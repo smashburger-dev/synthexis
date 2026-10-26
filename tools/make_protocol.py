@@ -74,6 +74,18 @@ HARD = [
 ]
 
 
+FREESTYLE = [
+    ("free_hands", 30, "Freestyle Hände: eigene Gesten und Positionen, die dir einfallen."),
+    ("free_face", 20, "Freestyle Gesicht und Kopf: eigene Ausdrücke und Bewegungen."),
+    ("free_play", 30, "Freestyle: so tun, als würdest du gerade einen Track spielen."),
+]
+
+BLOCK_TITLES = {
+    "A": "A Fingerhaltungen", "B": "B Langsame Zyklen und Zählen", "C": "C Gesicht und Kopf",
+    "D": "D Körper", "E": "E Objekte", "F": "F Schwierige Fälle", "G": "G Freestyle",
+}
+
+
 def seg(block, sid, dur, text, margin=(0.7, 0.3), **labels):
     return {"id": sid, "block": block, "duration_s": dur, "instruction_de": text,
             "margin_s": list(margin), "labels": labels}
@@ -120,8 +132,27 @@ def protocol(name, hold_s, objects, include_body, include_ramps):
         segs += [seg("D", f"D_{k}", d, t, body=k) for k, d, t in BODY]
     segs += [seg("E", f"E_{k}", 20, f"Objekt: {n}. {OBJ_MOVE}", objects=[k]) for k, n in objects]
     segs += [seg("F", f"F_{k}", 8, t, hard_case=k) for k, t in HARD]
+    if include_body:
+        # No gesture labels: these frames only get SAM 3.1 masks.
+        segs += [seg("G", f"G_{k}", d, t, freestyle=k) for k, d, t in FREESTYLE]
     total = sum(s["duration_s"] for s in segs) + len(segs) * 1.0  # 1 s gap with next prompt
     return {"name": name, "gap_s": 1.0, "total_s": total, "segments": segs}
+
+
+def markdown(protocols):
+    lines = ["# Aufnahme-Skript", "",
+             "Generiert aus `spec/recording-protocol.json` von `tools/make_protocol.py`. "
+             "Die Recorder-App zeigt dir jede Zeile groß an, mit Countdown. Diese Liste ist zum Vorbereiten.", ""]
+    for key, p in protocols.items():
+        lines += [f"## Protokoll `{key}`: {len(p['segments'])} Abschnitte, {p['total_s'] / 60:.1f} min", ""]
+        block = None
+        for i, s in enumerate(p["segments"], 1):
+            if s["block"] != block:
+                block = s["block"]
+                lines += ["", f"### {BLOCK_TITLES[block]}", "", "| # | Sekunden | Anweisung |", "|---|---|---|"]
+            lines.append(f"| {i} | {s['duration_s']} | {s['instruction_de']} |")
+        lines.append("")
+    return "\n".join(lines)
 
 
 def main():
@@ -133,8 +164,9 @@ def main():
             "short": protocol("short", 4, OBJECTS[:3], False, False),
         },
     }
-    path = Path(__file__).resolve().parents[1] / "spec" / "recording-protocol.json"
-    path.write_text(json.dumps(out, ensure_ascii=False, indent=1) + "\n")
+    root = Path(__file__).resolve().parents[1]
+    (root / "spec" / "recording-protocol.json").write_text(json.dumps(out, ensure_ascii=False, indent=1) + "\n")
+    (root / "docs" / "recording-script.md").write_text(markdown(out["protocols"]))
     for k, p in out["protocols"].items():
         print(f"{k}: {len(p['segments'])} segments, {p['total_s'] / 60:.1f} min")
 

@@ -5,7 +5,7 @@
   "full": {
    "name": "full",
    "gap_s": 1.0,
-   "total_s": 644.0,
+   "total_s": 727.0,
    "segments": [
     {
      "id": "A_R_00000",
@@ -1079,6 +1079,45 @@
      ],
      "labels": {
       "hard_case": "dim"
+     }
+    },
+    {
+     "id": "G_free_hands",
+     "block": "G",
+     "duration_s": 30,
+     "instruction_de": "Freestyle Hände: eigene Gesten und Positionen, die dir einfallen.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "freestyle": "free_hands"
+     }
+    },
+    {
+     "id": "G_free_face",
+     "block": "G",
+     "duration_s": 20,
+     "instruction_de": "Freestyle Gesicht und Kopf: eigene Ausdrücke und Bewegungen.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "freestyle": "free_face"
+     }
+    },
+    {
+     "id": "G_free_play",
+     "block": "G",
+     "duration_s": 30,
+     "instruction_de": "Freestyle: so tun, als würdest du gerade einen Track spielen.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "freestyle": "free_play"
      }
     }
    ]

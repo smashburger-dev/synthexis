@@ -185,7 +185,12 @@ snapshot:
 map:
   map.taxonomy: "about 40 parameter meanings: filter.cutoff, filter.resonance, amp.gain, fx.reverb.mix, fx.delay.mix, fx.delay.time, env.attack, env.release, osc.pitch, unison.detune, lfo.rate, macro, other, unsafe(master volume, output gain)"
   map.labeler: "Muse Spark Open (Baseten, meta-models/muse-spark-open-1026) labels harvested parameters with taxonomy + safe range"
-  map.param_sense: "student: tiny text classifier (char n-gram hashing + linear/MLP, <= 1M params) in Rust, runs instantly offline for unseen plugins"
+  map.license: "Muse Model License allows distillation; any model trained on Spark Open outputs is a Derivative and the product must show 'Built with Muse Spark Open' in its UI or docs"
+  map.param_sense: "student 1, classifier: parameter name + plugin name + unit + value strings -> taxonomy class. Char n-gram hashing + linear/MLP, <= 1M params, < 5 MB RAM, in Rust, offline for unseen plugins"
+  map.parser: "student 2, structured tagger (not a generative LM): sentence -> intent + slots (source gesture/feature, target meaning, target track or plugin, modifiers: invert, range, curve, amount). Tiny transformer or char-CNN encoder, target <= 5M params, <= 10 MB RAM, <= 5 ms. Trained on synthetic German and English commands that Spark Open writes from known structured edits, so labels are known by construction"
+  map.resolver: "deterministic: binds slots to real parameters through param-sense labels and fuzzy channel/plugin names; low parser confidence falls back to map.agent online"
+  map.eval: "100 commands written by Noa by hand, never trained on: exact route-edit accuracy >= 0.90; param-sense top-1 on plugins from unseen vendors >= 0.90"
+  map.research: "grounding so far: Oliveira 2026 (arXiv 2604.24636): on-device language features are reliable when the model does the least; Rana et al. COLING 2025 industry: slot filling distilled from LLM teachers with LLM-generated data; Gody et al. 2025: LLM annotations distilled into BERT-size intent classifiers"
   map.agent: "online: typed or spoken sentence -> route changes ('fist controls reverb and delay on the pad, mouth opens the bass filter') via Muse Spark Open tool calls against this graph (find_params by meaning, add_route, set_conditioner). One sentence may create several routes. The result is shown as a diff in the route matrix; the user accepts, edits or undoes it. Everything stays editable by hand."
   map.voice: "optional: push-to-talk through Muse Voice Transcribe realtime ($0.18 per hour of audio) feeding map.agent"
 
