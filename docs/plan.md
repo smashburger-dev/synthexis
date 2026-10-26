@@ -29,7 +29,7 @@ Anti-project check: the guide lists "simple image analyzers". synthexis is an in
 
 | Model | Access | Job | Cost estimate |
 |---|---|---|---|
-| SAM 3.1 open weights | Modal GPU | Bulk teacher masks on recorded and synthetic frames | Probe A reports $ per 1000 frames |
+| SAM 3.1 open weights | Modal GPU | Bulk teacher masks on recorded and synthetic frames | Probe A, H100: $0.051 per 1000 video frames per concept, $0.065 per 1000 images (lower bound, random weights) |
 | SAM 3.1 API (`sam-3.1`) | Meta Model API | Snapshot cut-outs in the plugin; cross-check sample of the Modal labels | $2.50 per 1000 images, $0.20 per 1000 video frames (min 50 frames per request) |
 | Muse Spark Open | Baseten `meta-models/muse-spark-open-1026` | Parameter meaning labels, gesture-label check on synthetic images, mapping agent | Baseten credits if granted |
 | Muse Image (`muse-image-1.0`) | Meta Model API | Synthetic people, hands, rooms, light for student training | $0.01 per image |
@@ -40,10 +40,12 @@ Why not SAM 3.1 in real time from the plugin: 30 fps x 3600 s = 108,000 frames p
 
 ## The student models
 
-- synthexis-seg: semantic masks [background, person, face, eye, mouth, hand, object], at most 4M parameters, CoreML FP16 on the Neural Engine. Candidates measured in probe B: LRASPP-MobileNetV3-Large and MobileNetV4-Conv-Small + LR-ASPP head.
-- synthexis-hand: hand crop 128 px to 5 finger-extension probabilities + openness, at most 2.5M parameters. It must beat Apple Vision keypoint geometry on the held-out session to replace it.
-- Total stays under 10M parameters.
-- Labels: SAM 3.1 masks for segmentation; finger states from the recording script (each segment is one known state), so no labeler can invent them. Muse Spark Open only checks synthetic images.
+Measured on the M1 Pro (probes B and C): the student candidates need 0.35 to 0.74 ms per inference on the Neural Engine. Apple Vision needs 18.4 ms for hand pose alone and 29.6 ms (p95 46.6 ms) for hand, face and body together. So the students run live and Apple Vision only runs offline as a teacher.
+
+- synthexis-seg: semantic masks [background, person, face, eye, mouth, hand, object], at most 4M parameters, CoreML FP16 on the Neural Engine. Front-runner: MobileNetV4-Conv-Small + LR-ASPP head, 1.51M parameters, 0.48 ms at 256 px.
+- synthexis-hand: hand crop 128 px to 21 keypoints + 5 finger-state logits, at most 2.5M parameters. Front-runner: MobileNetV3-Small, 1.52M parameters, 0.35 ms.
+- Per frame: one seg pass + two hand crops is about 1.2 ms. Total parameters about 3M, under the 10M target with room to grow.
+- Labels: SAM 3.1 masks for segmentation; Apple Vision keypoints computed offline on our own recordings for the keypoint head; finger states from the recording script (each segment is one known state), so no labeler can invent them. Muse Spark Open only checks synthetic images.
 - Eval gate (held-out session recorded on another day, never trained on): mIoU vs teacher >= 0.85 for person, face, hand and >= 0.70 for eye, mouth; finger-state accuracy >= 0.95; mouth-open and hand-openness signal MAE <= 0.05; seg p95 <= 3 ms and hand p95 <= 1.5 ms on the M1 Pro.
 
 ## Demo storyboard (3:00)
@@ -69,7 +71,7 @@ Why not SAM 3.1 in real time from the plugin: 30 fps x 3600 s = 108,000 frames p
 | Powerbeats motion not exposed to third-party apps | P4 | Camera head pose only |
 | Heart rate not readable while connected as audio | P5 | Drop heart rate from the demo |
 | SAM 3.1 weights access delayed (gated on Hugging Face) | A | Label through the API: 160,000 frames cost $32 |
-| Student misses the gate | eval | Vision keypoints for hands and face; student only for objects and cut-outs |
+| Student misses the gate | eval | Apple Vision live at 10 to 15 fps for hands and face; student only for objects and cut-outs |
 
 Cut order if the schedule slips: AUv2, heart rate, param-sense student (keep labels + rules), cameras beyond two, contour melody, zone anchors.
 

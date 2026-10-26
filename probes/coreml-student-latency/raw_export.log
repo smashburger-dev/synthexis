@@ -1,0 +1,16 @@
+python 3.13.17
+torch 2.14.1
+torchvision 0.29.1
+timm 1.0.30
+coremltools 9.0
+S1 params 3219328 (3.22M)
+S2 params 1509360 (1.51M)
+H1 params 2500710 (2.50M)
+H2 params 1524006 (1.52M)
+--- mlpackage sizes ---
+models/H1_128.mlpackage 5MiB
+models/H2_128.mlpackage 3MiB
+models/S1_256.mlpackage 7MiB
+models/S1_320.mlpackage 7MiB
+models/S2_256.mlpackage 3MiB
+models/S2_320.mlpackage 3MiB
