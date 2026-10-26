@@ -25,6 +25,7 @@ probes/apple-vision-fps/vision_probe
 probes/fl-camera-plugin/synthexis-probe-standalone.app/
 probes/headphone-motion/HeadphoneMotion.app/
 probes/heart-rate-ble/HeartRateBLE.app/
+tools/recorder/*.app/
 target/
 build/
 dist/
