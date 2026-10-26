@@ -19,6 +19,17 @@
 - Every number in `docs/` or `spec/` cites the probe or source that measured it. Unmeasured values are marked `hypothesis`.
 - Latency and throughput claims need a probe run on the real hardware (M1 Pro, macOS 27) or the real cloud GPU, with median and p95.
 
+## Design
+
+- Before any UI work load the skills `design-glass`, `design-rust` and `build-rust`. The plugin UI uses Noa's glass language and the lessons from chiasma (`/Users/no8/Desktop/life/Lifemaxxing/chiasma/docs/STYLE.md`) as its foundation: camera canvas edge to edge, glass panels and floating bar over it, ring knobs for continuous values, colour only on values.
+- Reimplement in this repo; do not copy chiasma code.
+
+## Secrets
+
+- Meta Model API key: macOS Keychain item `synthexis.meta-model-api` (read with `security find-generic-password -s synthexis.meta-model-api -w`), Modal secret `meta-model-api` (env `MODEL_API_KEY`).
+- Hugging Face token: Modal secret `huggingface` (env `HF_TOKEN`). Baseten: Keychain `synthexis.baseten` and Modal secret `baseten` (env `BASETEN_API_KEY`).
+- Never print, log or commit them.
+
 ## Engineering
 
 - Rust for the plugin (nih-plug, CLAP, with clap-wrapper for VST3 and AUv2). Perception never runs on the audio thread.

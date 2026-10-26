@@ -1,0 +1,3 @@
+date	run	lever	metric	before	after	kept	gates	evidence
+2026-10-26	0	baseline S2_256 + H2_128 random weights	frame_p95_ms	-	2.062	baseline	n/a	probes/coreml-student-latency/raw_mem.log
+2026-10-26	0	baseline camera standalone dim light	capture_latency_p95_ms	-	152.6-214.6	baseline	n/a	~/Library/Logs/synthexis-probe.log (quoted in probes/fl-camera-plugin/RESULT.md)

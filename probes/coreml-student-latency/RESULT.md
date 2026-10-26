@@ -43,6 +43,27 @@ Takeaways:
   features) beats S1 at every size: 0.46 ms vs 0.73 ms ANE median at 256².
 - All four candidates fit the <10M param student budget.
 
+## Memory and full per-frame pipeline (added 2026-10-26 23:01)
+
+`mem.swift`: loads one seg model + one hand model on `.cpuAndNeuralEngine`, then
+runs 3000 frames of the plugin's per-frame work (1 seg + 2 hand crops), 50
+warmup frames first. Memory = process `phys_footprint` (Activity Monitor
+"Memory"), sampled every 50 frames. Log: `raw_mem.log`.
+
+| seg + hand | frame median ms | p95 | p99 | max fps at p95 | footprint after load | steady peak (delta) |
+|---|---|---|---|---|---|---|
+| S2_256 + H2_128 (front-runners) | 1.121 | 2.062 | 2.676 | 485 | +12.2 MB | +15.9 MB |
+| S1_256 + H1_128 (largest) | 2.083 | 5.319 | 8.409 | 188 | +12.7 MB | +16.5 MB |
+| S2_320 + H2_128 | 1.522 | 3.541 | 4.780 | 282 | +10.7 MB | +15.8 MB |
+
+Not included: camera buffers (1280x720 BGRA is 3.7 MB per frame) and the
+editor preview texture; probe P1 measures those inside FL.
+
+```sh
+xcrun swiftc -O -o mem mem.swift
+./mem models/S2_256.mlmodelc 256 models/H2_128.mlmodelc 128
+```
+
 ## Models
 
 - **S1**: `torchvision.models.segmentation.lraspp_mobilenet_v3_large(weights=None,

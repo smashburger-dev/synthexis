@@ -1,0 +1,1793 @@
+{
+ "version": 1,
+ "finger_bits": "thumb,index,middle,ring,pinky; 1 = extended",
+ "protocols": {
+  "full": {
+   "name": "full",
+   "gap_s": 1.0,
+   "total_s": 644.0,
+   "segments": [
+    {
+     "id": "A_R_00000",
+     "block": "A",
+     "duration_s": 6,
+     "instruction_de": "Rechte Hand: Faust. Halten, dabei langsam durchs Bild bewegen, mal nah, mal fern, Handgelenk drehen. Linke Hand aus dem Bild.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "hand_R": "00000",
+      "hand_L": "absent"
+     }
+    },
+    {
+     "id": "A_R_10000",
+     "block": "A",
+     "duration_s": 6,
+     "instruction_de": "Rechte Hand: nur Daumen. Halten, dabei langsam durchs Bild bewegen, mal nah, mal fern, Handgelenk drehen. Linke Hand aus dem Bild.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "hand_R": "10000",
+      "hand_L": "absent"
+     }
+    },
+    {
+     "id": "A_R_01000",
+     "block": "A",
+     "duration_s": 6,
+     "instruction_de": "Rechte Hand: nur Zeigefinger. Halten, dabei langsam durchs Bild bewegen, mal nah, mal fern, Handgelenk drehen. Linke Hand aus dem Bild.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "hand_R": "01000",
+      "hand_L": "absent"
+     }
+    },
+    {
+     "id": "A_R_11000",
+     "block": "A",
+     "duration_s": 6,
+     "instruction_de": "Rechte Hand: Daumen + Zeigefinger. Halten, dabei langsam durchs Bild bewegen, mal nah, mal fern, Handgelenk drehen. Linke Hand aus dem Bild.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "hand_R": "11000",
+      "hand_L": "absent"
+     }
+    },
+    {
+     "id": "A_R_01100",
+     "block": "A",
+     "duration_s": 6,
+     "instruction_de": "Rechte Hand: Zeige- + Mittelfinger. Halten, dabei langsam durchs Bild bewegen, mal nah, mal fern, Handgelenk drehen. Linke Hand aus dem Bild.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "hand_R": "01100",
+      "hand_L": "absent"
+     }
+    },
+    {
+     "id": "A_R_11100",
+     "block": "A",
+     "duration_s": 6,
+     "instruction_de": "Rechte Hand: Daumen + Zeige- + Mittelfinger. Halten, dabei langsam durchs Bild bewegen, mal nah, mal fern, Handgelenk drehen. Linke Hand aus dem Bild.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "hand_R": "11100",
+      "hand_L": "absent"
+     }
+    },
+    {
+     "id": "A_R_01110",
+     "block": "A",
+     "duration_s": 6,
+     "instruction_de": "Rechte Hand: Zeige- + Mittel- + Ringfinger. Halten, dabei langsam durchs Bild bewegen, mal nah, mal fern, Handgelenk drehen. Linke Hand aus dem Bild.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "hand_R": "01110",
+      "hand_L": "absent"
+     }
+    },
+    {
+     "id": "A_R_01111",
+     "block": "A",
+     "duration_s": 6,
+     "instruction_de": "Rechte Hand: vier Finger, Daumen eingeklappt. Halten, dabei langsam durchs Bild bewegen, mal nah, mal fern, Handgelenk drehen. Linke Hand aus dem Bild.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "hand_R": "01111",
+      "hand_L": "absent"
+     }
+    },
+    {
+     "id": "A_R_11111",
+     "block": "A",
+     "duration_s": 6,
+     "instruction_de": "Rechte Hand: offene Hand. Halten, dabei langsam durchs Bild bewegen, mal nah, mal fern, Handgelenk drehen. Linke Hand aus dem Bild.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "hand_R": "11111",
+      "hand_L": "absent"
+     }
+    },
+    {
+     "id": "A_R_00001",
+     "block": "A",
+     "duration_s": 6,
+     "instruction_de": "Rechte Hand: nur kleiner Finger. Halten, dabei langsam durchs Bild bewegen, mal nah, mal fern, Handgelenk drehen. Linke Hand aus dem Bild.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "hand_R": "00001",
+      "hand_L": "absent"
+     }
+    },
+    {
+     "id": "A_R_10001",
+     "block": "A",
+     "duration_s": 6,
+     "instruction_de": "Rechte Hand: Daumen + kleiner Finger. Halten, dabei langsam durchs Bild bewegen, mal nah, mal fern, Handgelenk drehen. Linke Hand aus dem Bild.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "hand_R": "10001",
+      "hand_L": "absent"
+     }
+    },
+    {
+     "id": "A_R_01001",
+     "block": "A",
+     "duration_s": 6,
+     "instruction_de": "Rechte Hand: Zeigefinger + kleiner Finger. Halten, dabei langsam durchs Bild bewegen, mal nah, mal fern, Handgelenk drehen. Linke Hand aus dem Bild.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "hand_R": "01001",
+      "hand_L": "absent"
+     }
+    },
+    {
+     "id": "A_L_00000",
+     "block": "A",
+     "duration_s": 6,
+     "instruction_de": "Linke Hand: Faust. Halten, dabei langsam durchs Bild bewegen, mal nah, mal fern, Handgelenk drehen. Rechte Hand aus dem Bild.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "hand_L": "00000",
+      "hand_R": "absent"
+     }
+    },
+    {
+     "id": "A_L_10000",
+     "block": "A",
+     "duration_s": 6,
+     "instruction_de": "Linke Hand: nur Daumen. Halten, dabei langsam durchs Bild bewegen, mal nah, mal fern, Handgelenk drehen. Rechte Hand aus dem Bild.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "hand_L": "10000",
+      "hand_R": "absent"
+     }
+    },
+    {
+     "id": "A_L_01000",
+     "block": "A",
+     "duration_s": 6,
+     "instruction_de": "Linke Hand: nur Zeigefinger. Halten, dabei langsam durchs Bild bewegen, mal nah, mal fern, Handgelenk drehen. Rechte Hand aus dem Bild.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "hand_L": "01000",
+      "hand_R": "absent"
+     }
+    },
+    {
+     "id": "A_L_11000",
+     "block": "A",
+     "duration_s": 6,
+     "instruction_de": "Linke Hand: Daumen + Zeigefinger. Halten, dabei langsam durchs Bild bewegen, mal nah, mal fern, Handgelenk drehen. Rechte Hand aus dem Bild.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "hand_L": "11000",
+      "hand_R": "absent"
+     }
+    },
+    {
+     "id": "A_L_01100",
+     "block": "A",
+     "duration_s": 6,
+     "instruction_de": "Linke Hand: Zeige- + Mittelfinger. Halten, dabei langsam durchs Bild bewegen, mal nah, mal fern, Handgelenk drehen. Rechte Hand aus dem Bild.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "hand_L": "01100",
+      "hand_R": "absent"
+     }
+    },
+    {
+     "id": "A_L_11100",
+     "block": "A",
+     "duration_s": 6,
+     "instruction_de": "Linke Hand: Daumen + Zeige- + Mittelfinger. Halten, dabei langsam durchs Bild bewegen, mal nah, mal fern, Handgelenk drehen. Rechte Hand aus dem Bild.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "hand_L": "11100",
+      "hand_R": "absent"
+     }
+    },
+    {
+     "id": "A_L_01110",
+     "block": "A",
+     "duration_s": 6,
+     "instruction_de": "Linke Hand: Zeige- + Mittel- + Ringfinger. Halten, dabei langsam durchs Bild bewegen, mal nah, mal fern, Handgelenk drehen. Rechte Hand aus dem Bild.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "hand_L": "01110",
+      "hand_R": "absent"
+     }
+    },
+    {
+     "id": "A_L_01111",
+     "block": "A",
+     "duration_s": 6,
+     "instruction_de": "Linke Hand: vier Finger, Daumen eingeklappt. Halten, dabei langsam durchs Bild bewegen, mal nah, mal fern, Handgelenk drehen. Rechte Hand aus dem Bild.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "hand_L": "01111",
+      "hand_R": "absent"
+     }
+    },
+    {
+     "id": "A_L_11111",
+     "block": "A",
+     "duration_s": 6,
+     "instruction_de": "Linke Hand: offene Hand. Halten, dabei langsam durchs Bild bewegen, mal nah, mal fern, Handgelenk drehen. Rechte Hand aus dem Bild.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "hand_L": "11111",
+      "hand_R": "absent"
+     }
+    },
+    {
+     "id": "A_L_00001",
+     "block": "A",
+     "duration_s": 6,
+     "instruction_de": "Linke Hand: nur kleiner Finger. Halten, dabei langsam durchs Bild bewegen, mal nah, mal fern, Handgelenk drehen. Rechte Hand aus dem Bild.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "hand_L": "00001",
+      "hand_R": "absent"
+     }
+    },
+    {
+     "id": "A_L_10001",
+     "block": "A",
+     "duration_s": 6,
+     "instruction_de": "Linke Hand: Daumen + kleiner Finger. Halten, dabei langsam durchs Bild bewegen, mal nah, mal fern, Handgelenk drehen. Rechte Hand aus dem Bild.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "hand_L": "10001",
+      "hand_R": "absent"
+     }
+    },
+    {
+     "id": "A_L_01001",
+     "block": "A",
+     "duration_s": 6,
+     "instruction_de": "Linke Hand: Zeigefinger + kleiner Finger. Halten, dabei langsam durchs Bild bewegen, mal nah, mal fern, Handgelenk drehen. Rechte Hand aus dem Bild.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "hand_L": "01001",
+      "hand_R": "absent"
+     }
+    },
+    {
+     "id": "A_both_11000_11111",
+     "block": "A",
+     "duration_s": 6,
+     "instruction_de": "Beide Hände. Rechts: Daumen + Zeigefinger. Links: offene Hand. Halten, dabei langsam durchs Bild bewegen, mal nah, mal fern, Handgelenk drehen.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "hand_R": "11000",
+      "hand_L": "11111"
+     }
+    },
+    {
+     "id": "A_both_01000_00000",
+     "block": "A",
+     "duration_s": 6,
+     "instruction_de": "Beide Hände. Rechts: nur Zeigefinger. Links: Faust. Halten, dabei langsam durchs Bild bewegen, mal nah, mal fern, Handgelenk drehen.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "hand_R": "01000",
+      "hand_L": "00000"
+     }
+    },
+    {
+     "id": "A_both_11111_11111",
+     "block": "A",
+     "duration_s": 6,
+     "instruction_de": "Beide Hände. Rechts: offene Hand. Links: offene Hand. Halten, dabei langsam durchs Bild bewegen, mal nah, mal fern, Handgelenk drehen.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "hand_R": "11111",
+      "hand_L": "11111"
+     }
+    },
+    {
+     "id": "A_both_00000_00000",
+     "block": "A",
+     "duration_s": 6,
+     "instruction_de": "Beide Hände. Rechts: Faust. Links: Faust. Halten, dabei langsam durchs Bild bewegen, mal nah, mal fern, Handgelenk drehen.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "hand_R": "00000",
+      "hand_L": "00000"
+     }
+    },
+    {
+     "id": "A_both_01100_10000",
+     "block": "A",
+     "duration_s": 6,
+     "instruction_de": "Beide Hände. Rechts: Zeige- + Mittelfinger. Links: nur Daumen. Halten, dabei langsam durchs Bild bewegen, mal nah, mal fern, Handgelenk drehen.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "hand_R": "01100",
+      "hand_L": "10000"
+     }
+    },
+    {
+     "id": "A_both_10001_01001",
+     "block": "A",
+     "duration_s": 6,
+     "instruction_de": "Beide Hände. Rechts: Daumen + kleiner Finger. Links: Zeigefinger + kleiner Finger. Halten, dabei langsam durchs Bild bewegen, mal nah, mal fern, Handgelenk drehen.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "hand_R": "10001",
+      "hand_L": "01001"
+     }
+    },
+    {
+     "id": "B_R_open",
+     "block": "B",
+     "duration_s": 16,
+     "instruction_de": "Rechte Hand: langsam von Faust zu offen und zurück, 4 s pro Zyklus, im Takt der Anzeige.",
+     "margin_s": [
+      0.5,
+      0.0
+     ],
+     "labels": {
+      "ramp": {
+       "signal": "hand.R.openness",
+       "shape": "triangle",
+       "period_s": 4,
+       "start": "closed"
+      }
+     }
+    },
+    {
+     "id": "B_R_spread",
+     "block": "B",
+     "duration_s": 16,
+     "instruction_de": "Rechte Hand: offene Hand, Finger langsam spreizen und schließen, 4 s pro Zyklus.",
+     "margin_s": [
+      0.5,
+      0.0
+     ],
+     "labels": {
+      "ramp": {
+       "signal": "hand.R.spread",
+       "shape": "triangle",
+       "period_s": 4,
+       "start": "closed"
+      }
+     }
+    },
+    {
+     "id": "B_R_count0",
+     "block": "B",
+     "duration_s": 2,
+     "instruction_de": "Rechte Hand zählen: nur Zeigefinger.",
+     "margin_s": [
+      0.5,
+      0.2
+     ],
+     "labels": {
+      "hand_R": "01000"
+     }
+    },
+    {
+     "id": "B_R_count1",
+     "block": "B",
+     "duration_s": 2,
+     "instruction_de": "Rechte Hand zählen: Zeige- + Mittelfinger.",
+     "margin_s": [
+      0.5,
+      0.2
+     ],
+     "labels": {
+      "hand_R": "01100"
+     }
+    },
+    {
+     "id": "B_R_count2",
+     "block": "B",
+     "duration_s": 2,
+     "instruction_de": "Rechte Hand zählen: Zeige- + Mittel- + Ringfinger.",
+     "margin_s": [
+      0.5,
+      0.2
+     ],
+     "labels": {
+      "hand_R": "01110"
+     }
+    },
+    {
+     "id": "B_R_count3",
+     "block": "B",
+     "duration_s": 2,
+     "instruction_de": "Rechte Hand zählen: vier Finger, Daumen eingeklappt.",
+     "margin_s": [
+      0.5,
+      0.2
+     ],
+     "labels": {
+      "hand_R": "01111"
+     }
+    },
+    {
+     "id": "B_R_count4",
+     "block": "B",
+     "duration_s": 2,
+     "instruction_de": "Rechte Hand zählen: offene Hand.",
+     "margin_s": [
+      0.5,
+      0.2
+     ],
+     "labels": {
+      "hand_R": "11111"
+     }
+    },
+    {
+     "id": "B_R_count5",
+     "block": "B",
+     "duration_s": 2,
+     "instruction_de": "Rechte Hand zählen: vier Finger, Daumen eingeklappt.",
+     "margin_s": [
+      0.5,
+      0.2
+     ],
+     "labels": {
+      "hand_R": "01111"
+     }
+    },
+    {
+     "id": "B_R_count6",
+     "block": "B",
+     "duration_s": 2,
+     "instruction_de": "Rechte Hand zählen: Zeige- + Mittel- + Ringfinger.",
+     "margin_s": [
+      0.5,
+      0.2
+     ],
+     "labels": {
+      "hand_R": "01110"
+     }
+    },
+    {
+     "id": "B_R_count7",
+     "block": "B",
+     "duration_s": 2,
+     "instruction_de": "Rechte Hand zählen: Zeige- + Mittelfinger.",
+     "margin_s": [
+      0.5,
+      0.2
+     ],
+     "labels": {
+      "hand_R": "01100"
+     }
+    },
+    {
+     "id": "B_R_count8",
+     "block": "B",
+     "duration_s": 2,
+     "instruction_de": "Rechte Hand zählen: nur Zeigefinger.",
+     "margin_s": [
+      0.5,
+      0.2
+     ],
+     "labels": {
+      "hand_R": "01000"
+     }
+    },
+    {
+     "id": "B_L_open",
+     "block": "B",
+     "duration_s": 16,
+     "instruction_de": "Linke Hand: langsam von Faust zu offen und zurück, 4 s pro Zyklus, im Takt der Anzeige.",
+     "margin_s": [
+      0.5,
+      0.0
+     ],
+     "labels": {
+      "ramp": {
+       "signal": "hand.L.openness",
+       "shape": "triangle",
+       "period_s": 4,
+       "start": "closed"
+      }
+     }
+    },
+    {
+     "id": "B_L_spread",
+     "block": "B",
+     "duration_s": 16,
+     "instruction_de": "Linke Hand: offene Hand, Finger langsam spreizen und schließen, 4 s pro Zyklus.",
+     "margin_s": [
+      0.5,
+      0.0
+     ],
+     "labels": {
+      "ramp": {
+       "signal": "hand.L.spread",
+       "shape": "triangle",
+       "period_s": 4,
+       "start": "closed"
+      }
+     }
+    },
+    {
+     "id": "B_L_count0",
+     "block": "B",
+     "duration_s": 2,
+     "instruction_de": "Linke Hand zählen: nur Zeigefinger.",
+     "margin_s": [
+      0.5,
+      0.2
+     ],
+     "labels": {
+      "hand_L": "01000"
+     }
+    },
+    {
+     "id": "B_L_count1",
+     "block": "B",
+     "duration_s": 2,
+     "instruction_de": "Linke Hand zählen: Zeige- + Mittelfinger.",
+     "margin_s": [
+      0.5,
+      0.2
+     ],
+     "labels": {
+      "hand_L": "01100"
+     }
+    },
+    {
+     "id": "B_L_count2",
+     "block": "B",
+     "duration_s": 2,
+     "instruction_de": "Linke Hand zählen: Zeige- + Mittel- + Ringfinger.",
+     "margin_s": [
+      0.5,
+      0.2
+     ],
+     "labels": {
+      "hand_L": "01110"
+     }
+    },
+    {
+     "id": "B_L_count3",
+     "block": "B",
+     "duration_s": 2,
+     "instruction_de": "Linke Hand zählen: vier Finger, Daumen eingeklappt.",
+     "margin_s": [
+      0.5,
+      0.2
+     ],
+     "labels": {
+      "hand_L": "01111"
+     }
+    },
+    {
+     "id": "B_L_count4",
+     "block": "B",
+     "duration_s": 2,
+     "instruction_de": "Linke Hand zählen: offene Hand.",
+     "margin_s": [
+      0.5,
+      0.2
+     ],
+     "labels": {
+      "hand_L": "11111"
+     }
+    },
+    {
+     "id": "B_L_count5",
+     "block": "B",
+     "duration_s": 2,
+     "instruction_de": "Linke Hand zählen: vier Finger, Daumen eingeklappt.",
+     "margin_s": [
+      0.5,
+      0.2
+     ],
+     "labels": {
+      "hand_L": "01111"
+     }
+    },
+    {
+     "id": "B_L_count6",
+     "block": "B",
+     "duration_s": 2,
+     "instruction_de": "Linke Hand zählen: Zeige- + Mittel- + Ringfinger.",
+     "margin_s": [
+      0.5,
+      0.2
+     ],
+     "labels": {
+      "hand_L": "01110"
+     }
+    },
+    {
+     "id": "B_L_count7",
+     "block": "B",
+     "duration_s": 2,
+     "instruction_de": "Linke Hand zählen: Zeige- + Mittelfinger.",
+     "margin_s": [
+      0.5,
+      0.2
+     ],
+     "labels": {
+      "hand_L": "01100"
+     }
+    },
+    {
+     "id": "B_L_count8",
+     "block": "B",
+     "duration_s": 2,
+     "instruction_de": "Linke Hand zählen: nur Zeigefinger.",
+     "margin_s": [
+      0.5,
+      0.2
+     ],
+     "labels": {
+      "hand_L": "01000"
+     }
+    },
+    {
+     "id": "C_neutral",
+     "block": "C",
+     "duration_s": 6,
+     "instruction_de": "Neutral in die Kamera schauen, Hände unten.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "face": "neutral"
+     }
+    },
+    {
+     "id": "C_mouth_sweep",
+     "block": "C",
+     "duration_s": 12,
+     "instruction_de": "Mund langsam auf und zu, 4 s pro Zyklus, 3 Zyklen.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "face": "mouth_sweep"
+     }
+    },
+    {
+     "id": "C_mouth_wide",
+     "block": "C",
+     "duration_s": 6,
+     "instruction_de": "Mund weit offen halten.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "face": "mouth_wide"
+     }
+    },
+    {
+     "id": "C_blink",
+     "block": "C",
+     "duration_s": 6,
+     "instruction_de": "Normal blinzeln, etwa einmal pro Sekunde.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "face": "blink"
+     }
+    },
+    {
+     "id": "C_wink_L",
+     "block": "C",
+     "duration_s": 6,
+     "instruction_de": "Linkes Auge zu, rechtes offen.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "face": "wink_L"
+     }
+    },
+    {
+     "id": "C_wink_R",
+     "block": "C",
+     "duration_s": 6,
+     "instruction_de": "Rechtes Auge zu, linkes offen.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "face": "wink_R"
+     }
+    },
+    {
+     "id": "C_eyes_closed",
+     "block": "C",
+     "duration_s": 6,
+     "instruction_de": "Beide Augen zu halten.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "face": "eyes_closed"
+     }
+    },
+    {
+     "id": "C_smile",
+     "block": "C",
+     "duration_s": 6,
+     "instruction_de": "Breit lächeln.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "face": "smile"
+     }
+    },
+    {
+     "id": "C_yaw_sweep",
+     "block": "C",
+     "duration_s": 12,
+     "instruction_de": "Kopf langsam links und rechts drehen, 4 s pro Zyklus.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "face": "yaw_sweep"
+     }
+    },
+    {
+     "id": "C_pitch_sweep",
+     "block": "C",
+     "duration_s": 12,
+     "instruction_de": "Kopf langsam hoch und runter nicken, 4 s pro Zyklus.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "face": "pitch_sweep"
+     }
+    },
+    {
+     "id": "C_roll_sweep",
+     "block": "C",
+     "duration_s": 12,
+     "instruction_de": "Kopf zur Schulter neigen, links und rechts, 4 s pro Zyklus.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "face": "roll_sweep"
+     }
+    },
+    {
+     "id": "C_turned_mouth",
+     "block": "C",
+     "duration_s": 12,
+     "instruction_de": "Kopf 45 Grad zur Seite, dabei Mund auf und zu.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "face": "turned_mouth"
+     }
+    },
+    {
+     "id": "D_arms_sweep",
+     "block": "D",
+     "duration_s": 12,
+     "instruction_de": "Beide Arme langsam hoch und runter.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "body": "arms_sweep"
+     }
+    },
+    {
+     "id": "D_lean_sweep",
+     "block": "D",
+     "duration_s": 12,
+     "instruction_de": "Oberkörper links und rechts neigen.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "body": "lean_sweep"
+     }
+    },
+    {
+     "id": "D_step_back",
+     "block": "D",
+     "duration_s": 12,
+     "instruction_de": "Einen Schritt zurück, Oberkörper ganz im Bild, Arme bewegen.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "body": "step_back"
+     }
+    },
+    {
+     "id": "E_mug",
+     "block": "E",
+     "duration_s": 20,
+     "instruction_de": "Objekt: Tasse. Halten, drehen, durchs Bild bewegen, ablegen, wieder aufnehmen, kurz aus dem Bild.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "objects": [
+       "mug"
+      ]
+     }
+    },
+    {
+     "id": "E_phone",
+     "block": "E",
+     "duration_s": 20,
+     "instruction_de": "Objekt: Handy. Halten, drehen, durchs Bild bewegen, ablegen, wieder aufnehmen, kurz aus dem Bild.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "objects": [
+       "phone"
+      ]
+     }
+    },
+    {
+     "id": "E_pen",
+     "block": "E",
+     "duration_s": 20,
+     "instruction_de": "Objekt: Stift oder Drumstick. Halten, drehen, durchs Bild bewegen, ablegen, wieder aufnehmen, kurz aus dem Bild.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "objects": [
+       "pen"
+      ]
+     }
+    },
+    {
+     "id": "E_ball",
+     "block": "E",
+     "duration_s": 20,
+     "instruction_de": "Objekt: Ball oder Obst. Halten, drehen, durchs Bild bewegen, ablegen, wieder aufnehmen, kurz aus dem Bild.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "objects": [
+       "ball"
+      ]
+     }
+    },
+    {
+     "id": "E_demo_object",
+     "block": "E",
+     "duration_s": 20,
+     "instruction_de": "Objekt: dein Demo-Objekt. Halten, drehen, durchs Bild bewegen, ablegen, wieder aufnehmen, kurz aus dem Bild.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "objects": [
+       "demo_object"
+      ]
+     }
+    },
+    {
+     "id": "F_hand_over_face",
+     "block": "F",
+     "duration_s": 8,
+     "instruction_de": "Rechte Hand vor das Gesicht halten und bewegen.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "hard_case": "hand_over_face"
+     }
+    },
+    {
+     "id": "F_hands_overlap",
+     "block": "F",
+     "duration_s": 8,
+     "instruction_de": "Beide Hände überlappen, Finger verschränken, lösen.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "hard_case": "hands_overlap"
+     }
+    },
+    {
+     "id": "F_fast_moves",
+     "block": "F",
+     "duration_s": 8,
+     "instruction_de": "Hände schnell bewegen, wechselnde Gesten.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "hard_case": "fast_moves"
+     }
+    },
+    {
+     "id": "F_hand_edge",
+     "block": "F",
+     "duration_s": 8,
+     "instruction_de": "Hand halb aus dem Bildrand, rein und raus.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "hard_case": "hand_edge"
+     }
+    },
+    {
+     "id": "F_backlit",
+     "block": "F",
+     "duration_s": 8,
+     "instruction_de": "Wenn möglich: Licht von hinten (Fenster/Lampe hinter dir), Gesten zeigen.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "hard_case": "backlit"
+     }
+    },
+    {
+     "id": "F_dim",
+     "block": "F",
+     "duration_s": 8,
+     "instruction_de": "Licht dimmen oder Lampe aus, Gesten zeigen.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "hard_case": "dim"
+     }
+    }
+   ]
+  },
+  "short": {
+   "name": "short",
+   "gap_s": 1.0,
+   "total_s": 381.0,
+   "segments": [
+    {
+     "id": "A_R_00000",
+     "block": "A",
+     "duration_s": 4,
+     "instruction_de": "Rechte Hand: Faust. Halten, dabei langsam durchs Bild bewegen, mal nah, mal fern, Handgelenk drehen. Linke Hand aus dem Bild.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "hand_R": "00000",
+      "hand_L": "absent"
+     }
+    },
+    {
+     "id": "A_R_10000",
+     "block": "A",
+     "duration_s": 4,
+     "instruction_de": "Rechte Hand: nur Daumen. Halten, dabei langsam durchs Bild bewegen, mal nah, mal fern, Handgelenk drehen. Linke Hand aus dem Bild.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "hand_R": "10000",
+      "hand_L": "absent"
+     }
+    },
+    {
+     "id": "A_R_01000",
+     "block": "A",
+     "duration_s": 4,
+     "instruction_de": "Rechte Hand: nur Zeigefinger. Halten, dabei langsam durchs Bild bewegen, mal nah, mal fern, Handgelenk drehen. Linke Hand aus dem Bild.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "hand_R": "01000",
+      "hand_L": "absent"
+     }
+    },
+    {
+     "id": "A_R_11000",
+     "block": "A",
+     "duration_s": 4,
+     "instruction_de": "Rechte Hand: Daumen + Zeigefinger. Halten, dabei langsam durchs Bild bewegen, mal nah, mal fern, Handgelenk drehen. Linke Hand aus dem Bild.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "hand_R": "11000",
+      "hand_L": "absent"
+     }
+    },
+    {
+     "id": "A_R_01100",
+     "block": "A",
+     "duration_s": 4,
+     "instruction_de": "Rechte Hand: Zeige- + Mittelfinger. Halten, dabei langsam durchs Bild bewegen, mal nah, mal fern, Handgelenk drehen. Linke Hand aus dem Bild.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "hand_R": "01100",
+      "hand_L": "absent"
+     }
+    },
+    {
+     "id": "A_R_11100",
+     "block": "A",
+     "duration_s": 4,
+     "instruction_de": "Rechte Hand: Daumen + Zeige- + Mittelfinger. Halten, dabei langsam durchs Bild bewegen, mal nah, mal fern, Handgelenk drehen. Linke Hand aus dem Bild.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "hand_R": "11100",
+      "hand_L": "absent"
+     }
+    },
+    {
+     "id": "A_R_01110",
+     "block": "A",
+     "duration_s": 4,
+     "instruction_de": "Rechte Hand: Zeige- + Mittel- + Ringfinger. Halten, dabei langsam durchs Bild bewegen, mal nah, mal fern, Handgelenk drehen. Linke Hand aus dem Bild.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "hand_R": "01110",
+      "hand_L": "absent"
+     }
+    },
+    {
+     "id": "A_R_01111",
+     "block": "A",
+     "duration_s": 4,
+     "instruction_de": "Rechte Hand: vier Finger, Daumen eingeklappt. Halten, dabei langsam durchs Bild bewegen, mal nah, mal fern, Handgelenk drehen. Linke Hand aus dem Bild.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "hand_R": "01111",
+      "hand_L": "absent"
+     }
+    },
+    {
+     "id": "A_R_11111",
+     "block": "A",
+     "duration_s": 4,
+     "instruction_de": "Rechte Hand: offene Hand. Halten, dabei langsam durchs Bild bewegen, mal nah, mal fern, Handgelenk drehen. Linke Hand aus dem Bild.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "hand_R": "11111",
+      "hand_L": "absent"
+     }
+    },
+    {
+     "id": "A_R_00001",
+     "block": "A",
+     "duration_s": 4,
+     "instruction_de": "Rechte Hand: nur kleiner Finger. Halten, dabei langsam durchs Bild bewegen, mal nah, mal fern, Handgelenk drehen. Linke Hand aus dem Bild.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "hand_R": "00001",
+      "hand_L": "absent"
+     }
+    },
+    {
+     "id": "A_R_10001",
+     "block": "A",
+     "duration_s": 4,
+     "instruction_de": "Rechte Hand: Daumen + kleiner Finger. Halten, dabei langsam durchs Bild bewegen, mal nah, mal fern, Handgelenk drehen. Linke Hand aus dem Bild.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "hand_R": "10001",
+      "hand_L": "absent"
+     }
+    },
+    {
+     "id": "A_R_01001",
+     "block": "A",
+     "duration_s": 4,
+     "instruction_de": "Rechte Hand: Zeigefinger + kleiner Finger. Halten, dabei langsam durchs Bild bewegen, mal nah, mal fern, Handgelenk drehen. Linke Hand aus dem Bild.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "hand_R": "01001",
+      "hand_L": "absent"
+     }
+    },
+    {
+     "id": "A_L_00000",
+     "block": "A",
+     "duration_s": 4,
+     "instruction_de": "Linke Hand: Faust. Halten, dabei langsam durchs Bild bewegen, mal nah, mal fern, Handgelenk drehen. Rechte Hand aus dem Bild.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "hand_L": "00000",
+      "hand_R": "absent"
+     }
+    },
+    {
+     "id": "A_L_10000",
+     "block": "A",
+     "duration_s": 4,
+     "instruction_de": "Linke Hand: nur Daumen. Halten, dabei langsam durchs Bild bewegen, mal nah, mal fern, Handgelenk drehen. Rechte Hand aus dem Bild.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "hand_L": "10000",
+      "hand_R": "absent"
+     }
+    },
+    {
+     "id": "A_L_01000",
+     "block": "A",
+     "duration_s": 4,
+     "instruction_de": "Linke Hand: nur Zeigefinger. Halten, dabei langsam durchs Bild bewegen, mal nah, mal fern, Handgelenk drehen. Rechte Hand aus dem Bild.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "hand_L": "01000",
+      "hand_R": "absent"
+     }
+    },
+    {
+     "id": "A_L_11000",
+     "block": "A",
+     "duration_s": 4,
+     "instruction_de": "Linke Hand: Daumen + Zeigefinger. Halten, dabei langsam durchs Bild bewegen, mal nah, mal fern, Handgelenk drehen. Rechte Hand aus dem Bild.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "hand_L": "11000",
+      "hand_R": "absent"
+     }
+    },
+    {
+     "id": "A_L_01100",
+     "block": "A",
+     "duration_s": 4,
+     "instruction_de": "Linke Hand: Zeige- + Mittelfinger. Halten, dabei langsam durchs Bild bewegen, mal nah, mal fern, Handgelenk drehen. Rechte Hand aus dem Bild.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "hand_L": "01100",
+      "hand_R": "absent"
+     }
+    },
+    {
+     "id": "A_L_11100",
+     "block": "A",
+     "duration_s": 4,
+     "instruction_de": "Linke Hand: Daumen + Zeige- + Mittelfinger. Halten, dabei langsam durchs Bild bewegen, mal nah, mal fern, Handgelenk drehen. Rechte Hand aus dem Bild.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "hand_L": "11100",
+      "hand_R": "absent"
+     }
+    },
+    {
+     "id": "A_L_01110",
+     "block": "A",
+     "duration_s": 4,
+     "instruction_de": "Linke Hand: Zeige- + Mittel- + Ringfinger. Halten, dabei langsam durchs Bild bewegen, mal nah, mal fern, Handgelenk drehen. Rechte Hand aus dem Bild.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "hand_L": "01110",
+      "hand_R": "absent"
+     }
+    },
+    {
+     "id": "A_L_01111",
+     "block": "A",
+     "duration_s": 4,
+     "instruction_de": "Linke Hand: vier Finger, Daumen eingeklappt. Halten, dabei langsam durchs Bild bewegen, mal nah, mal fern, Handgelenk drehen. Rechte Hand aus dem Bild.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "hand_L": "01111",
+      "hand_R": "absent"
+     }
+    },
+    {
+     "id": "A_L_11111",
+     "block": "A",
+     "duration_s": 4,
+     "instruction_de": "Linke Hand: offene Hand. Halten, dabei langsam durchs Bild bewegen, mal nah, mal fern, Handgelenk drehen. Rechte Hand aus dem Bild.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "hand_L": "11111",
+      "hand_R": "absent"
+     }
+    },
+    {
+     "id": "A_L_00001",
+     "block": "A",
+     "duration_s": 4,
+     "instruction_de": "Linke Hand: nur kleiner Finger. Halten, dabei langsam durchs Bild bewegen, mal nah, mal fern, Handgelenk drehen. Rechte Hand aus dem Bild.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "hand_L": "00001",
+      "hand_R": "absent"
+     }
+    },
+    {
+     "id": "A_L_10001",
+     "block": "A",
+     "duration_s": 4,
+     "instruction_de": "Linke Hand: Daumen + kleiner Finger. Halten, dabei langsam durchs Bild bewegen, mal nah, mal fern, Handgelenk drehen. Rechte Hand aus dem Bild.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "hand_L": "10001",
+      "hand_R": "absent"
+     }
+    },
+    {
+     "id": "A_L_01001",
+     "block": "A",
+     "duration_s": 4,
+     "instruction_de": "Linke Hand: Zeigefinger + kleiner Finger. Halten, dabei langsam durchs Bild bewegen, mal nah, mal fern, Handgelenk drehen. Rechte Hand aus dem Bild.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "hand_L": "01001",
+      "hand_R": "absent"
+     }
+    },
+    {
+     "id": "A_both_11000_11111",
+     "block": "A",
+     "duration_s": 4,
+     "instruction_de": "Beide Hände. Rechts: Daumen + Zeigefinger. Links: offene Hand. Halten, dabei langsam durchs Bild bewegen, mal nah, mal fern, Handgelenk drehen.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "hand_R": "11000",
+      "hand_L": "11111"
+     }
+    },
+    {
+     "id": "A_both_01000_00000",
+     "block": "A",
+     "duration_s": 4,
+     "instruction_de": "Beide Hände. Rechts: nur Zeigefinger. Links: Faust. Halten, dabei langsam durchs Bild bewegen, mal nah, mal fern, Handgelenk drehen.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "hand_R": "01000",
+      "hand_L": "00000"
+     }
+    },
+    {
+     "id": "A_both_11111_11111",
+     "block": "A",
+     "duration_s": 4,
+     "instruction_de": "Beide Hände. Rechts: offene Hand. Links: offene Hand. Halten, dabei langsam durchs Bild bewegen, mal nah, mal fern, Handgelenk drehen.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "hand_R": "11111",
+      "hand_L": "11111"
+     }
+    },
+    {
+     "id": "A_both_00000_00000",
+     "block": "A",
+     "duration_s": 4,
+     "instruction_de": "Beide Hände. Rechts: Faust. Links: Faust. Halten, dabei langsam durchs Bild bewegen, mal nah, mal fern, Handgelenk drehen.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "hand_R": "00000",
+      "hand_L": "00000"
+     }
+    },
+    {
+     "id": "A_both_01100_10000",
+     "block": "A",
+     "duration_s": 4,
+     "instruction_de": "Beide Hände. Rechts: Zeige- + Mittelfinger. Links: nur Daumen. Halten, dabei langsam durchs Bild bewegen, mal nah, mal fern, Handgelenk drehen.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "hand_R": "01100",
+      "hand_L": "10000"
+     }
+    },
+    {
+     "id": "A_both_10001_01001",
+     "block": "A",
+     "duration_s": 4,
+     "instruction_de": "Beide Hände. Rechts: Daumen + kleiner Finger. Links: Zeigefinger + kleiner Finger. Halten, dabei langsam durchs Bild bewegen, mal nah, mal fern, Handgelenk drehen.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "hand_R": "10001",
+      "hand_L": "01001"
+     }
+    },
+    {
+     "id": "C_neutral",
+     "block": "C",
+     "duration_s": 6,
+     "instruction_de": "Neutral in die Kamera schauen, Hände unten.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "face": "neutral"
+     }
+    },
+    {
+     "id": "C_mouth_sweep",
+     "block": "C",
+     "duration_s": 12,
+     "instruction_de": "Mund langsam auf und zu, 4 s pro Zyklus, 3 Zyklen.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "face": "mouth_sweep"
+     }
+    },
+    {
+     "id": "C_mouth_wide",
+     "block": "C",
+     "duration_s": 6,
+     "instruction_de": "Mund weit offen halten.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "face": "mouth_wide"
+     }
+    },
+    {
+     "id": "C_blink",
+     "block": "C",
+     "duration_s": 6,
+     "instruction_de": "Normal blinzeln, etwa einmal pro Sekunde.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "face": "blink"
+     }
+    },
+    {
+     "id": "C_wink_L",
+     "block": "C",
+     "duration_s": 6,
+     "instruction_de": "Linkes Auge zu, rechtes offen.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "face": "wink_L"
+     }
+    },
+    {
+     "id": "C_wink_R",
+     "block": "C",
+     "duration_s": 6,
+     "instruction_de": "Rechtes Auge zu, linkes offen.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "face": "wink_R"
+     }
+    },
+    {
+     "id": "C_eyes_closed",
+     "block": "C",
+     "duration_s": 6,
+     "instruction_de": "Beide Augen zu halten.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "face": "eyes_closed"
+     }
+    },
+    {
+     "id": "C_smile",
+     "block": "C",
+     "duration_s": 6,
+     "instruction_de": "Breit lächeln.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "face": "smile"
+     }
+    },
+    {
+     "id": "C_yaw_sweep",
+     "block": "C",
+     "duration_s": 12,
+     "instruction_de": "Kopf langsam links und rechts drehen, 4 s pro Zyklus.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "face": "yaw_sweep"
+     }
+    },
+    {
+     "id": "C_pitch_sweep",
+     "block": "C",
+     "duration_s": 12,
+     "instruction_de": "Kopf langsam hoch und runter nicken, 4 s pro Zyklus.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "face": "pitch_sweep"
+     }
+    },
+    {
+     "id": "C_roll_sweep",
+     "block": "C",
+     "duration_s": 12,
+     "instruction_de": "Kopf zur Schulter neigen, links und rechts, 4 s pro Zyklus.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "face": "roll_sweep"
+     }
+    },
+    {
+     "id": "C_turned_mouth",
+     "block": "C",
+     "duration_s": 12,
+     "instruction_de": "Kopf 45 Grad zur Seite, dabei Mund auf und zu.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "face": "turned_mouth"
+     }
+    },
+    {
+     "id": "E_mug",
+     "block": "E",
+     "duration_s": 20,
+     "instruction_de": "Objekt: Tasse. Halten, drehen, durchs Bild bewegen, ablegen, wieder aufnehmen, kurz aus dem Bild.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "objects": [
+       "mug"
+      ]
+     }
+    },
+    {
+     "id": "E_phone",
+     "block": "E",
+     "duration_s": 20,
+     "instruction_de": "Objekt: Handy. Halten, drehen, durchs Bild bewegen, ablegen, wieder aufnehmen, kurz aus dem Bild.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "objects": [
+       "phone"
+      ]
+     }
+    },
+    {
+     "id": "E_pen",
+     "block": "E",
+     "duration_s": 20,
+     "instruction_de": "Objekt: Stift oder Drumstick. Halten, drehen, durchs Bild bewegen, ablegen, wieder aufnehmen, kurz aus dem Bild.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "objects": [
+       "pen"
+      ]
+     }
+    },
+    {
+     "id": "F_hand_over_face",
+     "block": "F",
+     "duration_s": 8,
+     "instruction_de": "Rechte Hand vor das Gesicht halten und bewegen.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "hard_case": "hand_over_face"
+     }
+    },
+    {
+     "id": "F_hands_overlap",
+     "block": "F",
+     "duration_s": 8,
+     "instruction_de": "Beide Hände überlappen, Finger verschränken, lösen.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "hard_case": "hands_overlap"
+     }
+    },
+    {
+     "id": "F_fast_moves",
+     "block": "F",
+     "duration_s": 8,
+     "instruction_de": "Hände schnell bewegen, wechselnde Gesten.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "hard_case": "fast_moves"
+     }
+    },
+    {
+     "id": "F_hand_edge",
+     "block": "F",
+     "duration_s": 8,
+     "instruction_de": "Hand halb aus dem Bildrand, rein und raus.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "hard_case": "hand_edge"
+     }
+    },
+    {
+     "id": "F_backlit",
+     "block": "F",
+     "duration_s": 8,
+     "instruction_de": "Wenn möglich: Licht von hinten (Fenster/Lampe hinter dir), Gesten zeigen.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "hard_case": "backlit"
+     }
+    },
+    {
+     "id": "F_dim",
+     "block": "F",
+     "duration_s": 8,
+     "instruction_de": "Licht dimmen oder Lampe aus, Gesten zeigen.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "hard_case": "dim"
+     }
+    }
+   ]
+  }
+ }
+}
