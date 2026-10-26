@@ -1,0 +1,28 @@
+# Private material: gated hackathon pages, credentials, notes
+private/
+.env
+.env.*
+
+# Recordings and datasets contain faces and hands: never commit them
+data/
+recordings/
+*.mov
+*.mp4
+
+# Model artifacts are published as release assets, not in git
+*.mlpackage/
+*.mlmodelc/
+*.onnx
+*.pt
+*.pth
+*.safetensors
+
+# Build output
+target/
+build/
+dist/
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
+graphify-out/
