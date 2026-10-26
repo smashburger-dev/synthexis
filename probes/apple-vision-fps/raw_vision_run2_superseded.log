@@ -1,0 +1,11 @@
+=== vision probe Mon Oct 26 22:29:14 CET 2026 ===
+2026-10-26 22:29:15.625 vision_probe[93004:1361139] FBBA: creating VNFaceBBoxAligner from VNFaceDetectorRevision2: VNFaceDetectorRevision2
+frames 300
+RESULT hand median_ms=17.419 p95_ms=30.147
+RESULT face median_ms=14.547 p95_ms=28.362
+RESULT body median_ms=15.476 p95_ms=20.638
+RESULT seg_fast median_ms=9.163 p95_ms=36.977
+RESULT seg_bal median_ms=28.671 p95_ms=84.950
+RESULT combo median_ms=0.610 p95_ms=4.000
+SANITY frac_hand=1.000 frac_face=1.000 frac_body=0.097
+=== end Mon Oct 26 22:29:47 CET 2026 ===

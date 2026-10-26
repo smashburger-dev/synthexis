@@ -1,0 +1,26 @@
+=== bench start Mon Oct 26 22:27:11 CET 2026 ===
+RESULT model=S1_256.mlmodelc units=cpuOnly load_ms=168.28 first_pred_ms=8.74 median_ms=3.710 p95_ms=5.665 p99_ms=6.564
+RESULT model=S1_256.mlmodelc units=cpuAndGPU load_ms=450.83 first_pred_ms=3230.40 median_ms=3.190 p95_ms=3.783 p99_ms=4.337
+RESULT model=S1_256.mlmodelc units=cpuAndNeuralEngine load_ms=691.74 first_pred_ms=4.17 median_ms=0.743 p95_ms=1.673 p99_ms=2.175
+RESULT model=S1_256.mlmodelc units=all load_ms=617.96 first_pred_ms=3.72 median_ms=0.734 p95_ms=1.292 p99_ms=1.921
+RESULT model=S1_320.mlmodelc units=cpuOnly load_ms=91.47 first_pred_ms=7.97 median_ms=5.967 p95_ms=6.980 p99_ms=9.967
+RESULT model=S1_320.mlmodelc units=cpuAndGPU load_ms=137.43 first_pred_ms=1053.69 median_ms=4.167 p95_ms=5.150 p99_ms=8.318
+RESULT model=S1_320.mlmodelc units=cpuAndNeuralEngine load_ms=769.26 first_pred_ms=5.27 median_ms=1.107 p95_ms=1.359 p99_ms=2.486
+RESULT model=S1_320.mlmodelc units=all load_ms=684.99 first_pred_ms=4.10 median_ms=1.527 p95_ms=4.055 p99_ms=8.957
+RESULT model=S2_256.mlmodelc units=cpuOnly load_ms=59.66 first_pred_ms=2.82 median_ms=1.628 p95_ms=2.241 p99_ms=2.837
+RESULT model=S2_256.mlmodelc units=cpuAndGPU load_ms=116.58 first_pred_ms=909.10 median_ms=2.188 p95_ms=2.810 p99_ms=3.298
+RESULT model=S2_256.mlmodelc units=cpuAndNeuralEngine load_ms=373.15 first_pred_ms=3.18 median_ms=0.482 p95_ms=0.592 p99_ms=0.661
+RESULT model=S2_256.mlmodelc units=all load_ms=407.68 first_pred_ms=3.08 median_ms=0.455 p95_ms=0.588 p99_ms=0.704
+RESULT model=S2_320.mlmodelc units=cpuOnly load_ms=57.08 first_pred_ms=3.98 median_ms=2.751 p95_ms=3.587 p99_ms=4.228
+RESULT model=S2_320.mlmodelc units=cpuAndGPU load_ms=100.42 first_pred_ms=308.43 median_ms=2.195 p95_ms=2.827 p99_ms=3.591
+RESULT model=S2_320.mlmodelc units=cpuAndNeuralEngine load_ms=410.99 first_pred_ms=4.34 median_ms=0.664 p95_ms=1.617 p99_ms=2.418
+RESULT model=S2_320.mlmodelc units=all load_ms=371.76 first_pred_ms=4.13 median_ms=0.671 p95_ms=1.098 p99_ms=1.479
+RESULT model=H1_128.mlmodelc units=cpuOnly load_ms=58.93 first_pred_ms=2.58 median_ms=0.772 p95_ms=1.483 p99_ms=2.375
+RESULT model=H1_128.mlmodelc units=cpuAndGPU load_ms=112.51 first_pred_ms=764.11 median_ms=1.961 p95_ms=2.775 p99_ms=3.797
+RESULT model=H1_128.mlmodelc units=cpuAndNeuralEngine load_ms=365.23 first_pred_ms=2.76 median_ms=0.375 p95_ms=0.550 p99_ms=0.741
+RESULT model=H1_128.mlmodelc units=all load_ms=465.08 first_pred_ms=2.91 median_ms=0.348 p95_ms=0.591 p99_ms=1.328
+RESULT model=H2_128.mlmodelc units=cpuOnly load_ms=79.38 first_pred_ms=1.52 median_ms=0.705 p95_ms=1.496 p99_ms=2.986
+RESULT model=H2_128.mlmodelc units=cpuAndGPU load_ms=122.62 first_pred_ms=1428.65 median_ms=2.775 p95_ms=3.877 p99_ms=4.447
+RESULT model=H2_128.mlmodelc units=cpuAndNeuralEngine load_ms=722.92 first_pred_ms=2.46 median_ms=0.350 p95_ms=0.475 p99_ms=0.659
+RESULT model=H2_128.mlmodelc units=all load_ms=727.57 first_pred_ms=2.47 median_ms=0.313 p95_ms=0.430 p99_ms=0.488
+=== bench end Mon Oct 26 22:28:12 CET 2026 ===

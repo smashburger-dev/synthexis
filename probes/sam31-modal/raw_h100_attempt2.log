@@ -1,0 +1,92 @@
+LOCAL_RUN_START_EPOCH 1793050029.030005
+✓ Initialized. View run at 
+https://modal.com/apps/smashburger-dev/main/ap-tWbbOSaDSum3rpSHsMJ89s
+✓ Created objects.
+├── ✓ Uploaded 
+│   /Users/no8/Desktop/life/Lifemaxxing/synthexis/probes/sam31-modal/sam31_probe
+│   .py
+├── ✓ Uploaded /Users/no8/Desktop/life/Lifemaxxing/synthexis/data/test_frames
+└── ✓ Created Function run_probe.
+FN_START_EPOCH 1793050043.758
+torch 2.10.0+cu128
+torch.version.cuda 12.8
+Stopping app - uncaught exception raised locally: ModuleNotFoundError("No module named 'pkg_resources'").
+gpu_name NVIDIA H100 80GB HBM3
+sam3_commit f1647e8d0c1d280991f4d1b7d974c2704537fe66
+Traceback (most recent call last):
+  File "/pkg/modal/_runtime/container_io_manager.py", line 987, in handle_input_exception
+    yield
+  File "/pkg/modal/_container_entrypoint.py", line 189, in run_input_sync
+    values = io_context.call_function_sync()
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/pkg/modal/_runtime/container_io_manager.py", line 266, in call_function_sync
+    expected_value_or_values = self.finalized_function.callable(*args, **kwargs)
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/sam31_probe.py", line 84, in run_probe
+    import sam3.model_builder as mb
+  File "/opt/sam3/sam3/__init__.py", line 5, in <module>
+    from .model_builder import build_sam3_image_model, build_sam3_predictor
+  File "/opt/sam3/sam3/model_builder.py", line 8, in <module>
+    import pkg_resources
+ModuleNotFoundError: No module named 'pkg_resources'
+╭───────────────────── Traceback (most recent call last) ──────────────────────╮
+│ /Users/no8/Desktop/life/Lifemaxxing/synthexis/probes/sam31-modal/sam31_probe │
+│ .py:237 in main                                                              │
+│                                                                              │
+│   236 def main():                                                            │
+│ ❱ 237 │   run_probe.remote()                                                 │
+│   238                                                                        │
+│                                                                              │
+│ /Users/no8/.cache/uv/archive-v0/g4Thm9Veywwa1CDB/lib/python3.13/site-package │
+│ s/modal/_object.py:49 in wrapped                                             │
+│                                                                              │
+│    48 │   │   await self.hydrate()                                           │
+│ ❱  49 │   │   return await method(self, *args, **kwargs)                     │
+│    50                                                                        │
+│                                                                              │
+│ /Users/no8/.cache/uv/archive-v0/g4Thm9Veywwa1CDB/lib/python3.13/site-package │
+│ s/modal/_functions.py:2081 in remote                                         │
+│                                                                              │
+│   2080 │   │                                                                 │
+│ ❱ 2081 │   │   return await self._call_function(args, kwargs)                │
+│   2082                                                                       │
+│                                                                              │
+│ /Users/no8/.cache/uv/archive-v0/g4Thm9Veywwa1CDB/lib/python3.13/site-package │
+│ s/modal/_functions.py:2018 in _call_function                                 │
+│                                                                              │
+│   2017 │   │                                                                 │
+│ ❱ 2018 │   │   return await invocation.run_function()                        │
+│   2019                                                                       │
+│                                                                              │
+│ /Users/no8/.cache/uv/archive-v0/g4Thm9Veywwa1CDB/lib/python3.13/site-package │
+│ s/modal/_functions.py:517 in run_function                                    │
+│                                                                              │
+│    516 │   │   │   # No more retries left.                                   │
+│ ❱  517 │   │   │   return await _process_result(                             │
+│    518 │   │   │   │   await_response.output.result, await_response.output.d │
+│                                                                              │
+│ /Users/no8/.cache/uv/archive-v0/g4Thm9Veywwa1CDB/lib/python3.13/site-package │
+│ s/modal/_utils/function_utils.py:572 in _process_result                      │
+│                                                                              │
+│   571 │   │   │                                                              │
+│ ❱ 572 │   │   │   raise exc_with_hints(exc)                                  │
+│   573                                                                        │
+│                                                                              │
+│     ...Remote call to Modal Function (ta-01M5X1RJQRPT2FSDAXKXFZQW8R)...      │
+│                                                                              │
+│ /root/sam31_probe.py:84 in run_probe                                         │
+│                                                                              │
+│ ❱ 84 import sam3.model_builder as mb                                         │
+│                                                                              │
+│                                                                              │
+│ /opt/sam3/sam3/__init__.py:5 in <module>                                     │
+│                                                                              │
+│ ❱ 5 from .model_builder import build_sam3_image_model, build_sam3_predictor  │
+│                                                                              │
+│                                                                              │
+│ /opt/sam3/sam3/model_builder.py:8 in <module>                                │
+│                                                                              │
+│ ❱ 8 import pkg_resources                                                     │
+│                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────╯
+ModuleNotFoundError: No module named 'pkg_resources'

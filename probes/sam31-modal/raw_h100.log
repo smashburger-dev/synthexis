@@ -1,0 +1,700 @@
+LOCAL_RUN_START_EPOCH 1793050504.733736
+✓ Initialized. View run at 
+https://modal.com/apps/smashburger-dev/main/ap-QlCLPXP22PtbT1YFp8UHkf
+✓ Created objects.
+├── ✓ Uploaded 
+│   /Users/no8/Desktop/life/Lifemaxxing/synthexis/probes/sam31-modal/sam31_probe
+│   .py
+├── ✓ Uploaded /Users/no8/Desktop/life/Lifemaxxing/synthexis/data/test_frames
+└── ✓ Created Function run_probe.
+FN_START_EPOCH 1793050574.255
+torch 2.10.0+cu128
+torch.version.cuda 12.8
+gpu_name NVIDIA H100 80GB HBM3
+sam3_commit f1647e8d0c1d280991f4d1b7d974c2704537fe66
+/opt/sam3/sam3/model_builder.py:8: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+/usr/local/lib/python3.12/site-packages/timm/models/layers/__init__.py:49: FutureWarning: Importing from timm.models.layers is deprecated, please import via timm.layers
+  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.layers", FutureWarning)
+MODEL_READY_EPOCH 1793050583.491
+image_model_build_s 6.80 fn_entry_to_ready_s 9.24
+image_model_params 840.5M
+frames 300
+IMAGE_MODE ms_med 59.56 ms_p95 61.49 fps 16.79 det_med 0 peak_mem_gib 5.10
+dynamic_multimask_via_stability is reset to False in the multiplex model
+[0m[32mINFO 2026-10-26 21:36:54,229 2 sam3_multiplex_base.py: 337:[0m `setting max_num_objects` to 16 -- creating num_obj_for_compile=1 objects for torch.compile cache
+video_predictor_build_s 10.16
+[0m[33mWARNING 2026-10-26 21:36:54,789 2 io_utils.py: 213:[0m frame names are not in "<frame_index>.<img_ext>" format: frame_names[:5]=['frame_0036.jpg', 'frame_0045.jpg', 'frame_0153.jpg', 'frame_0093.jpg', 'frame_0212.jpg'], falling back to lexicographic sort.
+
+[1Aframe loading (image folder) [rank=0]:   0%|          | 0/300 [00:00<?, ?it/s][0m[32mINFO 2026-10-26 21:36:54,877 2 sam3_base_predictor.py: 167:[0m started new session 818cbe63-b8b7-4345-b571-ac067dd2ed21
+[0m[32mINFO 2026-10-26 21:36:54,877 2 sam3_multiplex_tracking.py:1677:[0m Running add_prompt on frame 0
+
+[1Aframe loading (image folder) [rank=0]:   2%|▏         | 5/300 [00:00<00:07, 37.99it/s]
+[1Aframe loading (image folder) [rank=0]:   3%|▎         | 9/300 [00:00<00:07, 36.70it/s]
+[1Aframe loading (image folder) [rank=0]:   4%|▍         | 13/300 [00:00<00:07, 36.70it/s][0m[32mINFO 2026-10-26 21:36:55,193 2 sam3_multiplex_tracking.py:2320:[0m Running full VG propagation (reverse=False).
+
+
+[1A
+[1Apropagate_in_video:   0%|          | 0/300 [00:00<?, ?it/s][A
+[1Aframe loading (image folder) [rank=0]:   6%|▌         | 17/300 [00:00<00:15, 18.68it/s]
+[1Aframe loading (image folder) [rank=0]:   7%|▋         | 20/300 [00:00<00:15, 18.53it/s]
+
+[1A
+[1Apropagate_in_video:   0%|          | 1/300 [00:00<03:03,  1.63it/s][A
+[1Aframe loading (image folder) [rank=0]:   8%|▊         | 25/300 [00:01<00:11, 24.01it/s]
+[1Aframe loading (image folder) [rank=0]:  10%|▉         | 29/300 [00:01<00:09, 27.30it/s]
+[1Aframe loading (image folder) [rank=0]:  11%|█         | 33/300 [00:01<00:14, 17.85it/s]
+[1Aframe loading (image folder) [rank=0]:  12%|█▏        | 36/300 [00:01<00:14, 18.74it/s]
+
+propagate output keys ['frame_stats', 'out_binary_masks', 'out_boxes_xywh', 'out_obj_ids', 'out_probs']
+[1Apropagate_in_video:   6%|▌         | 17/300 [00:01<00:19, 14.80it/s][A
+[1Aframe loading (image folder) [rank=0]:  13%|█▎        | 40/300 [00:01<00:11, 22.37it/s]
+[1Aframe loading (image folder) [rank=0]:  15%|█▌        | 45/300 [00:01<00:09, 27.57it/s]
+[1Aframe loading (image folder) [rank=0]:  16%|█▋        | 49/300 [00:02<00:15, 16.45it/s]
+
+[1Apropagate_in_video:  11%|█         | 33/300 [00:02<00:14, 18.02it/s][A
+[1Aframe loading (image folder) [rank=0]:  18%|█▊        | 53/300 [00:02<00:12, 19.73it/s]
+[1Aframe loading (image folder) [rank=0]:  20%|█▉        | 59/300 [00:02<00:09, 25.90it/s]
+[1Aframe loading (image folder) [rank=0]:  22%|██▏       | 65/300 [00:02<00:11, 20.55it/s]
+[1Aframe loading (image folder) [rank=0]:  23%|██▎       | 68/300 [00:03<00:11, 19.69it/s]
+
+[1A
+[1Apropagate_in_video:  16%|█▋        | 49/300 [00:02<00:12, 19.35it/s][A
+[1Aframe loading (image folder) [rank=0]:  24%|██▍       | 73/300 [00:03<00:09, 24.04it/s]
+[1Aframe loading (image folder) [rank=0]:  26%|██▌       | 78/300 [00:03<00:07, 28.70it/s]
+[1Aframe loading (image folder) [rank=0]:  27%|██▋       | 82/300 [00:03<00:12, 17.51it/s]
+
+[1A
+[1Apropagate_in_video:  22%|██▏       | 65/300 [00:03<00:11, 20.18it/s][A
+[1Aframe loading (image folder) [rank=0]:  29%|██▊       | 86/300 [00:03<00:10, 20.49it/s]
+[1Aframe loading (image folder) [rank=0]:  30%|███       | 91/300 [00:04<00:08, 25.44it/s]
+[1Aframe loading (image folder) [rank=0]:  32%|███▏      | 96/300 [00:04<00:06, 29.98it/s]
+[1Aframe loading (image folder) [rank=0]:  34%|███▎      | 101/300 [00:04<00:10, 18.15it/s]
+
+[1A
+[1Apropagate_in_video:  27%|██▋       | 81/300 [00:04<00:10, 20.70it/s][A
+[1Aframe loading (image folder) [rank=0]:  36%|███▌      | 107/300 [00:04<00:08, 23.35it/s]
+[1Aframe loading (image folder) [rank=0]:  37%|███▋      | 112/300 [00:04<00:06, 27.41it/s]
+[1Aframe loading (image folder) [rank=0]:  39%|███▊      | 116/300 [00:05<00:10, 17.32it/s]
+
+[1A
+[1Apropagate_in_video:  32%|███▏      | 97/300 [00:05<00:09, 20.94it/s][A
+[1Aframe loading (image folder) [rank=0]:  40%|████      | 121/300 [00:05<00:08, 21.25it/s]
+[1Aframe loading (image folder) [rank=0]:  42%|████▏     | 127/300 [00:05<00:06, 26.57it/s]
+[1Aframe loading (image folder) [rank=0]:  44%|████▎     | 131/300 [00:06<00:09, 17.16it/s]
+
+[1A
+[1Apropagate_in_video:  38%|███▊      | 113/300 [00:05<00:08, 21.16it/s][A
+[1Aframe loading (image folder) [rank=0]:  45%|████▌     | 136/300 [00:06<00:07, 20.96it/s]
+[1Aframe loading (image folder) [rank=0]:  47%|████▋     | 142/300 [00:06<00:06, 26.20it/s]
+[1Aframe loading (image folder) [rank=0]:  49%|████▊     | 146/300 [00:06<00:08, 17.25it/s]
+
+[1A
+[1Apropagate_in_video:  43%|████▎     | 129/300 [00:06<00:08, 21.29it/s][A
+[1Aframe loading (image folder) [rank=0]:  50%|█████     | 150/300 [00:06<00:07, 20.02it/s]
+[1Aframe loading (image folder) [rank=0]:  52%|█████▏    | 156/300 [00:07<00:05, 25.64it/s]
+[1Aframe loading (image folder) [rank=0]:  54%|█████▎    | 161/300 [00:07<00:06, 20.13it/s]
+[1Aframe loading (image folder) [rank=0]:  55%|█████▌    | 165/300 [00:07<00:06, 19.43it/s]
+
+[1Apropagate_in_video:  48%|████▊     | 145/300 [00:07<00:07, 21.40it/s][A
+[1Aframe loading (image folder) [rank=0]:  57%|█████▋    | 170/300 [00:07<00:05, 23.90it/s]
+[1Aframe loading (image folder) [rank=0]:  58%|█████▊    | 175/300 [00:07<00:04, 28.30it/s]
+[1Aframe loading (image folder) [rank=0]:  60%|█████▉    | 179/300 [00:08<00:06, 17.44it/s]
+
+[1A
+[1Apropagate_in_video:  54%|█████▎    | 161/300 [00:08<00:06, 21.41it/s][A
+[1Aframe loading (image folder) [rank=0]:  61%|██████    | 182/300 [00:08<00:06, 19.03it/s]
+[1Aframe loading (image folder) [rank=0]:  62%|██████▏   | 187/300 [00:08<00:04, 23.84it/s]
+[1Aframe loading (image folder) [rank=0]:  64%|██████▍   | 193/300 [00:08<00:04, 26.75it/s]
+[1Aframe loading (image folder) [rank=0]:  66%|██████▌   | 197/300 [00:09<00:05, 17.66it/s]
+
+[1A
+[1Apropagate_in_video:  59%|█████▉    | 177/300 [00:08<00:05, 21.13it/s][A
+[1Aframe loading (image folder) [rank=0]:  67%|██████▋   | 201/300 [00:09<00:04, 20.72it/s]
+[1Aframe loading (image folder) [rank=0]:  69%|██████▊   | 206/300 [00:09<00:03, 25.09it/s]
+[1Aframe loading (image folder) [rank=0]:  70%|███████   | 210/300 [00:09<00:05, 16.76it/s]
+
+[1A
+[1Apropagate_in_video:  64%|██████▍   | 193/300 [00:09<00:05, 21.20it/s][A
+[1Aframe loading (image folder) [rank=0]:  71%|███████▏  | 214/300 [00:09<00:04, 19.82it/s]
+[1Aframe loading (image folder) [rank=0]:  73%|███████▎  | 219/300 [00:10<00:03, 24.53it/s]
+[1Aframe loading (image folder) [rank=0]:  75%|███████▍  | 224/300 [00:10<00:02, 27.59it/s]
+[1Aframe loading (image folder) [rank=0]:  76%|███████▌  | 228/300 [00:10<00:04, 17.47it/s]
+
+[1A
+[1Apropagate_in_video:  70%|██████▉   | 209/300 [00:10<00:04, 21.22it/s][A
+[1Aframe loading (image folder) [rank=0]:  78%|███████▊  | 233/300 [00:10<00:03, 21.50it/s]
+[1Aframe loading (image folder) [rank=0]:  79%|███████▉  | 238/300 [00:10<00:02, 25.67it/s]
+[1Aframe loading (image folder) [rank=0]:  81%|████████  | 242/300 [00:11<00:03, 16.36it/s]
+
+[1A
+[1Apropagate_in_video:  75%|███████▌  | 225/300 [00:11<00:03, 21.27it/s][A
+[1Aframe loading (image folder) [rank=0]:  82%|████████▏ | 245/300 [00:11<00:03, 18.00it/s]
+[1Aframe loading (image folder) [rank=0]:  83%|████████▎ | 249/300 [00:11<00:02, 21.00it/s]
+[1Aframe loading (image folder) [rank=0]:  85%|████████▍ | 254/300 [00:11<00:01, 26.02it/s]
+[1Aframe loading (image folder) [rank=0]:  86%|████████▌ | 258/300 [00:12<00:02, 16.75it/s]
+
+[1A
+[1Apropagate_in_video:  80%|████████  | 241/300 [00:11<00:02, 20.77it/s][A
+[1Aframe loading (image folder) [rank=0]:  87%|████████▋ | 261/300 [00:12<00:02, 18.30it/s]
+[1Aframe loading (image folder) [rank=0]:  88%|████████▊ | 265/300 [00:12<00:01, 21.31it/s]
+[1Aframe loading (image folder) [rank=0]:  90%|█████████ | 270/300 [00:12<00:01, 26.46it/s]
+[1Aframe loading (image folder) [rank=0]:  91%|█████████▏| 274/300 [00:12<00:01, 16.14it/s]
+
+[1Apropagate_in_video:  86%|████████▌ | 257/300 [00:12<00:02, 20.57it/s][A
+[1Aframe loading (image folder) [rank=0]:  93%|█████████▎| 278/300 [00:13<00:01, 19.35it/s]
+[1Aframe loading (image folder) [rank=0]:  94%|█████████▍| 283/300 [00:13<00:00, 24.39it/s]
+[1Aframe loading (image folder) [rank=0]:  96%|█████████▌| 288/300 [00:13<00:00, 29.23it/s]
+[1Aframe loading (image folder) [rank=0]:  97%|█████████▋| 292/300 [00:13<00:00, 17.01it/s]
+
+[1A
+[1Apropagate_in_video:  91%|█████████ | 273/300 [00:13<00:01, 20.51it/s][A
+[1Aframe loading (image folder) [rank=0]:  99%|█████████▉| 297/300 [00:13<00:00, 21.17it/s]
+[1Aframe loading (image folder) [rank=0]: 100%|██████████| 300/300 [00:13<00:00, 21.51it/s]
+
+
+[1Apropagate_in_video:  96%|█████████▋| 289/300 [00:14<00:00, 22.05it/s][A
+[1Apropagate_in_video: 100%|██████████| 300/300 [00:14<00:00, 21.36it/s]
+[0m[32mINFO 2026-10-26 21:37:09,240 2 sam3_base_predictor.py: 363:[0m propagation ended in session 818cbe63-b8b7-4345-b571-ac067dd2ed21
+[0m[32mINFO 2026-10-26 21:37:09,391 2 sam3_base_predictor.py: 467:[0m removed session 818cbe63-b8b7-4345-b571-ac067dd2ed21
+VIDEO_MODE hand frames 300 total_s 14.05 ms_per_frame 46.83 fps 21.36 tracked_objs_med 0
+[0m[33mWARNING 2026-10-26 21:37:09,391 2 io_utils.py: 213:[0m frame names are not in "<frame_index>.<img_ext>" format: frame_names[:5]=['frame_0036.jpg', 'frame_0045.jpg', 'frame_0153.jpg', 'frame_0093.jpg', 'frame_0212.jpg'], falling back to lexicographic sort.
+
+[1Aframe loading (image folder) [rank=0]:   0%|          | 0/300 [00:00<?, ?it/s][0m[32mINFO 2026-10-26 21:37:09,489 2 sam3_base_predictor.py: 167:[0m started new session 83a7661b-7551-42ba-b5d4-ac90db59dd93
+[0m[32mINFO 2026-10-26 21:37:09,489 2 sam3_multiplex_tracking.py:1677:[0m Running add_prompt on frame 0
+
+[1Aframe loading (image folder) [rank=0]:   2%|▏         | 6/300 [00:00<00:06, 48.85it/s][0m[32mINFO 2026-10-26 21:37:09,631 2 sam3_multiplex_tracking.py:2320:[0m Running full VG propagation (reverse=False).
+
+
+[1A
+[1Apropagate_in_video:   0%|          | 0/300 [00:00<?, ?it/s][A
+[1Aframe loading (image folder) [rank=0]:   4%|▎         | 11/300 [00:00<00:05, 48.79it/s]
+[1Aframe loading (image folder) [rank=0]:   6%|▌         | 17/300 [00:00<00:05, 47.55it/s]
+[1Aframe loading (image folder) [rank=0]:   7%|▋         | 22/300 [00:00<00:13, 20.01it/s]
+
+[1A
+[1Apropagate_in_video:   0%|          | 1/300 [00:00<03:11,  1.56it/s][A
+[1Aframe loading (image folder) [rank=0]:   9%|▉         | 27/300 [00:00<00:10, 25.18it/s]
+[1Aframe loading (image folder) [rank=0]:  11%|█         | 33/300 [00:01<00:11, 22.81it/s]
+[1Aframe loading (image folder) [rank=0]:  12%|█▏        | 37/300 [00:01<00:13, 19.00it/s]
+
+[1A
+propagate output keys ['frame_stats', 'out_binary_masks', 'out_boxes_xywh', 'out_obj_ids', 'out_probs']
+[1Apropagate_in_video:   6%|▌         | 17/300 [00:01<00:19, 14.35it/s][A
+[1Aframe loading (image folder) [rank=0]:  14%|█▍        | 42/300 [00:01<00:10, 23.59it/s]
+[1Aframe loading (image folder) [rank=0]:  16%|█▌        | 47/300 [00:01<00:08, 28.23it/s]
+[1Aframe loading (image folder) [rank=0]:  17%|█▋        | 51/300 [00:02<00:14, 17.64it/s]
+
+[1A
+[1Apropagate_in_video:  11%|█         | 33/300 [00:02<00:15, 17.66it/s][A
+[1Aframe loading (image folder) [rank=0]:  18%|█▊        | 55/300 [00:02<00:11, 20.62it/s]
+[1Aframe loading (image folder) [rank=0]:  20%|██        | 61/300 [00:02<00:09, 26.32it/s]
+[1Aframe loading (image folder) [rank=0]:  22%|██▏       | 65/300 [00:02<00:10, 22.92it/s]
+[1Aframe loading (image folder) [rank=0]:  23%|██▎       | 69/300 [00:03<00:12, 18.00it/s]
+
+[1A
+[1Apropagate_in_video:  16%|█▋        | 49/300 [00:02<00:12, 19.36it/s][A
+[1Aframe loading (image folder) [rank=0]:  25%|██▌       | 75/300 [00:03<00:09, 23.66it/s]
+[1Aframe loading (image folder) [rank=0]:  27%|██▋       | 81/300 [00:03<00:09, 21.96it/s]
+[1Aframe loading (image folder) [rank=0]:  28%|██▊       | 84/300 [00:03<00:11, 18.42it/s]
+
+[1A
+[1Apropagate_in_video:  22%|██▏       | 65/300 [00:03<00:11, 20.25it/s][A
+[1Aframe loading (image folder) [rank=0]:  30%|██▉       | 89/300 [00:03<00:09, 22.48it/s]
+[1Aframe loading (image folder) [rank=0]:  32%|███▏      | 95/300 [00:03<00:07, 28.04it/s]
+[1Aframe loading (image folder) [rank=0]:  33%|███▎      | 99/300 [00:04<00:11, 17.59it/s]
+
+[1A
+[1Apropagate_in_video:  27%|██▋       | 81/300 [00:04<00:10, 20.78it/s][A
+[1Aframe loading (image folder) [rank=0]:  34%|███▍      | 103/300 [00:04<00:09, 20.39it/s]
+[1Aframe loading (image folder) [rank=0]:  36%|███▌      | 107/300 [00:04<00:08, 23.55it/s]
+[1Aframe loading (image folder) [rank=0]:  37%|███▋      | 112/300 [00:05<00:10, 18.36it/s]
+[1Aframe loading (image folder) [rank=0]:  38%|███▊      | 115/300 [00:05<00:10, 18.25it/s]
+
+[1A
+[1Apropagate_in_video:  32%|███▏      | 97/300 [00:05<00:09, 20.96it/s][A
+[1Aframe loading (image folder) [rank=0]:  40%|███▉      | 119/300 [00:05<00:08, 21.49it/s]
+[1Aframe loading (image folder) [rank=0]:  41%|████▏     | 124/300 [00:05<00:06, 25.92it/s]
+[1Aframe loading (image folder) [rank=0]:  43%|████▎     | 128/300 [00:05<00:08, 21.35it/s]
+[1Aframe loading (image folder) [rank=0]:  44%|████▎     | 131/300 [00:06<00:09, 17.24it/s]
+
+[1Apropagate_in_video:  38%|███▊      | 113/300 [00:05<00:08, 20.80it/s][A
+[1Aframe loading (image folder) [rank=0]:  45%|████▌     | 136/300 [00:06<00:07, 21.81it/s]
+[1Aframe loading (image folder) [rank=0]:  47%|████▋     | 141/300 [00:06<00:05, 26.79it/s]
+[1Aframe loading (image folder) [rank=0]:  48%|████▊     | 145/300 [00:06<00:08, 18.99it/s]
+[1Aframe loading (image folder) [rank=0]:  49%|████▉     | 148/300 [00:06<00:08, 18.50it/s]
+
+[1A
+[1Apropagate_in_video:  43%|████▎     | 129/300 [00:06<00:08, 20.83it/s][A
+[1Aframe loading (image folder) [rank=0]:  51%|█████     | 153/300 [00:06<00:06, 23.18it/s]
+[1Aframe loading (image folder) [rank=0]:  53%|█████▎    | 159/300 [00:07<00:04, 29.15it/s]
+[1Aframe loading (image folder) [rank=0]:  54%|█████▍    | 163/300 [00:07<00:07, 17.90it/s]
+
+[1A
+[1Apropagate_in_video:  48%|████▊     | 145/300 [00:07<00:07, 20.98it/s][A
+[1Aframe loading (image folder) [rank=0]:  56%|█████▌    | 167/300 [00:07<00:06, 20.85it/s]
+[1Aframe loading (image folder) [rank=0]:  58%|█████▊    | 173/300 [00:07<00:04, 26.75it/s]
+[1Aframe loading (image folder) [rank=0]:  59%|█████▉    | 177/300 [00:08<00:06, 19.28it/s]
+[1Aframe loading (image folder) [rank=0]:  60%|██████    | 180/300 [00:08<00:06, 18.79it/s]
+
+[1Apropagate_in_video:  54%|█████▎    | 161/300 [00:08<00:06, 21.36it/s][A
+[1Aframe loading (image folder) [rank=0]:  61%|██████▏   | 184/300 [00:08<00:05, 22.22it/s]
+[1Aframe loading (image folder) [rank=0]:  63%|██████▎   | 189/300 [00:08<00:04, 27.36it/s]
+[1Aframe loading (image folder) [rank=0]:  64%|██████▍   | 193/300 [00:08<00:04, 23.59it/s]
+[1Aframe loading (image folder) [rank=0]:  66%|██████▌   | 197/300 [00:09<00:05, 17.79it/s]
+
+[1Apropagate_in_video:  59%|█████▉    | 177/300 [00:08<00:05, 21.27it/s][A
+[1Aframe loading (image folder) [rank=0]:  67%|██████▋   | 202/300 [00:09<00:04, 22.59it/s]
+[1Aframe loading (image folder) [rank=0]:  69%|██████▉   | 207/300 [00:09<00:03, 26.89it/s]
+[1Aframe loading (image folder) [rank=0]:  70%|███████   | 211/300 [00:09<00:05, 16.78it/s]
+
+[1Apropagate_in_video:  64%|██████▍   | 193/300 [00:09<00:05, 21.27it/s][A
+[1Aframe loading (image folder) [rank=0]:  72%|███████▏  | 215/300 [00:09<00:04, 19.88it/s]
+[1Aframe loading (image folder) [rank=0]:  73%|███████▎  | 219/300 [00:09<00:03, 23.21it/s]
+[1Aframe loading (image folder) [rank=0]:  75%|███████▍  | 224/300 [00:10<00:04, 17.78it/s]
+[1Aframe loading (image folder) [rank=0]:  76%|███████▌  | 227/300 [00:10<00:04, 17.57it/s]
+
+[1Apropagate_in_video:  70%|██████▉   | 209/300 [00:10<00:04, 21.10it/s][A
+[1Aframe loading (image folder) [rank=0]:  77%|███████▋  | 231/300 [00:10<00:03, 20.65it/s]
+[1Aframe loading (image folder) [rank=0]:  79%|███████▊  | 236/300 [00:10<00:02, 25.11it/s]
+[1Aframe loading (image folder) [rank=0]:  80%|████████  | 240/300 [00:10<00:02, 26.87it/s]
+[1Aframe loading (image folder) [rank=0]:  81%|████████▏ | 244/300 [00:11<00:03, 17.19it/s]
+
+[1Apropagate_in_video:  75%|███████▌  | 225/300 [00:11<00:03, 20.81it/s][A
+[1Aframe loading (image folder) [rank=0]:  83%|████████▎ | 249/300 [00:11<00:02, 21.54it/s]
+[1Aframe loading (image folder) [rank=0]:  85%|████████▍ | 254/300 [00:11<00:01, 26.20it/s]
+[1Aframe loading (image folder) [rank=0]:  86%|████████▌ | 258/300 [00:12<00:02, 16.65it/s]
+
+[1A
+[1Apropagate_in_video:  80%|████████  | 241/300 [00:11<00:02, 20.89it/s][A
+[1Aframe loading (image folder) [rank=0]:  87%|████████▋ | 262/300 [00:12<00:01, 19.65it/s]
+[1Aframe loading (image folder) [rank=0]:  89%|████████▉ | 267/300 [00:12<00:01, 23.92it/s]
+[1Aframe loading (image folder) [rank=0]:  91%|█████████ | 272/300 [00:12<00:01, 27.98it/s]
+[1Aframe loading (image folder) [rank=0]:  92%|█████████▏| 276/300 [00:12<00:01, 16.42it/s]
+
+[1A
+[1Apropagate_in_video:  86%|████████▌ | 257/300 [00:12<00:02, 20.83it/s][A
+[1Aframe loading (image folder) [rank=0]:  94%|█████████▎| 281/300 [00:13<00:00, 20.41it/s]
+[1Aframe loading (image folder) [rank=0]:  95%|█████████▌| 286/300 [00:13<00:00, 24.39it/s]
+[1Aframe loading (image folder) [rank=0]:  97%|█████████▋| 290/300 [00:13<00:00, 16.28it/s]
+
+[1A
+[1Apropagate_in_video:  91%|█████████ | 273/300 [00:13<00:01, 20.67it/s][A
+[1Aframe loading (image folder) [rank=0]:  98%|█████████▊| 294/300 [00:13<00:00, 19.23it/s]
+[1Aframe loading (image folder) [rank=0]: 100%|██████████| 300/300 [00:13<00:00, 24.98it/s]frame loading (image folder) [rank=0]: 100%|██████████| 300/300 [00:13<00:00, 21.69it/s]
+
+
+[1A
+[1Apropagate_in_video:  96%|█████████▋| 289/300 [00:14<00:00, 22.84it/s][A
+[1Apropagate_in_video: 100%|██████████| 300/300 [00:14<00:00, 21.39it/s]
+[0m[32mINFO 2026-10-26 21:37:23,655 2 sam3_base_predictor.py: 363:[0m propagation ended in session 83a7661b-7551-42ba-b5d4-ac90db59dd93
+[0m[32mINFO 2026-10-26 21:37:23,858 2 sam3_base_predictor.py: 467:[0m removed session 83a7661b-7551-42ba-b5d4-ac90db59dd93
+VIDEO_4PROMPT hand frames 300 total_s 14.02 ms_per_frame 46.75 fps 21.39 tracked_objs_med 0
+[0m[33mWARNING 2026-10-26 21:37:23,859 2 io_utils.py: 213:[0m frame names are not in "<frame_index>.<img_ext>" format: frame_names[:5]=['frame_0036.jpg', 'frame_0045.jpg', 'frame_0153.jpg', 'frame_0093.jpg', 'frame_0212.jpg'], falling back to lexicographic sort.
+
+[1Aframe loading (image folder) [rank=0]:   0%|          | 0/300 [00:00<?, ?it/s][0m[32mINFO 2026-10-26 21:37:23,942 2 sam3_base_predictor.py: 167:[0m started new session 83e4a152-5ccd-4ce5-8430-b76891a2ef0c
+[0m[32mINFO 2026-10-26 21:37:23,943 2 sam3_multiplex_tracking.py:1677:[0m Running add_prompt on frame 0
+
+[1Aframe loading (image folder) [rank=0]:   2%|▏         | 6/300 [00:00<00:05, 55.79it/s][0m[32mINFO 2026-10-26 21:37:24,084 2 sam3_multiplex_tracking.py:2320:[0m Running full VG propagation (reverse=False).
+
+
+[1A
+[1Apropagate_in_video:   0%|          | 0/300 [00:00<?, ?it/s][A
+[1Aframe loading (image folder) [rank=0]:   4%|▍         | 12/300 [00:00<00:05, 51.34it/s]
+[1Aframe loading (image folder) [rank=0]:   6%|▌         | 18/300 [00:00<00:13, 20.24it/s]
+
+[1A
+[1Apropagate_in_video:   0%|          | 1/300 [00:00<03:07,  1.59it/s][A
+[1Aframe loading (image folder) [rank=0]:   7%|▋         | 22/300 [00:00<00:11, 23.41it/s]
+[1Aframe loading (image folder) [rank=0]:   9%|▉         | 27/300 [00:00<00:09, 28.62it/s]
+[1Aframe loading (image folder) [rank=0]:  11%|█         | 32/300 [00:01<00:09, 29.25it/s]
+[1Aframe loading (image folder) [rank=0]:  12%|█▏        | 36/300 [00:01<00:14, 18.83it/s]
+
+propagate output keys ['frame_stats', 'out_binary_masks', 'out_boxes_xywh', 'out_obj_ids', 'out_probs']
+[1Apropagate_in_video:   6%|▌         | 17/300 [00:01<00:19, 14.22it/s][A
+[1Aframe loading (image folder) [rank=0]:  14%|█▎        | 41/300 [00:01<00:11, 23.05it/s]
+[1Aframe loading (image folder) [rank=0]:  15%|█▌        | 46/300 [00:01<00:09, 27.70it/s]
+[1Aframe loading (image folder) [rank=0]:  17%|█▋        | 50/300 [00:02<00:14, 17.20it/s]
+
+[1A
+[1Apropagate_in_video:  11%|█         | 33/300 [00:02<00:15, 17.66it/s][A
+[1Aframe loading (image folder) [rank=0]:  18%|█▊        | 54/300 [00:02<00:12, 20.11it/s]
+[1Aframe loading (image folder) [rank=0]:  20%|█▉        | 59/300 [00:02<00:09, 25.04it/s]
+[1Aframe loading (image folder) [rank=0]:  22%|██▏       | 65/300 [00:02<00:07, 29.52it/s]
+[1Aframe loading (image folder) [rank=0]:  23%|██▎       | 69/300 [00:03<00:12, 18.42it/s]
+
+[1A
+[1Apropagate_in_video:  16%|█▋        | 49/300 [00:02<00:13, 19.12it/s][A
+[1Aframe loading (image folder) [rank=0]:  24%|██▍       | 73/300 [00:03<00:10, 21.50it/s]
+[1Aframe loading (image folder) [rank=0]:  26%|██▌       | 78/300 [00:03<00:08, 26.29it/s]
+[1Aframe loading (image folder) [rank=0]:  27%|██▋       | 82/300 [00:03<00:12, 16.79it/s]
+
+[1A
+[1Apropagate_in_video:  22%|██▏       | 65/300 [00:03<00:11, 20.18it/s][A
+[1Aframe loading (image folder) [rank=0]:  29%|██▊       | 86/300 [00:03<00:10, 19.79it/s]
+[1Aframe loading (image folder) [rank=0]:  31%|███       | 92/300 [00:03<00:08, 25.80it/s]
+[1Aframe loading (image folder) [rank=0]:  33%|███▎      | 98/300 [00:04<00:09, 20.62it/s]
+[1Aframe loading (image folder) [rank=0]:  34%|███▍      | 102/300 [00:04<00:09, 20.23it/s]
+
+[1A
+[1Apropagate_in_video:  27%|██▋       | 81/300 [00:04<00:10, 20.63it/s][A
+[1Aframe loading (image folder) [rank=0]:  36%|███▌      | 107/300 [00:04<00:07, 24.68it/s]
+[1Aframe loading (image folder) [rank=0]:  37%|███▋      | 112/300 [00:04<00:06, 29.16it/s]
+[1Aframe loading (image folder) [rank=0]:  39%|███▊      | 116/300 [00:05<00:10, 17.50it/s]
+
+[1A
+[1Apropagate_in_video:  32%|███▏      | 97/300 [00:05<00:09, 21.05it/s][A
+[1Aframe loading (image folder) [rank=0]:  40%|████      | 121/300 [00:05<00:08, 21.55it/s]
+[1Aframe loading (image folder) [rank=0]:  42%|████▏     | 127/300 [00:05<00:06, 27.02it/s]
+[1Aframe loading (image folder) [rank=0]:  44%|████▎     | 131/300 [00:05<00:09, 17.32it/s]
+
+[1A
+[1Apropagate_in_video:  38%|███▊      | 113/300 [00:05<00:08, 21.28it/s][A
+[1Aframe loading (image folder) [rank=0]:  45%|████▌     | 135/300 [00:06<00:08, 20.15it/s]
+[1Aframe loading (image folder) [rank=0]:  47%|████▋     | 140/300 [00:06<00:06, 24.75it/s]
+[1Aframe loading (image folder) [rank=0]:  48%|████▊     | 145/300 [00:06<00:08, 19.25it/s]
+[1Aframe loading (image folder) [rank=0]:  49%|████▉     | 148/300 [00:06<00:08, 18.66it/s]
+
+[1A
+[1Apropagate_in_video:  43%|████▎     | 129/300 [00:06<00:08, 21.27it/s][A
+[1Aframe loading (image folder) [rank=0]:  51%|█████     | 152/300 [00:06<00:06, 22.01it/s]
+[1Aframe loading (image folder) [rank=0]:  52%|█████▏    | 157/300 [00:06<00:05, 26.75it/s]
+[1Aframe loading (image folder) [rank=0]:  54%|█████▎    | 161/300 [00:07<00:07, 19.04it/s]
+[1Aframe loading (image folder) [rank=0]:  55%|█████▍    | 164/300 [00:07<00:07, 18.59it/s]
+
+[1A
+[1Apropagate_in_video:  48%|████▊     | 145/300 [00:07<00:07, 21.27it/s][A
+[1Aframe loading (image folder) [rank=0]:  56%|█████▌    | 168/300 [00:07<00:06, 21.78it/s]
+[1Aframe loading (image folder) [rank=0]:  58%|█████▊    | 173/300 [00:07<00:04, 26.47it/s]
+[1Aframe loading (image folder) [rank=0]:  59%|█████▉    | 177/300 [00:08<00:07, 16.67it/s]
+
+[1A
+[1Apropagate_in_video:  54%|█████▎    | 161/300 [00:08<00:06, 21.38it/s][A
+[1Aframe loading (image folder) [rank=0]:  60%|██████    | 180/300 [00:08<00:06, 18.46it/s]
+[1Aframe loading (image folder) [rank=0]:  62%|██████▏   | 185/300 [00:08<00:04, 23.63it/s]
+[1Aframe loading (image folder) [rank=0]:  63%|██████▎   | 190/300 [00:08<00:03, 28.18it/s]
+[1Aframe loading (image folder) [rank=0]:  65%|██████▍   | 194/300 [00:08<00:06, 17.08it/s]
+
+[1A
+[1Apropagate_in_video:  59%|█████▉    | 177/300 [00:08<00:05, 21.01it/s][A
+[1Aframe loading (image folder) [rank=0]:  66%|██████▌   | 198/300 [00:09<00:05, 20.17it/s]
+[1Aframe loading (image folder) [rank=0]:  68%|██████▊   | 203/300 [00:09<00:03, 25.10it/s]
+[1Aframe loading (image folder) [rank=0]:  70%|██████▉   | 209/300 [00:09<00:04, 20.11it/s]
+[1Aframe loading (image folder) [rank=0]:  71%|███████   | 212/300 [00:09<00:04, 19.49it/s]
+
+[1A
+[1Apropagate_in_video:  64%|██████▍   | 193/300 [00:09<00:05, 21.23it/s][A
+[1Aframe loading (image folder) [rank=0]:  72%|███████▏  | 217/300 [00:09<00:03, 23.67it/s]
+[1Aframe loading (image folder) [rank=0]:  74%|███████▍  | 222/300 [00:09<00:02, 28.45it/s]
+[1Aframe loading (image folder) [rank=0]:  75%|███████▌  | 226/300 [00:10<00:03, 19.00it/s]
+[1Aframe loading (image folder) [rank=0]:  76%|███████▋  | 229/300 [00:10<00:03, 19.63it/s]
+
+[1A
+[1Apropagate_in_video:  70%|██████▉   | 209/300 [00:10<00:04, 21.23it/s][A
+[1Aframe loading (image folder) [rank=0]:  78%|███████▊  | 233/300 [00:10<00:02, 23.07it/s]
+[1Aframe loading (image folder) [rank=0]:  79%|███████▉  | 238/300 [00:10<00:02, 28.33it/s]
+[1Aframe loading (image folder) [rank=0]:  81%|████████  | 242/300 [00:11<00:03, 18.04it/s]
+[1Aframe loading (image folder) [rank=0]:  82%|████████▏ | 245/300 [00:11<00:02, 19.61it/s]
+
+[1Apropagate_in_video:  75%|███████▌  | 225/300 [00:11<00:03, 21.36it/s][A
+[1Aframe loading (image folder) [rank=0]:  83%|████████▎ | 249/300 [00:11<00:02, 23.21it/s]
+[1Aframe loading (image folder) [rank=0]:  85%|████████▍ | 254/300 [00:11<00:01, 28.46it/s]
+[1Aframe loading (image folder) [rank=0]:  86%|████████▌ | 258/300 [00:11<00:02, 16.98it/s]
+
+[1A
+[1Apropagate_in_video:  80%|████████  | 241/300 [00:11<00:02, 21.58it/s][A
+[1Aframe loading (image folder) [rank=0]:  87%|████████▋ | 262/300 [00:12<00:01, 20.18it/s]
+[1Aframe loading (image folder) [rank=0]:  89%|████████▉ | 267/300 [00:12<00:01, 25.19it/s]
+[1Aframe loading (image folder) [rank=0]:  91%|█████████ | 272/300 [00:12<00:00, 29.38it/s]
+[1Aframe loading (image folder) [rank=0]:  92%|█████████▏| 276/300 [00:12<00:01, 17.40it/s]
+
+[1Apropagate_in_video:  86%|████████▌ | 257/300 [00:12<00:02, 21.47it/s][A
+[1Aframe loading (image folder) [rank=0]:  93%|█████████▎| 280/300 [00:12<00:00, 20.65it/s]
+[1Aframe loading (image folder) [rank=0]:  95%|█████████▌| 285/300 [00:12<00:00, 25.35it/s]
+[1Aframe loading (image folder) [rank=0]:  96%|█████████▋| 289/300 [00:13<00:00, 18.47it/s]
+[1Aframe loading (image folder) [rank=0]:  97%|█████████▋| 292/300 [00:13<00:00, 18.13it/s]
+
+[1A
+[1Apropagate_in_video:  91%|█████████ | 273/300 [00:13<00:01, 21.39it/s][A
+[1Aframe loading (image folder) [rank=0]:  99%|█████████▊| 296/300 [00:13<00:00, 21.66it/s]
+[1Aframe loading (image folder) [rank=0]: 100%|██████████| 300/300 [00:13<00:00, 21.99it/s]
+
+
+[1A
+[1Apropagate_in_video:  96%|█████████▋| 289/300 [00:13<00:00, 23.26it/s][A
+[1Apropagate_in_video: 100%|██████████| 300/300 [00:13<00:00, 21.64it/s]
+[0m[32mINFO 2026-10-26 21:37:37,946 2 sam3_base_predictor.py: 363:[0m propagation ended in session 83e4a152-5ccd-4ce5-8430-b76891a2ef0c
+[0m[32mINFO 2026-10-26 21:37:38,155 2 sam3_base_predictor.py: 467:[0m removed session 83e4a152-5ccd-4ce5-8430-b76891a2ef0c
+VIDEO_4PROMPT face frames 300 total_s 13.86 ms_per_frame 46.21 fps 21.64 tracked_objs_med 0
+[0m[33mWARNING 2026-10-26 21:37:38,156 2 io_utils.py: 213:[0m frame names are not in "<frame_index>.<img_ext>" format: frame_names[:5]=['frame_0036.jpg', 'frame_0045.jpg', 'frame_0153.jpg', 'frame_0093.jpg', 'frame_0212.jpg'], falling back to lexicographic sort.
+
+[1Aframe loading (image folder) [rank=0]:   0%|          | 0/300 [00:00<?, ?it/s][0m[32mINFO 2026-10-26 21:37:38,242 2 sam3_base_predictor.py: 167:[0m started new session d1869ec1-7e85-4306-a8db-cc5e02be290b
+[0m[32mINFO 2026-10-26 21:37:38,243 2 sam3_multiplex_tracking.py:1677:[0m Running add_prompt on frame 0
+
+[1Aframe loading (image folder) [rank=0]:   2%|▏         | 6/300 [00:00<00:05, 55.56it/s][0m[32mINFO 2026-10-26 21:37:38,386 2 sam3_multiplex_tracking.py:2320:[0m Running full VG propagation (reverse=False).
+
+
+[1A
+[1Apropagate_in_video:   0%|          | 0/300 [00:00<?, ?it/s][A
+[1Aframe loading (image folder) [rank=0]:   4%|▍         | 12/300 [00:00<00:05, 49.82it/s]
+[1Aframe loading (image folder) [rank=0]:   6%|▌         | 18/300 [00:00<00:14, 20.09it/s]
+
+[1A
+[1Apropagate_in_video:   0%|          | 1/300 [00:00<03:07,  1.60it/s][A
+[1Aframe loading (image folder) [rank=0]:   7%|▋         | 22/300 [00:00<00:11, 23.46it/s]
+[1Aframe loading (image folder) [rank=0]:   9%|▉         | 28/300 [00:00<00:09, 30.08it/s]
+[1Aframe loading (image folder) [rank=0]:  11%|█         | 33/300 [00:01<00:12, 21.32it/s]
+[1Aframe loading (image folder) [rank=0]:  12%|█▏        | 37/300 [00:01<00:12, 20.60it/s]
+
+[1A
+propagate output keys ['frame_stats', 'out_binary_masks', 'out_boxes_xywh', 'out_obj_ids', 'out_probs']
+[1Apropagate_in_video:   6%|▌         | 17/300 [00:01<00:19, 14.36it/s][A
+[1Aframe loading (image folder) [rank=0]:  14%|█▍        | 43/300 [00:01<00:09, 26.38it/s]
+[1Aframe loading (image folder) [rank=0]:  16%|█▋        | 49/300 [00:02<00:12, 20.92it/s]
+[1Aframe loading (image folder) [rank=0]:  17%|█▋        | 52/300 [00:02<00:12, 20.05it/s]
+
+[1A
+[1Apropagate_in_video:  11%|█         | 33/300 [00:02<00:14, 17.95it/s][A
+[1Aframe loading (image folder) [rank=0]:  19%|█▊        | 56/300 [00:02<00:10, 23.17it/s]
+[1Aframe loading (image folder) [rank=0]:  20%|██        | 61/300 [00:02<00:08, 27.73it/s]
+[1Aframe loading (image folder) [rank=0]:  22%|██▏       | 65/300 [00:02<00:10, 23.43it/s]
+[1Aframe loading (image folder) [rank=0]:  23%|██▎       | 68/300 [00:03<00:13, 17.81it/s]
+
+[1A
+[1Apropagate_in_video:  16%|█▋        | 49/300 [00:02<00:13, 19.26it/s][A
+[1Aframe loading (image folder) [rank=0]:  24%|██▍       | 72/300 [00:03<00:10, 21.30it/s]
+[1Aframe loading (image folder) [rank=0]:  26%|██▌       | 78/300 [00:03<00:08, 27.55it/s]
+[1Aframe loading (image folder) [rank=0]:  27%|██▋       | 82/300 [00:03<00:12, 17.12it/s]
+
+[1Apropagate_in_video:  22%|██▏       | 65/300 [00:03<00:11, 20.11it/s][A
+[1Aframe loading (image folder) [rank=0]:  29%|██▊       | 86/300 [00:03<00:10, 20.16it/s]
+[1Aframe loading (image folder) [rank=0]:  30%|███       | 91/300 [00:03<00:08, 25.04it/s]
+[1Aframe loading (image folder) [rank=0]:  32%|███▏      | 96/300 [00:04<00:06, 29.45it/s]
+[1Aframe loading (image folder) [rank=0]:  33%|███▎      | 100/300 [00:04<00:11, 17.54it/s]
+
+[1A
+[1Apropagate_in_video:  27%|██▋       | 81/300 [00:04<00:10, 20.57it/s][A
+[1Aframe loading (image folder) [rank=0]:  35%|███▌      | 105/300 [00:04<00:09, 21.63it/s]
+[1Aframe loading (image folder) [rank=0]:  37%|███▋      | 110/300 [00:04<00:07, 26.35it/s]
+[1Aframe loading (image folder) [rank=0]:  38%|███▊      | 114/300 [00:05<00:11, 16.82it/s]
+
+[1A
+[1Apropagate_in_video:  32%|███▏      | 97/300 [00:05<00:09, 20.88it/s][A
+[1Aframe loading (image folder) [rank=0]:  39%|███▉      | 118/300 [00:05<00:09, 19.83it/s]
+[1Aframe loading (image folder) [rank=0]:  41%|████      | 123/300 [00:05<00:07, 24.67it/s]
+[1Aframe loading (image folder) [rank=0]:  43%|████▎     | 129/300 [00:05<00:06, 28.45it/s]
+[1Aframe loading (image folder) [rank=0]:  44%|████▍     | 133/300 [00:05<00:09, 18.38it/s]
+
+[1A
+[1Apropagate_in_video:  38%|███▊      | 113/300 [00:05<00:08, 20.99it/s][A
+[1Aframe loading (image folder) [rank=0]:  46%|████▌     | 138/300 [00:06<00:07, 22.27it/s]
+[1Aframe loading (image folder) [rank=0]:  48%|████▊     | 144/300 [00:06<00:05, 27.59it/s]
+[1Aframe loading (image folder) [rank=0]:  49%|████▉     | 148/300 [00:06<00:08, 17.51it/s]
+
+[1A
+[1Apropagate_in_video:  43%|████▎     | 129/300 [00:06<00:08, 21.15it/s][A
+[1Aframe loading (image folder) [rank=0]:  51%|█████     | 152/300 [00:06<00:07, 20.51it/s]
+[1Aframe loading (image folder) [rank=0]:  52%|█████▏    | 157/300 [00:06<00:05, 24.66it/s]
+[1Aframe loading (image folder) [rank=0]:  54%|█████▎    | 161/300 [00:07<00:06, 20.40it/s]
+[1Aframe loading (image folder) [rank=0]:  55%|█████▍    | 164/300 [00:07<00:07, 17.40it/s]
+
+[1A
+[1Apropagate_in_video:  48%|████▊     | 145/300 [00:07<00:07, 21.27it/s][A
+[1Aframe loading (image folder) [rank=0]:  56%|█████▌    | 168/300 [00:07<00:06, 20.89it/s]
+[1Aframe loading (image folder) [rank=0]:  58%|█████▊    | 173/300 [00:07<00:04, 25.97it/s]
+[1Aframe loading (image folder) [rank=0]:  59%|█████▉    | 177/300 [00:08<00:06, 18.61it/s]
+[1Aframe loading (image folder) [rank=0]:  60%|██████    | 180/300 [00:08<00:06, 18.23it/s]
+
+[1A
+[1Apropagate_in_video:  54%|█████▎    | 161/300 [00:08<00:06, 21.29it/s][A
+[1Aframe loading (image folder) [rank=0]:  62%|██████▏   | 185/300 [00:08<00:05, 22.67it/s]
+[1Aframe loading (image folder) [rank=0]:  63%|██████▎   | 190/300 [00:08<00:04, 27.19it/s]
+[1Aframe loading (image folder) [rank=0]:  65%|██████▍   | 194/300 [00:08<00:06, 16.61it/s]
+
+[1A
+[1Apropagate_in_video:  59%|█████▉    | 177/300 [00:08<00:05, 21.12it/s][A
+[1Aframe loading (image folder) [rank=0]:  66%|██████▌   | 198/300 [00:09<00:05, 19.57it/s]
+[1Aframe loading (image folder) [rank=0]:  68%|██████▊   | 203/300 [00:09<00:03, 24.51it/s]
+[1Aframe loading (image folder) [rank=0]:  70%|██████▉   | 209/300 [00:09<00:04, 20.02it/s]
+[1Aframe loading (image folder) [rank=0]:  71%|███████   | 212/300 [00:09<00:04, 19.11it/s]
+
+[1A
+[1Apropagate_in_video:  64%|██████▍   | 193/300 [00:09<00:05, 21.24it/s][A
+[1Aframe loading (image folder) [rank=0]:  72%|███████▏  | 216/300 [00:09<00:03, 22.42it/s]
+[1Aframe loading (image folder) [rank=0]:  74%|███████▎  | 221/300 [00:09<00:02, 27.36it/s]
+[1Aframe loading (image folder) [rank=0]:  75%|███████▌  | 226/300 [00:10<00:03, 20.10it/s]
+[1Aframe loading (image folder) [rank=0]:  76%|███████▋  | 229/300 [00:10<00:03, 19.41it/s]
+
+[1A
+[1Apropagate_in_video:  70%|██████▉   | 209/300 [00:10<00:04, 21.16it/s][A
+[1Aframe loading (image folder) [rank=0]:  78%|███████▊  | 233/300 [00:10<00:02, 22.81it/s]
+[1Aframe loading (image folder) [rank=0]:  79%|███████▉  | 238/300 [00:10<00:02, 27.76it/s]
+[1Aframe loading (image folder) [rank=0]:  81%|████████  | 242/300 [00:11<00:03, 18.61it/s]
+[1Aframe loading (image folder) [rank=0]:  82%|████████▏ | 245/300 [00:11<00:02, 19.13it/s]
+
+[1A
+[1Apropagate_in_video:  75%|███████▌  | 225/300 [00:11<00:03, 21.28it/s][A
+[1Aframe loading (image folder) [rank=0]:  83%|████████▎ | 250/300 [00:11<00:02, 23.70it/s]
+[1Aframe loading (image folder) [rank=0]:  85%|████████▌ | 255/300 [00:11<00:01, 28.42it/s]
+[1Aframe loading (image folder) [rank=0]:  86%|████████▋ | 259/300 [00:11<00:02, 17.32it/s]
+
+[1A
+[1Apropagate_in_video:  80%|████████  | 241/300 [00:11<00:02, 21.35it/s][A
+[1Aframe loading (image folder) [rank=0]:  88%|████████▊ | 263/300 [00:12<00:01, 20.36it/s]
+[1Aframe loading (image folder) [rank=0]:  89%|████████▉ | 268/300 [00:12<00:01, 25.30it/s]
+[1Aframe loading (image folder) [rank=0]:  91%|█████████ | 273/300 [00:12<00:01, 23.97it/s]
+[1Aframe loading (image folder) [rank=0]:  92%|█████████▏| 277/300 [00:12<00:01, 17.84it/s]
+
+[1A
+[1Apropagate_in_video:  86%|████████▌ | 257/300 [00:12<00:02, 21.46it/s][A
+[1Aframe loading (image folder) [rank=0]:  94%|█████████▍| 282/300 [00:12<00:00, 22.34it/s]
+[1Aframe loading (image folder) [rank=0]:  96%|█████████▌| 287/300 [00:12<00:00, 26.97it/s]
+[1Aframe loading (image folder) [rank=0]:  97%|█████████▋| 291/300 [00:13<00:00, 17.19it/s]
+
+[1A
+[1Apropagate_in_video:  91%|█████████ | 273/300 [00:13<00:01, 21.34it/s][A
+[1Aframe loading (image folder) [rank=0]:  98%|█████████▊| 295/300 [00:13<00:00, 20.23it/s]
+[1Aframe loading (image folder) [rank=0]: 100%|██████████| 300/300 [00:13<00:00, 25.09it/s]frame loading (image folder) [rank=0]: 100%|██████████| 300/300 [00:13<00:00, 21.98it/s]
+
+
+[1A
+[1Apropagate_in_video:  96%|█████████▋| 289/300 [00:13<00:00, 23.60it/s][A
+[1Apropagate_in_video: 100%|██████████| 300/300 [00:13<00:00, 21.66it/s]
+[0m[32mINFO 2026-10-26 21:37:52,239 2 sam3_base_predictor.py: 363:[0m propagation ended in session d1869ec1-7e85-4306-a8db-cc5e02be290b
+[0m[32mINFO 2026-10-26 21:37:52,445 2 sam3_base_predictor.py: 467:[0m removed session d1869ec1-7e85-4306-a8db-cc5e02be290b
+VIDEO_4PROMPT mouth frames 300 total_s 13.85 ms_per_frame 46.18 fps 21.66 tracked_objs_med 0
+[0m[33mWARNING 2026-10-26 21:37:52,446 2 io_utils.py: 213:[0m frame names are not in "<frame_index>.<img_ext>" format: frame_names[:5]=['frame_0036.jpg', 'frame_0045.jpg', 'frame_0153.jpg', 'frame_0093.jpg', 'frame_0212.jpg'], falling back to lexicographic sort.
+
+[1Aframe loading (image folder) [rank=0]:   0%|          | 0/300 [00:00<?, ?it/s][0m[32mINFO 2026-10-26 21:37:52,532 2 sam3_base_predictor.py: 167:[0m started new session 81c35b51-caa8-4486-9fba-1291ce289a9b
+[0m[32mINFO 2026-10-26 21:37:52,533 2 sam3_multiplex_tracking.py:1677:[0m Running add_prompt on frame 0
+
+[1Aframe loading (image folder) [rank=0]:   2%|▏         | 6/300 [00:00<00:05, 54.14it/s][0m[32mINFO 2026-10-26 21:37:52,673 2 sam3_multiplex_tracking.py:2320:[0m Running full VG propagation (reverse=False).
+
+
+[1Apropagate_in_video:   0%|          | 0/300 [00:00<?, ?it/s][A
+[1Aframe loading (image folder) [rank=0]:   4%|▍         | 12/300 [00:00<00:05, 50.31it/s]
+[1Aframe loading (image folder) [rank=0]:   6%|▌         | 18/300 [00:00<00:14, 20.08it/s]
+
+[1A
+[1Apropagate_in_video:   0%|          | 1/300 [00:00<03:08,  1.59it/s][A
+[1Aframe loading (image folder) [rank=0]:   7%|▋         | 22/300 [00:00<00:11, 23.31it/s]
+[1Aframe loading (image folder) [rank=0]:   9%|▉         | 27/300 [00:00<00:09, 28.35it/s]
+[1Aframe loading (image folder) [rank=0]:  11%|█         | 32/300 [00:01<00:09, 29.72it/s]
+[1Aframe loading (image folder) [rank=0]:  12%|█▏        | 36/300 [00:01<00:14, 18.66it/s]
+
+propagate output keys ['frame_stats', 'out_binary_masks', 'out_boxes_xywh', 'out_obj_ids', 'out_probs']
+[1Apropagate_in_video:   6%|▌         | 17/300 [00:01<00:20, 14.15it/s][A
+[1Aframe loading (image folder) [rank=0]:  14%|█▎        | 41/300 [00:01<00:11, 22.84it/s]
+[1Aframe loading (image folder) [rank=0]:  16%|█▌        | 47/300 [00:01<00:08, 28.68it/s]
+[1Aframe loading (image folder) [rank=0]:  17%|█▋        | 51/300 [00:02<00:13, 17.97it/s]
+
+[1A
+[1Apropagate_in_video:  11%|█         | 33/300 [00:02<00:15, 17.60it/s][A
+[1Aframe loading (image folder) [rank=0]:  18%|█▊        | 55/300 [00:02<00:11, 20.90it/s]
+[1Aframe loading (image folder) [rank=0]:  20%|██        | 60/300 [00:02<00:09, 25.68it/s]
+[1Aframe loading (image folder) [rank=0]:  22%|██▏       | 65/300 [00:02<00:12, 19.57it/s]
+[1Aframe loading (image folder) [rank=0]:  23%|██▎       | 68/300 [00:03<00:12, 18.96it/s]
+
+[1Apropagate_in_video:  16%|█▋        | 49/300 [00:02<00:12, 19.40it/s][A
+[1Aframe loading (image folder) [rank=0]:  24%|██▍       | 73/300 [00:03<00:09, 23.36it/s]
+[1Aframe loading (image folder) [rank=0]:  26%|██▌       | 78/300 [00:03<00:07, 28.20it/s]
+[1Aframe loading (image folder) [rank=0]:  27%|██▋       | 82/300 [00:03<00:11, 18.71it/s]
+[1Aframe loading (image folder) [rank=0]:  28%|██▊       | 85/300 [00:03<00:10, 19.60it/s]
+
+[1A
+[1Apropagate_in_video:  22%|██▏       | 65/300 [00:03<00:11, 20.09it/s][A
+[1Aframe loading (image folder) [rank=0]:  30%|██▉       | 89/300 [00:03<00:09, 23.08it/s]
+[1Aframe loading (image folder) [rank=0]:  31%|███▏      | 94/300 [00:03<00:07, 28.40it/s]
+[1Aframe loading (image folder) [rank=0]:  33%|███▎      | 98/300 [00:04<00:11, 16.92it/s]
+
+[1A
+[1Apropagate_in_video:  27%|██▋       | 81/300 [00:04<00:10, 20.73it/s][A
+[1Aframe loading (image folder) [rank=0]:  34%|███▍      | 102/300 [00:04<00:09, 20.07it/s]
+[1Aframe loading (image folder) [rank=0]:  36%|███▌      | 107/300 [00:04<00:07, 25.17it/s]
+[1Aframe loading (image folder) [rank=0]:  37%|███▋      | 112/300 [00:04<00:06, 29.92it/s]
+[1Aframe loading (image folder) [rank=0]:  39%|███▉      | 117/300 [00:05<00:10, 17.84it/s]
+
+[1A
+[1Apropagate_in_video:  32%|███▏      | 97/300 [00:05<00:09, 20.96it/s][A
+[1Aframe loading (image folder) [rank=0]:  41%|████      | 122/300 [00:05<00:08, 22.16it/s]
+[1Aframe loading (image folder) [rank=0]:  42%|████▏     | 127/300 [00:05<00:06, 26.65it/s]
+[1Aframe loading (image folder) [rank=0]:  44%|████▎     | 131/300 [00:05<00:09, 16.97it/s]
+
+[1Apropagate_in_video:  38%|███▊      | 113/300 [00:05<00:08, 21.13it/s][A
+[1Aframe loading (image folder) [rank=0]:  45%|████▌     | 135/300 [00:06<00:08, 20.11it/s]
+[1Aframe loading (image folder) [rank=0]:  47%|████▋     | 140/300 [00:06<00:06, 24.78it/s]
+[1Aframe loading (image folder) [rank=0]:  48%|████▊     | 145/300 [00:06<00:07, 20.55it/s]
+[1Aframe loading (image folder) [rank=0]:  50%|████▉     | 149/300 [00:06<00:08, 18.68it/s]
+
+[1A
+[1Apropagate_in_video:  43%|████▎     | 129/300 [00:06<00:08, 21.22it/s][A
+[1Aframe loading (image folder) [rank=0]:  51%|█████▏    | 154/300 [00:06<00:06, 23.29it/s]
+[1Aframe loading (image folder) [rank=0]:  53%|█████▎    | 159/300 [00:06<00:05, 27.70it/s]
+[1Aframe loading (image folder) [rank=0]:  54%|█████▍    | 163/300 [00:07<00:08, 17.00it/s]
+
+[1Apropagate_in_video:  48%|████▊     | 145/300 [00:07<00:07, 21.23it/s][A
+[1Aframe loading (image folder) [rank=0]:  56%|█████▌    | 168/300 [00:07<00:06, 21.07it/s]
+[1Aframe loading (image folder) [rank=0]:  58%|█████▊    | 173/300 [00:07<00:04, 25.68it/s]
+[1Aframe loading (image folder) [rank=0]:  59%|█████▉    | 177/300 [00:07<00:05, 23.18it/s]
+[1Aframe loading (image folder) [rank=0]:  60%|██████    | 181/300 [00:08<00:06, 17.53it/s]
+
+[1A
+[1Apropagate_in_video:  54%|█████▎    | 161/300 [00:08<00:06, 21.19it/s][A
+[1Aframe loading (image folder) [rank=0]:  62%|██████▏   | 186/300 [00:08<00:05, 22.01it/s]
+[1Aframe loading (image folder) [rank=0]:  64%|██████▎   | 191/300 [00:08<00:04, 26.62it/s]
+[1Aframe loading (image folder) [rank=0]:  65%|██████▌   | 195/300 [00:08<00:06, 16.53it/s]
+
+[1Apropagate_in_video:  59%|█████▉    | 177/300 [00:08<00:05, 21.12it/s][A
+[1Aframe loading (image folder) [rank=0]:  66%|██████▋   | 199/300 [00:09<00:05, 19.71it/s]
+[1Aframe loading (image folder) [rank=0]:  68%|██████▊   | 204/300 [00:09<00:03, 24.48it/s]
+[1Aframe loading (image folder) [rank=0]:  70%|██████▉   | 209/300 [00:09<00:03, 23.43it/s]
+[1Aframe loading (image folder) [rank=0]:  71%|███████   | 213/300 [00:09<00:04, 17.64it/s]
+
+[1A
+[1Apropagate_in_video:  64%|██████▍   | 193/300 [00:09<00:05, 21.10it/s][A
+[1Aframe loading (image folder) [rank=0]:  73%|███████▎  | 218/300 [00:09<00:03, 22.21it/s]
+[1Aframe loading (image folder) [rank=0]:  74%|███████▍  | 223/300 [00:10<00:02, 26.84it/s]
+[1Aframe loading (image folder) [rank=0]:  76%|███████▌  | 227/300 [00:10<00:04, 17.13it/s]
+
+[1A
+[1Apropagate_in_video:  70%|██████▉   | 209/300 [00:10<00:04, 21.09it/s][A
+[1Aframe loading (image folder) [rank=0]:  77%|███████▋  | 231/300 [00:10<00:03, 20.06it/s]
+[1Aframe loading (image folder) [rank=0]:  79%|███████▊  | 236/300 [00:10<00:02, 24.73it/s]
+[1Aframe loading (image folder) [rank=0]:  80%|████████  | 241/300 [00:10<00:02, 21.97it/s]
+[1Aframe loading (image folder) [rank=0]:  82%|████████▏ | 245/300 [00:11<00:03, 18.18it/s]
+
+[1A
+[1Apropagate_in_video:  75%|███████▌  | 225/300 [00:11<00:03, 21.29it/s][A
+[1Aframe loading (image folder) [rank=0]:  84%|████████▎ | 251/300 [00:11<00:02, 23.69it/s]
+[1Aframe loading (image folder) [rank=0]:  85%|████████▌ | 256/300 [00:11<00:01, 28.10it/s]
+[1Aframe loading (image folder) [rank=0]:  87%|████████▋ | 260/300 [00:11<00:02, 17.54it/s]
+
+[1A
+[1Apropagate_in_video:  80%|████████  | 241/300 [00:11<00:02, 21.45it/s][A
+[1Aframe loading (image folder) [rank=0]:  88%|████████▊ | 265/300 [00:12<00:01, 21.63it/s]
+[1Aframe loading (image folder) [rank=0]:  90%|█████████ | 270/300 [00:12<00:01, 26.20it/s]
+[1Aframe loading (image folder) [rank=0]:  91%|█████████▏| 274/300 [00:12<00:01, 16.95it/s]
+
+[1A
+[1Apropagate_in_video:  86%|████████▌ | 257/300 [00:12<00:01, 21.54it/s][A
+[1Aframe loading (image folder) [rank=0]:  93%|█████████▎| 278/300 [00:12<00:01, 19.87it/s]
+[1Aframe loading (image folder) [rank=0]:  95%|█████████▍| 284/300 [00:12<00:00, 25.61it/s]
+[1Aframe loading (image folder) [rank=0]:  96%|█████████▋| 289/300 [00:13<00:00, 19.71it/s]
+[1Aframe loading (image folder) [rank=0]:  98%|█████████▊| 293/300 [00:13<00:00, 19.48it/s]
+
+[1Apropagate_in_video:  91%|█████████ | 273/300 [00:13<00:01, 21.57it/s][A
+[1Aframe loading (image folder) [rank=0]:  99%|█████████▉| 298/300 [00:13<00:00, 23.70it/s]
+[1Aframe loading (image folder) [rank=0]: 100%|██████████| 300/300 [00:13<00:00, 21.97it/s]
+
+
+[1Apropagate_in_video:  96%|█████████▋| 289/300 [00:13<00:00, 23.40it/s][A
+[1Apropagate_in_video: 100%|██████████| 300/300 [00:13<00:00, 21.64it/s]
+[0m[32mINFO 2026-10-26 21:38:06,539 2 sam3_base_predictor.py: 363:[0m propagation ended in session 81c35b51-caa8-4486-9fba-1291ce289a9b
+[0m[32mINFO 2026-10-26 21:38:06,741 2 sam3_base_predictor.py: 467:[0m removed session 81c35b51-caa8-4486-9fba-1291ce289a9b
+VIDEO_4PROMPT person frames 300 total_s 13.87 ms_per_frame 46.22 fps 21.64 tracked_objs_med 0
+VIDEO_4PROMPT_TOTAL_s 55.61
+VIDEO_MODE peak_mem_gib 23.21
+FN_END_EPOCH 1793050686.741
+Stopping app - local entrypoint completed.
+✓ App completed. View run at 
+https://modal.com/apps/smashburger-dev/main/ap-QlCLPXP22PtbT1YFp8UHkf

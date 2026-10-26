@@ -18,6 +18,9 @@ recordings/
 *.safetensors
 
 # Build output
+probes/coreml-student-latency/bench
+probes/coreml-student-latency/models/
+probes/apple-vision-fps/vision_probe
 target/
 build/
 dist/
