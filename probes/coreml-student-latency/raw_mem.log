@@ -1,0 +1,16 @@
+=== run Mon Oct 26 23:01:01 CET 2026
+MEM baseline_mb=1.8
+MEM after_load_mb=14.0 delta_mb=12.2
+MEM after_first_frame_mb=17.0 delta_mb=15.2
+PIPELINE seg=S2_256.mlmodelc hand=H2_128.mlmodelc frames=3000 median_ms=1.121 p95_ms=2.062 p99_ms=2.676 max_fps_at_p95=485
+MEM steady_peak_mb=17.7 delta_mb=15.9
+MEM baseline_mb=1.8
+MEM after_load_mb=14.6 delta_mb=12.7
+MEM after_first_frame_mb=17.7 delta_mb=15.8
+PIPELINE seg=S1_256.mlmodelc hand=H1_128.mlmodelc frames=3000 median_ms=2.083 p95_ms=5.319 p99_ms=8.409 max_fps_at_p95=188
+MEM steady_peak_mb=18.4 delta_mb=16.5
+MEM baseline_mb=1.8
+MEM after_load_mb=12.6 delta_mb=10.7
+MEM after_first_frame_mb=16.9 delta_mb=15.1
+PIPELINE seg=S2_320.mlmodelc hand=H2_128.mlmodelc frames=3000 median_ms=1.522 p95_ms=3.541 p99_ms=4.780 max_fps_at_p95=282
+MEM steady_peak_mb=17.7 delta_mb=15.8

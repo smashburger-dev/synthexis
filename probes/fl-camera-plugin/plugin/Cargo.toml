@@ -1,0 +1,32 @@
+[package]
+name = "synthexis-probe"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+
+[[bin]]
+name = "synthexis-probe"
+path = "src/main.rs"
+
+[dependencies]
+# nih-plug pinned to commit de42101 (2026-10-26 master)
+nih_plug = { git = "https://github.com/robbert-vdh/nih-plug.git", rev = "de421011f41a6d10fc8c7a6084e4f4dee0143683", features = ["standalone"] }
+nih_plug_egui = { git = "https://github.com/robbert-vdh/nih-plug.git", rev = "de421011f41a6d10fc8c7a6084e4f4dee0143683" }
+objc2 = "0.6"
+objc2-foundation = { version = "0.3", features = [
+    "NSString",
+    "NSArray",
+    "NSError",
+    "NSObject",
+] }
+objc2-av-foundation = "0.3"
+objc2-core-media = "0.3"
+objc2-core-video = "0.3"
+objc2-quartz-core = "0.3"
+block2 = "0.6"
+dispatch2 = "0.3"
+crossbeam-channel = "0.5"
+parking_lot = "0.12"

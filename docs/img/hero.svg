@@ -1,0 +1,138 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1280" height="600" viewBox="0 0 1280 600" font-family="Inter, 'SF Pro Text', -apple-system, 'Helvetica Neue', Arial, sans-serif">
+  <title>synthexis: hands, face and headphones drive plugin parameters and MIDI</title>
+  <defs>
+    <clipPath id="window"><rect width="1280" height="600" rx="16"/></clipPath>
+    <radialGradient id="lamp" cx="0.56" cy="0.3" r="0.6">
+      <stop offset="0" stop-color="#3a2f28"/>
+      <stop offset="0.55" stop-color="#241f1c"/>
+      <stop offset="1" stop-color="#1b1b1b"/>
+    </radialGradient>
+    <filter id="frost" x="-5%" y="-5%" width="110%" height="110%"><feGaussianBlur stdDeviation="9"/></filter>
+    <linearGradient id="field" x1="0" x2="1"><stop offset="0" stop-color="#fff" stop-opacity="0.15"/><stop offset="1" stop-color="#fff" stop-opacity="0.05"/></linearGradient>
+    <linearGradient id="kViolet" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#4b3f6b"/><stop offset="0.6" stop-color="#8a73c9"/><stop offset="1" stop-color="#c4adff"/></linearGradient>
+    <linearGradient id="kTeal" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#2f5a54"/><stop offset="0.6" stop-color="#4fa89a"/><stop offset="1" stop-color="#7fe0cf"/></linearGradient>
+    <linearGradient id="kAmber" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#5e4a2c"/><stop offset="0.6" stop-color="#b48a4c"/><stop offset="1" stop-color="#f0c27a"/></linearGradient>
+    <linearGradient id="toggleOn" x1="0" x2="1"><stop offset="0" stop-color="#5a4892"/><stop offset="1" stop-color="#5a4892" stop-opacity="0"/></linearGradient>
+    <clipPath id="cpTitle"><path d="M0 0H1280V36H0Z"/></clipPath>
+    <clipPath id="cpSignals"><rect x="24" y="56" width="330" height="316" rx="16"/></clipPath>
+    <clipPath id="cpInfo"><rect x="884" y="56" width="372" height="64" rx="16"/></clipPath>
+    <clipPath id="cpBar"><rect x="330" y="496" width="620" height="80" rx="16"/></clipPath>
+  </defs>
+
+  <g clip-path="url(#window)">
+    <!-- The work: camera frame with live masks and keypoints -->
+    <g id="work">
+      <rect width="1280" height="600" fill="url(#lamp)"/>
+      <!-- person -->
+      <path d="M420 600C430 500 500 440 600 440C700 440 770 500 780 600Z" fill="#2a2523"/>
+      <ellipse cx="600" cy="252" rx="86" ry="110" fill="#2c2725"/>
+      <!-- face masks (synthexis-seg classes) -->
+      <g fill="#7fe0cf">
+        <ellipse cx="600" cy="252" rx="80" ry="104" opacity="0.13"/>
+        <ellipse cx="571" cy="232" rx="17" ry="7" opacity="0.55"/>
+        <ellipse cx="629" cy="232" rx="17" ry="7" opacity="0.55"/>
+        <ellipse cx="600" cy="302" rx="25" ry="13" opacity="0.55"/>
+      </g>
+      <!-- mapping lines -->
+      <g fill="none" stroke="#fff" stroke-opacity="0.28" stroke-width="1.5" stroke-dasharray="5 6">
+        <path d="M884 362C760 470 560 470 412 506"/>
+        <path d="M600 316C596 400 530 450 502 506"/>
+      </g>
+      <!-- hand mask -->
+      <g opacity="0.22" fill="#c4adff" stroke="#c4adff" stroke-linejoin="round" stroke-linecap="round">
+        <path d="M845 420L830 380L850 310L882 304L912 310L938 324L920 420Z" stroke-width="30"/>
+        <polyline points="830,380 795,345 772,312 755,282" fill="none" stroke-width="30"/>
+        <polyline points="850,310 840,255 835,222 831,192" fill="none" stroke-width="28"/>
+        <polyline points="882,304 882,242 882,204 882,170" fill="none" stroke-width="28"/>
+        <polyline points="912,310 920,254 925,220 929,190" fill="none" stroke-width="27"/>
+        <polyline points="938,324 953,280 962,253 970,228" fill="none" stroke-width="24"/>
+      </g>
+      <!-- hand keypoints (synthexis-hand) -->
+      <g fill="none" stroke="#fff" stroke-opacity="0.6" stroke-width="1.5">
+        <polyline points="880,410 830,380 795,345 772,312 755,282"/>
+        <polyline points="880,410 850,310 840,255 835,222 831,192"/>
+        <polyline points="882,304 882,242 882,204 882,170"/>
+        <polyline points="912,310 920,254 925,220 929,190"/>
+        <polyline points="880,410 938,324 953,280 962,253 970,228"/>
+        <polyline points="850,310 882,304 912,310 938,324"/>
+      </g>
+      <g fill="#fff">
+        <circle cx="880" cy="410" r="3.5"/>
+        <circle cx="830" cy="380" r="3"/><circle cx="795" cy="345" r="3"/><circle cx="772" cy="312" r="3"/><circle cx="755" cy="282" r="3"/>
+        <circle cx="850" cy="310" r="3"/><circle cx="840" cy="255" r="3"/><circle cx="835" cy="222" r="3"/><circle cx="831" cy="192" r="3"/>
+        <circle cx="882" cy="304" r="3"/><circle cx="882" cy="242" r="3"/><circle cx="882" cy="204" r="3"/><circle cx="882" cy="170" r="3"/>
+        <circle cx="912" cy="310" r="3"/><circle cx="920" cy="254" r="3"/><circle cx="925" cy="220" r="3"/><circle cx="929" cy="190" r="3"/>
+        <circle cx="938" cy="324" r="3"/><circle cx="953" cy="280" r="3"/><circle cx="962" cy="253" r="3"/><circle cx="970" cy="228" r="3"/>
+      </g>
+    </g>
+
+    <!-- Title strip -->
+    <g clip-path="url(#cpTitle)"><use xlink:href="#work" filter="url(#frost)"/></g>
+    <rect width="1280" height="36" fill="#1e1e1e" fill-opacity="0.5"/>
+    <line x1="0" y1="36" x2="1280" y2="36" stroke="#fff" stroke-opacity="0.2"/>
+    <circle cx="24" cy="18" r="6" fill="#ff5f57"/><circle cx="44" cy="18" r="6" fill="#febc2e"/><circle cx="64" cy="18" r="6" fill="#28c840"/>
+    <text x="640" y="23" text-anchor="middle" font-size="14" font-weight="600" fill="#fff" fill-opacity="0.9">synthexis</text>
+    <text x="1256" y="23" text-anchor="end" font-size="12" fill="#fff" fill-opacity="0.4">FL Studio · Channel 4 · Pad</text>
+
+    <!-- Signals panel -->
+    <g clip-path="url(#cpSignals)"><use xlink:href="#work" filter="url(#frost)"/></g>
+    <rect x="24" y="56" width="330" height="316" rx="16" fill="#1e1e1e" fill-opacity="0.5" stroke="#fff" stroke-opacity="0.2"/>
+    <text x="40" y="84" font-size="15" font-weight="600" fill="#fff">Signals</text>
+    <text x="338" y="84" text-anchor="end" font-size="12" font-family="'Geist Mono', 'SF Mono', Menlo, monospace" fill="#fff" fill-opacity="0.4">cam0 · 30 fps</text>
+    <line x1="40" y1="96" x2="338" y2="96" stroke="#fff" stroke-opacity="0.2"/>
+    <g font-size="13">
+      <text x="40" y="122" fill="#fff" fill-opacity="0.56">hand.R.openness</text>
+      <text x="338" y="122" text-anchor="end" font-family="'Geist Mono', 'SF Mono', Menlo, monospace" fill="#fff" fill-opacity="0.8">0.72</text>
+      <rect x="40" y="130" width="298" height="6" rx="3" fill="#fff" fill-opacity="0.05"/><rect x="40" y="130" width="215" height="6" rx="3" fill="url(#field)"/>
+
+      <text x="40" y="162" fill="#fff" fill-opacity="0.56">hand.R.fingers</text>
+      <text x="338" y="162" text-anchor="end" font-family="'Geist Mono', 'SF Mono', Menlo, monospace" fill="#fff" fill-opacity="0.8">11000 · trap roll</text>
+      <g fill="#fff"><circle cx="44" cy="174" r="4" fill-opacity="0.8"/><circle cx="58" cy="174" r="4" fill-opacity="0.8"/><circle cx="72" cy="174" r="4" fill-opacity="0.15"/><circle cx="86" cy="174" r="4" fill-opacity="0.15"/><circle cx="100" cy="174" r="4" fill-opacity="0.15"/></g>
+
+      <text x="40" y="202" fill="#fff" fill-opacity="0.56">face.mouth.open</text>
+      <text x="338" y="202" text-anchor="end" font-family="'Geist Mono', 'SF Mono', Menlo, monospace" fill="#fff" fill-opacity="0.8">0.31</text>
+      <rect x="40" y="210" width="298" height="6" rx="3" fill="#fff" fill-opacity="0.05"/><rect x="40" y="210" width="92" height="6" rx="3" fill="url(#field)"/>
+
+      <text x="40" y="242" fill="#fff" fill-opacity="0.56">head.yaw · Powerbeats</text>
+      <text x="338" y="242" text-anchor="end" font-family="'Geist Mono', 'SF Mono', Menlo, monospace" fill="#fff" fill-opacity="0.8">−0.18</text>
+      <rect x="40" y="250" width="298" height="6" rx="3" fill="#fff" fill-opacity="0.05"/><rect x="40" y="250" width="122" height="6" rx="3" fill="url(#field)"/>
+
+      <text x="40" y="282" fill="#fff" fill-opacity="0.56">heart.rate</text>
+      <text x="338" y="282" text-anchor="end" font-family="'Geist Mono', 'SF Mono', Menlo, monospace" fill="#fff" fill-opacity="0.8">92 bpm</text>
+      <rect x="40" y="290" width="298" height="6" rx="3" fill="#fff" fill-opacity="0.05"/><rect x="40" y="290" width="137" height="6" rx="3" fill="url(#field)"/>
+
+      <text x="40" y="322" fill="#fff" fill-opacity="0.56">object.mug.angle</text>
+      <text x="338" y="322" text-anchor="end" font-family="'Geist Mono', 'SF Mono', Menlo, monospace" fill="#fff" fill-opacity="0.8">0.64</text>
+      <rect x="40" y="330" width="298" height="6" rx="3" fill="#fff" fill-opacity="0.05"/><rect x="40" y="330" width="191" height="6" rx="3" fill="url(#field)"/>
+    </g>
+
+    <!-- Model info -->
+    <g clip-path="url(#cpInfo)"><use xlink:href="#work" filter="url(#frost)"/></g>
+    <rect x="884" y="56" width="372" height="64" rx="16" fill="#1e1e1e" fill-opacity="0.5" stroke="#fff" stroke-opacity="0.2"/>
+    <text x="902" y="82" font-size="13" font-family="'Geist Mono', 'SF Mono', Menlo, monospace" fill="#fff" fill-opacity="0.8">SAM 3.1 → student · ~3M params</text>
+    <text x="902" y="104" font-size="12" font-family="'Geist Mono', 'SF Mono', Menlo, monospace" fill="#fff" fill-opacity="0.45">1.1 ms/frame · 16 MB · M1 Pro ANE</text>
+
+    <!-- Floating bar: ring knobs and toggles -->
+    <g clip-path="url(#cpBar)"><use xlink:href="#work" filter="url(#frost)"/></g>
+    <rect x="330" y="496" width="620" height="80" rx="16" fill="#1e1e1e" fill-opacity="0.5" stroke="#fff" stroke-opacity="0.2"/>
+    <g fill="none" stroke-linecap="round">
+      <path d="M390.25 540.14A24 24 0 1 1 433.75 540.14" stroke="#fff" stroke-opacity="0.15" stroke-width="1"/>
+      <path d="M390.25 540.14A24 24 0 0 1 430.55 514.77" stroke="url(#kViolet)" stroke-width="8"/>
+      <path d="M480.25 540.14A24 24 0 1 1 523.75 540.14" stroke="#fff" stroke-opacity="0.15" stroke-width="1"/>
+      <path d="M480.25 540.14A24 24 0 0 1 485.42 512.65" stroke="url(#kTeal)" stroke-width="8"/>
+      <path d="M570.25 540.14A24 24 0 1 1 613.75 540.14" stroke="#fff" stroke-opacity="0.15" stroke-width="1"/>
+      <path d="M570.25 540.14A24 24 0 0 1 586.28 506.69" stroke="url(#kAmber)" stroke-width="8"/>
+    </g>
+    <g font-size="12" fill="#fff" fill-opacity="0.5" text-anchor="middle">
+      <text x="412" y="568">Reverb</text><text x="502" y="568">Cutoff</text><text x="592" y="568">Delay</text>
+    </g>
+    <line x1="642" y1="510" x2="642" y2="562" stroke="#fff" stroke-opacity="0.2"/>
+    <rect x="660" y="522" width="86" height="28" rx="6" fill="none" stroke="#fff" stroke-opacity="0.25"/>
+    <text x="703" y="541" text-anchor="middle" font-size="12" fill="#fff" fill-opacity="0.4">Hi-hat</text>
+    <rect x="756" y="522" width="86" height="28" rx="6" fill="url(#toggleOn)" stroke="#c4adff" stroke-opacity="0.3" stroke-width="0.8"/>
+    <text x="799" y="541" text-anchor="middle" font-size="12" fill="#e2d6ff">Trap roll</text>
+    <line x1="858" y1="510" x2="858" y2="562" stroke="#fff" stroke-opacity="0.2"/>
+    <circle cx="880" cy="536" r="5" fill="#ff5f57"/>
+    <text x="892" y="541" font-size="12" fill="#fff" fill-opacity="0.8">REC</text>
+  </g>
+</svg>

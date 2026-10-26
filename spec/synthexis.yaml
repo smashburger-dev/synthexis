@@ -186,7 +186,8 @@ map:
   map.taxonomy: "about 40 parameter meanings: filter.cutoff, filter.resonance, amp.gain, fx.reverb.mix, fx.delay.mix, fx.delay.time, env.attack, env.release, osc.pitch, unison.detune, lfo.rate, macro, other, unsafe(master volume, output gain)"
   map.labeler: "Muse Spark Open (Baseten, meta-models/muse-spark-open-1026) labels harvested parameters with taxonomy + safe range"
   map.param_sense: "student: tiny text classifier (char n-gram hashing + linear/MLP, <= 1M params) in Rust, runs instantly offline for unseen plugins"
-  map.agent: "optional online: sentence -> route changes ('fist controls reverb on the pad') via Muse Spark Open tool calls against this graph"
+  map.agent: "online: typed or spoken sentence -> route changes ('fist controls reverb and delay on the pad, mouth opens the bass filter') via Muse Spark Open tool calls against this graph (find_params by meaning, add_route, set_conditioner). One sentence may create several routes. The result is shown as a diff in the route matrix; the user accepts, edits or undoes it. Everything stays editable by hand."
+  map.voice: "optional: push-to-talk through Muse Voice Transcribe realtime ($0.18 per hour of audio) feeding map.agent"
 
 # ---------------------------------------------------------------------------
 # 11. Data engine and distillation
@@ -234,7 +235,8 @@ decisions:
   D4: {topic: SAM 3.1 path, chosen: "open weights on Modal for bulk labels (SAM License allows derivatives and commercial use); Meta API for snapshots and a cross-check sample", why: "probe A: H100 video mode 46.8 ms/frame = $0.051 per 1000 frames (lower bound, random weights) vs API $0.20", status: proposed}
   D5: {topic: gesture labels, chosen: "labels from the recording script; Muse Spark Open only checks synthetic data", status: proposed}
   D6: {topic: parameter bridge, chosen: "macros + MIDI out everywhere; FL Python script for discovery and direct control", status: proposed}
-  D7: {topic: repo license, chosen: "open", note: "nih-plug's VST3 export pulls GPLv3 bindings; pick GPL-3.0 or switch VST3 to clap-wrapper (MIT SDK) before going public", status: needs-noa}
+  D7: {topic: repo license, chosen: "MIT for all source in this repo", note: "VST3 binaries built with nih-plug's VST3 wrapper link GPLv3 bindings, so those release binaries are GPLv3 combined works; CLAP builds and a later clap-wrapper VST3/AU (MIT VST3 SDK) stay MIT. Noa holds the copyright and can relicense.", status: decided, decided: 2026-10-26}
+  D8: {topic: design language, chosen: "design-glass tokens and the chiasma UI lessons (chiasma/docs/STYLE.md), implemented fresh in egui via the design-rust skill; no chiasma code copied (hackathon new-work rule)", status: decided, decided: 2026-10-26}
 
 # ---------------------------------------------------------------------------
 # 14. Probes (feasibility, measured on real hardware)

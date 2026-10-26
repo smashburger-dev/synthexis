@@ -1,12 +1,132 @@
+<p align="center">
+  <img src="docs/img/hero.svg" alt="synthexis plugin: camera view with hand keypoints and face masks driving Reverb, Cutoff and Delay knobs and a trap-roll pattern" width="100%">
+</p>
+
 # synthexis
 
-Camera, headphones and hands as a playable control layer for the plugins producers already own.
+Hands, face, headphones and everyday objects as a playable control layer for the plugins producers already own.
 
-synthexis is an audio plugin (VST3, AU, CLAP; Apple Silicon first) that watches one or more cameras, reads head motion and heart rate from Powerbeats Pro 2, and turns hands, face, body and objects into automation and MIDI inside the DAW. It does not ship its own synth. It bridges into the instruments and effects already in the project, starting with FL Studio.
+synthexis is an audio plugin (VST3, CLAP, later AU; Apple Silicon) for FL Studio. It watches one or more cameras, reads head motion and heart rate from Powerbeats Pro 2, and turns what it sees into automation and MIDI: open your fist and the reverb on your pad blooms, raise thumb and index finger and the hi-hat switches to a trap roll, turn your head and the delay sweeps. It has no synth of its own. It plays the instruments and effects already in your project, and FL Studio records every move.
 
-Perception runs locally in real time on a student model distilled from Meta's SAM 3.1. Meta's open-weight Muse Spark Open labels plugin parameters so gestures can be mapped to any instrument by meaning.
+> Built for the **Meta Global AI Developer Hackathon** (Oct 26 to Nov 4, 2026), Indie track, theme "Build for Your World". Everything in this repository was created during the event; the commit history starts on Oct 26.
 
-Status: planning. Built during the Meta Global AI Developer Hackathon (Oct 26 to Nov 4, 2026). Everything in this repository was created during the event.
+## Why Meta models
 
-- Plan and specification: [`spec/`](spec/) and [`docs/`](docs/)
-- Feasibility probes: [`probes/`](probes/)
+Live segmentation with SAM 3.1 from a plugin would cost $21.60 per hour per camera (30 fps x 3600 s x $0.20 per 1000 frames) plus a network round trip on every frame. synthexis distills SAM 3.1 into a student model of about 3M parameters that runs on the laptop's Neural Engine every frame, for free.
+
+| Meta model | Where | What it does in synthexis |
+|---|---|---|
+| SAM 3.1 (open weights) | Modal GPUs | Teacher: pixel masks for hands, face, eyes, mouth, body and objects on our recordings |
+| SAM 3.1 (Meta Model API) | in the plugin | Snapshot cut-outs that stay on the canvas as playable elements; cross-check of the teacher labels |
+| Muse Spark Open | Baseten | Labels what every plugin parameter means (cutoff, reverb mix, attack ...); runs the mapping agent |
+| Muse Image | Meta Model API | Renders diverse people, hands and rooms so the student does not only know one face |
+| Muse Glimmer 30B | Fireworks | Second labeler: a label survives only if Glimmer and Spark Open agree |
+| Muse Voice Transcribe | Meta Model API | Optional: say the mapping instead of typing it |
+
+## How it works
+
+```mermaid
+flowchart LR
+    subgraph inputs ["Inputs"]
+        cams[/"Cameras: built-in, USB, iPhone"/]
+        hp[/"Powerbeats head motion"/]
+        hr[/"Heart rate, BLE"/]
+    end
+    subgraph perception ["On-device perception, about 1 ms"]
+        seg["synthexis-seg student"]
+        hand["synthexis-hand student"]
+    end
+    subgraph core ["Signal core"]
+        feat["Features 0..1 + confidence"]
+        cond["Smoothing, hold, re-acquire"]
+        matrix["Route matrix"]
+    end
+    subgraph out ["Into the DAW"]
+        macros["32 automatable macros"]
+        midi["MIDI: patterns, chords, melodies"]
+        bridge["FL Python bridge"]
+    end
+    fl(["FL Studio + any plugin"])
+    sam["SAM 3.1 teacher"]
+    spark["Muse Spark Open"]
+
+    cams --> seg --> hand --> feat
+    seg --> feat
+    hp & hr --> feat
+    feat --> cond --> matrix --> macros & midi & bridge --> fl
+    sam -.->|"distills"| seg
+    spark -.->|"parameter meaning"| matrix
+```
+
+Every input speaks one contract: a value from 0 to 1, a confidence and the capture time. Every feature reuses the same conditioning chain, so new sources (a second camera, a sensor) plug in without new special cases. Perception never runs on the audio thread; the audio thread reads the latest values from a lock-free snapshot once per block.
+
+When a feature disappears (you turn your head and the camera loses your mouth), the value holds instead of snapping to zero, then glides back without a jump when the feature returns:
+
+```mermaid
+stateDiagram-v2
+    [*] --> Tracking
+    Tracking --> Holding: lost or low confidence
+    Holding --> Reacquiring: seen again
+    Holding --> Gliding: hold time over
+    Gliding --> Reacquiring: seen again
+    Gliding --> Resting: rest value reached
+    Resting --> Reacquiring: seen again
+    Reacquiring --> Tracking: gap closed
+```
+
+### The student models
+
+```mermaid
+flowchart LR
+    rec[/"Scripted recordings"/] --> samM["SAM 3.1 on Modal"] --> ds[("Masks + labels")]
+    rec --> script["Labels from the script"] --> ds
+    img[/"Muse Image people"/] --> samM
+    ds --> train["Train on Modal"] --> coreml["CoreML FP16"] --> gate{"Held-out eval gate"}
+    gate -->|"pass"| plugin(["Ships in the plugin"])
+    gate -->|"fail"| climb["Hill-climb"] -.-> rec
+```
+
+The recordings follow a script ([recording protocol](docs/recording-protocol.md)): each segment shows one known finger state, face action or object, so gesture labels come from the script and cannot be invented by a model. SAM 3.1 adds the masks.
+
+## Measured so far
+
+All on an M1 Pro (16 GB, macOS 27) or real Modal GPUs. Raw logs and exact commands are in each probe folder.
+
+| What | Result | Source |
+|---|---|---|
+| SAM 3.1 on Modal, H100 | 46.8 ms per video frame, 59.6 ms per image; $0.051 per 1000 frames (API: $0.20) | [probes/sam31-modal](probes/sam31-modal/RESULT.md) |
+| Student candidates on the Neural Engine | 0.35 to 0.74 ms per inference at 1.5M to 3.2M parameters | [probes/coreml-student-latency](probes/coreml-student-latency/RESULT.md) |
+| Full frame: seg + two hand crops | 1.12 ms median, 2.06 ms p95, +16 MB memory | [probes/coreml-student-latency](probes/coreml-student-latency/RESULT.md) |
+| Apple Vision for comparison | 18.4 ms hand pose, 29.6 ms hand + face + body | [probes/apple-vision-fps](probes/apple-vision-fps/RESULT.md) |
+| Camera inside a Rust plugin (standalone, night light) | works; 18.6 fps, about 100 ms capture latency, light-bound | [probes/fl-camera-plugin](probes/fl-camera-plugin/RESULT.md) |
+
+Student numbers use untrained weights; latency does not depend on weight values. The [hill-climb log](docs/hillclimb.md) tracks every change against these baselines.
+
+## Status
+
+- [x] Plan, feature inventory and decisions: [`spec/synthexis.yaml`](spec/synthexis.yaml), [`docs/plan.md`](docs/plan.md)
+- [x] Feasibility probes: SAM 3.1 on Modal, student latency, Apple Vision baseline, camera in a Rust plugin
+- [ ] Hardware probes in FL Studio: automation recording, MIDI out, FL Python bridge, Powerbeats motion and heart rate
+- [ ] Recordings and teacher labels
+- [ ] Students v1 and eval gate
+- [ ] Plugin: camera, signals, macros, gestures and MIDI, snapshot anchors, mapping agent
+- [ ] Demo video (3 min)
+
+Planning board with all diagrams: [FigJam](https://www.figma.com/board/WJIE59w34hCSTXuq3XpKGH).
+
+## Repository
+
+| Path | Content |
+|---|---|
+| `spec/` | single source of truth: features, signals, decisions, recording script |
+| `docs/` | plan, judging fit, recording protocol, hill-climb protocol, credit texts |
+| `probes/` | feasibility probes, each with code, `RESULT.md` and raw logs |
+| `tools/` | generators (recording script) |
+
+## Privacy
+
+Recordings of faces and hands stay on the machine and in a private Modal volume used for labeling. `data/` is git-ignored; no recording or dataset is ever committed.
+
+## License
+
+Source code: [MIT](LICENSE). VST3 builds made with nih-plug's VST3 wrapper link GPLv3 bindings, so those binaries are distributed under GPLv3. SAM 3.1 is used under the SAM License; Muse Glimmer under Apache 2.0.
