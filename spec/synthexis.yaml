@@ -1,0 +1,249 @@
+# synthexis specification: single source of truth.
+# FigJam diagrams, task lists and tests are derived from this file.
+# Status values: planned | probe | building | done | dropped
+# Evidence values: measured (cite probe) | doc (cite source) | hypothesis
+
+meta:
+  version: 0.1
+  updated: 2026-10-26
+  track: indie
+  theme: build-for-your-world
+  deadline: "2026-11-04T21:00:00-05:00"
+  target_host: FL Studio 2026 (26.1.6), macOS 27, Apple Silicon (M1 Pro 16 GB dev machine)
+
+# ---------------------------------------------------------------------------
+# 1. Feature inventory: every function from Noa's idea blob, one line each.
+#    `nodes` points to the spec elements that implement it.
+# ---------------------------------------------------------------------------
+features:
+  - {id: F01, text: "Camera-tracked objects and body parts move plugin parameters live", nodes: [src.camera, sig.*, route.matrix]}
+  - {id: F02, text: "Each finger open/closed sets a parameter, e.g. pad amount", nodes: [feat.hand.finger, tgt.macro]}
+  - {id: F03, text: "Fist open/close sets delay or reverb level", nodes: [feat.hand.openness, tgt.macro]}
+  - {id: F04, text: "Snapshot from camera, contours become a MIDI melody", nodes: [snap.capture, snap.contour, midi.contour_melody]}
+  - {id: F05, text: "Contour from edge or depth map with adjustable threshold, shown live in the view", nodes: [snap.contour, ui.canvas]}
+  - {id: F06, text: "Recognize arbitrary objects; their movement, size and placement drive parameters", nodes: [perc.seg, feat.object]}
+  - {id: F07, text: "Generic base mechanism: detection -> feature -> value 0..1 in any direction -> parameter", nodes: [sig.contract, cond.chain, route.matrix]}
+  - {id: F08, text: "Multiple objects at once", nodes: [perc.seg, perc.track]}
+  - {id: F09, text: "Face split into left eye, right eye and mouth", nodes: [perc.vision.face, perc.seg, feat.face]}
+  - {id: F10, text: "Head as parent class, head rotation yaw/pitch/roll", nodes: [feat.head, src.headphones]}
+  - {id: F11, text: "Understand how the DAW identifies plugin parameters; synthexis is only a bridge", nodes: [bridge.macros, bridge.fl_script, bridge.harvest]}
+  - {id: F12, text: "Headphone gyroscope and heart rate as an extra control layer", nodes: [src.headphones, src.heartrate]}
+  - {id: F13, text: "Powerbeats Pro 2 head tilt replaces camera head pose when present", nodes: [src.headphones, fuse.head]}
+  - {id: F14, text: "Occluded feature (mouth while head turned) holds its value instead of resetting", nodes: [cond.occlusion]}
+  - {id: F15, text: "Smooth re-acquisition when the new value is far from the held one", nodes: [cond.reacquire]}
+  - {id: F16, text: "First-principles architecture so later additions do not get blocked", nodes: [sig.contract, decisions]}
+  - {id: F17, text: "Editable visual map (FigJam) the agent reads back to correct the plan", nodes: [process.figjam_roundtrip]}
+  - {id: F18, text: "Hand shape live: fingers are chord notes, spreading fingers enlarges chord or arp", nodes: [midi.chord, feat.hand.spread]}
+  - {id: F19, text: "Cut-out snapshots of hands/face stay on the canvas as fixed elements next to the live ones", nodes: [snap.anchor]}
+  - {id: F20, text: "Plugin UI: camera canvas on top, parameter menu below", nodes: [ui.canvas, ui.panel]}
+  - {id: F21, text: "Click a cut-out to see its own parameters (on/off, mix 0..100 %), automatable in FL", nodes: [snap.anchor, tgt.anchor_params]}
+  - {id: F22, text: "Live mode is recordable; parameter moves become DAW automation", nodes: [bridge.macros, rec.automation]}
+  - {id: F23, text: "Separate in-house parameters from mirrored parameters of other plugins", nodes: [tgt.macro, tgt.anchor_params, bridge.fl_script]}
+  - {id: F24, text: "Works with every existing plugin, no own synth", nodes: [bridge.macros, bridge.midi_out, bridge.fl_script]}
+  - {id: F25, text: "Pads, plucks, pianos, basses", nodes: [midi.chord, bridge.macros]}
+  - {id: F26, text: "Drums: one hand drives synth parameters, the other hand drives drum patterns", nodes: [midi.patterns, route.matrix]}
+  - {id: F27, text: "Hi-hat: thumb up plays a basic pattern while held; index finger plays a trap roll; user picks the note (e.g. C4)", nodes: [gest.finger_states, midi.patterns]}
+  - {id: F28, text: "Same for snare and other drum voices", nodes: [midi.patterns]}
+  - {id: F29, text: "Own step grid / piano roll (e.g. 8 bars) to draw the pattern a finger plays", nodes: [ui.pattern_editor, midi.patterns]}
+  - {id: F30, text: "Scale and key selection, preset chords and accents per finger for melodic plugins", nodes: [midi.scale, midi.chord, midi.patterns]}
+  - {id: F31, text: "MIDI section: choose target channel; presets; chord sequences of any length", nodes: [bridge.midi_out, ui.pattern_editor]}
+  - {id: F32, text: "Tempo and position come from the DAW transport", nodes: [midi.transport]}
+  - {id: F33, text: "Everything live and recorded: MIDI into the DAW, parameters as automation", nodes: [rec.midi, rec.automation]}
+  - {id: F34, text: "Demo built for FL Studio first", nodes: [demo]}
+  - {id: F35, text: "Real-time perception without per-use cost: own small student model", nodes: [perc.seg, perc.hand, train.*]}
+  - {id: F36, text: "Multi-camera, including iPhone, to film other places as extra sources", nodes: [src.camera]}
+  - {id: F37, text: "Runs in real time on low-end Apple Silicon", nodes: [budget.latency]}
+  - {id: F38, text: "Small model that knows what plugin parameters mean, for mapping", nodes: [bridge.harvest, map.param_sense]}
+  - {id: F39, text: "SAM 3.1 as teacher, own student model as the Meta showcase", nodes: [train.teacher, train.students]}
+
+# ---------------------------------------------------------------------------
+# 2. Signal contract: the one interface every source and target speaks.
+# ---------------------------------------------------------------------------
+sig.contract:
+  sample: {value: "f32 in 0..1", confidence: "f32 in 0..1", t_capture: "host-monotonic ns of the camera frame or sensor sample", present: bool}
+  ids: "<source>.<entity>.<feature>, e.g. cam0.hand.L.finger.index, cam0.face.mouth.open, hp.head.yaw, hr.bpm, cam1.object.2.angle"
+  rule: "Perception never runs on the audio thread. The audio thread reads the latest conditioned values from a lock-free snapshot once per block."
+
+# ---------------------------------------------------------------------------
+# 3. Sources
+# ---------------------------------------------------------------------------
+sources:
+  src.camera:
+    what: "Any AVCaptureDevice: built-in FaceTime camera, USB webcam, iPhone via Continuity Camera. One capture session per device, shared by all synthexis instances in the host process."
+    multi: "N cameras at once; entity ids carry the camera index (cam0, cam1, ...)."
+    status: planned
+  src.headphones:
+    what: "Powerbeats Pro 2 head attitude (yaw, pitch, roll) and user acceleration via CMHeadphoneMotionManager."
+    evidence: "hypothesis: Apple lists head tracking for Powerbeats Pro on Mac; third-party access untested (probe P4)"
+    status: probe
+  src.heartrate:
+    what: "Powerbeats Pro 2 heart rate over the standard BLE Heart Rate Service (0x180D, characteristic 0x2A37)."
+    evidence: "doc: DC Rainmaker review (broadcasts as BLE HR profile); Mac read while connected as audio untested (probe P5)"
+    status: probe
+  src.watch:
+    what: "Apple Watch heart rate"
+    status: dropped
+    reason: "No HealthKit streaming to macOS without an iPhone/watch companion app. Revisit after the hackathon."
+
+# ---------------------------------------------------------------------------
+# 4. Perception (local, real time)
+# ---------------------------------------------------------------------------
+perception:
+  perc.vision.hand: {what: "Apple Vision hand pose, 2 hands x 21 keypoints", role: "baseline for finger states and spread", status: probe}
+  perc.vision.face: {what: "Apple Vision face landmarks + yaw/pitch/roll", role: "eyes, mouth, head pose", status: probe}
+  perc.vision.body: {what: "Apple Vision body pose, 19 joints", role: "arms, shoulders, lean", status: probe}
+  perc.seg:
+    what: "synthexis-seg student: semantic masks [background, person, face, eye, mouth, hand, object] at 256 or 320 px, CoreML FP16 on the Neural Engine"
+    role: "masks for canvas, cut-outs, arbitrary objects, mouth/eye openness cross-check"
+    params_budget: "<= 4M"
+    status: planned
+  perc.hand:
+    what: "synthexis-hand student: hand crop 128 px -> 5 finger-extension probabilities + openness"
+    role: "challenger to Vision geometry for finger states; replaces it only if it wins on held-out data"
+    params_budget: "<= 2.5M"
+    status: planned
+  perc.track: {what: "Track ids across frames: IoU + centroid matching on masks and keypoints; left/right hand from image side and wrist-to-body geometry", status: planned}
+  fuse.head: {what: "Head pose = headphones when connected and confident, else camera face pose; crossfade on switch", status: planned}
+
+# ---------------------------------------------------------------------------
+# 5. Features derived by geometry (deterministic, unit-tested)
+# ---------------------------------------------------------------------------
+derived_features:
+  feat.hand.finger: "per finger: extension from joint angles (tip-pip-mcp), 0 folded .. 1 straight"
+  feat.hand.openness: "mean finger extension, or mask solidity (area / convex hull area) from perc.seg"
+  feat.hand.spread: "angle between index and pinky rays, normalized"
+  feat.hand.position: "palm centre x, y in frame; depth proxy from hand size"
+  feat.face: "eye openness L/R (eyelid distance / eye width), mouth openness (inner lip distance / mouth width), smile"
+  feat.head: "yaw, pitch, roll"
+  feat.object: "per tracked object: x, y, area, angle (second moments), velocity"
+  feat.body: "arm raise L/R, lean, shoulder width proxy"
+
+# ---------------------------------------------------------------------------
+# 6. Conditioning: per route, applied in this order
+# ---------------------------------------------------------------------------
+cond.chain:
+  cond.range: "in_min/in_max -> 0..1, invert, curve (linear, exp, log, s-curve)"
+  cond.filter: "One Euro filter (min_cutoff, beta, d_cutoff) against jitter with low lag"
+  cond.occlusion: "on present=false or confidence < c_min: hold last value for hold_ms (default 600), then glide to rest value over decay_ms (default 800) or freeze (per route)"
+  cond.reacquire: "on return: slew-limit to max_rate units/s (default 2.0) or crossfade over reacquire_ms (default 150) from held to live value"
+  cond.hysteresis: "discrete states: on_threshold / off_threshold + min_dwell_ms (default 60)"
+  cond.quantize: "optional steps or scale degrees"
+
+route.matrix: "many-to-many: any signal to any target with depth -1..1; one signal may drive many targets, one target may sum many signals (clamped)"
+
+# ---------------------------------------------------------------------------
+# 7. Targets and DAW bridge
+# ---------------------------------------------------------------------------
+targets:
+  tgt.macro: "32 host-automatable synthexis parameters (Signal 1..32). Host records them as automation and links them to any plugin parameter."
+  tgt.anchor_params: "8 anchor slots x 4 parameters (enabled, mix 0..100 %, transpose, gate) exposed to the host"
+  tgt.midi_cc: "MIDI CC out on a chosen channel"
+  tgt.midi_notes: "notes from patterns, chords and contour melodies"
+  tgt.fl_param: "direct value of any FL plugin parameter through the FL bridge script"
+
+bridge:
+  bridge.macros: {what: "Route A, universal: macros + host linking (FL: Link to controller / Multilink)", status: planned}
+  bridge.midi_out: {what: "Route B: plugin MIDI out to other channels (FL: MIDI output port -> channel input port)", status: probe}
+  bridge.fl_script:
+    what: "Route C, FL deep bridge: FL Python MIDI controller script + CoreMIDI virtual ports. Script lists plugins and parameter names (plugins.getParamName), sends them to synthexis via SysEx, sets values on request (plugins.setParamValue)."
+    evidence: "doc: FL Studio Python API plugins module gets/sets parameters of plugins incl. 3rd-party VST/AU; automation recording of script-set values untested (probe P3)"
+    status: probe
+  bridge.harvest: {what: "Parameter dump of installed plugins (names, ranges, units, value strings) via the FL script and via pedalboard on macOS", status: planned}
+
+recording:
+  rec.automation: "macro and anchor params changed through the host parameter API (begin/perform/end edit) so FL records automation; whether that works with the editor closed is probe P2"
+  rec.midi: "notes emitted on the plugin MIDI out are recorded by FL into the target channel's pattern"
+
+# ---------------------------------------------------------------------------
+# 8. Gestures and MIDI engine
+# ---------------------------------------------------------------------------
+gest.finger_states: "per hand a 5-bit mask (thumb..pinky extended) after hysteresis; 32 states per hand; user names states and assigns them"
+midi:
+  midi.transport: "tempo, PPQ position and play state from the host every block"
+  midi.patterns: "pattern slot = clip (step grid or piano roll, 1..8 bars, note, velocity, channel). Plays while its finger state is active; starts quantized to the next 1/16 or 1/4; stops at state end or at clip end (per slot)"
+  midi.chord: "finger count / spread -> chord size and voicing within key and scale; spread can drive arp rate"
+  midi.scale: "key + scale (major, minor, dorian, phrygian, harmonic minor, pentatonics, custom)"
+  midi.contour_melody: "contour polyline resampled over N steps; y -> scale degree, x -> time; result is a pattern clip"
+
+# ---------------------------------------------------------------------------
+# 9. Snapshot and anchors
+# ---------------------------------------------------------------------------
+snapshot:
+  snap.capture: "freeze a frame from any camera"
+  snap.segment: "SAM 3.1 API image call with the selected concept or a click point ($0.0025 per image); offline fallback: synthexis-seg mask"
+  snap.contour: "edge/mask contour with adjustable threshold and simplification, previewed on the canvas"
+  snap.anchor: "cut-out sprite pinned on the canvas. Kinds: frozen controller (holds the gesture's signal values; mix blends frozen and live), zone (live hand overlapping it triggers or modulates), melody source (contour -> clip)"
+
+# ---------------------------------------------------------------------------
+# 10. Mapping assistant
+# ---------------------------------------------------------------------------
+map:
+  map.taxonomy: "about 40 parameter meanings: filter.cutoff, filter.resonance, amp.gain, fx.reverb.mix, fx.delay.mix, fx.delay.time, env.attack, env.release, osc.pitch, unison.detune, lfo.rate, macro, other, unsafe(master volume, output gain)"
+  map.labeler: "Muse Spark Open (Baseten, meta-models/muse-spark-open-1026) labels harvested parameters with taxonomy + safe range"
+  map.param_sense: "student: tiny text classifier (char n-gram hashing + linear/MLP, <= 1M params) in Rust, runs instantly offline for unseen plugins"
+  map.agent: "optional online: sentence -> route changes ('fist controls reverb on the pad') via Muse Spark Open tool calls against this graph"
+
+# ---------------------------------------------------------------------------
+# 11. Data engine and distillation
+# ---------------------------------------------------------------------------
+train:
+  train.protocol: "scripted recording sessions: each segment is one known finger state / face action / object, so gesture labels come from the script. Built-in camera + iPhone, two lighting setups, held-out session on another day."
+  train.synthetic: "Muse Image ($0.01 per image) renders varied people, hands, gestures, rooms and light; gesture label from the prompt; Muse Spark Open checks it"
+  train.teacher: "SAM 3.1 open weights on Modal (video mode, concepts: person, face, eye, mouth, hand, object in hand, demo objects). Meta API used for snapshots and a cross-check sample."
+  train.students: "synthexis-seg and synthexis-hand trained on Modal GPUs, exported to CoreML FP16"
+  train.eval: "held-out session only. Gate before shipping a student (see budget.quality)"
+
+budget:
+  budget.latency:
+    seg_p95_ms: 3        # M1 Pro Neural Engine, 256 px
+    hand_p95_ms: 1.5     # per crop
+    perception_frame_p95_ms: 12
+    note: "hypothesis until probes B and C report"
+  budget.quality:
+    seg_miou_vs_teacher: {person: 0.85, face: 0.85, hand: 0.85, eye: 0.70, mouth: 0.70}
+    finger_state_accuracy: 0.95
+    signal_mae: {mouth_open: 0.05, hand_openness: 0.05}
+  budget.money:
+    modal_usd: 100
+    meta_api_usd: 150
+    baseten_usd: "100 if granted"
+    fireworks_usd: "25 if granted"
+
+# ---------------------------------------------------------------------------
+# 12. Plugin and UI
+# ---------------------------------------------------------------------------
+plugin:
+  framework: "nih-plug (Rust): CLAP + VST3; AUv2 via clap-wrapper (stretch, also for Logic)"
+  gui: "egui via nih_plug_egui; design language: design-glass skill"
+  ui.canvas: "camera view with masks, keypoints, live values, anchors; multi-camera picture-in-picture"
+  ui.panel: "below the canvas: routes, conditioners, targets, selected element parameters"
+  ui.pattern_editor: "step grid / piano roll per pattern slot"
+
+# ---------------------------------------------------------------------------
+# 13. Decisions (Noa can override any of these in FigJam)
+# ---------------------------------------------------------------------------
+decisions:
+  D1: {topic: process model, chosen: "perception in-process on its own threads, one engine per host process shared by all instances", alt: "separate helper app over shared memory (crash isolation)", status: proposed}
+  D2: {topic: plugin format, chosen: "nih-plug VST3 + CLAP now, AUv2 via clap-wrapper later", status: proposed}
+  D3: {topic: keypoints, chosen: "Apple Vision for keypoints in v1; synthexis-hand challenges it on held-out data", alt: "student-only perception (needed for Windows later)", status: proposed}
+  D4: {topic: SAM 3.1 path, chosen: "open weights on Modal for bulk labels (SAM License allows derivatives and commercial use); Meta API for snapshots and a cross-check sample", status: proposed}
+  D5: {topic: gesture labels, chosen: "labels from the recording script; Muse Spark Open only checks synthetic data", status: proposed}
+  D6: {topic: parameter bridge, chosen: "macros + MIDI out everywhere; FL Python script for discovery and direct control", status: proposed}
+  D7: {topic: repo license, chosen: "open", note: "nih-plug's VST3 export pulls GPLv3 bindings; pick GPL-3.0 or switch VST3 to clap-wrapper (MIT SDK) before going public", status: needs-noa}
+
+# ---------------------------------------------------------------------------
+# 14. Probes (feasibility, measured on real hardware)
+# ---------------------------------------------------------------------------
+probes:
+  A: {what: "SAM 3.1 on Modal: install, throughput, cost per 1000 frames (random weights until HF access)", status: running}
+  B: {what: "CoreML latency of student candidates on M1 Pro", status: running}
+  C: {what: "Apple Vision hand/face/body latency on M1 Pro", status: running}
+  P1: {what: "Camera inside a nih-plug plugin in FL Studio 2026 (permission prompt, frames, CPU)", status: planned}
+  P2: {what: "FL records automation of synthexis macros changed from the perception thread, editor open and closed", status: planned}
+  P3: {what: "FL Python script lists and sets parameters of a 3rd-party plugin; does FL record it", status: planned}
+  P4: {what: "CMHeadphoneMotionManager with Powerbeats Pro 2 on macOS 27", status: planned}
+  P5: {what: "BLE heart rate from Powerbeats Pro 2 while connected as audio device", status: planned}
+  P6: {what: "plugin MIDI out reaches another FL channel and gets recorded", status: planned}
+
+process.figjam_roundtrip: "Noa edits the FigJam board; the agent reads it with get_figjam, updates this file, regenerates diagrams and tasks"
+demo: "3-minute video in an FL Studio demo project; see docs/plan.md"
