@@ -2,7 +2,7 @@
 
 Generiert aus `spec/recording-protocol.json` von `tools/make_protocol.py`. Die Recorder-App zeigt dir jede Zeile groß an, mit Countdown. Diese Liste ist zum Vorbereiten.
 
-## Protokoll `full`: 81 Abschnitte, 12.1 min
+## Protokoll `full`: 99 Abschnitte, 14.8 min
 
 
 ### A Fingerhaltungen
@@ -113,15 +113,38 @@ Generiert aus `spec/recording-protocol.json` von `tools/make_protocol.py`. Die R
 | 77 | 8 | Wenn möglich: Licht von hinten (Fenster/Lampe hinter dir), Gesten zeigen. |
 | 78 | 8 | Licht dimmen oder Lampe aus, Gesten zeigen. |
 
+### H Bewegungen
+
+| # | Sekunden | Anweisung |
+|---|---|---|
+| 79 | 8 | Rechte Hand: Projektile an den OBEREN Bildrand werfen, mal links, mal Mitte, mal rechts. |
+| 80 | 8 | Rechte Hand: Projektile an den RECHTEN Bildrand werfen, mal oben, mal unten. |
+| 81 | 8 | Rechte Hand: Projektile an den UNTEREN Bildrand werfen, verschiedene Stellen. |
+| 82 | 8 | Rechte Hand: Projektile an den LINKEN Bildrand werfen, mal oben, mal unten. |
+| 83 | 8 | Linke Hand: Projektile an beliebige Stellen der Bildränder werfen. |
+| 84 | 8 | Rechte Hand: offen von links nach rechts wischen, ohne loszulassen. |
+| 85 | 8 | Rechte Hand: offen von rechts nach links wischen. |
+| 86 | 8 | Rechte Hand: von unten nach oben wischen. |
+| 87 | 8 | Rechte Hand: von oben nach unten wischen. |
+| 88 | 8 | Rechte Hand: Kreise im Uhrzeigersinn, mal klein, mal groß. |
+| 89 | 8 | Rechte Hand: Kreise gegen den Uhrzeigersinn. |
+| 90 | 8 | Rechte Hand: zur Kamera hin drücken und zurückziehen. |
+| 91 | 8 | Rechte Hand: Daumen und Zeigefinger zusammen, so durchs Bild ziehen, loslassen. |
+| 92 | 8 | Rechte Hand: in der Luft etwas greifen und loslassen, an verschiedenen Stellen. |
+| 93 | 8 | Beide Hände halten einen Orb: größer, kleiner, drehen, durchs Bild tragen. |
+| 94 | 8 | Orb halten und an einen Bildrand werfen, neu formen, wieder werfen. |
+| 95 | 8 | Beide Hände: auseinanderziehen und zusammenführen, wie ein Gummiband. |
+| 96 | 8 | In die Hände klatschen, mal langsam, mal schnell. |
+
 ### G Freestyle
 
 | # | Sekunden | Anweisung |
 |---|---|---|
-| 79 | 30 | Freestyle Hände: eigene Gesten und Positionen, die dir einfallen. |
-| 80 | 20 | Freestyle Gesicht und Kopf: eigene Ausdrücke und Bewegungen. |
-| 81 | 30 | Freestyle: so tun, als würdest du gerade einen Track spielen. |
+| 97 | 30 | Freestyle Hände: eigene Gesten und Positionen, die dir einfallen. |
+| 98 | 20 | Freestyle Gesicht und Kopf: eigene Ausdrücke und Bewegungen. |
+| 99 | 30 | Freestyle: so tun, als würdest du gerade einen Track spielen. |
 
-## Protokoll `short`: 51 Abschnitte, 6.3 min
+## Protokoll `short`: 71 Abschnitte, 9.5 min
 
 
 ### A Fingerhaltungen
@@ -194,3 +217,33 @@ Generiert aus `spec/recording-protocol.json` von `tools/make_protocol.py`. Die R
 | 49 | 8 | Hand halb aus dem Bildrand, rein und raus. |
 | 50 | 8 | Wenn möglich: Licht von hinten (Fenster/Lampe hinter dir), Gesten zeigen. |
 | 51 | 8 | Licht dimmen oder Lampe aus, Gesten zeigen. |
+
+### H Bewegungen
+
+| # | Sekunden | Anweisung |
+|---|---|---|
+| 52 | 6 | Rechte Hand: Projektile an den OBEREN Bildrand werfen, mal links, mal Mitte, mal rechts. |
+| 53 | 6 | Rechte Hand: Projektile an den RECHTEN Bildrand werfen, mal oben, mal unten. |
+| 54 | 6 | Rechte Hand: Projektile an den UNTEREN Bildrand werfen, verschiedene Stellen. |
+| 55 | 6 | Rechte Hand: Projektile an den LINKEN Bildrand werfen, mal oben, mal unten. |
+| 56 | 6 | Linke Hand: Projektile an beliebige Stellen der Bildränder werfen. |
+| 57 | 6 | Rechte Hand: offen von links nach rechts wischen, ohne loszulassen. |
+| 58 | 6 | Rechte Hand: offen von rechts nach links wischen. |
+| 59 | 6 | Rechte Hand: von unten nach oben wischen. |
+| 60 | 6 | Rechte Hand: von oben nach unten wischen. |
+| 61 | 6 | Rechte Hand: Kreise im Uhrzeigersinn, mal klein, mal groß. |
+| 62 | 6 | Rechte Hand: Kreise gegen den Uhrzeigersinn. |
+| 63 | 6 | Rechte Hand: zur Kamera hin drücken und zurückziehen. |
+| 64 | 6 | Rechte Hand: Daumen und Zeigefinger zusammen, so durchs Bild ziehen, loslassen. |
+| 65 | 6 | Rechte Hand: in der Luft etwas greifen und loslassen, an verschiedenen Stellen. |
+| 66 | 6 | Beide Hände halten einen Orb: größer, kleiner, drehen, durchs Bild tragen. |
+| 67 | 6 | Orb halten und an einen Bildrand werfen, neu formen, wieder werfen. |
+| 68 | 6 | Beide Hände: auseinanderziehen und zusammenführen, wie ein Gummiband. |
+| 69 | 6 | In die Hände klatschen, mal langsam, mal schnell. |
+
+### G Freestyle
+
+| # | Sekunden | Anweisung |
+|---|---|---|
+| 70 | 30 | Freestyle Hände: eigene Gesten und Positionen, die dir einfallen. |
+| 71 | 30 | Freestyle: so tun, als würdest du gerade einen Track spielen. |

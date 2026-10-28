@@ -55,6 +55,11 @@ features:
   - {id: F37, text: "Runs in real time on low-end Apple Silicon", nodes: [budget.latency]}
   - {id: F38, text: "Small model that knows what plugin parameters mean, for mapping", nodes: [bridge.harvest, map.param_sense]}
   - {id: F39, text: "SAM 3.1 as teacher, own student model as the Meta showcase", nodes: [train.teacher, train.students]}
+  - {id: F40, text: "Freestyle is read live: the plugin names what the hands are doing (throw, swipe, hold, orb ...) with its parameters, no setup needed (Noa 2026-10-27)", nodes: [motion.primitives, motion.readout]}
+  - {id: F41, text: "Preset Pong: throw at any point of the frame border; side and position along it become notes and values, the projectile bounces", nodes: [preset.pong]}
+  - {id: F42, text: "Preset Orb: hold an orb between both hands; size, position and rotation are signals; release throws it", nodes: [preset.orb]}
+  - {id: F43, text: "Record own motifs (3-5 takes) and have them recognized live", nodes: [motion.motifs]}
+  - {id: F44, text: "Muse Spark Open watches the freestyle recordings and labels what happened, for evaluation, motif examples and the demo", nodes: [motion.labels]}
 
 # ---------------------------------------------------------------------------
 # 2. Signal contract: the one interface every source and target speaks.
@@ -163,12 +168,53 @@ recording:
 # 8. Gestures and MIDI engine
 # ---------------------------------------------------------------------------
 gest.finger_states: "per hand a 5-bit mask (thumb..pinky extended) after hysteresis; 32 states per hand; user names states and assigns them"
+gest.hand_role: "Noa 2026-10-27: each hand (and each tracked object) has a role chosen in the plugin UI: MIDI (finger states -> notes, chords, patterns), Parameter (continuous features -> routes), Motion (primitives and presets below) or Off. Roles can be mixed per feature (e.g. finger state -> chord while openness -> cutoff). The role is a host-visible setting stored with the project."
+gest.presets:
+  preset.chord_hand: "hand role MIDI: finger states pick chords in the project key and scale (midi.chord), spread drives voicing or arp rate"
+  preset.filter_hand: "hand role Parameter: openness (fist -> open) opens filter.cutoff, spread opens filter.resonance, both close when the hand closes; targets resolved by map.param_sense, editable as normal routes"
+  preset.pattern_hand: "hand role MIDI: finger states trigger pattern slots (midi.patterns), quantized to the host grid"
+  note: "basic presets are core scope; preset.pong and preset.orb are extras for the demo (Noa 2026-10-27)"
 midi:
   midi.transport: "tempo, PPQ position and play state from the host every block"
   midi.patterns: "pattern slot = clip (step grid or piano roll, 1..8 bars, note, velocity, channel). Plays while its finger state is active; starts quantized to the next 1/16 or 1/4; stops at state end or at clip end (per slot)"
   midi.chord: "finger count / spread -> chord size and voicing within key and scale; spread can drive arp rate"
   midi.scale: "key + scale (major, minor, dorian, phrygian, harmonic minor, pentatonics, custom)"
   midi.contour_melody: "contour polyline resampled over N steps; y -> scale degree, x -> time; result is a pattern clip"
+
+# ---------------------------------------------------------------------------
+# 8b. Motion layer: primitives, presets, motifs (Noa 2026-10-27, from the S1 freestyle)
+# ---------------------------------------------------------------------------
+motion:
+  motion.primitives:
+    what: "live, offline, at camera rate, from feat.hand.* tracks (normalized frame coordinates), finger states and two-hand geometry. Each primitive emits an event plus continuous parameters on the signal contract (value 0..1, confidence, timestamp)."
+    vocabulary:
+      throw: "hand speed peak above v_min (frame widths per s), then release (openness rises) or stop; params: direction angle, speed, release point; the ray from the release point hits the frame border at a perimeter position"
+      swipe: "sustained motion without release; params: direction (8 sectors and angle), speed, distance"
+      push_pull: "rate of change of the depth proxy (hand size)"
+      hold: "speed below v_hold for >= 300 ms; params: position, finger state"
+      pinch: "thumb-index tip distance below threshold with hysteresis; params: drag x, y"
+      circle: "accumulated angle of the hand path around its running centroid; params: rate, direction cw/ccw, radius"
+      grab_release: "openness crosses the hysteresis band down (grab) or up (release)"
+      two_hand: "stretch (palm distance rate), orb (palms facing each other: size = palm distance, centre x, y, rotation of the palm-palm line), clap (distance to near zero at speed)"
+    approach: "v1 is geometry on student keypoints (deterministic, unit-tested, no training data needed); a learned primitive classifier only if motion.eval misses its target"
+    status: planned
+  motion.readout: "the canvas labels the current primitive next to the hand ('throw -> right edge 0.62'), so any spontaneous movement is visible and mappable; the mapping assistant can address primitives ('when I throw, ...')"
+  preset.pong:
+    what: "frame border as one ring: a throw ray hits side (top, right, bottom, left) and perimeter position 0..1. A visual projectile flies and bounces like Pong; every wall hit is an event with speed."
+    border_zones: "the ring is split into user-sized segments; each segment is assigned to a target: a parameter, a MIDI note or a pattern slot"
+    hit_ramp: "a hit on a parameter segment fires a one-shot ramp through that parameter: shapes up, down, triangle, exponential decay, ADSR, bounce, steps; depth from throw speed, length synced to the host tempo or free in ms. Several ramps may overlap and sum (clamped)."
+    hit_note: "a hit on a note segment plays a note: position quantized to the scale, velocity from speed"
+    options: "grid quantization of hits, max bounces, projectile speed and gravity"
+    scope: "border zones and hit ramps live only inside this preset for now (Noa 2026-10-27)"
+  preset.orb:
+    what: "two_hand.orb drawn between the palms; size, x, y, rotation -> 4 signals"
+    throw: "fast separation releases the orb as a projectile into preset.pong; it bounces and hits border zones"
+    explode: "closing both hands fast on the orb (or an orb hitting another orb) bursts it: a fan of projectiles at once, each hitting the border and firing its ramp or note"
+    status: "extra for the demo"
+  motion.motifs: "user records a movement 3-5 times; the plugin stores the feature trajectories (palm positions and velocities, finger states, two-hand distance), recognizes live by DTW against the takes with a rejection threshold; emits event + progress 0..1. Offline, no training."
+  motion.novelty: "stretch: a primitive sequence that recurs >= 3 times in a session and matches no motif -> canvas suggests saving it as a motif (hypothesis, after v1)"
+  motion.labels: "build time: Muse Spark Open on Baseten (image input verified 2026-10-27) reads frame strips (2 fps, SAM masks overlaid) of every freestyle segment and writes a timeline in the motion.primitives vocabulary plus a free-text name per event. Same pass checks 3 frames per scripted segment against its instruction; mismatches are flagged for Noa (catches errors not marked with B). Noa consented 2026-10-27 to sending his frames to Baseten. Spark Open labels do not train SAM (frozen teacher); they evaluate the motion layer, seed motif examples and filter finger-state labels."
+  motion.eval: "primitive events vs Spark Open timeline on S4 freestyle, spot-checked by Noa: event F1 >= 0.85, movement end to event <= 100 ms (targets, hypothesis)"
 
 # ---------------------------------------------------------------------------
 # 9. Snapshot and anchors
@@ -193,7 +239,7 @@ map:
   map.eval: "100 commands written by Noa by hand, never trained on: exact route-edit accuracy >= 0.90; param-sense top-1 on plugins from unseen vendors >= 0.90"
   map.research: "grounding so far: Oliveira 2026 (arXiv 2604.24636): on-device language features are reliable when the model does the least; Rana et al. COLING 2025 industry: slot filling distilled from LLM teachers with LLM-generated data; Gody et al. 2025: LLM annotations distilled into BERT-size intent classifiers"
   map.agent: "offline at runtime: typed sentence -> map.parser -> map.resolver -> route changes ('fist controls reverb and delay on the pad, mouth opens the bass filter'). One sentence may create several routes. The result is shown as a diff in the route matrix; the user accepts, edits or undoes it. Everything stays editable by hand. Muse Spark Open works only at build time (parameter labels, synthetic commands)."
-  map.open_question: "Best Build on Meta Open Weight Models says the partner verifies the project 'runs on' Muse Glimmer or Spark Open. With an offline runtime only the data engine runs on Spark Open. Ask Noa whether an explicit, opt-in 'scan new plugins with Muse Spark Open' button is acceptable, or whether the build-time pipeline is enough."
+  map.bonus_prize: "Noa 2026-10-27: no online button, not even opt-in. Best Build on Meta Open Weight Models rests on the build-time pipeline: Muse Spark Open on Baseten labels the harvested parameters and writes the synthetic commands that train param-sense and map.parser. Demo and README must show that pipeline with real request counts and the 'Built with Muse Spark Open' credit. Whether judges accept build-time use as 'runs on' is unverified."
   map.voice: "optional, online: push-to-talk through Muse Voice Transcribe realtime ($0.18 per hour of audio) feeding map.parser; ask Noa (same online question)"
 
 # ---------------------------------------------------------------------------
@@ -204,6 +250,16 @@ train:
   train.synthetic: "Muse Image ($0.01 per image) renders varied people, hands, gestures, rooms and light; gesture label from the prompt; Muse Spark Open checks it"
   train.teacher: "SAM 3.1 open weights on Modal (video mode, concepts: person, face, eye, mouth, hand, object in hand, demo objects). Meta API used for snapshots and a cross-check sample."
   train.students: "synthexis-seg and synthexis-hand trained on Modal GPUs, exported to CoreML FP16"
+  train.setup:
+    data: "packed on the Mac before upload: frames downscaled to training size (seg 384x216), hand and face crops of 128 px cut from the full-resolution frames using SAM boxes (D10), labels alongside, written as tar shards of about 2,000 samples. Modal Volumes work best below 50,000 files (doc: modal.com/docs/guide/volumes); S1-S3 as loose JPEGs and PNGs would exceed that. The container copies its shards to local disk at start."
+    split: "dev = whole segments held back per session (never random frames: neighbouring frames are near duplicates); S4 only for the final gate"
+    model: "ImageNet-pretrained backbones (license checked per weight file), bf16 mixed precision, AdamW + cosine; seg head LR-ASPP, hand head keypoints + 5 finger-state logits"
+    gpu: "L4 by default; the pilot measures samples/s and $ per epoch, a bigger GPU only if the data loader keeps it busy"
+    preflight: "free local run before every paid run: 64 samples, 20 steps on the Mac, checks shapes, label ranges, falling loss and CoreML export"
+    guards: "same as labelling: pilot epoch with re-estimate and abort above the cap, runtime spend guard, checkpoint per epoch to the volume, resumable, function timeout"
+    runs: "one line per run in docs/hillclimb.tsv, one change per run; seed spread decides: accept a change only above max(1 point, 2 standard errors) over 3 seeds, and test data effects against a control with the same step count"
+    eval: "per-class IoU against the teacher and per-class recall plus confusion matrix for finger states; distilled students can inherit a teacher's class skew, so thresholds are calibrated on dev"
+    lessons: "from kleinhirn K24 (FINDINGS §20, §22, §24, §28): fixed container start cost matters (Qwen job: 0.12 $ per start, 229 s to model ready), so batch work per container; more steps alone can fake a data effect, so run matched controls; a distilled student skewed toward one class was fixed by calibration, not retraining"
   train.eval: "held-out session only. Gate before shipping a student (see budget.quality)"
 
 budget:
@@ -217,9 +273,9 @@ budget:
     finger_state_accuracy: 0.95
     signal_mae: {mouth_open: 0.05, hand_openness: 0.05}
   budget.money:
-    modal_usd: 100
+    modal_usd: "credits: 25 until 2026-10-31 (expires), 30 from 2026-11-01; plus up to 12.50 paid overage that Noa allows (real money, use only when needed). Spent by 2026-10-27: about 18.2 (S1 labels 17.51, computed from container seconds, 2x over estimate because post-processing ran on the H100). Students train on Modal too (Noa 2026-10-27), as efficiently as possible. Every paid run: pilot chunk, runtime spend guard, per-run cap."
     meta_api_usd: 150
-    baseten_usd: "100 if granted"
+    baseten_usd: "100 granted 2026-10-27; Muse Spark Open Model API ($1.25 per 1M input, $4.25 per 1M output tokens, litellm/openrouter listing 2026-10)"
     fireworks_usd: "25 if granted"
 
 # ---------------------------------------------------------------------------
@@ -239,17 +295,21 @@ decisions:
   D1: {topic: process model, chosen: "perception in-process on its own threads, one engine per host process shared by all instances", alt: "separate helper app over shared memory (crash isolation)", status: proposed}
   D2: {topic: plugin format, chosen: "nih-plug VST3 + CLAP now, AUv2 via clap-wrapper later", status: proposed}
   D3: {topic: keypoints, chosen: "students only at runtime: synthexis-seg + synthexis-hand (about 1.2 ms per frame on the ANE); Apple Vision runs offline as keypoint teacher and eval baseline", why: "probe C: Vision hand+face+body 29.6 ms median, 46.6 ms p95 per frame vs probe B students under 1 ms each", alt: "Vision live as fallback at 10-15 fps", status: proposed, changed: "2026-10-26 after probes B and C (was: Vision live in v1)"}
-  D4: {topic: SAM 3.1 path, chosen: "open weights on Modal for bulk labels (SAM License allows derivatives and commercial use); Meta API for snapshots and a cross-check sample", why: "probe A: H100 video mode 46.8 ms/frame = $0.051 per 1000 frames (lower bound, random weights) vs API $0.20", status: proposed}
+  D4: {topic: SAM 3.1 path, chosen: "open weights on Modal for bulk labels (SAM License allows derivatives and commercial use); Meta API for snapshots and a cross-check sample", why: "probe A real weights: H100 video mode about 75 ms/frame per concept = $0.082 per 1000 frames vs API $0.20", status: proposed}
   D5: {topic: gesture labels, chosen: "labels from the recording script; Muse Spark Open only checks synthetic data", status: proposed}
   D6: {topic: parameter bridge, chosen: "macros + MIDI out everywhere; FL Python script for discovery and direct control", status: proposed}
   D7: {topic: repo license, chosen: "MIT for all source in this repo", note: "VST3 binaries built with nih-plug's VST3 wrapper link GPLv3 bindings, so those release binaries are GPLv3 combined works; CLAP builds and a later clap-wrapper VST3/AU (MIT VST3 SDK) stay MIT. Noa holds the copyright and can relicense.", status: decided, decided: 2026-10-26}
+  D9: {topic: proxy teacher, chosen: "two-step distillation: SAM 3.1 masks train a mid-size proxy (about 20-30M params, higher input resolution); the proxy labels every recorded frame at 30 fps with soft per-pixel probabilities, and those train the tiny students together with the SAM masks", why: "EUPE (Meta, arXiv 2603.22387, ablation Table 2): direct distillation from huge teachers into small students loses signal, an intermediate proxy recovers it; the proxy also labels frames SAM never saw at no Modal SAM cost", status: proposed}
+  D10: {topic: resolution and crops, chosen: "full frame at low resolution (384x216) for person, hand, object; face crop (about 128 px, from the full-res frame) for eye and mouth, the same way hands use 128 px crops", why: "at 384x216 an eye is about 10 px wide, too small for a reliable mask; crops keep compute low and detail high (MediaPipe-style detector + ROI)", status: proposed}
+  D11: {topic: temporal prior, chosen: "the seg student gets the previous frame's mask as an extra input channel (or a small recurrent state) and a temporal-consistency loss between neighbouring frames", why: "MobileSAM2 (arXiv 2607.12297) distils SAM2's temporal knowledge explicitly; recurrent matting nets reach stable masks at small size. Reimplemented, no code copied.", status: proposed}
+  D12: {topic: backbone family, chosen: "CNNs that map well to the Neural Engine: MobileNetV4-Conv-Small (measured, probe B) first, RepViT-M0.9 as challenger; EfficientViT-B0 (0.7M) only if latency allows its attention ops on the ANE", why: "EfficientSAM3 (arXiv 2511.15833) distils SAM3 into RepViT, TinyViT and EfficientViT students from 0.7M to 21M params; YOLO26-seg excluded (AGPL-3.0)", status: proposed}
   D8: {topic: design language, chosen: "design-glass tokens and the chiasma UI lessons (chiasma/docs/STYLE.md), implemented fresh in egui via the design-rust skill; no chiasma code copied (hackathon new-work rule)", status: decided, decided: 2026-10-26}
 
 # ---------------------------------------------------------------------------
 # 14. Probes (feasibility, measured on real hardware)
 # ---------------------------------------------------------------------------
 probes:
-  A: {what: "SAM 3.1 on Modal: install, throughput, cost per 1000 frames (random weights until HF access)", status: done, result: "runs on Modal (torch 2.10 cu128, sam3 f1647e8). H100: image 59.6 ms/frame, video 46.8 ms/frame, 4 concepts x 300 frames 55.6 s, peak 23 GiB. Real-weight rerun pending HF access.", see: probes/sam31-modal/RESULT.md}
+  A: {what: "SAM 3.1 on Modal: install, throughput, cost per 1000 frames", status: done, result: "real weights (facebook/sam3.1 multiplex, 2026-10-27), H100: video mode 69-98 ms/frame avg per concept (eye slowest), p95 157-165 ms, peak 28.2 GiB; image mode 58.2 / 59.3 ms per text prompt (median / p95). About $0.082 per 1000 frames per concept in video mode. Contact sheet: person, face, eye, hand correct on all 20 frames; mouth also fires on lips drawn on the wallpaper, so eye/mouth must be constrained to the face mask. Random-weight run: video 46.8 ms/frame.", see: probes/sam31-modal/RESULT.md}
   B: {what: "CoreML latency of student candidates on M1 Pro", status: done, result: "all candidates under 1.2 ms median on the ANE; cpuAndGPU slower than cpuOnly", see: probes/coreml-student-latency/RESULT.md}
   C: {what: "Apple Vision hand/face/body latency on M1 Pro", status: done, result: "hand 18.4 ms, combined 29.6 ms median; too slow for live use next to the students", see: probes/apple-vision-fps/RESULT.md}
   P1: {what: "Camera inside a nih-plug plugin in FL Studio 2026 (permission prompt, frames, CPU)", status: planned}

@@ -1,0 +1,98 @@
+✓ Initialized. View run at 
+https://modal.com/apps/smashburger-dev/main/ap-xhKnZyFrzqoPRvCtsHwUdH
+✓ Created objects.
+├── ✓ Uploaded 
+│   /Users/no8/Desktop/life/Lifemaxxing/synthexis/probes/sam31-modal/sam31_real.
+│   py
+├── ✓ Uploaded /Users/no8/Desktop/life/Lifemaxxing/synthexis/data/test_frames
+└── ✓ Created Function run_probe.
+FN_START_EPOCH 1793135720.335
+gpu_env H100 timeout_s 2100
+torch 2.10.0+cu128
+torch.version.cuda 12.8
+gpu_name NVIDIA H100 80GB HBM3
+sam3_commit f1647e8d0c1d280991f4d1b7d974c2704537fe66
+hf_token_present True
+/opt/sam3/sam3/model_builder.py:8: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+/usr/local/lib/python3.12/site-packages/timm/models/layers/__init__.py:49: FutureWarning: Importing from timm.models.layers is deprecated, please import via timm.layers
+  warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.layers", FutureWarning)
+ckpt_download_s 0.36 ckpt_path /__modal/volumes/vo-sa2LvK7Jy2zbX5Bij93wTW/hf-cache/models--facebook--sam3.1/snapshots/daa63191845a41281374e725f4c9e51c7a824460/sam3.1_multiplex.pt
+loaded /__modal/volumes/vo-sa2LvK7Jy2zbX5Bij93wTW/hf-cache/models--facebook--sam3.1/snapshots/daa63191845a41281374e725f4c9e51c7a824460/sam3.1_multiplex.pt and found missing and/or unexpected keys:
+missing_keys=['backbone.vision_backbone.convs.3.conv_1x1.weight', 'backbone.vision_backbone.convs.3.conv_1x1.bias', 'backbone.vision_backbone.convs.3.conv_3x3.weight', 'backbone.vision_backbone.convs.3.conv_3x3.bias']
+image_model_build_s 11.13
+frames 300
+Traceback (most recent call last):
+  File "/pkg/modal/_runtime/container_io_manager.py", line 987, in handle_input_exception
+    yield
+  File "/pkg/modal/_container_entrypoint.py", line 189, in run_input_sync
+    values = io_context.call_function_sync()
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/pkg/modal/_runtime/container_io_manager.py", line 266, in call_function_sync
+    expected_value_or_values = self.finalized_function.callable(*args, **kwargs)
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/sam31_real.py", line 242, in run_probe
+    ov = render_overlay(pil_img, out, prompt)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/sam31_real.py", line 191, in render_overlay
+    0.5 * overlay[..., c][m] + 0.5 * color[c]
+          ~~~~~~~~~~~~~~~^^^
+IndexError: too many indices for array: array is 2-dimensional, but 3 were indexed
+Stopping app - uncaught exception raised locally: IndexError('too many indices for array: array is 2-dimensional, but 3 were indexed').
+╭───────────────────── Traceback (most recent call last) ──────────────────────╮
+│ /Users/no8/Desktop/life/Lifemaxxing/synthexis/probes/sam31-modal/sam31_real. │
+│ py:436 in main                                                               │
+│                                                                              │
+│   435 def main():                                                            │
+│ ❱ 436 │   result = run_probe.remote()                                        │
+│   437                                                                        │
+│                                                                              │
+│ /Users/no8/.cache/uv/archive-v0/BfcH4rxnAungGUZX/lib/python3.13/site-package │
+│ s/modal/_object.py:49 in wrapped                                             │
+│                                                                              │
+│    48 │   │   await self.hydrate()                                           │
+│ ❱  49 │   │   return await method(self, *args, **kwargs)                     │
+│    50                                                                        │
+│                                                                              │
+│ /Users/no8/.cache/uv/archive-v0/BfcH4rxnAungGUZX/lib/python3.13/site-package │
+│ s/modal/_functions.py:2081 in remote                                         │
+│                                                                              │
+│   2080 │   │                                                                 │
+│ ❱ 2081 │   │   return await self._call_function(args, kwargs)                │
+│   2082                                                                       │
+│                                                                              │
+│ /Users/no8/.cache/uv/archive-v0/BfcH4rxnAungGUZX/lib/python3.13/site-package │
+│ s/modal/_functions.py:2018 in _call_function                                 │
+│                                                                              │
+│   2017 │   │                                                                 │
+│ ❱ 2018 │   │   return await invocation.run_function()                        │
+│   2019                                                                       │
+│                                                                              │
+│ /Users/no8/.cache/uv/archive-v0/BfcH4rxnAungGUZX/lib/python3.13/site-package │
+│ s/modal/_functions.py:517 in run_function                                    │
+│                                                                              │
+│    516 │   │   │   # No more retries left.                                   │
+│ ❱  517 │   │   │   return await _process_result(                             │
+│    518 │   │   │   │   await_response.output.result, await_response.output.d │
+│                                                                              │
+│ /Users/no8/.cache/uv/archive-v0/BfcH4rxnAungGUZX/lib/python3.13/site-package │
+│ s/modal/_utils/function_utils.py:572 in _process_result                      │
+│                                                                              │
+│   571 │   │   │                                                              │
+│ ❱ 572 │   │   │   raise exc_with_hints(exc)                                  │
+│   573                                                                        │
+│                                                                              │
+│     ...Remote call to Modal Function (ta-01M5ZKF7GT77EDV8E7NB7RSKCR)...      │
+│                                                                              │
+│ /root/sam31_real.py:242 in run_probe                                         │
+│                                                                              │
+│ ❱ 242 ov = render_overlay(pil_img, out, prompt)                              │
+│                                                                              │
+│                                                                              │
+│ /root/sam31_real.py:191 in render_overlay                                    │
+│                                                                              │
+│ ❱ 191 0.5 * overlay[..., c][m] + 0.5 * color[c]                              │
+│                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────╯
+IndexError: too many indices for array: array is 2-dimensional, but 3 were 
+indexed

@@ -5,7 +5,7 @@
   "full": {
    "name": "full",
    "gap_s": 1.0,
-   "total_s": 727.0,
+   "total_s": 889.0,
    "segments": [
     {
      "id": "A_R_00000",
@@ -1082,6 +1082,240 @@
      }
     },
     {
+     "id": "H_throw_top",
+     "block": "H",
+     "duration_s": 8,
+     "instruction_de": "Rechte Hand: Projektile an den OBEREN Bildrand werfen, mal links, mal Mitte, mal rechts.",
+     "margin_s": [
+      0.5,
+      0.2
+     ],
+     "labels": {
+      "motion": "throw_top"
+     }
+    },
+    {
+     "id": "H_throw_right",
+     "block": "H",
+     "duration_s": 8,
+     "instruction_de": "Rechte Hand: Projektile an den RECHTEN Bildrand werfen, mal oben, mal unten.",
+     "margin_s": [
+      0.5,
+      0.2
+     ],
+     "labels": {
+      "motion": "throw_right"
+     }
+    },
+    {
+     "id": "H_throw_bottom",
+     "block": "H",
+     "duration_s": 8,
+     "instruction_de": "Rechte Hand: Projektile an den UNTEREN Bildrand werfen, verschiedene Stellen.",
+     "margin_s": [
+      0.5,
+      0.2
+     ],
+     "labels": {
+      "motion": "throw_bottom"
+     }
+    },
+    {
+     "id": "H_throw_left",
+     "block": "H",
+     "duration_s": 8,
+     "instruction_de": "Rechte Hand: Projektile an den LINKEN Bildrand werfen, mal oben, mal unten.",
+     "margin_s": [
+      0.5,
+      0.2
+     ],
+     "labels": {
+      "motion": "throw_left"
+     }
+    },
+    {
+     "id": "H_throw_any_L",
+     "block": "H",
+     "duration_s": 8,
+     "instruction_de": "Linke Hand: Projektile an beliebige Stellen der Bildränder werfen.",
+     "margin_s": [
+      0.5,
+      0.2
+     ],
+     "labels": {
+      "motion": "throw_any_L"
+     }
+    },
+    {
+     "id": "H_swipe_right",
+     "block": "H",
+     "duration_s": 8,
+     "instruction_de": "Rechte Hand: offen von links nach rechts wischen, ohne loszulassen.",
+     "margin_s": [
+      0.5,
+      0.2
+     ],
+     "labels": {
+      "motion": "swipe_right"
+     }
+    },
+    {
+     "id": "H_swipe_left",
+     "block": "H",
+     "duration_s": 8,
+     "instruction_de": "Rechte Hand: offen von rechts nach links wischen.",
+     "margin_s": [
+      0.5,
+      0.2
+     ],
+     "labels": {
+      "motion": "swipe_left"
+     }
+    },
+    {
+     "id": "H_swipe_up",
+     "block": "H",
+     "duration_s": 8,
+     "instruction_de": "Rechte Hand: von unten nach oben wischen.",
+     "margin_s": [
+      0.5,
+      0.2
+     ],
+     "labels": {
+      "motion": "swipe_up"
+     }
+    },
+    {
+     "id": "H_swipe_down",
+     "block": "H",
+     "duration_s": 8,
+     "instruction_de": "Rechte Hand: von oben nach unten wischen.",
+     "margin_s": [
+      0.5,
+      0.2
+     ],
+     "labels": {
+      "motion": "swipe_down"
+     }
+    },
+    {
+     "id": "H_circle_cw",
+     "block": "H",
+     "duration_s": 8,
+     "instruction_de": "Rechte Hand: Kreise im Uhrzeigersinn, mal klein, mal groß.",
+     "margin_s": [
+      0.5,
+      0.2
+     ],
+     "labels": {
+      "motion": "circle_cw"
+     }
+    },
+    {
+     "id": "H_circle_ccw",
+     "block": "H",
+     "duration_s": 8,
+     "instruction_de": "Rechte Hand: Kreise gegen den Uhrzeigersinn.",
+     "margin_s": [
+      0.5,
+      0.2
+     ],
+     "labels": {
+      "motion": "circle_ccw"
+     }
+    },
+    {
+     "id": "H_push_pull",
+     "block": "H",
+     "duration_s": 8,
+     "instruction_de": "Rechte Hand: zur Kamera hin drücken und zurückziehen.",
+     "margin_s": [
+      0.5,
+      0.2
+     ],
+     "labels": {
+      "motion": "push_pull"
+     }
+    },
+    {
+     "id": "H_pinch_drag",
+     "block": "H",
+     "duration_s": 8,
+     "instruction_de": "Rechte Hand: Daumen und Zeigefinger zusammen, so durchs Bild ziehen, loslassen.",
+     "margin_s": [
+      0.5,
+      0.2
+     ],
+     "labels": {
+      "motion": "pinch_drag"
+     }
+    },
+    {
+     "id": "H_grab_release",
+     "block": "H",
+     "duration_s": 8,
+     "instruction_de": "Rechte Hand: in der Luft etwas greifen und loslassen, an verschiedenen Stellen.",
+     "margin_s": [
+      0.5,
+      0.2
+     ],
+     "labels": {
+      "motion": "grab_release"
+     }
+    },
+    {
+     "id": "H_orb_hold",
+     "block": "H",
+     "duration_s": 8,
+     "instruction_de": "Beide Hände halten einen Orb: größer, kleiner, drehen, durchs Bild tragen.",
+     "margin_s": [
+      0.5,
+      0.2
+     ],
+     "labels": {
+      "motion": "orb_hold"
+     }
+    },
+    {
+     "id": "H_orb_throw",
+     "block": "H",
+     "duration_s": 8,
+     "instruction_de": "Orb halten und an einen Bildrand werfen, neu formen, wieder werfen.",
+     "margin_s": [
+      0.5,
+      0.2
+     ],
+     "labels": {
+      "motion": "orb_throw"
+     }
+    },
+    {
+     "id": "H_stretch",
+     "block": "H",
+     "duration_s": 8,
+     "instruction_de": "Beide Hände: auseinanderziehen und zusammenführen, wie ein Gummiband.",
+     "margin_s": [
+      0.5,
+      0.2
+     ],
+     "labels": {
+      "motion": "stretch"
+     }
+    },
+    {
+     "id": "H_clap",
+     "block": "H",
+     "duration_s": 8,
+     "instruction_de": "In die Hände klatschen, mal langsam, mal schnell.",
+     "margin_s": [
+      0.5,
+      0.2
+     ],
+     "labels": {
+      "motion": "clap"
+     }
+    },
+    {
      "id": "G_free_hands",
      "block": "G",
      "duration_s": 30,
@@ -1125,7 +1359,7 @@
   "short": {
    "name": "short",
    "gap_s": 1.0,
-   "total_s": 381.0,
+   "total_s": 569.0,
    "segments": [
     {
      "id": "A_R_00000",
@@ -1824,6 +2058,266 @@
      ],
      "labels": {
       "hard_case": "dim"
+     }
+    },
+    {
+     "id": "H_throw_top",
+     "block": "H",
+     "duration_s": 6,
+     "instruction_de": "Rechte Hand: Projektile an den OBEREN Bildrand werfen, mal links, mal Mitte, mal rechts.",
+     "margin_s": [
+      0.5,
+      0.2
+     ],
+     "labels": {
+      "motion": "throw_top"
+     }
+    },
+    {
+     "id": "H_throw_right",
+     "block": "H",
+     "duration_s": 6,
+     "instruction_de": "Rechte Hand: Projektile an den RECHTEN Bildrand werfen, mal oben, mal unten.",
+     "margin_s": [
+      0.5,
+      0.2
+     ],
+     "labels": {
+      "motion": "throw_right"
+     }
+    },
+    {
+     "id": "H_throw_bottom",
+     "block": "H",
+     "duration_s": 6,
+     "instruction_de": "Rechte Hand: Projektile an den UNTEREN Bildrand werfen, verschiedene Stellen.",
+     "margin_s": [
+      0.5,
+      0.2
+     ],
+     "labels": {
+      "motion": "throw_bottom"
+     }
+    },
+    {
+     "id": "H_throw_left",
+     "block": "H",
+     "duration_s": 6,
+     "instruction_de": "Rechte Hand: Projektile an den LINKEN Bildrand werfen, mal oben, mal unten.",
+     "margin_s": [
+      0.5,
+      0.2
+     ],
+     "labels": {
+      "motion": "throw_left"
+     }
+    },
+    {
+     "id": "H_throw_any_L",
+     "block": "H",
+     "duration_s": 6,
+     "instruction_de": "Linke Hand: Projektile an beliebige Stellen der Bildränder werfen.",
+     "margin_s": [
+      0.5,
+      0.2
+     ],
+     "labels": {
+      "motion": "throw_any_L"
+     }
+    },
+    {
+     "id": "H_swipe_right",
+     "block": "H",
+     "duration_s": 6,
+     "instruction_de": "Rechte Hand: offen von links nach rechts wischen, ohne loszulassen.",
+     "margin_s": [
+      0.5,
+      0.2
+     ],
+     "labels": {
+      "motion": "swipe_right"
+     }
+    },
+    {
+     "id": "H_swipe_left",
+     "block": "H",
+     "duration_s": 6,
+     "instruction_de": "Rechte Hand: offen von rechts nach links wischen.",
+     "margin_s": [
+      0.5,
+      0.2
+     ],
+     "labels": {
+      "motion": "swipe_left"
+     }
+    },
+    {
+     "id": "H_swipe_up",
+     "block": "H",
+     "duration_s": 6,
+     "instruction_de": "Rechte Hand: von unten nach oben wischen.",
+     "margin_s": [
+      0.5,
+      0.2
+     ],
+     "labels": {
+      "motion": "swipe_up"
+     }
+    },
+    {
+     "id": "H_swipe_down",
+     "block": "H",
+     "duration_s": 6,
+     "instruction_de": "Rechte Hand: von oben nach unten wischen.",
+     "margin_s": [
+      0.5,
+      0.2
+     ],
+     "labels": {
+      "motion": "swipe_down"
+     }
+    },
+    {
+     "id": "H_circle_cw",
+     "block": "H",
+     "duration_s": 6,
+     "instruction_de": "Rechte Hand: Kreise im Uhrzeigersinn, mal klein, mal groß.",
+     "margin_s": [
+      0.5,
+      0.2
+     ],
+     "labels": {
+      "motion": "circle_cw"
+     }
+    },
+    {
+     "id": "H_circle_ccw",
+     "block": "H",
+     "duration_s": 6,
+     "instruction_de": "Rechte Hand: Kreise gegen den Uhrzeigersinn.",
+     "margin_s": [
+      0.5,
+      0.2
+     ],
+     "labels": {
+      "motion": "circle_ccw"
+     }
+    },
+    {
+     "id": "H_push_pull",
+     "block": "H",
+     "duration_s": 6,
+     "instruction_de": "Rechte Hand: zur Kamera hin drücken und zurückziehen.",
+     "margin_s": [
+      0.5,
+      0.2
+     ],
+     "labels": {
+      "motion": "push_pull"
+     }
+    },
+    {
+     "id": "H_pinch_drag",
+     "block": "H",
+     "duration_s": 6,
+     "instruction_de": "Rechte Hand: Daumen und Zeigefinger zusammen, so durchs Bild ziehen, loslassen.",
+     "margin_s": [
+      0.5,
+      0.2
+     ],
+     "labels": {
+      "motion": "pinch_drag"
+     }
+    },
+    {
+     "id": "H_grab_release",
+     "block": "H",
+     "duration_s": 6,
+     "instruction_de": "Rechte Hand: in der Luft etwas greifen und loslassen, an verschiedenen Stellen.",
+     "margin_s": [
+      0.5,
+      0.2
+     ],
+     "labels": {
+      "motion": "grab_release"
+     }
+    },
+    {
+     "id": "H_orb_hold",
+     "block": "H",
+     "duration_s": 6,
+     "instruction_de": "Beide Hände halten einen Orb: größer, kleiner, drehen, durchs Bild tragen.",
+     "margin_s": [
+      0.5,
+      0.2
+     ],
+     "labels": {
+      "motion": "orb_hold"
+     }
+    },
+    {
+     "id": "H_orb_throw",
+     "block": "H",
+     "duration_s": 6,
+     "instruction_de": "Orb halten und an einen Bildrand werfen, neu formen, wieder werfen.",
+     "margin_s": [
+      0.5,
+      0.2
+     ],
+     "labels": {
+      "motion": "orb_throw"
+     }
+    },
+    {
+     "id": "H_stretch",
+     "block": "H",
+     "duration_s": 6,
+     "instruction_de": "Beide Hände: auseinanderziehen und zusammenführen, wie ein Gummiband.",
+     "margin_s": [
+      0.5,
+      0.2
+     ],
+     "labels": {
+      "motion": "stretch"
+     }
+    },
+    {
+     "id": "H_clap",
+     "block": "H",
+     "duration_s": 6,
+     "instruction_de": "In die Hände klatschen, mal langsam, mal schnell.",
+     "margin_s": [
+      0.5,
+      0.2
+     ],
+     "labels": {
+      "motion": "clap"
+     }
+    },
+    {
+     "id": "G_free_hands",
+     "block": "G",
+     "duration_s": 30,
+     "instruction_de": "Freestyle Hände: eigene Gesten und Positionen, die dir einfallen.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "freestyle": "free_hands"
+     }
+    },
+    {
+     "id": "G_free_play",
+     "block": "G",
+     "duration_s": 30,
+     "instruction_de": "Freestyle: so tun, als würdest du gerade einen Track spielen.",
+     "margin_s": [
+      0.7,
+      0.3
+     ],
+     "labels": {
+      "freestyle": "free_play"
      }
     }
    ]

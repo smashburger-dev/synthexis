@@ -80,9 +80,32 @@ FREESTYLE = [
     ("free_play", 30, "Freestyle: so tun, als würdest du gerade einen Track spielen."),
 ]
 
+# Block H: motion primitives (spec motion.primitives), labels known from the script.
+MOTION = [
+    ("throw_top", "Rechte Hand: Projektile an den OBEREN Bildrand werfen, mal links, mal Mitte, mal rechts."),
+    ("throw_right", "Rechte Hand: Projektile an den RECHTEN Bildrand werfen, mal oben, mal unten."),
+    ("throw_bottom", "Rechte Hand: Projektile an den UNTEREN Bildrand werfen, verschiedene Stellen."),
+    ("throw_left", "Rechte Hand: Projektile an den LINKEN Bildrand werfen, mal oben, mal unten."),
+    ("throw_any_L", "Linke Hand: Projektile an beliebige Stellen der Bildränder werfen."),
+    ("swipe_right", "Rechte Hand: offen von links nach rechts wischen, ohne loszulassen."),
+    ("swipe_left", "Rechte Hand: offen von rechts nach links wischen."),
+    ("swipe_up", "Rechte Hand: von unten nach oben wischen."),
+    ("swipe_down", "Rechte Hand: von oben nach unten wischen."),
+    ("circle_cw", "Rechte Hand: Kreise im Uhrzeigersinn, mal klein, mal groß."),
+    ("circle_ccw", "Rechte Hand: Kreise gegen den Uhrzeigersinn."),
+    ("push_pull", "Rechte Hand: zur Kamera hin drücken und zurückziehen."),
+    ("pinch_drag", "Rechte Hand: Daumen und Zeigefinger zusammen, so durchs Bild ziehen, loslassen."),
+    ("grab_release", "Rechte Hand: in der Luft etwas greifen und loslassen, an verschiedenen Stellen."),
+    ("orb_hold", "Beide Hände halten einen Orb: größer, kleiner, drehen, durchs Bild tragen."),
+    ("orb_throw", "Orb halten und an einen Bildrand werfen, neu formen, wieder werfen."),
+    ("stretch", "Beide Hände: auseinanderziehen und zusammenführen, wie ein Gummiband."),
+    ("clap", "In die Hände klatschen, mal langsam, mal schnell."),
+]
+
 BLOCK_TITLES = {
     "A": "A Fingerhaltungen", "B": "B Langsame Zyklen und Zählen", "C": "C Gesicht und Kopf",
-    "D": "D Körper", "E": "E Objekte", "F": "F Schwierige Fälle", "G": "G Freestyle",
+    "D": "D Körper", "E": "E Objekte", "F": "F Schwierige Fälle", "H": "H Bewegungen",
+    "G": "G Freestyle",
 }
 
 
@@ -123,7 +146,7 @@ def ramp_block():
     return out
 
 
-def protocol(name, hold_s, objects, include_body, include_ramps):
+def protocol(name, hold_s, objects, include_body, include_ramps, motion_s, freestyle):
     segs = finger_block(hold_s)
     if include_ramps:
         segs += ramp_block()
@@ -132,9 +155,9 @@ def protocol(name, hold_s, objects, include_body, include_ramps):
         segs += [seg("D", f"D_{k}", d, t, body=k) for k, d, t in BODY]
     segs += [seg("E", f"E_{k}", 20, f"Objekt: {n}. {OBJ_MOVE}", objects=[k]) for k, n in objects]
     segs += [seg("F", f"F_{k}", 8, t, hard_case=k) for k, t in HARD]
-    if include_body:
-        # No gesture labels: these frames only get SAM 3.1 masks.
-        segs += [seg("G", f"G_{k}", d, t, freestyle=k) for k, d, t in FREESTYLE]
+    segs += [seg("H", f"H_{k}", motion_s, t, margin=(0.5, 0.2), motion=k) for k, t in MOTION]
+    # No gesture labels: these frames get SAM 3.1 masks and a Muse Spark Open timeline.
+    segs += [seg("G", f"G_{k}", d, t, freestyle=k) for k, d, t in FREESTYLE if k in freestyle]
     total = sum(s["duration_s"] for s in segs) + len(segs) * 1.0  # 1 s gap with next prompt
     return {"name": name, "gap_s": 1.0, "total_s": total, "segments": segs}
 
@@ -160,8 +183,8 @@ def main():
         "version": 1,
         "finger_bits": "thumb,index,middle,ring,pinky; 1 = extended",
         "protocols": {
-            "full": protocol("full", 6, OBJECTS, True, True),
-            "short": protocol("short", 4, OBJECTS[:3], False, False),
+            "full": protocol("full", 6, OBJECTS, True, True, 8, [k for k, _, _ in FREESTYLE]),
+            "short": protocol("short", 4, OBJECTS[:3], False, False, 6, ["free_hands", "free_play"]),
         },
     }
     root = Path(__file__).resolve().parents[1]

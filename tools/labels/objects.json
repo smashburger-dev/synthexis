@@ -1,0 +1,10 @@
+{
+  "default": {
+    "mug": "soda can",
+    "phone": "phone",
+    "pen": "pen",
+    "ball": "ball",
+    "demo_object": "air freshener"
+  },
+  "sessions": {}
+}

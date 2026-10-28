@@ -35,3 +35,14 @@
 - Rust for the plugin (nih-plug, CLAP, with clap-wrapper for VST3 and AUv2). Perception never runs on the audio thread.
 - Python with uv for the data engine and training on Modal.
 - English for code, comments and docs. Talk to Noa in German.
+
+## Commands
+
+- Recorder: `tools/recorder/build.sh` builds, bundles the protocol, signs and runs `--selftest` (exit 0 = ready). Never call swiftc through a pipe that hides its exit code. Recordings land in `~/Movies/synthexis/recordings/` (`data/recordings` is a symlink).
+- Protocol: edit `tools/make_protocol.py`, run `python3 tools/make_protocol.py`, then `tools/recorder/build.sh`.
+- Labels: `uv run tools/labels/run.py data/recordings/<date>-<Sx> --max-usd <cap>` (default GPU L40S). Inspect `data/labels/<session>/contact_sheet.jpg` by eye before using the labels.
+
+## Money
+
+- Every paid cloud run has a cap in its command and the three guards in `tools/labels/run.py` (up-front estimate, pilot re-estimate, rolling spend stop) or their equivalent. Measure on a pilot before scaling; keep GPU containers doing GPU work only.
+- Budgets and spend so far: `spec/synthexis.yaml` -> `budget.money`; latest session digest in `docs/session-*.md`.
