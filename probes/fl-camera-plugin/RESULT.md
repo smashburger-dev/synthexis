@@ -64,3 +64,11 @@ Läufe: `bridge/runs/*.json` (nicht im Repo). Kommandos: `bridge/flbridged &`, d
 | Automation aufgenommen mit Editor geschlossen (Drive=Always)? | |
 | MIDI test: Synth bekam Note 60 pro Beat? Aufgenommen? | |
 | Auffälligkeiten / Crash / Freeze | |
+
+## Welle-3-Gate: synthexis-Grundgerüst in FL (2026-10-28)
+
+- Plugin `plugin/` (VST3, nih-plug mit `host_context_available`-Patch). Log `~/Library/Logs/synthexis.log`: `host context available (api=Vst3)` 1 ms nach dem Laden, bevor FL das Fenster automatisch öffnete; Noa schloss es sofort. Danach schrieb das Plugin bei geschlossenem Fenster.
+- Gate (`bridge/gate_run.py 52`): Kontrolle flach (0,000), Aufnahme 10 s mit Live an, Abspielen mit Live aus: Signal 32 (Testdreieck) Spanne 0,744, 158 Werte, aufgenommen. Gegenprobe mit `/tmp/pb.py`-Logik auf Pattern 50 und dem leeren Pattern 51: Pattern 50 spielt Signal 1 (Helligkeit, Spanne 0,061), Signal 2 (Bewegung, 0,039) und Signal 32 (0,754) ab, Pattern 51 ist flach. Die Kamera-Signale landen also als Automation in FL.
+- Kamera bis Parameter in FL: 116 bis 126 ms Median, 142 bis 145 ms p95 (Log-Fenster je 300 Schreibvorgänge); davon Kamera-Auslieferung pts_to_cb 117 bis 135 ms Median, Merkmale 0,7 ms Median.
+- Offener Fehler: `plugins.setParamValue` aus dem FL-Skript kommt bei synthexis nicht an (Wert bleibt 0), beim Probe-Plugin ging es (P3). `general.processRECEvent(getRecEventId(ch) + REC_Chan_Plugin_First + idx, v * 2^30, REC_MIDIController)` funktioniert; der Gate-Lauf nutzt diesen Weg. Ursache unbekannt.
+- Erster Gate-Lauf (Pattern 50) meldete fälschlich "flat": der Lauf sprang vor dem Abspielen nicht ins aufgenommene Pattern zurück und prüfte den Record-Status nicht. Behoben in `gate_run.py`.

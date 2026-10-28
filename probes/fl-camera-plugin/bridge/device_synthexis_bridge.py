@@ -13,6 +13,8 @@ import time
 
 import channels
 import device
+import general
+import midi
 import patterns
 import plugins
 import transport
@@ -80,6 +82,14 @@ def _handle(cmd):
             float(cmd["value"]), int(cmd["idx"]), int(cmd["ch"])
         )
         return {"ok": True}
+    if op == "rec":
+        # Set a plugin parameter through FL's REC event path (like a linked
+        # MIDI controller). Value 0..1 maps to 0..2^30 with REC_MIDIController.
+        ch = int(cmd["ch"])
+        eid = channels.getRecEventId(ch) + midi.REC_Chan_Plugin_First + int(cmd["idx"])
+        val = int(max(0.0, min(1.0, float(cmd["value"]))) * (1 << 30))
+        res = general.processRECEvent(eid, val, midi.REC_MIDIController)
+        return {"ok": True, "res": res, "eid": eid}
     if op == "show":
         channels.showEditor(int(cmd["ch"]), 1 if cmd.get("on") else 0)
         return {"ok": True}

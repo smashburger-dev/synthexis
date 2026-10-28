@@ -50,7 +50,7 @@ def params(ch):
 
 
 def setp(ch, idx, name, v):
-    must(call("set", ch=ch, idx=idx[name], value=v))
+    must(call("rec", ch=ch, idx=idx[name], value=v))
 
 
 def getp(ch, idx, name):
@@ -68,6 +68,9 @@ def sample(ch, idx, name, secs, hz=20):
     return [v for v in vals if v is not None]
 
 
+PATTERN = int(sys.argv[1]) if len(sys.argv) > 1 else 50
+
+
 def main():
     must(call("ping"))
     ch = find()
@@ -77,7 +80,7 @@ def main():
 
     setp(ch, idx, "Test signal", 1.0)
     setp(ch, idx, "Live", 1.0)
-    must(call("pattern", n=50))
+    must(call("pattern", n=PATTERN))
     must(call("setpos", pos=0))
 
     # Control: Live off -> Signal 32 must be flat on playback.
@@ -105,7 +108,12 @@ def main():
     must(call("transport", op="record"))
     setp(ch, idx, "Live", 0.0)
 
-    # Judge: replay and watch Signal 32.
+    # Judge: replay the recorded pattern and watch Signal 32.
+    time.sleep(0.5)
+    st = must(call("transport", op="status"))
+    if st.get("recording"):
+        must(call("transport", op="record"))
+    must(call("pattern", n=PATTERN))
     must(call("setpos", pos=0))
     series = sample(ch, idx, "Signal 32", 8)
     rng = max(series) - min(series) if series else 0.0
