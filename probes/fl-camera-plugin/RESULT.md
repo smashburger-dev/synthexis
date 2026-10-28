@@ -29,6 +29,29 @@ Send back: `~/Library/Logs/synthexis-probe.log` Inhalt + diese Felder.
 - Build: `./guarded-cargo.sh xtask bundle synthexis-probe --release` (Peak 960 MB), `codesign --force --deep -s -` auf beide Bundles, installiert nach `~/Library/Audio/Plug-Ins/{VST3,CLAP}/`. Log-Zeile `synthexis probe v0.2.0 build=948fc05`.
 - Checkliste für FL: [README.md](README.md).
 
+## H2 in FL Studio 2026, gemessen über die FL-Bridge (2026-10-28)
+
+Methode (`bridge/h2_run.py`, FL-Skript `bridge/device_synthexis_bridge.py`): Pro Bedingung frisches Pattern, Kontrolle mit Drive = Off (muss flach sein), Plugin-Fenster 1 s auf und wieder zu, dann Drive = Always, Aufnahme 10 s mit Automation-Filter, Stop. Schiedsrichter: Drive = Off, Abspielen, Signal 1 über `plugins.getParamValue` 8 s lang mit 20 Hz auslesen. Aufgenommen = Spanne > 0,3 und mindestens 20 verschiedene Werte. Das Plugin-Log bestätigt, dass während der Abspielphase keine Schreibvorgänge liefen.
+
+| Bundle | Weg | Gesture | Fenster | Spanne beim Abspielen | Werte | Ergebnis | Pattern |
+|---|---|---|---|---|---|---|---|
+| VST3 | A Hintergrund-Thread | per write | zu | 0,000 | 1 | nicht aufgenommen | 10 |
+| VST3 | B Main-Thread | per write | zu | 0,983 | 156 | aufgenommen | 11 |
+| VST3 | A | held | zu | 0,000 | 1 | nicht aufgenommen | 12 |
+| VST3 | B | held | zu | 0,995 | 157 | aufgenommen | 13 |
+| VST3 | A | per write | offen | 0,996 | 155 | aufgenommen | 30 |
+| CLAP (Weg C) | A | per write | zu | 0,015 | 2 | nicht aufgenommen | 20 |
+| CLAP | B | per write | zu | 0,034 | 2 | nicht aufgenommen | 21 |
+| CLAP | A | held | zu | 0,018 | 2 | nicht aufgenommen | 22 |
+| CLAP | B | held | zu | 0,174 | 3 | nicht aufgenommen | 23 |
+| CLAP | A | per write | offen | 0,994 | 155 | aufgenommen | 24 |
+
+Ergebnis: Gate erfüllt. FL nimmt Automation bei geschlossenem Plugin-Fenster auf, wenn das VST3 die Änderungen auf dem Main-Thread meldet (Weg B). Aus einem Hintergrund-Thread (Weg A) nimmt FL nur bei offenem Fenster auf, das CLAP-Bundle ebenso. Weg D wurde nicht getestet, weil B ohne jede Einrichtung funktioniert.
+
+Offen für das Produkt: Die Wege A bis C brauchen den GuiContext von nih-plug, den es erst gibt, wenn das Fenster seit dem Start von FL einmal offen war. Der Lauf hat das Fenster dafür je Bedingung 1 s geöffnet. Das echte Plugin muss ohne diesen Schritt schreiben können.
+
+Läufe: `bridge/runs/*.json` (nicht im Repo). Kommandos: `bridge/flbridged &`, dann `python3 bridge/h2_run.py --channel-name "synthexis probe"` bzw. `--channel-name "synthexis probe clap" --pattern-base 20`.
+
 ## Auszufüllen von Noa (v0.1)
 
 | Feld | Antwort |

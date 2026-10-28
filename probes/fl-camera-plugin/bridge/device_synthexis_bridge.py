@@ -8,6 +8,8 @@
 # One command = one quick API call; nothing here blocks or sleeps.
 
 import json
+import os
+import time
 
 import channels
 import device
@@ -113,13 +115,40 @@ def _handle(cmd):
     return {"error": "unknown cmd " + str(op)}
 
 
+_LOG_PATH = os.path.expanduser("~/Library/Logs/synthexis-flbridge-fl.log")
+_last_beat = [0.0]
+
+
+def _log(text):
+    try:
+        with open(_LOG_PATH, "a") as f:
+            f.write("[%.3f] %s\n" % (time.time(), text))
+    except Exception:
+        pass
+
+
 def OnInit():
-    pass
+    _log("OnInit port=%s" % _safe(device.getPortNumber))
+
+
+def _safe(fn):
+    try:
+        return fn()
+    except Exception as e:
+        return "err:" + str(e)
+
+
+def OnMidiIn(msg):
+    try:
+        _log("OnMidiIn status=0x%02x sysex=%s" % (msg.status, msg.sysex is not None))
+    except Exception as e:
+        _log("OnMidiIn err " + str(e))
 
 
 def OnSysEx(msg):
     try:
         payload = _sysex_payload(msg)
+        _log("OnSysEx payload=%s" % (payload[:80] if payload else None))
         if payload is None:
             return
         cmd = json.loads(payload.decode("ascii"))
@@ -134,4 +163,7 @@ def OnSysEx(msg):
 
 
 def OnIdle():
-    pass
+    now = time.time()
+    if now - _last_beat[0] > 10:
+        _last_beat[0] = now
+        _log("alive")
