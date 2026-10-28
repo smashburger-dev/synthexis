@@ -1,1 +1,4 @@
 tools/midi-listen
+bridge/flbridged
+bridge/__pycache__/
+bridge/runs/

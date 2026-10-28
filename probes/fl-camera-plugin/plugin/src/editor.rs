@@ -111,7 +111,14 @@ pub fn make_editor(
             shared,
             texture: None,
         },
-        |_, _| {},
+        // Runs on every editor open. The egui Context is recreated per open
+        // while this user state persists (nih_plug_egui::editor::EguiEditor
+        // keeps user_state across openings), so any TextureHandle from a
+        // previous open points at a texture id the new Context does not
+        // have -> drop it and let the update closure recreate it.
+        |_, state| {
+            state.texture = None;
+        },
         move |egui_ctx, setter, state| {
             egui::CentralPanel::default().show(egui_ctx, |ui| {
                 ui.heading("synthexis probe");
