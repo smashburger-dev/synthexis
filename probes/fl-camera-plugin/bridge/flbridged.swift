@@ -60,13 +60,14 @@ func sendPackets(_ bytes: [UInt8]) {
 // Iterate a MIDIPacketList's byte payloads.
 func forEachPacket(_ list: UnsafePointer<MIDIPacketList>,
                    _ f: (UnsafePointer<UInt8>, Int) -> Void) {
-    var pkt = list.pointee.packet
-    for _ in 0..<list.pointee.numPackets {
-        let len = Int(pkt.length)
-        withUnsafePointer(to: &pkt.data) { d in
-            d.withMemoryRebound(to: UInt8.self, capacity: len) { f($0, len) }
-        }
-        pkt = MIDIPacketNext(&pkt).pointee
+    // Walk the list in place: copying a MIDIPacket by value truncates its
+    // payload to the 256-byte tuple, which cut long SysEx replies.
+    let dataOffset = MemoryLayout<MIDIPacket>.offset(of: \MIDIPacket.data) ?? 10
+    for pkt in list.unsafeSequence() {
+        let len = Int(pkt.pointee.length)
+        let bytes = UnsafeRawPointer(pkt).advanced(by: dataOffset)
+            .assumingMemoryBound(to: UInt8.self)
+        f(bytes, len)
     }
 }
 
