@@ -1,0 +1,32 @@
+{
+  "fourcc" : "34323076",
+  "fx_bgrepl_active" : false,
+  "sync_is_host" : true,
+  "device_id" : "47B4B64B-7067-4B9C-AD2B-AE273A71F4B5",
+  "max_dur_s" : 0.033333333333333333,
+  "min_dur_s" : 0.033333333333333333,
+  "fx_portrait_en" : false,
+  "fx_center_en" : false,
+  "fps_ranges" : [
+    "15.00-30.00"
+  ],
+  "dropped" : 0,
+  "label" : "D6a-hold20",
+  "fx_react_gestures_en" : false,
+  "format_w" : 1920,
+  "fx_reactions_en" : true,
+  "format_h" : 1080,
+  "device" : "FaceTime HD-Kamera",
+  "macos" : "Version 27.0.1 (Build 26A434)",
+  "inject_ms" : 0,
+  "args" : "--label D6a-hold20 --seconds 60 --device builtin --mode preset720 --fps auto --pix bgra --qos default --flash 0 --out \/Users\/no8\/Desktop\/life\/Lifemaxxing\/synthexis\/probes\/camera-latency\/out --hold-ms 20",
+  "load_start" : "{ 10.36 12.72 11.76 }",
+  "discards_late" : true,
+  "fx_studio_en" : false,
+  "fx_studio_active" : false,
+  "fx_portrait_active" : false,
+  "fx_bgrepl_en" : false,
+  "frames" : 1784,
+  "fx_center_active" : false,
+  "load_end" : "{ 12.80 13.15 12.00 }"
+}

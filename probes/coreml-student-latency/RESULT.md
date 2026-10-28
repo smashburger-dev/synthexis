@@ -114,3 +114,31 @@ done
 - Logs: `raw_export.log` (versions, param counts, package sizes, re-derived
   after the fact — the first export's console output was not saved),
   `raw_bench.log` (all bench RESULT lines of the timing run).
+
+## D10-D12 export check (2026-10-28, benches deferred)
+
+Export run: `.venv/bin/python export2.py` (random weights, FP16 mlprogram,
+min macOS 15, generic LR-ASPP-style head on stride-8/stride-32 timm
+features). Latency was deliberately NOT measured yet.
+
+Exported OK (`models2/*.mlpackage`, params from manifest.json):
+
+| model | params | size MiB |
+|-------|--------|----------|
+| seg_mnv4s_384x216(_pm) | 1,509,166 / 1,509,454 | 2.92 |
+| seg_mnv4s_320x180(_pm) | 1,509,166 / 1,509,454 | 2.92 |
+| seg_mnv4s50_384x216(_pm) | 465,390 / 465,678 | 0.95 |
+| seg_mnv4s50_320x180(_pm) | 465,390 / 465,678 | 0.95 |
+| seg_repvit09_384x216(_pm) | 4,818,062 / 4,818,278 | 9.34 |
+| seg_repvit09_320x180(_pm) | 4,818,062 / 4,818,278 | 9.34 |
+| face_f1_mnv4s_128 | 1,508,390 | 2.92 |
+| hand_h3_mnv3_128_{img_b1,t_b1,t_b2} | 1,566,031 | 3.07 |
+
+Failed (all four variants, same error): `seg_effvitb0_{384x216,320x180}{,_pm}` —
+`TypeError('only 0-dimensional arrays can be converted to Python scalars')`
+while converting `int` op in `backbone/stages_2/blocks/1/context_module/main`
+(EfficientViT attention context module, coremltools 9.0 frontend).
+
+bench2.swift and frame2.swift were written (bench2 compiles) but not run,
+per decision to defer H3 benches. mobilenetv4_conv_small_050 pretrained
+availability not checked.
