@@ -1,0 +1,29 @@
+[workspace]
+resolver = "2"
+members = ["synthexis", "xtask"]
+exclude = ["vendor"]
+
+[workspace.lints.rust]
+unsafe_code = "deny"
+
+[workspace.lints.clippy]
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+
+[profile.dev]
+opt-level = 1
+debug = "line-tables-only"
+[profile.dev.package."*"]
+opt-level = 3
+debug = false
+
+[profile.app]
+inherits = "release"
+opt-level = 3
+incremental = true
+codegen-units = 64
+
+[profile.release]
+lto = false
+strip = true

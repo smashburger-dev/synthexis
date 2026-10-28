@@ -1,0 +1,195 @@
+//! The H2 write path: one coalesced main-queue dispatch per signal frame,
+//! per-write gestures on macros that moved >= 1/1024. Plus the audio-thread
+//! snapshot and the camera->parameter latency instrumentation.
+//!
+//! The dispatch block touches ObjC (dispatch2); everything else is safe.
+#![allow(unsafe_code)]
+
+use std::sync::atomic::{AtomicBool, AtomicU32, AtomicU64, Ordering};
+use std::sync::Arc;
+use std::time::Instant;
+
+use parking_lot::Mutex;
+
+use dispatch2::DispatchQueue;
+use nih_plug::prelude::*;
+
+use crate::engine::SignalSubscriber;
+use crate::log;
+use crate::route::{apply_sample, default_routes, Route, NUM_MACROS};
+use crate::signal::{Sample, SIG_TRIANGLE};
+
+const WRITE_EPS: f32 = 1.0 / 1024.0;
+const LOG_EVERY_S: u64 = 5;
+
+/// Per-instance writer state. Registers with the engine as a subscriber.
+pub struct Writer {
+    pub params: Arc<crate::params::SynthexisParams>,
+    host_ctx: Mutex<Option<Arc<dyn GuiContext>>>,
+    routes: Mutex<Vec<Route>>,
+    /// Self-reference so subscriber calls can re-enter `submit_main`
+    /// (the trait gives us `&self`, the dispatch block needs `Arc<Self>`).
+    me: Mutex<std::sync::Weak<Self>>,
+    /// Latest target values (f32 bits) + per-macro capture timestamps of the
+    /// camera frame that produced them (0 for non-camera signals like
+    /// test.triangle, whose t_capture_ns is dispatch time and would pollute
+    /// the camera-to-parameter metric).
+    latest: Box<[AtomicU32; NUM_MACROS]>,
+    latest_ts: Box<[AtomicU64; NUM_MACROS]>,
+    pending: AtomicBool,
+    /// Last written values — main queue only.
+    written: Mutex<[f32; NUM_MACROS]>,
+    /// Snapshot the audio thread reads once per block.
+    pub snapshot: Box<[AtomicU32; NUM_MACROS]>,
+    /// Instrumentation.
+    writes: AtomicU64,
+    cam_to_param_ms: Mutex<std::collections::VecDeque<f64>>,
+    last_log: Mutex<Option<Instant>>,
+}
+
+impl Writer {
+    pub fn new(params: Arc<crate::params::SynthexisParams>) -> Arc<Self> {
+        let test_on = params.test_signal.value();
+        let w = Arc::new(Self {
+            me: Mutex::new(std::sync::Weak::new()),
+            params,
+            host_ctx: Mutex::new(None),
+            routes: Mutex::new(default_routes(test_on)),
+            latest: Box::new([const { AtomicU32::new(0) }; NUM_MACROS]),
+            latest_ts: Box::new([const { AtomicU64::new(0) }; NUM_MACROS]),
+            pending: AtomicBool::new(false),
+            written: Mutex::new([0.0; NUM_MACROS]),
+            snapshot: Box::new([const { AtomicU32::new(0) }; NUM_MACROS]),
+            writes: AtomicU64::new(0),
+            cam_to_param_ms: Mutex::new(std::collections::VecDeque::new()),
+            last_log: Mutex::new(None),
+        });
+        *w.me.lock() = Arc::downgrade(&w);
+        w
+    }
+
+    pub fn set_context(&self, ctx: Arc<dyn GuiContext>) {
+        let api = format!("{:?}", ctx.plugin_api());
+        *self.host_ctx.lock() = Some(ctx);
+        log::log(&format!("host context available (api={api})"));
+    }
+
+    /// Called by process() once per block (audio thread).
+    pub fn read_snapshot(&self, out: &mut [f32; NUM_MACROS]) {
+        for (i, a) in self.snapshot.iter().enumerate() {
+            out[i] = f32::from_bits(a.load(Ordering::Relaxed));
+        }
+    }
+
+    /// Queue a coalesced write onto the main queue.
+    fn submit_main(&self) {
+        let this = match self.me.lock().upgrade() {
+            Some(t) => t,
+            None => return,
+        };
+        if self.pending.swap(true, Ordering::AcqRel) {
+            return; // a block is already queued; it will read the latest
+        }
+        DispatchQueue::main().exec_async(move || {
+            let guard = &*this;
+            let ctx = guard.host_ctx.lock().clone();
+            let setter = match ctx.as_ref() {
+                Some(c) => ParamSetter::new(c.as_ref()),
+                None => {
+                    guard.pending.store(false, Ordering::Release);
+                    return;
+                }
+            };
+            let sig_params = guard.params.signals();
+            let mut written = guard.written.lock();
+            let mut n_writes = 0u64;
+            let mut max_cam_ms = 0.0f64;
+            for (i, param) in sig_params.iter().enumerate() {
+                let target = f32::from_bits(guard.latest[i].load(Ordering::Relaxed));
+                if (target - written[i]).abs() >= WRITE_EPS {
+                    setter.begin_set_parameter(*param);
+                    setter.set_parameter(*param, target);
+                    setter.end_set_parameter(*param);
+                    written[i] = target;
+                    n_writes += 1;
+                    let ts = guard.latest_ts[i].load(Ordering::Relaxed);
+                    if ts > 0 {
+                        let done_ns = crate::engine::host_time_ns();
+                        max_cam_ms = max_cam_ms
+                            .max(done_ns.saturating_sub(ts) as f64 / 1e6);
+                    }
+                }
+            }
+            drop(written);
+            guard.pending.store(false, Ordering::Release);
+            if n_writes > 0 {
+                guard.writes.fetch_add(n_writes, Ordering::Relaxed);
+                if max_cam_ms > 0.0 {
+                    let mut v = guard.cam_to_param_ms.lock();
+                    v.push_back(max_cam_ms);
+                    while v.len() > 300 {
+                        v.pop_front();
+                    }
+                }
+            }
+        });
+    }
+
+    fn periodic_log(&self) {
+        let mut last = self.last_log.lock();
+        let now = Instant::now();
+        if last.map(|t| t.elapsed().as_secs() >= LOG_EVERY_S).unwrap_or(true) {
+            *last = Some(now);
+            let v = self.cam_to_param_ms.lock();
+            let (med, p95) = crate::engine::camera::median_p95(&v);
+            log::log(&format!(
+                "writes_total={} cam_to_param_ms med={med:.1} p95={p95:.1}",
+                self.writes.load(Ordering::Relaxed)
+            ));
+        }
+    }
+}
+
+impl SignalSubscriber for Writer {
+    fn on_sample(&self, signal_id: &str, sample: &Sample) {
+        {
+            let mut routes = self.routes.lock();
+            for r in routes.iter_mut() {
+                if r.signal == SIG_TRIANGLE {
+                    r.enabled = self.params.test_signal.value();
+                }
+            }
+            let mut current = *self.written.lock();
+            let t_s = sample.t_capture_ns as f64 / 1e9;
+            let changed =
+                apply_sample(&mut routes, &mut current, signal_id, sample, t_s);
+            drop(current);
+            if changed.is_empty() {
+                self.periodic_log();
+                return;
+            }
+            for (i, v) in &changed {
+                self.latest[*i].store(v.to_bits(), Ordering::Relaxed);
+                self.snapshot[*i].store(v.to_bits(), Ordering::Relaxed);
+                self.latest_ts[*i].store(
+                    if signal_id.starts_with("cam") {
+                        sample.t_capture_ns
+                    } else {
+                        0
+                    },
+                    Ordering::Relaxed,
+                );
+            }
+        }
+        if !self.params.live.value() {
+            self.periodic_log();
+            return;
+        }
+        if self.host_ctx.lock().is_none() {
+            self.periodic_log();
+            return;
+        }
+        self.submit_main();
+        self.periodic_log();
+    }
+}
