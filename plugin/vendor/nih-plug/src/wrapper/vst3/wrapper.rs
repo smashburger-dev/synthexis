@@ -368,6 +368,7 @@ impl<P: Vst3Plugin> IComponent for Wrapper<P> {
     }
 
     unsafe fn set_active(&self, state: TBool) -> tresult {
+        nih_diag_log(&format!("set_active({})", state != 0));
         // We could call initialize in `IAudioProcessor::setup_processing()`, but REAPER will set
         // the bus arrangements between that function and this function. So to be able to handle
         // custom channel layout overrides we need to initialize here.
@@ -659,16 +660,34 @@ impl<P: Vst3Plugin> IEditController for Wrapper<P> {
     }
 
     unsafe fn get_param_normalized(&self, id: u32) -> f64 {
-        match self.inner.param_by_hash.get(&id) {
+        let v = match self.inner.param_by_hash.get(&id) {
             Some(param_ptr) => param_ptr.modulated_normalized_value() as f64,
             _ => 0.5,
+        };
+        // [synthexis patch] rate-limit: log only when the read-back value
+        // changes (shows what FL's script sees).
+        if let Ok(mut last) = nih_last_gets().lock() {
+            if last.get(&id).copied() != Some(v) {
+                last.insert(id, v);
+                nih_diag_log(&format!(
+                    "get_param_normalized hash={id:#x} name={} -> {v:.4}",
+                    nih_param_name(&self.inner, id)
+                ));
+            }
         }
+        v
     }
 
     unsafe fn set_param_normalized(&self, id: u32, value: f64) -> tresult {
         // If the plugin is currently processing audio, then this parameter change will also be sent
         // to the process function
-        if self.inner.is_processing.load(Ordering::SeqCst) {
+        let processing = self.inner.is_processing.load(Ordering::SeqCst);
+        nih_diag_log(&format!(
+            "set_param_normalized hash={id:#x} name={} value={value:.4} is_processing={processing} applied={}",
+            nih_param_name(&self.inner, id),
+            !processing
+        ));
+        if processing {
             return kResultOk;
         }
 
@@ -710,6 +729,58 @@ impl<P: Vst3Plugin> IEditController for Wrapper<P> {
             None => std::ptr::null_mut(),
         }
     }
+}
+
+
+// [synthexis patch] Diagnostics for the FL setParamValue no-effect issue:
+// append-only log to ~/Library/Logs/synthexis-nih.log. Deliberately cheap —
+// open+append per line, no locking beyond std Mutex.
+fn nih_diag_log(msg: &str) {
+    use std::io::Write;
+    // Gated on the marker file; checked once per process.
+    static ENABLED: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+    let enabled = *ENABLED.get_or_init(|| {
+        std::env::var_os("HOME")
+            .map(|h| {
+                std::path::PathBuf::from(h)
+                    .join("Library/Logs/synthexis-nih.enable")
+                    .exists()
+            })
+            .unwrap_or(false)
+    });
+    if !enabled {
+        return;
+    }
+    if let Some(home) = std::env::var_os("HOME") {
+        let path = std::path::PathBuf::from(home)
+            .join("Library/Logs/synthexis-nih.log");
+        if let Ok(mut f) = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(path)
+        {
+            let ts = std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map(|d| d.as_secs_f64())
+                .unwrap_or(0.0);
+            let _ = writeln!(f, "[{ts:.3}] {msg}");
+        }
+    }
+}
+
+fn nih_param_name<P: Vst3Plugin>(inner: &WrapperInner<P>, hash: u32) -> String {
+    inner
+        .param_id_by_hash
+        .get(&hash)
+        .cloned()
+        .unwrap_or_else(|| "<?>".into())
+}
+
+// Per-hash last-logged get_param_normalized value.
+fn nih_last_gets() -> &'static std::sync::Mutex<std::collections::HashMap<u32, f64>> {
+    static M: std::sync::OnceLock<std::sync::Mutex<std::collections::HashMap<u32, f64>>> =
+        std::sync::OnceLock::new();
+    M.get_or_init(|| std::sync::Mutex::new(std::collections::HashMap::new()))
 }
 
 impl<P: Vst3Plugin> IAudioProcessor for Wrapper<P> {
@@ -908,6 +979,7 @@ impl<P: Vst3Plugin> IAudioProcessor for Wrapper<P> {
 
     unsafe fn set_processing(&self, state: TBool) -> tresult {
         let state = state != 0;
+        nih_diag_log(&format!("set_processing({state})"));
 
         // Always reset the processing status when the plugin gets activated or deactivated
         self.inner.last_process_status.store(ProcessStatus::Normal);
@@ -1004,6 +1076,24 @@ impl<P: Vst3Plugin> IAudioProcessor for Wrapper<P> {
                         let num_changes = param_change_queue.get_point_count();
                         if num_changes <= 0 {
                             continue;
+                        }
+
+                        // [synthexis patch] log host->process param changes
+                        // (rate-limited by nature: only when queues exist).
+                        {
+                            let mut sample_offset = 0i32;
+                            let mut value = 0.0f64;
+                            if param_change_queue.get_point(
+                                num_changes - 1,
+                                &mut sample_offset,
+                                &mut value,
+                            ) == kResultOk
+                            {
+                                nih_diag_log(&format!(
+                                    "process input_param_changes hash={param_hash:#x} name={} n={num_changes} last={value:.4}",
+                                    nih_param_name(&self.inner, param_hash)
+                                ));
+                            }
                         }
 
                         let mut sample_offset = 0i32;
