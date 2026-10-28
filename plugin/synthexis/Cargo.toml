@@ -1,0 +1,37 @@
+[package]
+name = "synthexis"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+
+[[bin]]
+name = "synthexis"
+path = "src/main.rs"
+
+[lints]
+workspace = true
+
+[dependencies]
+nih_plug = { path = "../vendor/nih-plug", features = ["standalone"] }
+nih_plug_egui = { path = "../vendor/nih-plug/nih_plug_egui" }
+objc2 = "0.6"
+objc2-foundation = { version = "0.3", features = [
+    "NSString",
+    "NSArray",
+    "NSError",
+    "NSObject",
+] }
+objc2-av-foundation = { version = "0.3", features = ["objc2-core-media"] }
+objc2-core-foundation = "=0.3.2"
+objc2-core-media = "0.3"
+objc2-core-video = "0.3"
+block2 = "0.6"
+dispatch2 = "0.3"
+parking_lot = "0.12"
+crossbeam-channel = "0.5"
+
+[build-dependencies]
+# none needed; build.rs uses std only
