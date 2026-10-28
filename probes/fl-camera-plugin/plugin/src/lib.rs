@@ -1,17 +1,19 @@
 //! synthexis probe — camera-to-parameter + MIDI-out test plugin.
 //!
 //! Covers probes P1 (camera capture inside a plugin), P2 (automation written
-//! from a background thread through GuiContext) and P6 (sample-accurate MIDI
-//! out on the beat grid). Outputs silence; sits in the FL Channel Rack as an
-//! instrument.
+//! through GuiContext) and P6 (sample-accurate MIDI out on the beat grid),
+//! plus hill-climb H2 (does the host record automation while the editor is
+//! closed) with write paths A (background thread), B (main thread), C
+//! (CLAP bundle) and D (CoreMIDI virtual source). Outputs silence; sits in
+//! the FL Channel Rack as an instrument.
 
 mod camera;
 mod editor;
+mod midi;
 mod probe_log;
+mod pump;
 
 use std::num::NonZeroU32;
-use std::panic::{catch_unwind, AssertUnwindSafe};
-use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, OnceLock};
 
 use nih_plug::prelude::*;
@@ -20,11 +22,17 @@ use parking_lot::Mutex;
 
 static GUI_CONTEXT: Mutex<Option<Arc<dyn GuiContext>>> = Mutex::new(None);
 static PARAMS: OnceLock<Arc<ProbeParams>> = OnceLock::new();
-/// Number of param-set failures/no-ops so far (also logged).
-static PUMP_NOOPS: AtomicUsize = AtomicUsize::new(0);
 
 pub(crate) fn gui_context_slot() -> &'static Mutex<Option<Arc<dyn GuiContext>>> {
     &GUI_CONTEXT
+}
+
+pub(crate) fn gui_context() -> Option<Arc<dyn GuiContext>> {
+    GUI_CONTEXT.lock().clone()
+}
+
+pub(crate) fn params() -> Option<&'static Arc<ProbeParams>> {
+    PARAMS.get()
 }
 
 #[derive(Enum, Debug, Clone, Copy, PartialEq)]
@@ -40,75 +48,142 @@ pub enum Drive {
     Always,
 }
 
+#[derive(Enum, Debug, Clone, Copy, PartialEq)]
+pub enum Source {
+    #[id = "lum"]
+    #[name = "Luminance"]
+    Luminance,
+    #[id = "tri"]
+    #[name = "Triangle"]
+    Triangle,
+}
+
+#[derive(Enum, Debug, Clone, Copy, PartialEq)]
+pub enum WritePath {
+    #[id = "a"]
+    #[name = "A: background thread"]
+    Background,
+    #[id = "b"]
+    #[name = "B: main thread"]
+    Main,
+    #[id = "d"]
+    #[name = "D: MIDI CC"]
+    MidiCc,
+}
+
+impl WritePath {
+    pub fn letter(self) -> &'static str {
+        match self {
+            WritePath::Background => "a",
+            WritePath::Main => "b",
+            WritePath::MidiCc => "d",
+        }
+    }
+}
+
+#[derive(Enum, Debug, Clone, Copy, PartialEq)]
+pub enum Gesture {
+    #[id = "per_write"]
+    #[name = "Per write"]
+    PerWrite,
+    #[id = "held"]
+    #[name = "Held"]
+    Held,
+}
+
 #[derive(Params)]
 pub struct ProbeParams {
     #[persist = "editor-state"]
     pub editor_state: Arc<EguiState>,
 
-    /// Written every frame by the camera thread, 0..1.
+    /// Written at 30 Hz by the pump thread, 0..1.
     #[id = "signal1"]
     pub signal_1: FloatParam,
 
     #[id = "drive"]
     pub drive: EnumParam<Drive>,
 
+    /// Where the signal value comes from.
+    #[id = "source"]
+    pub source: EnumParam<Source>,
+
+    /// Which thread/transport performs the writes.
+    #[id = "path"]
+    pub path: EnumParam<WritePath>,
+
+    /// Whether each write is its own begin/end gesture.
+    #[id = "gesture"]
+    pub gesture: EnumParam<Gesture>,
+
     #[id = "midi_test"]
     pub midi_test: BoolParam,
 }
 
+/// Test-only override: `SYNTHEXIS_PROBE_TEST="drive=always,source=tri,path=b,gesture=held"`
+/// selects the initial param values (used for headless standalone runs).
+/// Read once during `ProbeParams::default`; unknown keys/values are ignored.
+#[derive(Default)]
+struct TestOverride {
+    drive: Option<Drive>,
+    source: Option<Source>,
+    path: Option<WritePath>,
+    gesture: Option<Gesture>,
+}
+
+impl TestOverride {
+    fn read() -> Self {
+        let mut out = Self::default();
+        let Ok(spec) = std::env::var("SYNTHEXIS_PROBE_TEST") else {
+            return out;
+        };
+        let mut applied: Vec<String> = Vec::new();
+        for pair in spec.split(',') {
+            let Some((key, val)) = pair.split_once('=') else {
+                continue;
+            };
+            let (key, val) = (key.trim(), val.trim());
+            match (key, val) {
+                ("drive", "off") => out.drive = Some(Drive::Off),
+                ("drive", "editor") => out.drive = Some(Drive::EditorOnly),
+                ("drive", "always") => out.drive = Some(Drive::Always),
+                ("source", "lum") => out.source = Some(Source::Luminance),
+                ("source", "tri") => out.source = Some(Source::Triangle),
+                ("path", "a") => out.path = Some(WritePath::Background),
+                ("path", "b") => out.path = Some(WritePath::Main),
+                ("path", "d") => out.path = Some(WritePath::MidiCc),
+                ("gesture", "per_write") => out.gesture = Some(Gesture::PerWrite),
+                ("gesture", "held") => out.gesture = Some(Gesture::Held),
+                _ => continue,
+            }
+            applied.push(format!("{key}={val}"));
+        }
+        if !applied.is_empty() {
+            probe_log::log(&format!(
+                "SYNTHEXIS_PROBE_TEST applied: {}",
+                applied.join(",")
+            ));
+        }
+        out
+    }
+}
+
 impl Default for ProbeParams {
     fn default() -> Self {
+        let over = TestOverride::read();
         Self {
-            editor_state: EguiState::from_size(640, 520),
+            editor_state: EguiState::from_size(680, 640),
             signal_1: FloatParam::new(
                 "Signal 1",
                 0.0,
                 FloatRange::Linear { min: 0.0, max: 1.0 },
             )
             .with_smoother(SmoothingStyle::Linear(10.0)),
-            drive: EnumParam::new("Drive", Drive::Off),
+            drive: EnumParam::new("Drive", over.drive.unwrap_or(Drive::Off)),
+            source: EnumParam::new("Source", over.source.unwrap_or(Source::Triangle)),
+            path: EnumParam::new("Path", over.path.unwrap_or(WritePath::Background)),
+            gesture: EnumParam::new("Gesture", over.gesture.unwrap_or(Gesture::PerWrite)),
             midi_test: BoolParam::new("MIDI test", false),
         }
-    }
-}
-
-/// Called from the camera thread at frame rate with the latest luminance.
-/// This is the P2 experiment: does FL record automation when the host-visible
-/// param setter is driven off the GUI thread?
-pub(crate) fn pump_signal_param(value: f32) {
-    let Some(params) = PARAMS.get() else {
-        return;
-    };
-    let drive = params.drive.value();
-    if drive == Drive::Off {
-        return;
-    }
-    if drive == Drive::EditorOnly && !editor::EDITOR_OPEN.load(Ordering::Acquire) {
-        return;
-    }
-    let ctx = GUI_CONTEXT.lock().clone();
-    let Some(ctx) = ctx else {
-        // No editor has ever been opened; expected no-op. Log at most once
-        // per 30 s so the file doesn't flood.
-        static LAST_LOG: Mutex<Option<std::time::Instant>> = Mutex::new(None);
-        let mut g = LAST_LOG.lock();
-        if g.map(|t| t.elapsed().as_secs() > 30).unwrap_or(true) {
-            probe_log::log("pump: no GuiContext captured yet (open the editor once)");
-            *g = Some(std::time::Instant::now());
-        }
-        PUMP_NOOPS.fetch_add(1, Ordering::Relaxed);
-        return;
-    };
-
-    let setter = ParamSetter::new(ctx.as_ref());
-    let result = catch_unwind(AssertUnwindSafe(|| {
-        setter.begin_set_parameter(&params.signal_1);
-        setter.set_parameter(&params.signal_1, value);
-        setter.end_set_parameter(&params.signal_1);
-    }));
-    if let Err(e) = result {
-        let n = PUMP_NOOPS.fetch_add(1, Ordering::Relaxed) + 1;
-        probe_log::log(&format!("pump: param set panicked ({e:?}) — #{n}"));
     }
 }
 
@@ -123,6 +198,11 @@ pub struct SynthexisProbe {
 
 impl Default for SynthexisProbe {
     fn default() -> Self {
+        probe_log::log(&format!(
+            "synthexis probe v{} build={}",
+            env!("CARGO_PKG_VERSION"),
+            env!("SYNTHEXIS_BUILD")
+        ));
         let params = Arc::new(ProbeParams::default());
         let _ = PARAMS.set(params.clone());
         let engine = camera::start();

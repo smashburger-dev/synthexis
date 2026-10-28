@@ -11,7 +11,7 @@ use nih_plug_egui::egui::{self, Color32, ColorImage, TextureHandle};
 use nih_plug_egui::{create_egui_editor, widgets};
 
 use crate::camera::CaptureShared;
-use crate::{probe_log, Drive, ProbeParams};
+use crate::{probe_log, Drive, Gesture, ProbeParams, Source, WritePath};
 
 pub static EDITOR_OPEN: AtomicBool = AtomicBool::new(false);
 
@@ -70,6 +70,35 @@ impl Editor for InterceptingEditor {
     }
 }
 
+/// Combo box for an `EnumParam`, same pattern as the Drive selector.
+fn enum_combo<E: Enum + PartialEq + Copy + 'static>(
+    ui: &mut egui::Ui,
+    setter: &ParamSetter,
+    id: &str,
+    label: &str,
+    param: &EnumParam<E>,
+    variants: &[(E, &'static str)],
+) {
+    ui.label(label);
+    egui::ComboBox::from_id_salt(id)
+        .selected_text(
+            variants
+                .iter()
+                .find(|(v, _)| *v == param.value())
+                .map(|(_, l)| *l)
+                .unwrap_or("?"),
+        )
+        .show_ui(ui, |ui| {
+            for (v, text) in variants {
+                if ui.selectable_label(param.value() == *v, *text).clicked() {
+                    setter.begin_set_parameter(param);
+                    setter.set_parameter(param, *v);
+                    setter.end_set_parameter(param);
+                }
+            }
+        });
+}
+
 pub fn make_editor(
     params: Arc<ProbeParams>,
     shared: Arc<CaptureShared>,
@@ -103,9 +132,12 @@ pub fn make_editor(
                     int_med, int_p95, lat_med, lat_p95
                 ));
                 ui.label(format!(
-                    "luminance (central 25%): {:.3}",
-                    state.shared.luminance()
+                    "luminance (central 25%): {:.3}   dropped: {}",
+                    state.shared.luminance(),
+                    state.shared.drop_count.load(Ordering::Relaxed)
                 ));
+                ui.monospace(state.shared.diag_line.lock().clone());
+                ui.monospace(crate::pump::last_write_line());
 
                 ui.separator();
                 ui.label("Signal 1 (set from camera when Drive != Off):");
@@ -137,6 +169,20 @@ pub fn make_editor(
                             }
                         }
                     });
+
+                enum_combo(ui, setter, "source", "Source:", &state.params.source, &[
+                    (Source::Luminance, "Luminance"),
+                    (Source::Triangle, "Triangle"),
+                ]);
+                enum_combo(ui, setter, "path", "Path:", &state.params.path, &[
+                    (WritePath::Background, "A: background thread"),
+                    (WritePath::Main, "B: main thread"),
+                    (WritePath::MidiCc, "D: MIDI CC"),
+                ]);
+                enum_combo(ui, setter, "gesture", "Gesture:", &state.params.gesture, &[
+                    (Gesture::PerWrite, "Per write"),
+                    (Gesture::Held, "Held"),
+                ]);
 
                 let mut midi = state.params.midi_test.value();
                 if ui.checkbox(&mut midi, "MIDI test (note 60 on beats)").changed() {
