@@ -41,7 +41,7 @@ var client = MIDIClientRef()
 var source = MIDIEndpointRef()
 var dest = MIDIEndpointRef()
 
-var replyBuf = Data()          // partial inbound sysex accumulation
+var replyBuf: [UInt8] = []     // partial inbound sysex accumulation
 var pendingLock = NSCondition()
 var pending: [Int: Data] = [:] // id -> reply JSON bytes
 
@@ -71,7 +71,9 @@ func forEachPacket(_ list: UnsafePointer<MIDIPacketList>,
 }
 
 func feedInbound(_ bytes: UnsafePointer<UInt8>, _ count: Int) {
-    replyBuf.append(bytes, count: count)
+    // Plain [UInt8] with 0-based indices; Data slices keep their old indices
+    // after removeFirst, which trapped on multi-packet replies.
+    replyBuf.append(contentsOf: UnsafeBufferPointer(start: bytes, count: count))
     while true {
         guard let start = replyBuf.firstIndex(of: 0xF0) else {
             replyBuf.removeAll(keepingCapacity: true); return
@@ -83,7 +85,7 @@ func feedInbound(_ bytes: UnsafePointer<UInt8>, _ count: Int) {
             if replyBuf.count > MAX_PAYLOAD + 4 { replyBuf.removeAll() }
             return
         }
-        let payload = replyBuf.subdata(in: 2..<end)
+        let payload = Data(replyBuf[2..<end])
         replyBuf.removeFirst(end + 1)
         if let obj = try? JSONSerialization.jsonObject(with: payload)
             as? [String: Any], let rid = obj["id"] as? Int {
@@ -176,6 +178,9 @@ status = MIDIDestinationCreateWithBlock(
     forEachPacket(packetList) { ptr, len in feedInbound(ptr, len) }
 }
 guard status == noErr else { log("dest create failed \(status)"); exit(1) }
+// Fixed unique IDs so hosts can re-identify the ports after a daemon restart.
+MIDIObjectSetIntegerProperty(source, kMIDIPropertyUniqueID, 0x5359_4E01)
+MIDIObjectSetIntegerProperty(dest, kMIDIPropertyUniqueID, 0x5359_4E02)
 log("flbridged up: source='synthexis bridge' dest='synthexis bridge return'")
 
 Thread.detachNewThread(serve)

@@ -102,7 +102,8 @@ def sample(ch, sig_idx, seconds, hz=20):
 
 def run_condition(name, cfg, ch, pidx, pattern):
     log = {"condition": name, "config": cfg, "channel": ch, "params": pidx}
-    # 1. control — must be flat
+    # 1. control — must be flat, in the fresh pattern this condition records into
+    must(call("pattern", n=pattern))
     must(call("setpos", pos=0))
     set_enum(pidx, ch, "drive", "off")
     control = sample(ch, pidx["signal"], 6)
@@ -153,6 +154,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--channel-name", default=None)
     ap.add_argument("--cond", nargs="*", default=None)
+    ap.add_argument("--pattern-base", type=int, default=10)
     args = ap.parse_args()
 
     ping = call("ping")
@@ -169,7 +171,7 @@ def main():
 
     print(f"{'condition':14} {'control_rng':>11} {'judge_rng':>9} "
           f"{'distinct':>8} verdict")
-    for i, (name, cfg) in enumerate(conds, start=10):
+    for i, (name, cfg) in enumerate(conds, start=args.pattern_base):
         try:
             log = run_condition(name, cfg, ch, pidx, pattern=i)
         except Exception as e:
