@@ -1,0 +1,32 @@
+{
+  "args" : "--label L5-iphone60 --seconds 40 --device iphone --mode format:1280x720 --fps 60 --pix bgra --qos default --flash 1 --out \/Users\/no8\/Desktop\/life\/Lifemaxxing\/synthexis\/probes\/camera-latency\/out",
+  "macos" : "Version 27.0.1 (Build 26A434)",
+  "max_dur_s" : 0.033333333333333333,
+  "fx_bgrepl_active" : false,
+  "format_h" : 1080,
+  "discards_late" : true,
+  "device" : "Kamera von „Noa‘s iPhone“",
+  "dropped" : 0,
+  "fx_studio_active" : false,
+  "fx_portrait_en" : false,
+  "load_start" : "{ 12.86 11.83 10.97 }",
+  "load_end" : "{ 14.01 12.15 11.13 }",
+  "sync_is_host" : true,
+  "fx_center_en" : false,
+  "fourcc" : "34323076",
+  "frames" : 1156,
+  "fx_portrait_active" : false,
+  "fx_reactions_en" : true,
+  "device_id" : "9080C084-FF30-4DAF-854A-93D900000001",
+  "fps_ranges" : [
+    "1.00-30.00"
+  ],
+  "fx_studio_en" : false,
+  "fx_center_active" : false,
+  "min_dur_s" : 0.033333333333333333,
+  "fx_react_gestures_en" : false,
+  "inject_ms" : 0,
+  "format_w" : 1920,
+  "label" : "L5-iphone60",
+  "fx_bgrepl_en" : false
+}

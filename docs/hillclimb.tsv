@@ -1,3 +1,33 @@
 date	run	lever	metric	before	after	kept	gates	evidence
 2026-10-26	0	baseline S2_256 + H2_128 random weights	frame_p95_ms	-	2.062	baseline	n/a	probes/coreml-student-latency/raw_mem.log
 2026-10-26	0	baseline camera standalone dim light	capture_latency_p95_ms	-	152.6-214.6	baseline	n/a	~/Library/Logs/synthexis-probe.log (quoted in probes/fl-camera-plugin/RESULT.md)
+2026-10-28	H1-V1	sync clock==host clock	sync_is_host	-	true	baseline	n/a	probes/camera-latency/out/1793196560-base3.info.json
+2026-10-28	H1-V2	inject 20ms busy-wait	pts_to_cb_med_ms	128.1	74.5-75.5	anomaly	flash_to_pts stable, -53ms systematic; judge OK	load>6	probes/camera-latency/out/1793196617-inject20.summary.json + 1793196775-inject20b.summary.json
+2026-10-28	H1-V3	baseline spread x3	flash_to_cb_p95_ms	-	176.9/177.8/178.2	baseline	med spread 2.8%, p95 spread 0.7%, fps~29.8 drops=0 load>6	probes/camera-latency/out/1793196298-base1.summary.json + 1793196385-base1.summary.json + 1793196560-base3.summary.json
+2026-10-28	H1-L1	format:1280x720 + fps30 lock	flash_to_cb_p95_ms	178.2	182.2	no	fps=29.8 drops=0 load>6	probes/camera-latency/out/1793196827-L1-fmt720-fps30.summary.json
+2026-10-28	H1-L2	format:640x480	flash_to_cb_p95_ms	178.2	176.9	no	fps=29.7 drops=0 load>6	probes/camera-latency/out/1793196888-L2-fmt640.summary.json
+2026-10-28	H1-L3	pix 420v	flash_to_cb_p95_ms	178.2	173.9	no	fps=29.7 drops=0 load>6	probes/camera-latency/out/1793196935-L3-pix420v.summary.json
+2026-10-28	H1-L4	qos userInteractive	flash_to_cb_p95_ms	178.2	186.7	no	fps=30.0 drops=0 load>6	probes/camera-latency/out/1793197010-L4-qosUI.summary.json
+2026-10-28	H1-L5a	iPhone Continuity 720p fps60	flash_to_cb_p95_ms	178.2	116.3	comparison	fps=30.2(delivered) drops=0 load>6	probes/camera-latency/out/1793197133-L5-iphone60.summary.json
+2026-10-28	H1-L5b	iPhone Continuity 720p fps30	flash_to_cb_p95_ms	178.2	117.7	comparison	fps=30.0 drops=0 load>6	probes/camera-latency/out/1793197188-L5-iphone30.summary.json
+2026-10-28	H1-D1	diag baseline 120s timeline	pts_to_cb_med_ms	-	129.1	baseline	high state whole run, t100=0s, fps=29.7 drops=0 load>6	probes/camera-latency/out/1793197475-D1-baseline.summary.json
+2026-10-28	H1-D2	diag busy-after 20ms	pts_to_cb_med_ms	129.1	107.0	winner	low ~55ms for 9s then climbs, fps=30.0 drops=0	probes/camera-latency/out/1793197605-D2-busyafter20.summary.json
+2026-10-28	H1-D3	diag sleep 20ms	pts_to_cb_med_ms	129.1	152.0	no	worse; occupancy w/o CPU doesn't trigger low, fps=29.7 drops=0	probes/camera-latency/out/1793197667-D3-sleep20.summary.json
+2026-10-28	H1-D4	diag busy-after 2/5/10ms	pts_to_cb_med_ms	129.1	129.3/127.9/125.1	no	grace period ~1s/~2s/~4s dose-dependent, drops=0	probes/camera-latency/out/1793197853-D4c-busyafter10.summary.json
+2026-10-28	H1-D5	diag spinner 20% off-queue	pts_to_cb_med_ms	129.1	126.2	no	no low state; not process-wide power/scheduling	probes/camera-latency/out/1793197916-D5-spinner20.summary.json
+2026-10-28	H1-D6	diag hold sample buffer 20/60ms	pts_to_cb_med_ms	129.1	129.5/126.8	no	no low state; not buffer pool depth	probes/camera-latency/out/1793197978-D6a-hold20.summary.json
+2026-10-28	H1-D7a	diag busy-after 20 repeat	pts_to_cb_med_ms	129.1	64.7	winner	repro: low ~50-80ms for 42s, fps=29.9 drops=0	probes/camera-latency/out/1793198132-D7a-busyafter20.summary.json
+2026-10-28	H1-D7b	diag fresh flash baseline	flash_to_cb_p95_ms	-	187.5	baseline	low->high switch at ~15s visible in series, drops=0	probes/camera-latency/out/1793198194-D7b-baseline-flash.summary.json
+2026-10-28	H1-D7c	diag busy-after20 + flash judge	flash_to_cb_p95_ms	187.5	137.9	confirmed	med 92.4 vs 152.0 (-60ms real), p2c med 55.7, drops=0	probes/camera-latency/out/1793198255-D7c-busyafter20-flash.summary.json
+2026-10-28	H1-R1a	repeat baseline	pts_to_cb_med_ms	-	126.6	base	low_frac=0.048 fps=29.7 drops=0 load>6	probes/camera-latency/out/1793198465-R1-base.summary.json
+2026-10-28	H1-R1b	repeat busy-after 20	pts_to_cb_med_ms	128.7	99.8	yes	low_frac=0.355 fps=30.0 drops=0	probes/camera-latency/out/1793198527-R1-ba20.summary.json
+2026-10-28	H1-R1c	repeat sleep 20	pts_to_cb_med_ms	128.7	153.1	no	low_frac=0.0 fps=29.6 drops=0	probes/camera-latency/out/1793198589-R1-sleep20.summary.json
+2026-10-28	H1-R1d	repeat busy-after 3	pts_to_cb_med_ms	128.7	128.4	no	low_frac=0.0 fps=29.6 drops=0	probes/camera-latency/out/1793198652-R1-ba3.summary.json
+2026-10-28	H1-R2a	repeat baseline	pts_to_cb_med_ms	-	128.7	base	low_frac=0.0 fps=29.7 drops=0 load>6	probes/camera-latency/out/1793198714-R2-base.summary.json
+2026-10-28	H1-R2b	repeat busy-after 20	pts_to_cb_med_ms	128.7	62.4	yes	low_frac=0.871 fps=29.9 drops=0	probes/camera-latency/out/1793198776-R2-ba20.summary.json
+2026-10-28	H1-R2c	repeat sleep 20	pts_to_cb_med_ms	128.7	153.2	no	low_frac=0.0 fps=29.7 drops=0	probes/camera-latency/out/1793198838-R2-sleep20.summary.json
+2026-10-28	H1-R2d	repeat busy-after 3	pts_to_cb_med_ms	128.7	130.6	no	low_frac=0.0 fps=29.7 drops=0	probes/camera-latency/out/1793198901-R2-ba3.summary.json
+2026-10-28	H1-R3a	repeat baseline	pts_to_cb_med_ms	-	127.5	base	low_frac=0.0 fps=29.7 drops=0 load>6	probes/camera-latency/out/1793198963-R3-base.summary.json
+2026-10-28	H1-R3b	repeat busy-after 20	pts_to_cb_med_ms	128.7	105.9	yes	low_frac=0.226 fps=30.0 drops=0	probes/camera-latency/out/1793199025-R3-ba20.summary.json
+2026-10-28	H1-R3c	repeat sleep 20	pts_to_cb_med_ms	128.7	152.0	no	low_frac=0.0 fps=29.7 drops=0	probes/camera-latency/out/1793199087-R3-sleep20.summary.json
+2026-10-28	H1-R3d	repeat busy-after 3	pts_to_cb_med_ms	128.7	126.1	no	low_frac=0.016 fps=29.6 drops=0	probes/camera-latency/out/1793199149-R3-ba3.summary.json

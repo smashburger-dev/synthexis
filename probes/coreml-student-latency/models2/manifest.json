@@ -1,0 +1,78 @@
+{
+ "seg_mnv4s_384x216": {
+  "params": 1509166,
+  "size_mib": 2.92
+ },
+ "seg_mnv4s_384x216_pm": {
+  "params": 1509454,
+  "size_mib": 2.92
+ },
+ "seg_mnv4s_320x180": {
+  "params": 1509166,
+  "size_mib": 2.92
+ },
+ "seg_mnv4s_320x180_pm": {
+  "params": 1509454,
+  "size_mib": 2.92
+ },
+ "seg_mnv4s50_384x216": {
+  "params": 465390,
+  "size_mib": 0.95
+ },
+ "seg_mnv4s50_384x216_pm": {
+  "params": 465678,
+  "size_mib": 0.95
+ },
+ "seg_mnv4s50_320x180": {
+  "params": 465390,
+  "size_mib": 0.95
+ },
+ "seg_mnv4s50_320x180_pm": {
+  "params": 465678,
+  "size_mib": 0.95
+ },
+ "seg_repvit09_384x216": {
+  "params": 4818062,
+  "size_mib": 9.34
+ },
+ "seg_repvit09_384x216_pm": {
+  "params": 4818278,
+  "size_mib": 9.34
+ },
+ "seg_repvit09_320x180": {
+  "params": 4818062,
+  "size_mib": 9.34
+ },
+ "seg_repvit09_320x180_pm": {
+  "params": 4818278,
+  "size_mib": 9.34
+ },
+ "seg_effvitb0_384x216": {
+  "error": "TypeError('only 0-dimensional arrays can be converted to Python scalars')"
+ },
+ "seg_effvitb0_384x216_pm": {
+  "error": "TypeError('only 0-dimensional arrays can be converted to Python scalars')"
+ },
+ "seg_effvitb0_320x180": {
+  "error": "TypeError('only 0-dimensional arrays can be converted to Python scalars')"
+ },
+ "seg_effvitb0_320x180_pm": {
+  "error": "TypeError('only 0-dimensional arrays can be converted to Python scalars')"
+ },
+ "face_f1_mnv4s_128": {
+  "params": 1508390,
+  "size_mib": 2.92
+ },
+ "hand_h3_mnv3_128_img_b1": {
+  "params": 1566031,
+  "size_mib": 3.07
+ },
+ "hand_h3_mnv3_128_t_b1": {
+  "params": 1566031,
+  "size_mib": 3.07
+ },
+ "hand_h3_mnv3_128_t_b2": {
+  "params": 1566031,
+  "size_mib": 3.07
+ }
+}
