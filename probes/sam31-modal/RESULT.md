@@ -136,3 +136,93 @@ fa3=False baseline already measured.
 
 `raw_h100.log`, `raw_l40s.log`, `raw_a100.log` (final runs);
 `raw_h100_attempt1..5.log` (failed bring-up attempts, kept for provenance).
+
+## Real weights (H100, facebook/sam3.1)
+
+Same setup as the random-weight runs above, but loading the real
+`facebook/sam3.1` checkpoint `sam3.1_multiplex.pt` (snapshot `daa6319`)
+via `HF_TOKEN` (Modal secret `huggingface`). The HF cache lives in the
+Modal Volume `sam31-weights`, so the ~3.6 GB checkpoint was downloaded
+once (17.7 s) and re-runs hit the volume cache (<1 s). Probe script:
+`probes/sam31-modal/sam31_real.py`, app `synthexis-sam31-real`.
+
+### Image mode (Sam3Processor, real weights)
+
+20 frames evenly spaced over the 300-frame clip x 5 text prompts
+(`person`, `face`, `eye`, `mouth`, `hand`). `set_image` once per frame,
+`set_text_prompt` timed per prompt under bf16 autocast. The image model
+is built from the multiplex checkpoint via `_load_checkpoint` (strips the
+`detector.` prefix); the only missing keys are
+`backbone.vision_backbone.convs.3.*` — the dual neck's 4th FPN conv,
+which stays random-init (the sam3.1 tri neck has 3 convs).
+
+| metric | value |
+|--------|-------|
+| text_prompt median | 58.18 ms |
+| text_prompt p95 | 59.26 ms |
+| peak GPU mem | 4.99 GiB |
+
+Detections are real and stable across all 20 frames:
+
+| prompt | det/frame (med) | det/frame (mean) | max score (med) | frames w/ det |
+|--------|-----------------|------------------|-----------------|---------------|
+| person | 1 | 1.00 | 0.949 | 20/20 |
+| face | 1 | 1.00 | 0.961 | 20/20 |
+| eye | 2 | 2.05 | 0.691 | 20/20 |
+| mouth | 2 | 2.30 | 0.719 | 20/20 |
+| hand | 2 | 2.10 | 0.895 | 20/20 |
+
+Per-(frame, prompt) mask overlays: `data/sam31_real/overlays/*.jpg`
+(100 files), contact sheet `data/sam31_real/contact_sheet.jpg`,
+raw records `data/sam31_real/detections.json` (git-ignored, not
+committed). Note: an identical earlier run measured 41.0/43.6 ms
+median/p95 for `set_text_prompt`, so run-to-run variance is real; both
+runs are inside the 40–60 ms band.
+
+### Video mode (SAM 3.1 multiplex predictor, real weights)
+
+5 concepts x 300 consecutive frames each, `add_prompt` text at frame 0,
+forward `propagate_in_video`. Outputs yield in ~16-frame multiplex
+batches (`out_obj_ids`, `out_binary_masks`, `out_probs`, `frame_stats`),
+so per-yield deltas are bimodal (~0.016 ms inside a burst, ~1.05–1.29 s
+at batch boundaries). The `ms/frame` columns below are the cumulative
+elapsed/frames-done rate at each yield — the honest per-frame cost —
+with `avg = wall/300`.
+
+| concept | wall s / 300f | ms/frame avg | ms/frame med | ms/frame p95 | fps | tracked objs med/max |
+|---------|---------------|--------------|--------------|--------------|-----|----------------------|
+| person | 21.42 | 71.42 | 78.26 | 164.65 | 14.00 | 1 / 1 |
+| face | 20.81 | 69.38 | 76.79 | 157.35 | 14.41 | 1 / 1 |
+| eye | 29.42 | 98.06 | 95.59 | 161.71 | 10.20 | 2 / 3 |
+| mouth | 22.29 | 74.29 | 80.65 | 158.15 | 13.46 | 2 / 2 |
+| hand | 22.53 | 75.10 | 81.58 | 160.69 | 13.32 | 2 / 2 |
+| **total** | **117.16** | | | | | |
+
+Wall time includes `start_session` + `add_prompt` (~2–4 s). Real weights
+are ~55–75% slower per frame than random weights (46 ms) — detection,
+association and tracker reconditioning now do real work, and cost scales
+with object count (`eye` with up to 3 objs is the slowest). Peak GPU
+memory 28.18 GiB (vs 23.2 GiB random-weight). Video predictor build
+11.7 s; image model build 9.6 s.
+
+### Cost and budget
+
+Measured `fn_gpu_s` 150.2 s on the final run -> **$0.165** at
+$0.001097/s. Whole-task Modal spend across 4 runs (2 trivial bring-up
+failures + 2 successful runs, incl. container spin-up overhead):
+~**$0.5**, far under the $5 cap. Single-run hard cap via
+`timeout=2100 s` (~$2.30 worst case). All four apps show `stopped` in
+`modal app list`; the HF token was never printed (`hf_token_present
+True` is the only log reference).
+
+### Command
+
+```sh
+PROBE_GPU=H100 uvx modal run probes/sam31-modal/sam31_real.py \
+    2>&1 | tee probes/sam31-modal/raw_h100_real.log
+```
+
+Logs: `raw_h100_real.log` (final instrumented run),
+`raw_h100_real_attempt1..3.log` (earlier runs; 1–2 are trivial bug
+failures, 3 is the first complete run without the cumulative-rate
+metric).

@@ -6,11 +6,13 @@ import SwiftUI
 // instructions), records each selected camera to .mov, writes
 // segments.json + session.json. New work for the Meta hackathon.
 
-let APP_VERSION = "0.1.0"
+let APP_VERSION = "0.2.0"
 
 let rlogFile: FileHandle? = {
     let p = NSHomeDirectory() + "/Library/Logs/synthexis-recorder.log"
-    FileManager.default.createFile(atPath: p, contents: nil)
+    if !FileManager.default.fileExists(atPath: p) {
+        FileManager.default.createFile(atPath: p, contents: nil)
+    }
     let h = try? FileHandle(forWritingTo: URL(fileURLWithPath: p))
     h?.seekToEndOfFile()
     return h
@@ -46,10 +48,11 @@ struct Segment: Codable {
 }
 
 enum LabelValue: Codable {
-    case string(String), ramp(RampLabel), other
+    case string(String), strings([String]), ramp(RampLabel), other
     init(from d: Decoder) throws {
         let c = try d.singleValueContainer()
         if let s = try? c.decode(String.self) { self = .string(s); return }
+        if let a = try? c.decode([String].self) { self = .strings(a); return }
         if let r = try? c.decode(RampLabel.self) { self = .ramp(r); return }
         self = .other
     }
@@ -57,8 +60,20 @@ enum LabelValue: Codable {
         var c = e.singleValueContainer()
         switch self {
         case .string(let s): try c.encode(s)
+        case .strings(let a): try c.encode(a)
         case .ramp(let r): try c.encode(r)
         case .other: try c.encode("other")
+        }
+    }
+    // segments.json representation; used by writeFiles and the --selftest
+    // round-trip so both paths can never diverge again.
+    var jsonValue: Any {
+        switch self {
+        case .string(let s): return s
+        case .strings(let a): return a
+        case .ramp(let rp): return ["signal": rp.signal, "shape": rp.shape,
+                                    "period_s": rp.period_s, "start": rp.start]
+        case .other: return "other"
         }
     }
 }
@@ -67,6 +82,10 @@ struct RecProtocol: Codable {
     let name: String
     let gap_s: Double
     let segments: [Segment]
+}
+
+struct ProtocolFile: Codable {
+    let protocols: [String: RecProtocol]
 }
 
 // MARK: - Camera capture
@@ -236,44 +255,42 @@ final class Model: ObservableObject {
         DispatchQueue.main.async { self.logLines.append(s) }
     }
 
-    /// Repo root: the app lives at <root>/tools/recorder/<name>.app. Launching via
-    /// `open` sets the working directory to "/", so never rely on it.
-    var repoRoot: URL {
-        let fromBundle = Bundle.main.bundleURL.deletingLastPathComponent()
-            .deletingLastPathComponent().deletingLastPathComponent()
-        if FileManager.default.fileExists(atPath: fromBundle.appendingPathComponent("spec").path) {
-            return fromBundle
-        }
-        return URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
-    }
+    /// The app never touches the repo at run time: the repo lives on the Desktop,
+    /// which macOS guards per app (TCC) and resets on every re-sign. The protocol
+    /// ships inside the bundle and recordings go to ~/Movies (not TCC-guarded);
+    /// data/recordings in the repo is a symlink to that folder (see build.sh).
+    static let recordingsRoot = URL(fileURLWithPath: NSHomeDirectory())
+        .appendingPathComponent("Movies/synthexis/recordings")
 
     func loadProtocol() {
         let args = CommandLine.arguments
-        var path = "spec/recording-protocol.json"
+        var url = Bundle.main.url(forResource: "recording-protocol", withExtension: "json")
         if let i = args.firstIndex(of: "--protocol-file"), i + 1 < args.count {
-            path = args[i + 1]
+            url = URL(fileURLWithPath: args[i + 1])
         }
-        let fm = FileManager.default
-        let candidates = [path, repoRoot.appendingPathComponent(path).path,
-                          fm.currentDirectoryPath + "/" + path]
-        for c in candidates {
-            guard let data = fm.contents(atPath: c) else { continue }
-            if let spec = try? JSONDecoder().decode([String: [String: RecProtocol]].self,
-                                                    from: data),
-               let ps = spec["protocols"] {
-                protocolNames = Array(ps.keys).sorted()
-                protos = ps
-                proto = ps[protoSel]
-                return
-            }
-            if let p = try? JSONDecoder().decode(RecProtocol.self, from: data) {
-                protocolNames = [p.name]; proto = p
+        if let i = args.firstIndex(of: "--session"), i + 1 < args.count { sessionId = args[i + 1] }
+        guard let url, let data = FileManager.default.contents(atPath: url.path) else {
+            log("Protokoll nicht lesbar: \(url?.path ?? "fehlt im App-Bundle, build.sh neu laufen lassen")")
+            return
+        }
+        let dec = JSONDecoder()
+        do {
+            if let file = try? dec.decode(ProtocolFile.self, from: data) {
+                protos = file.protocols
+            } else {
+                let p = try dec.decode(RecProtocol.self, from: data)
                 protos = [p.name: p]
                 protoSel = p.name
-                return
             }
+        } catch {
+            log("Protokoll ungültig (\(url.lastPathComponent)): \(error)")
+            return
         }
-        log("protocol file not found or invalid: \(path)")
+        protocolNames = protos.keys.sorted()
+        if protos[protoSel] == nil { protoSel = protocolNames[0] }
+        proto = protos[protoSel]
+        rlog("protocol loaded from \(url.path): " +
+             protocolNames.map { "\($0)=\(protos[$0]!.segments.count)" }.joined(separator: " "))
     }
 
     func reloadProto() {
@@ -290,13 +307,14 @@ final class Model: ObservableObject {
 
     func startAll() {
         reloadProto()
-        guard let p = proto, cam0 >= 0, cam0 < devices.count else {
-            log("no protocol or no camera")
-            return
-        }
+        guard proto != nil else { authNote = "Kein Protokoll geladen (siehe Zeile darunter)"; return }
+        guard cam0 >= 0, cam0 < devices.count else { authNote = "Keine Kamera gefunden"; return }
         AVCaptureDevice.requestAccess(for: .video) { granted in
             DispatchQueue.main.async {
-                if !granted { self.authNote = "camera denied"; return }
+                if !granted {
+                    self.authNote = "Kamera verweigert: Systemeinstellungen → Datenschutz & Sicherheit → Kamera → synthexis recorder einschalten"
+                    return
+                }
                 self.beginRecording()
             }
         }
@@ -316,7 +334,7 @@ final class Model: ObservableObject {
 
         let date = DateFormatter()
         date.dateFormat = "yyyy-MM-dd"
-        let base = repoRoot.appendingPathComponent("data/recordings")
+        let base = Model.recordingsRoot
         let stem = "\(date.string(from: Date()))-\(sessionId)"
         var dir = base.appendingPathComponent(stem)
         var n = 1
@@ -408,12 +426,7 @@ final class Model: ObservableObject {
         var segs = [[String: Any]](); records.forEach { r in
             var labels = [String: Any]()
             for (k, v) in r.labels {
-                switch v {
-                case .string(let s): labels[k] = s
-                case .ramp(let rp): labels[k] = ["signal": rp.signal, "shape": rp.shape,
-                                                "period_s": rp.period_s, "start": rp.start]
-                case .other: labels[k] = "other"
-                }
+                labels[k] = v.jsonValue
             }
             var d: [String: Any] = ["id": r.id, "block": r.block, "labels": labels,
                                     "margin_s": r.margin_s, "bad": r.bad,
@@ -598,6 +611,39 @@ struct RampPulse: View {
 }
 
 @main
+enum Launcher {
+    static func main() {
+        guard CommandLine.arguments.contains("--selftest") else { RecorderApp.main(); return }
+        // Headless check run by build.sh: protocol loads from the bundle and the
+        // recordings folder is writable. Exit code 0 = ready to record.
+        let m = Model()
+        m.loadProtocol()
+        let fm = FileManager.default
+        let probe = Model.recordingsRoot.appendingPathComponent(".selftest")
+        let writable = (try? fm.createDirectory(at: Model.recordingsRoot,
+                                                withIntermediateDirectories: true)) != nil
+            && fm.createFile(atPath: probe.path, contents: Data())
+        try? fm.removeItem(at: probe)
+        let summary = m.protocolNames.map { "\($0)=\(m.protos[$0]!.segments.count)" }
+        print("selftest protocols: \(summary.joined(separator: " ")) recordings: " +
+              "\(Model.recordingsRoot.path) writable=\(writable)")
+        // Round-trip one block-E segment's labels through the writeFiles
+        // serialization: objects must come back as a JSON array, not the
+        // "other" string that broke the label pipeline on S1.
+        var objectsOK = false
+        if let e = m.protos["full"]?.segments.first(where: { $0.block == "E" }) {
+            var labels = [String: Any]()
+            for (k, v) in e.labels { labels[k] = v.jsonValue }
+            objectsOK = labels["objects"] is [String]
+            print("selftest E-segment \(e.id): labels.objects -> " +
+                  "\(String(describing: labels["objects"])) isArray=\(objectsOK)")
+        } else {
+            print("selftest E-segment: none found in protocol 'full'")
+        }
+        exit(m.protos["full"] != nil && m.protos["short"] != nil && writable && objectsOK ? 0 : 1)
+    }
+}
+
 struct RecorderApp: App {
     @StateObject private var m = Model()
     var body: some Scene {
@@ -610,6 +656,8 @@ struct RecorderApp: App {
         m.loadProtocol(); m.discoverCameras()
         if CommandLine.arguments.contains("--auto") { m.startAll() }
         NSEvent.addLocalMonitorForEvents(matching: .keyDown) { e in
+            // Shortcuts only while recording, so text fields keep space and "b".
+            guard self.m.phase == .gap || self.m.phase == .segment else { return e }
             if e.keyCode == 53 { self.m.finish(); return nil }        // esc
             if e.charactersIgnoringModifiers == " " { self.m.togglePause(); return nil }
             if e.charactersIgnoringModifiers?.lowercased() == "b" { self.m.markBad(); return nil }

@@ -8,10 +8,10 @@ Full readable script with every instruction: [`docs/recording-script.md`](record
 
 | Session | Camera | Light and look | When | Protocol | Use |
 |---|---|---|---|---|---|
-| S1 | built-in FaceTime camera | usual studio light | Oct 27 | full, 12.1 min | train |
-| S2 | built-in | different light (daylight or ceiling light), different shirt | Oct 27 | full, 12.1 min | train |
-| S3 | iPhone via Continuity Camera, different angle (higher or from the side) | studio light | Oct 27 or 28 | full, 12.1 min | train |
-| S4 | built-in | other day, other shirt, other part of the room in the background | Oct 28 | short, 6.3 min | held-out eval only, never trained on |
+| S1 | built-in FaceTime camera | room light | Oct 27, recorded (18.2 min with pauses, 29.9 fps, protocol v1 without block H) | full v1, 12.1 min | train |
+| S2 | built-in | different light (daylight or ceiling light), different shirt | Oct 27 | full, 14.8 min | train |
+| S3 | iPhone via Continuity Camera, different angle (higher or from the side) | studio light | Oct 27 or 28 | full, 14.8 min | train |
+| S4 | built-in | other day, other shirt, other part of the room in the background | Oct 28 | short, 9.5 min | held-out eval only, never trained on |
 
 About 36 minutes of training video. At 30 fps that is about 65,000 frames; we label every second frame.
 
@@ -27,9 +27,10 @@ Light matters for speed, not only for quality: the first camera test at night de
 | D body | arms up and down, lean, step back with the torso in frame | 0.6 min |
 | E objects | mug, phone, pen or drumstick, ball or fruit, one demo object: hold, rotate, move, put down, pick up, leave the frame | 1.7 min |
 | F hard cases | hand in front of the face, overlapping hands, fast moves, hand at the frame edge, backlight, dim light | 0.8 min |
-| G freestyle | your own gestures, faces and positions, and playing as if performing a track; these frames get SAM 3.1 masks but no gesture labels | 1.3 min |
+| H motions | 18 motion primitives, 8 s each: throws at the four frame borders, swipes, circles, push/pull, pinch drag, grab/release, orb hold and throw, stretch, clap (spec `motion.primitives`) | 2.7 min |
+| G freestyle | your own gestures, faces and positions, and playing as if performing a track; these frames get SAM 3.1 masks and a Muse Spark Open timeline instead of script labels | 1.3 min |
 
-The short protocol (S4) keeps blocks A (4 s per state), C, E with three objects and F.
+The short protocol (S4) keeps blocks A (4 s per state), C, E with three objects, F, H (6 s per motion) and the freestyle segments free_hands and free_play, so the motion layer has held-out data.
 
 ## Rules while recording
 
@@ -52,7 +53,7 @@ The short protocol (S4) keeps blocks A (4 s per state), C, E with three objects 
 ## After recording
 
 1. Frames are extracted at 15 fps and uploaded to the Modal volume.
-2. SAM 3.1 (open weights, Modal H100) segments the concepts person, face, eye, mouth, hand and the object names from block E. Estimated cost for all training sessions: under $10 (probe A: $0.051 per 1000 frames per concept, lower bound).
+2. SAM 3.1 (open weights, Modal H100) segments the concepts person, face, eye, mouth, hand and the object names from block E. Estimated cost for S1 to S3: about $15 (probe A, real weights: $0.082 per 1000 frames per concept; 32,700 frames x 5 concepts plus objects on block E only). Eye and mouth masks are kept only inside the face mask, because probe A showed mouth detections on lips drawn on a wallpaper.
 3. Apple Vision computes hand keypoints offline as targets for the keypoint head.
 4. Segment labels from `segments.json` become finger-state and face-action targets.
 5. Training and the eval gate run as described in [`plan.md`](plan.md).
