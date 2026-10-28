@@ -28,3 +28,17 @@ it, not when a window opens.
   `make_gui_context()`.
 - `src/wrapper/standalone/wrapper.rs` `run`: after `make_gui_context()`,
   calls the hook.
+
+## Diagnostics (synthexis-nih.log)
+
+- `src/wrapper/vst3/wrapper.rs`: `nih_diag_log`/`nih_param_name`/
+  `nih_last_gets` helpers appending to `~/Library/Logs/synthexis-nih.log`;
+  logs every `set_param_normalized` (hash, name, value, is_processing,
+  applied), `set_active`/`set_processing` transitions, input_param_changes
+  queues inside `process()` (hash, name, count, last value — only when
+  queues exist), and `get_param_normalized` only when the read-back value
+  differs from the last logged. Diagnostics only, no behaviour change.
+  Diagnostics are gated on the marker file
+  `~/Library/Logs/synthexis-nih.enable` (checked once per process via
+  OnceLock): without the file, nih_diag_log is a no-op, so the ~60 lines/s
+  echo of our own automation writes stops.
