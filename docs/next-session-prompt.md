@@ -26,6 +26,13 @@ Lies zuerst: `AGENTS.md`, `docs/session-2026-10-27-data-engine.md`, `spec/synthe
 - Bildstreifen mit 2 fps und SAM-Overlay je Freestyle-Segment, Muse Spark Open auf Baseten schreibt eine Zeitleiste im Vokabular von `motion.primitives` plus Freitext-Namen. Dazu 3 Bilder pro Skript-Segment gegen die Anweisung prüfen, Abweichungen als Liste für Noa. Anfragen bündeln (Reasoning-Tokens), Kostengrenze 3 $.
 - Gate: Noa prüft 20 Zeitleisten-Einträge und die Abweichungsliste.
 
+### Welle 2b: Probe P2 klären (vor Welle 3)
+Stand 27.10. (Noa in FL 2026, `~/Library/Logs/synthexis-probe.log`): P1 bestanden, Kamera im VST3 in FL mit 29,7 bis 30 fps, Capture-Latenz 126 / 142 ms (Median / p95, Kamera-Zeitstempel bis Callback). MIDI-Out zu Analog Lab klingt (P6), aber FL nahm weder die Noten ins Pattern noch sichtbare Automation auf. Der Log kann P2 nicht entscheiden, weil die Probe Parameter-Schreibvorgänge nicht protokolliert.
+- Probe v2: jeden Schreibvorgang zählen und mit Thread-Name loggen (pro Sekunde Anzahl, Wertebereich); Testsignal mit großem Hub (Dreieck 0..1 alle 4 s, unabhängig vom Licht) zusätzlich zur Helligkeit; Option, `performEdit` auf den Main-Thread zu verlegen (VST3 verlangt den UI-Thread, die Probe schreibt bisher aus dem Kamera-Thread); prüfen, ob FL das CLAP-Bundle lädt (CLAP schickt Parameter-Events aus dem Audio-Thread, der saubere Weg ohne offenes Fenster).
+- Für Noa eine Checkliste: Drive steht standardmäßig auf Off; Aufnahme-Filter mit Automation; wo FL aufgenommene Plugin-Parameter ablegt (Event-Daten im Pattern oder Automation-Clip).
+- MIDI-Aufnahme: vermutlich nimmt FL die MIDI-Ausgabe eines Plugins nicht direkt ins Pattern auf (unbestätigt, Doku prüfen). Plan B fürs Produkt: das Plugin nimmt seine eigenen Noten auf und bietet sie per Drag-and-drop als .mid an.
+- Gate: in FL eine aufgenommene Kurve von Signal 1, einmal mit offenem, einmal mit geschlossenem Fenster.
+
 ### Welle 3: Plugin-Grundgerüst
 - `plugin/` (Rust, nih-plug, VST3 + CLAP, egui): eine Kamera-Engine pro Host-Prozess, Signalvertrag, Konditionierungskette, 32 Makros, Rolle pro Hand (`gest.hand_role`) als Einstellung, vorerst Platzhalter-Features (Helligkeit, Bewegung). Wahrnehmung nie im Audio-Thread. Design nach design-glass und chiasmas STYLE.md, neu geschrieben.
 - Gate: In FL nimmt ein Makro Automation auf, die von der Kamera bewegt wird. Messung Kamera bis Parameter (Median, p95) im Log.
