@@ -1,0 +1,35 @@
+# Plugins that must map reliably in the demo (Noa 2026-10-29). label.py --priority labels
+# every parameter of these individually, twice, with adjudication, and the result becomes the
+# known-plugin table shipped with the resolver. Match is case-insensitive on the plugin name
+# after stripping format suffixes (" VST3", "AU64", " (AU)"); `vendor:` entries match the
+# manufacturer name, `prefix:` entries match the start of the plugin name.
+
+explicit:
+  - ZENOLOGY
+  - Serum 2
+  - Serum 2 FX
+  - Serum
+  - Omnisphere
+  - FX-Omnisphere
+  - Analog Lab V
+  - vendor:Arturia
+  - vendor:Valhalla DSP, LLC
+  - vendor:FabFilter
+  - vendor:Apple
+  - vendor:Kilohearts
+  - Phase Plant
+  - imagiro piano 2.2
+  - shearwater piano
+  - Portal
+  - Yak Delay
+  - BadChannel
+  - Bad Channel
+  - Vital
+
+# FL Studio stock plugins have no AU/VST3; they come from the FL script dump (tools/mapping/fl/).
+fl_stock: true
+
+# Every plugin in Noa's FL plugin database (Generators and Effects folders under
+# ~/Documents/Image-Line/FL Studio/Presets/Plugin database) is priority too; the list is read
+# at run time into data/mapping/fl_favorites.json.
+fl_favorites: true

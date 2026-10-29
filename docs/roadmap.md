@@ -44,14 +44,18 @@ Hard dates: S3 and S4 recorded 10-30/10-31, training from 11-01 (new Modal credi
 - [ ] `setParamValue` root cause (bridge only, not blocking)
 - [ ] UI in the glass language (last, after perception and routes are stable)
 
-## Mapping assistant (can run in its own session now)
+## Mapping assistant (own session; state in `docs/session-2026-10-29-mapping.md`)
 
-- [ ] Taxonomy final (`map.taxonomy`)
-- [ ] Parameter harvest of installed plugins: names, ranges, units, value strings (`bridge.harvest`)
-- [ ] Spark Open labels the harvest with taxonomy and safe range (`map.labeler`)
-- [ ] Spark Open writes synthetic German and English commands with known structured edits (`map.parser` data)
-- [ ] param-sense classifier and command parser trained, eval sets written by Noa (`map.eval`)
-- [ ] Resolver, chip fallback, "Built with Muse Spark Open" credit
+- [x] Taxonomy final: 44 classes plus ontology of sources, targets, intents, modifiers (`tools/mapping/ontology.yaml`; spec merge proposed in `probes/mapping-pipeline/SPEC_PROPOSAL.md`)
+- [x] Parameter harvest AU (886 of 906 plugins, 122,664 params) and VST3 (405 of 549 bundles) with own tools (`tools/mapping/harvest/`)
+- [ ] FL stock plugins: FL script dump (`tools/mapping/fl/README.md`, Noa, about 10 min)
+- [x] Spark Open labels: 302 priority plugins double-labelled and adjudicated, 583 more single pass; VST3 labels running
+- [x] Glossary EN/DE (11,333 phrases, 416 concepts)
+- [x] Synthetic commands generator v3 with validators and round-trip check; stage 1 (8,000 edits) generated
+- [ ] Noa: 50 calibration sentences and 100 eval sentences, typed as he would (`map.eval`), never trained
+- [ ] param-sense v1 trained, vendor-holdout eval; known-plugin table exported
+- [ ] Parser v1 (about 8M, span-pointer frame decoder) trained; challenge set; threshold calibrated on Noa's 50
+- [ ] Resolver and chip fallback in the plugin, "Built with Muse Spark Open" credit
 
 ## Demo and submission
 

@@ -1,0 +1,237 @@
+# Sampling distributions for synthetic structured edits (map.parser training data).
+# Read by tools/mapping/edits.py. Weights are relative within each block.
+# Authored 2026-10-29. v2 after review round 1 (probes/mapping-pipeline/review-r1-*.md):
+# en/de 70/30, flatter class weights, more plugin and literal-name scopes, refs, deltas,
+# toggles, gates, ramp times, corrections, typos inside marks, template keyword sentences.
+
+languages: {en: 70, de: 30}
+
+variants_per_edit: 2          # each variant gets its own style
+edits_per_job: 20
+
+styles:
+  register: {casual: 26, terse: 14, polite: 5, rambling: 6, jargon: 12, beginner: 14, layperson: 12, codeswitch: 11}
+  noise: {clean: 45, lowercase: 25, typos: 15, dictated: 15}
+  # sentence frame per variant: syntax conditioning moves synthetic queries toward real
+  # traffic (Ventirozos et al. 2026, arXiv 2610.35102); it also drops constraints more often,
+  # which the mark validator and the round-trip check catch
+  frame: {imperative: 22, declarative: 18, conditional: 15, comparative: 10, request: 12, wish: 8, fragment: 15}
+
+# Minimal pairs: a share of map edits gets a twin that differs in one slot only, swapped for a
+# confusable neighbour, written next to it in the same job (contrast between adjacent classes;
+# cf. confusable negatives in Shen and Zhang, EMNLP 2026).
+minimal_pairs:
+  fraction: 0.10
+  neighbours:
+    filter.cutoff: [fx.tone, fx.eq.freq]
+    fx.tone: [filter.cutoff, fx.eq.gain]
+    fx.reverb.mix: [fx.delay.mix, fx.mix, fx.reverb.decay]
+    fx.delay.mix: [fx.reverb.mix, fx.delay.feedback]
+    fx.reverb.decay: [fx.delay.time, fx.reverb.mix]
+    fx.delay.time: [fx.delay.feedback, fx.reverb.decay]
+    fx.delay.feedback: [fx.delay.time, fx.delay.mix]
+    amp.gain: [osc.level, unsafe]
+    env.attack: [env.release, env.decay]
+    env.release: [env.attack, env.decay]
+    lfo.rate: [fx.mod.rate, lfo.amount]
+    lfo.amount: [mod.amount, fx.mod.depth]
+    osc.pitch: [osc.fine, fx.pitch]
+    unison.detune: [osc.fine, stereo.width]
+    fx.drive: [fx.comp.amount, fx.tone]
+    hand.openness: [hand.spread, hand.fist]
+    hand.fist: [hand.pinch, hand.openness]
+    hand.y: [arm.raise, hand.x]
+    hand.x: [hand.y, hand.depth]
+    head.yaw: [head.roll, head.pitch]
+    mouth.open: [face.smile]
+
+# Template sentences without an LLM: keyword soup from glossary noun phrases joined by
+# separators ("pad verb fist", "fist -> reverb, pad", "bass cutoff mouth 20-70%").
+# Fraction of map edits that additionally get one template sentence (labels exact).
+keyword_template:
+  fraction: 0.25
+  separators: [" ", " -> ", ", ", " / ", " > ", " to ", " = "]
+  orders: {src_tgt_track: 35, track_tgt_src: 25, tgt_src_track: 20, src_track_tgt: 20}
+  range_forms: ["{lo}-{hi}%", "{lo} to {hi}", "max {hi}%", "{lo}..{hi}"]
+
+intents: {map: 55, modify: 10, unmap: 7, replace: 6, clear: 3, role: 4, preset: 4, scale: 2, undo: 2, query: 4, none: 3}
+
+# map: number of routes per sentence, targets per route, sources per route
+routes_per_edit: {1: 60, 2: 30, 3: 10}
+targets_per_route: {1: 75, 2: 20, 3: 5}
+sources_per_route: {1: 95, 2: 5}
+
+# source ids from ontology.yaml -> weight
+sources:
+  hand.openness: 9
+  hand.fist: 9
+  hand.finger.thumb: 2.5
+  hand.finger.index: 3.5
+  hand.finger.middle: 2
+  hand.finger.ring: 1.5
+  hand.finger.pinky: 2
+  hand.spread: 4
+  hand.x: 6
+  hand.y: 8
+  hand.depth: 3.5
+  hand.pinch: 3.5
+  hand.speed: 2
+  hand.shape: 3          # only with midi targets or macro; see shape_targets
+  hands.distance: 3
+  orb.size: 1.5
+  orb.x: 0.7
+  orb.y: 0.7
+  orb.rotation: 1
+  mouth.open: 5
+  face.smile: 2
+  eye.open: 1
+  eye.closed: 1.5
+  head.yaw: 2.5
+  head.pitch: 2
+  head.roll: 2
+  arm.raise: 2
+  body.lean: 1.5
+  object.x: 1
+  object.y: 1
+  object.size: 1
+  object.angle: 1
+  object.speed: 1
+  heart.bpm: 1.5
+  motion.throw: 2
+  motion.swipe: 2
+  motion.push_pull: 1
+  motion.hold: 1
+  motion.circle: 2
+  motion.grab: 1
+  motion.release: 1
+  motion.clap: 1
+
+# side for sources with side: true
+sides: {none: 40, right: 30, left: 25, both: 3, either: 2}
+
+objects: {phone: 25, ball: 20, bottle: 15, can: 10, drumstick: 15, mug: 8, pen: 7}
+
+# target kinds; hand.shape and event sources prefer midi targets
+targets: {param: 72, macro: 7, midi.note: 5, midi.pattern: 5, midi.chord: 4, midi.cc: 3, toggle: 4}
+shape_targets: {midi.pattern: 35, midi.note: 25, midi.chord: 20, macro: 8, toggle: 12}
+event_targets: {param: 45, toggle: 25, midi.note: 15, midi.pattern: 15}   # motion.* events
+toggle_families: {reverb: 25, delay: 25, chorus: 8, flanger: 5, phaser: 5, distortion: 12, filter: 10, eq: 3, compressor: 4, gate: 3, plugin: 10}
+toggle_modes: {toggle: 60, momentary: 40}
+
+# taxonomy ids for param targets -> weight (classes absent here are not sampled)
+params:
+  filter.cutoff: 10
+  filter.resonance: 6
+  filter.env_amount: 2
+  fx.reverb.mix: 9
+  fx.reverb.decay: 4
+  fx.delay.mix: 7
+  fx.delay.time: 3
+  fx.delay.feedback: 4
+  amp.gain: 6
+  amp.pan: 4
+  stereo.width: 3
+  osc.pitch: 4
+  osc.fine: 1.5
+  osc.shape: 5
+  osc.level: 2
+  osc.fm: 2
+  unison.detune: 3
+  voice.glide: 1.5
+  sample.position: 2
+  env.attack: 3
+  env.decay: 2
+  env.sustain: 1.5
+  env.release: 3
+  lfo.rate: 4
+  lfo.amount: 3
+  mod.amount: 1.5
+  macro: 2
+  fx.mod.mix: 2.5
+  fx.mod.rate: 2.5
+  fx.mod.depth: 2
+  fx.drive: 6
+  fx.tone: 3
+  fx.mix: 2.5
+  fx.comp.amount: 3
+  fx.gate: 2.5
+  fx.eq.gain: 3
+  fx.eq.freq: 2.5
+  fx.eq.q: 2
+  fx.pitch: 2.5
+  other: 1.5
+  unsafe: 2.5            # e.g. master volume: the parser tags it, the resolver refuses
+
+# scope of each route: which of track / plugin / literal param name is said
+scope: {none: 20, track: 38, plugin: 17, track_plugin: 15, param_name: 10}
+
+tracks:
+  # ontology tracks plus names people give channels; sampled uniformly from both lists, 70/30
+  roles: [pad, bass, sub, "808", lead, pluck, keys, piano, rhodes, organ, strings, brass, choir, vocals, guitar, arp, synth, drums, kick, snare, clap, hi-hat, percussion, fx, riser]
+  custom: ["Synth 1", "Lead 2", "my pad", "Bassline", "Insert 4", "channel 3", "Pad Layer", "Main Lead", "Chords", "Vox", "Atmo", "Sub Bass", "Pluck Hook", "FX Bus", "Drum Bus", "Kick 2", "Hats", "Perc Loop", "Arp 1", "Keys Bus", "Fläche", "Leadsynth", "Schlagzeug", "Gesang", "Strings Section", "Reese", "Lofi Keys", "Sampler 1"]
+
+# plugin names: 50 % FL Studio natives (below), 50 % names from the harvest (plugins.jsonl, deduplicated)
+fl_plugins: ["Fruity Reeverb 2", "Fruity Delay 3", "Fruity Delay 2", "Fruity Filter", "Fruity Parametric EQ 2", "Fruity Limiter", "Fruity Chorus", "Fruity Flanger", "Fruity Phaser", "Fruity Love Philter", "Fruity Blood Overdrive", "Fruity Fast Dist", "Fruity Squeeze", "Fruity Stereo Shaper", "Fruity Delay Bank", "Fruity Convolver", "Fruity Granulizer", "Luxeverb", "Vintage Chorus", "Vintage Phaser", "Transient Processor", "Maximus", "Soundgoodizer", "Pitcher", "Vocodex", "Hardcore", "Distructor", "Effector", "Gross Beat", "Sytrus", "3xOsc", "Harmor", "Harmless", "FLEX", "Sakura", "PoiZone", "Toxic Biohazard", "Morphine", "Ogun", "Transistor Bass", "Kepler", "FL Keys", "BooBass", "FPC", "Slicex", "DirectWave", "GMS"]
+# demo plugins named by producers in short forms; sampled for 30 % of harvest-side plugin draws
+demo_plugins: ["Serum 2", "Serum", "Zenology", "ZENOLOGY", "Analog Lab", "Analog Lab V", "Omnisphere", "Valhalla VintageVerb", "VintageVerb", "Valhalla Supermassive", "Supermassive", "ValhallaDelay", "Valhalla Room", "Pro-Q 3", "Pro-Q", "Saturn 2", "Saturn", "Pro-R", "Timeless 3", "Volcano 3", "Pro-C 2", "Pro-L 2", "Twin 2"]
+
+# literal parameter names said verbatim (scope param_name)
+param_names: ["WT Pos", "Macro 1", "Macro 2", "Macro 4", "Cutoff 2", "Osc A Level", "Filter Freq", "Res", "Env Amt", "LFO 1 Rate", "Mod Wheel", "Dry/Wet", "Feedback", "Decay", "Size", "Drive", "Mix", "Depth", "Rate", "Gain", "Warp 1", "Unison Detune", "FM Amount", "Sample Start", "Release", "Attack", "Pitch", "Formant", "Tone", "Width"]
+
+macro_signal: [1, 32]          # "Signal N"
+midi_notes: ["C1", "D1", "F#1", "A#1", "C2", "D2", "E2", "G2", "C3", "E3", "G3", "A3", "C4", "D4", "E4", "F4", "G4", "A4", "B4", "C5"]
+midi_patterns: ["hi-hat pattern", "trap roll", "snare roll", "kick pattern", "clap pattern", "arp", "percussion loop", "pattern 1", "pattern 2", "pattern 3", "fill"]
+midi_cc: [1, 7, 10, 11, 16, 21, 64, 71, 74]
+
+# per-route modifiers: independent draws, probability each
+modifiers:
+  invert: 0.15
+  range: 0.15
+  curve: 0.05
+  amount: 0.15
+  smooth: 0.05
+  hold: 0.03
+  quantize: 0.03
+  gate: 0.04             # g slot: route active only while another source or shape is on
+  time: 0.03             # tm slot: ramp length; mostly with event sources and toggles
+range_shapes: {up_to: 45, from: 15, between: 40}   # [0,x], [x,1], [x,y]; x,y multiples of 5 %
+amount_values: {0.25: 35, 0.5: 30, 0.75: 15, 1.0: 20}
+curve_values: {exp: 40, log: 35, s: 25}
+smooth_values: {low: 35, medium: 25, high: 40}
+hold_values: {hold: 50, reset: 20, freeze: 30}
+quantize_values: {2: 10, 4: 25, 8: 25, 12: 10, 16: 10, scale: 20}
+gate_sources: {hand.shape: 50, hand.fist: 15, hand.openness: 10, mouth.open: 10, eye.closed: 5, hand.pinch: 10}
+time_values: {"1 beat": 10, "2 beats": 12, "1 bar": 18, "2 bars": 15, "4 bars": 20, "8 bars": 8, "250 ms": 7, "500 ms": 10}
+delta_values: {0.1: 25, -0.1: 25, 0.25: 15, -0.25: 15, 0.5: 10, -0.5: 10}
+
+# references back to earlier edits (resolver fills them from history)
+refs:
+  map: 0.06              # "same for the bass": route {ref: rf1, scope: [k1 new track]}, no src/tgt
+  modify: 0.35           # "invert that", "make it subtler": route {ref: rf1, mods: [...]}
+  unmap: 0.30            # "remove that one": route {ref: rf1}
+  track: 0.05            # map: a route's track given as "there" / "same track": k slot value ref:last_track
+# corrections: the sentence first names a wrong value, then the right one (w slot, ignored)
+correction: {probability: 0.05, of: {source: 50, target: 30, track: 20}}
+
+# say: probability that a slot gets a glossary phrase to use verbatim (needs the glossary).
+# v3: lower, and rank-weighted: glossary phrases are ordered common -> rare, pick rank r with
+# weight 1/(r+2), so common wording dominates and rare wording still appears.
+say_probability: 0.35
+say_rank_weighting: true
+
+# frames that make sense per intent (others fall back to imperative)
+frames_by_intent:
+  map: [imperative, declarative, conditional, comparative, request, wish, fragment]
+  modify: [imperative, declarative, comparative, request, wish, fragment]
+  default: [imperative, declarative, request, wish, fragment]
+
+# other intents
+modify_mods_per_edit: {1: 75, 2: 25}           # modify always has >= 1 modifier
+modify_delta_share: 0.4                        # share of modify modifiers that are a delta
+clear_scope: {source: 35, target: 20, track: 25, all: 20}
+roles: {midi: 35, parameter: 30, motion: 20, off: 15}
+presets: {filter_hand: 30, chord_hand: 25, pattern_hand: 20, pong: 13, orb: 12}
+keys: [C, C#, D, Eb, E, F, F#, G, Ab, A, Bb, B]
+scales: {minor: 30, major: 30, dorian: 8, phrygian: 6, harmonic minor: 6, minor pentatonic: 10, major pentatonic: 6, mixolydian: 4}
+undo: {undo: 80, redo: 20}
+query_scope: {source: 50, target: 25, track: 15, all: 10}

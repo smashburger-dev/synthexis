@@ -1,0 +1,273 @@
+# synthexis mapping ontology v1 (2026-10-29)
+#
+# Everything the mapping assistant can name, in one file:
+#   taxonomy   param-sense classes: what a plugin parameter means (list order = class index)
+#   sources    signals a route reads (spec sig.contract, feat.*, gest.*, motion.*)
+#   shapes     named finger states (gest.finger_states, 5-bit masks thumb..pinky)
+#   targets    kinds of things a route writes to
+#   intents    what one sentence asks for
+#   modifiers  per-route conditioning (cond.range, cond.filter, cond.occlusion, cond.quantize)
+#   tracks     channel roles producers name in a project
+#   presets    gest.presets and preset.pong / preset.orb
+#
+# Polarity convention for sources: every continuous source is 0..1 and its id names
+# the state that reads 1 (hand.openness: 1 = open hand, hand.fist: 1 = closed fist).
+# Pairs like openness/fist are the same signal inverted; the resolver turns hand.fist
+# into hand.openness with invert. Directions are from the user's point of view
+# (hand.x = 1 is the user's right, even though the camera image is mirrored).
+
+version: 1
+
+taxonomy:
+  # ---- level and space
+  - {id: amp.gain, quantity: loudness, mappable: true, safe: [0, 1],
+     desc: "Volume or level of the sound or of a layer inside the plugin, and effect input/output levels inside the chain whose top is about unity (0 dB). Final output/master stages that boost well above 0 dB are unsafe.",
+     examples: ["Volume", "Level", "Amp", "Layer Vol", "Gain (synth amp)", "Output (max 0 dB)"]}
+  - {id: amp.pan, quantity: position to the right, mappable: true, safe: [0, 1],
+     desc: "Stereo position of the sound: pan, balance.",
+     examples: ["Pan", "Balance", "Osc A Pan"]}
+  - {id: stereo.width, quantity: width, mappable: true, safe: [0, 1],
+     desc: "Stereo width or spread: width, stereo spread, unison stereo spread, ping-pong width, Haas, imager, mid/side balance toward side.",
+     examples: ["Width", "Stereo", "Spread", "Ping Pong"]}
+  # ---- filter (an actual filter section)
+  - {id: filter.cutoff, quantity: cutoff frequency, mappable: true, safe: [0.05, 1],
+     desc: "Cutoff frequency of a real filter section: synth filters, filter plugins, dedicated high-pass/low-pass filters in EQs and channel strips. Tone and damping knobs of effects are fx.tone.",
+     examples: ["Cutoff", "Filter Freq", "Flt Freq", "LP Freq", "HPF", "Low Cut (EQ)"]}
+  - {id: filter.resonance, quantity: resonance, mappable: true, safe: [0, 0.8],
+     desc: "Resonance, emphasis or Q of a real filter section (not EQ band Q).",
+     examples: ["Resonance", "Res", "Reso", "Emphasis", "Filter Q"]}
+  - {id: filter.env_amount, quantity: envelope depth on the filter, mappable: true, safe: [0, 1],
+     desc: "How much an envelope moves the filter cutoff: filter env amount, env depth on the filter.",
+     examples: ["Env Amt", "Filter Env", "Env Depth", "Contour"]}
+  # ---- oscillators and voices
+  - {id: osc.pitch, quantity: pitch, mappable: true, safe: [0, 1],
+     desc: "Coarse pitch of a sound source: octave, semitone, transpose, coarse tune, drum voice tune.",
+     examples: ["Octave", "Semi", "Coarse", "Transpose", "Tune (drum)", "Pitch"]}
+  - {id: osc.fine, quantity: fine pitch, mappable: true, safe: [0, 1],
+     desc: "Fine tuning of one source in cents (not unison detune, not chorus detune).",
+     examples: ["Fine", "Cents", "Fine Tune", "Osc 2 Detune (single osc)"]}
+  - {id: osc.shape, quantity: shape position, mappable: true, safe: [0, 1],
+     desc: "Timbre of an oscillator: wavetable position, waveform morph, pulse width, shape, harmonics, timbre, bend or warp that is not FM/sync.",
+     examples: ["WT Pos", "Wavetable Position", "Shape", "PW", "Morph", "Timbre", "Harmonics"]}
+  - {id: osc.level, quantity: level of the source, mappable: true, safe: [0, 1],
+     desc: "Level of one source inside a synth or sampler: oscillator volume, sub level, noise level, layer mix, osc balance.",
+     examples: ["Osc A Level", "Sub", "Noise", "Osc Mix", "Layer B Vol"]}
+  - {id: osc.fm, quantity: modulation amount between oscillators, mappable: true, safe: [0, 1],
+     desc: "FM, ring modulation, AM, hard sync and cross-modulation amounts.",
+     examples: ["FM Amount", "FM", "Ring Mod", "Sync", "Cross Mod", "Op 2 Level (FM operator)"]}
+  - {id: unison.detune, quantity: detune spread, mappable: true, safe: [0, 1],
+     desc: "Detune between unison voices or supersaw spread.",
+     examples: ["Unison Detune", "Detune", "Spread (unison)", "Supersaw Detune"]}
+  - {id: voice.glide, quantity: glide time, mappable: true, safe: [0, 1],
+     desc: "Portamento or glide time.",
+     examples: ["Glide", "Portamento", "Porta Time", "Slide"]}
+  - {id: sample.position, quantity: position in the sample, mappable: true, safe: [0, 1],
+     desc: "Play position in a sample: sample start, granular position, scan position, loop start offset.",
+     examples: ["Sample Start", "Start", "Position", "Grain Position", "Scan"]}
+  # ---- envelopes (amp, filter and mod envelopes alike; the group tells which)
+  - {id: env.attack, quantity: attack time, mappable: true, safe: [0, 1],
+     desc: "Attack time of any envelope.", examples: ["Attack", "Att", "A", "Amp Env Attack"]}
+  - {id: env.decay, quantity: decay time, mappable: true, safe: [0, 1],
+     desc: "Decay time of any envelope, and decay of drum voices.", examples: ["Decay", "Dec", "D", "Kick Decay"]}
+  - {id: env.sustain, quantity: sustain level, mappable: true, safe: [0, 1],
+     desc: "Sustain level of any envelope.", examples: ["Sustain", "Sus", "S"]}
+  - {id: env.release, quantity: release time, mappable: true, safe: [0, 1],
+     desc: "Release time of any envelope (compressor release is other).", examples: ["Release", "Rel", "R"]}
+  # ---- modulation
+  - {id: lfo.rate, quantity: LFO speed, mappable: true, safe: [0, 1],
+     desc: "Rate or speed of an LFO in a synth or filter plugin (effect-internal modulation rates are fx.mod.rate).",
+     examples: ["LFO 1 Rate", "LFO Speed", "Rate", "Freq (LFO)"]}
+  - {id: lfo.amount, quantity: LFO depth, mappable: true, safe: [0, 1],
+     desc: "Depth or amount of an LFO.", examples: ["LFO Amount", "LFO Depth", "Amt", "Intensity"]}
+  - {id: mod.amount, quantity: modulation depth, mappable: true, safe: [0, 1],
+     desc: "Modulation matrix amounts and other modulation depths: pitch envelope amount, velocity-to-cutoff amount, mod wheel depth.",
+     examples: ["Mod 1 Amount", "Matrix Amt", "Pitch Env Amt", "Vel > Cutoff"]}
+  - {id: macro, quantity: macro value, mappable: true, safe: [0, 1],
+     desc: "Generic macro or performance slots whose name does not say what they do. A named macro takes the class of its name.",
+     examples: ["Macro 1", "Knob 3", "Quick Control 2", "#014", "M1"]}
+  # ---- reverb and delay
+  - {id: fx.reverb.mix, quantity: wetness of the reverb, mappable: true, safe: [0, 1],
+     desc: "Dry/wet or wet level of a reverb (Dry level has direction -1).", examples: ["Mix", "Wet", "Dry/Wet", "Reverb Mix", "Send"]}
+  - {id: fx.reverb.decay, quantity: reverb length, mappable: true, safe: [0, 1],
+     desc: "Size, decay, time, length, room size of a reverb.", examples: ["Decay", "Size", "Time", "RT60", "Room Size"]}
+  - {id: fx.delay.mix, quantity: wetness of the delay, mappable: true, safe: [0, 1],
+     desc: "Dry/wet or wet level of a delay or echo.", examples: ["Mix", "Wet", "Delay Mix", "Echo Level"]}
+  - {id: fx.delay.time, quantity: delay time, mappable: true, safe: [0, 1],
+     desc: "Delay time, in ms or as a synced note value (a list of note values is still fx.delay.time).", examples: ["Time", "Delay L", "Time R", "Sync Rate", "1/8"]}
+  - {id: fx.delay.feedback, quantity: number of repeats, mappable: true, safe: [0, 0.85],
+     desc: "Feedback or repeats of a delay or echo. Keep the safe top below self-oscillation.", examples: ["Feedback", "Fdbk", "Repeats", "Regen"]}
+  # ---- modulation effects
+  - {id: fx.mod.mix, quantity: wetness of the modulation effect, mappable: true, safe: [0, 1],
+     desc: "Dry/wet of chorus, flanger, phaser, ensemble, rotary, vibrato, tremolo, auto-pan.", examples: ["Mix", "Chorus Mix", "Wet"]}
+  - {id: fx.mod.rate, quantity: modulation speed, mappable: true, safe: [0, 1],
+     desc: "Rate or speed inside an effect: chorus, flanger, phaser, tremolo, vibrato, auto-pan, rotary, trance gate, and modulation inside reverbs and delays.",
+     examples: ["Rate", "Speed", "Chorus Rate", "Mod Rate"]}
+  - {id: fx.mod.depth, quantity: modulation depth, mappable: true, safe: [0, 1],
+     desc: "Depth, intensity or feedback inside a modulation effect (flanger/phaser feedback, chorus depth, auto-pan depth, delay or reverb mod depth).",
+     examples: ["Depth", "Intensity", "Feedback (flanger)", "Mod Depth"]}
+  # ---- tone shaping
+  - {id: fx.drive, quantity: distortion amount, mappable: true, safe: [0, 1],
+     desc: "Distortion, saturation, overdrive, fuzz, amp-sim gain, filter drive, bitcrush, downsample, lo-fi degradation (Bits has direction -1).",
+     examples: ["Drive", "Saturation", "Amount (distortion)", "Gain (guitar amp)", "Bits", "Downsample", "Crush"]}
+  - {id: fx.tone, quantity: brightness, mappable: true, safe: [0, 1],
+     desc: "Tone, colour, brightness, tilt, presence, and the internal filters of reverbs, delays and distortions (damping has direction -1). A named 'Brightness' macro belongs here.",
+     examples: ["Tone", "Color", "Brightness", "Damping", "Hi Cut (reverb)", "Presence", "Tilt"]}
+  - {id: fx.mix, quantity: wetness of the effect, mappable: true, safe: [0, 1],
+     desc: "Dry/wet of any effect that is not a reverb, delay or modulation effect: distortion mix, compressor parallel mix, multi-effect wet, filter plugin mix.",
+     examples: ["Mix", "Dry/Wet", "Wet", "Blend", "Parallel"]}
+  - {id: fx.comp.amount, quantity: compression amount, mappable: true, safe: [0, 1],
+     desc: "How hard a compressor or limiter works: threshold (direction -1), ratio, amount, depth, OTT depth, input drive into a limiter.",
+     examples: ["Threshold", "Ratio", "Depth", "Amount", "Squash", "Input (limiter)"]}
+  - {id: fx.gate, quantity: gating depth, mappable: true, safe: [0, 1],
+     desc: "Depth of gating or ducking: gate threshold, trance gate depth, volume shaper or sidechain duck amount.",
+     examples: ["Gate", "Duck", "Depth (trance gate)", "Shaper Amount"]}
+  - {id: fx.eq.gain, quantity: band boost, mappable: true, safe: [0, 1],
+     desc: "Gain of an EQ band or shelf, and tone-stack knobs (Bass, Mid, Treble, Low, High).", examples: ["Band 2 Gain", "Low Shelf", "Bass", "Treble", "Mid"]}
+  - {id: fx.eq.freq, quantity: band frequency, mappable: true, safe: [0, 1],
+     desc: "Frequency of a peaking or shelving EQ band (dedicated HP/LP filters are filter.cutoff).", examples: ["Band 3 Freq", "Mid Freq", "Frequency"]}
+  - {id: fx.eq.q, quantity: band narrowness, mappable: true, safe: [0, 1],
+     desc: "Q or bandwidth of an EQ band (bandwidth has direction -1).", examples: ["Q", "Band 1 Q", "Bandwidth", "BW"]}
+  - {id: fx.pitch, quantity: pitch shift, mappable: true, safe: [0, 1],
+     desc: "Pitch shifting effects: shift in semitones or cents, formant shift, harmonizer interval.", examples: ["Pitch", "Shift", "Formant", "Semitones (pitch shifter)"]}
+  # ---- non-performance
+  - {id: ctl.switch, quantity: none, mappable: false, safe: [0, 1],
+     desc: "Performance toggles: bypass, on/off, enable, mute, solo, freeze, hold, kill.", examples: ["Bypass", "On", "Enable", "Mute", "Freeze"]}
+  - {id: ctl.select, quantity: none, mappable: false, safe: [0, 1],
+     desc: "Discrete choices: mode, type, waveform, algorithm, filter type, routing, mod source or destination, character.", examples: ["Filter Type", "Waveform", "Mode", "Algorithm", "LFO Shape"]}
+  - {id: system, quantity: none, mappable: false, safe: [0, 1],
+     desc: "Setup nobody performs: tempo sync on/off, oversampling, quality, MIDI channel, polyphony, voice count, bend range, velocity sensitivity, latency, sidechain source, meters, read-only values, GUI.",
+     examples: ["Oversampling", "Sync", "Polyphony", "Voices", "Bend Range", "MIDI Ch", "GR Meter"]}
+  - {id: other, quantity: none, mappable: true, safe: [0, 1],
+     desc: "Performance-relevant parameters no other class covers: predelay, compressor attack/release, LFO phase, envelope hold or delay stage, arp rate, grain size, transient attack, early reflections.",
+     examples: ["Predelay", "Knee", "LFO Phase", "Grain Size", "Arp Rate"]}
+  - {id: unsafe, quantity: none, mappable: false, safe: [0, 1],
+     desc: "Never mapped by default: final output or master gain that boosts well above 0 dB, makeup gain with large boost, and destructive actions (panic, reset, randomize, init, preset or program change, MIDI learn).",
+     examples: ["Output +24 dB", "Master Gain", "Makeup", "Randomize", "Panic", "Program"]}
+
+# ---------------------------------------------------------------------------
+# Sources. side: hand, eye and arm take left | right | either | both.
+# ---------------------------------------------------------------------------
+sources:
+  # hand, per side
+  - {id: hand.openness, side: true, desc: "0 fist .. 1 open hand", pair: hand.fist}
+  - {id: hand.fist, side: true, desc: "0 open hand .. 1 closed fist (hand.openness inverted)", pair: hand.openness}
+  - {id: hand.finger.thumb, side: true, desc: "thumb extension, 0 folded .. 1 straight"}
+  - {id: hand.finger.index, side: true, desc: "index finger extension"}
+  - {id: hand.finger.middle, side: true, desc: "middle finger extension"}
+  - {id: hand.finger.ring, side: true, desc: "ring finger extension"}
+  - {id: hand.finger.pinky, side: true, desc: "pinky extension"}
+  - {id: hand.spread, side: true, desc: "fingers together 0 .. spread wide 1"}
+  - {id: hand.x, side: true, desc: "hand position, 0 user's left .. 1 user's right"}
+  - {id: hand.y, side: true, desc: "hand height, 0 low .. 1 high (raise the hand)"}
+  - {id: hand.depth, side: true, desc: "0 far .. 1 close to the camera (push toward the camera)"}
+  - {id: hand.pinch, side: true, desc: "thumb and index tips, 0 apart .. 1 touching"}
+  - {id: hand.speed, side: true, desc: "how fast the hand moves, 0 still .. 1 fast"}
+  - {id: hand.shape, side: true, discrete: true, desc: "a named finger state (see shapes), a trigger: on while held"}
+  # two hands
+  - {id: hands.distance, desc: "distance between the palms, 0 together .. 1 far apart (stretch)"}
+  - {id: orb.size, desc: "orb held between both palms, size = palm distance"}
+  - {id: orb.x, desc: "orb centre, 0 left .. 1 right"}
+  - {id: orb.y, desc: "orb centre, 0 low .. 1 high"}
+  - {id: orb.rotation, desc: "rotation of the palm-to-palm line, 0 tilted left .. 1 tilted right"}
+  # face and head
+  - {id: mouth.open, desc: "0 closed .. 1 wide open"}
+  - {id: face.smile, desc: "0 neutral .. 1 big smile"}
+  - {id: eye.open, side: true, desc: "0 closed .. 1 open", pair: eye.closed}
+  - {id: eye.closed, side: true, desc: "0 open .. 1 closed (blink, wink; eye.open inverted)", pair: eye.open}
+  - {id: head.yaw, desc: "head turn, 0 turned to the user's left .. 1 turned right; also from headphones"}
+  - {id: head.pitch, desc: "head nod, 0 looking down .. 1 looking up; also from headphones"}
+  - {id: head.roll, desc: "head tilt, 0 tilted to the left shoulder .. 1 tilted right; also from headphones"}
+  # body
+  - {id: arm.raise, side: true, desc: "arm, 0 down .. 1 raised above the head"}
+  - {id: body.lean, desc: "upper body, 0 leaning left .. 1 leaning right"}
+  # tracked objects; name: phone, ball, bottle, can, drumstick, mug, pen, or 'object N'
+  - {id: object.x, named: true, desc: "object position, 0 left .. 1 right"}
+  - {id: object.y, named: true, desc: "object height, 0 low .. 1 high"}
+  - {id: object.size, named: true, desc: "object size in the frame (closer = bigger)"}
+  - {id: object.angle, named: true, desc: "object rotation"}
+  - {id: object.speed, named: true, desc: "how fast the object moves"}
+  # body sensors
+  - {id: heart.bpm, desc: "heart rate from the headphones, normalized over a user range"}
+  # motion primitives (motion.primitives); each one is an event with continuous parameters
+  - {id: motion.throw, side: true, event: true, params: [speed, direction, border_position], desc: "fast move then release"}
+  - {id: motion.swipe, side: true, event: true, params: [distance, speed, direction], desc: "sustained move without release"}
+  - {id: motion.push_pull, side: true, params: [rate], desc: "pushing toward or pulling away from the camera"}
+  - {id: motion.hold, side: true, event: true, params: [duration], desc: "hand held still for 300 ms or more"}
+  - {id: motion.circle, side: true, params: [rate, direction, radius], desc: "hand drawing circles"}
+  - {id: motion.grab, side: true, event: true, desc: "hand closes (grab)"}
+  - {id: motion.release, side: true, event: true, desc: "hand opens (release)"}
+  - {id: motion.clap, event: true, desc: "both hands clap"}
+
+# Named finger states: 5-bit masks thumb, index, middle, ring, pinky (1 = extended).
+shapes:
+  - {id: fist, mask: "00000"}
+  - {id: open, mask: "11111"}
+  - {id: point, mask: "01000"}
+  - {id: thumbs_up, mask: "10000"}
+  - {id: peace, mask: "01100"}
+  - {id: three, mask: "01110"}
+  - {id: four, mask: "01111"}
+  - {id: rock, mask: "01001"}
+  - {id: shaka, mask: "10001"}
+  - {id: l_shape, mask: "11000"}
+  - {id: pinky_up, mask: "00001"}
+  - {id: thumb_index_middle, mask: "11100"}
+
+# ---------------------------------------------------------------------------
+# Targets: what a route writes to.
+# ---------------------------------------------------------------------------
+targets:
+  - {id: param, desc: "a plugin parameter, addressed by meaning (taxonomy id) and optionally track, plugin, or the literal parameter name"}
+  - {id: macro, desc: "a synthexis macro 'Signal 1..32' that the user linked in FL"}
+  - {id: midi.note, desc: "play a note (e.g. C4, hi-hat note) on a channel while the source is on"}
+  - {id: midi.chord, desc: "play chords in the project key on a channel"}
+  - {id: midi.pattern, desc: "play a pattern slot (drum pattern, roll, arp) quantized to the host grid"}
+  - {id: midi.cc, desc: "send a MIDI CC number on a channel"}
+  - {id: toggle, desc: "switch an effect or plugin on and off (its bypass or on switch, class ctl.switch); value = effect family; mode toggle (each event flips it) or momentary (on while the source is on)"}
+
+# Effect families for toggle targets and for 'the reverb' style plugin references.
+families: [reverb, delay, chorus, flanger, phaser, distortion, filter, eq, compressor, gate, pitch, plugin]
+
+# References back to earlier edits ("the same for the bass", "invert that", "remove it").
+# ref:last_route is its own slot (rf) standing for the source(s) and target(s) of the previous
+# edit's routes; ref:last_track is a track slot value ("there"). The resolver fills both from
+# the edit history; the parser never sees the history.
+refs: [ref:last_route, ref:last_track]
+
+intents:
+  - {id: map, desc: "add one or more routes source -> target"}
+  - {id: unmap, desc: "remove specific routes"}
+  - {id: clear, desc: "remove all routes of a source, a target, a track, or everything"}
+  - {id: modify, desc: "change modifiers of existing routes (range, invert, curve, amount, smoothing)"}
+  - {id: replace, desc: "move an existing route to a different target or source ('use the delay instead of the reverb')"}
+  - {id: role, desc: "set a hand's role: midi, parameter, motion, off (gest.hand_role)"}
+  - {id: preset, desc: "load a preset: filter_hand, chord_hand, pattern_hand, pong, orb"}
+  - {id: scale, desc: "set key and scale for MIDI roles"}
+  - {id: undo, desc: "undo or redo the last change"}
+  - {id: query, desc: "ask what is mapped or what a source does"}
+  - {id: none, desc: "not a command (chat, praise, unrelated text)"}
+
+modifiers:
+  invert: "bool; the target moves opposite to the source"
+  range: "[lo, hi] in 0..1 of the target's safe range; words: 'up to half', 'between 20 and 80 percent', 'only a little', 'all the way'"
+  curve: "linear | exp | log | s; words: 'slowly at first', 'exponential', 'logarithmic', 'smooth s-curve'"
+  amount: "route depth -1..1; buckets subtle 0.25, medium 0.5, strong 0.75, full 1.0"
+  smooth: "low | medium | high (One Euro filter); words: 'snappy', 'fast', 'smooth', 'less jittery', 'lazy'"
+  hold: "hold | reset | freeze when the source disappears (cond.occlusion)"
+  quantize: "steps N or scale degrees; words: 'in steps', 'in 8 steps', 'snap to the scale'"
+  note: "MIDI note name, e.g. C4, F#2"
+  grid: "MIDI quantize grid, e.g. 1/16, 1/8, 1/4"
+  delta: "relative change of an existing route's amount (modify only): +0.1 a bit more, +0.25 more, +0.5 much more, and the negatives"
+  gate: "the route is active only while another source or finger state is on ('only while I hold a fist')"
+  time: "ramp or fade length in beats, bars or ms ('over 4 bars', 'in 500 ms')"
+  mode: "toggle | momentary, for toggle targets"
+  rejected: "a value the user names by mistake and then corrects ('right hand, no, left hand'); the parser must ignore it"
+
+tracks: [pad, bass, sub, "808", lead, pluck, keys, piano, rhodes, organ, strings, brass, choir, vocals, guitar, arp, synth, drums, kick, snare, clap, hi-hat, percussion, fx, riser, master]
+
+presets:
+  - {id: filter_hand, desc: "hand openness opens filter cutoff, spread opens resonance"}
+  - {id: chord_hand, desc: "finger states pick chords in key and scale, spread drives voicing or arp rate"}
+  - {id: pattern_hand, desc: "finger states trigger pattern slots"}
+  - {id: pong, desc: "throws bounce off the frame border, wall segments fire ramps or notes"}
+  - {id: orb, desc: "orb between both hands: size, position and rotation are signals; throw it into pong"}
