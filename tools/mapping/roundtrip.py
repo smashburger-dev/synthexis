@@ -105,17 +105,21 @@ def gold_routes(e: dict) -> list:
 
 def pred_routes(pred: dict) -> list:
     out = []
-    for r in pred.get("routes", []):
+    for r in pred.get("routes") or []:
+        if not isinstance(r, dict):
+            continue
         srcs, tgts = set(), set()
-        for raw in r.get("src", []):
+        src_list = [x for x in (r.get("src") or []) if isinstance(x, str)]
+        tgt_list = [x for x in (r.get("tgt") or []) if isinstance(x, str)]
+        for raw in src_list:
             s, side, flip = fold_src(raw)
             srcs.add((s, side, flip))
         from_to = None
         if r.get("from") or r.get("to"):
             from_to = (r.get("from"), r.get("to"))
-        if "ref" in r.get("tgt", []):
+        if "ref" in tgt_list:
             srcs.add(("ref", None, False))
-        for t in r.get("tgt", []):
+        for t in tgt_list:
             if t.startswith("toggle:") or t == "ref":
                 tgts.add(t)
             elif t.startswith("macro"):

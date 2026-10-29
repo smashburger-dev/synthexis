@@ -23,11 +23,11 @@ Entry point for the next mapping session. Measured numbers and commands: `probes
 
 1. Noa: 50 calibration sentences and 100 eval sentences, typed as he would (English, German or mixed), into `data/mapping/eval/calibration.txt` and `data/mapping/eval/eval.txt` (git-ignored). Never used for training or prompt tuning.
 2. Noa, about 10 min: FL stock plugin dump (`tools/mapping/fl/README.md`), then `import_fl_dump.py` and `label.py --harvest fl --priority`.
-3. Omnisphere: no parameter meaning in the AU; check the VST3 names in FL; otherwise MIDI CC or Omnisphere's own host-automation assignment.
-4. Training (next session, Mac CPU/MPS, no cloud needed): tokenizer, parser v1, param-sense v1, challenge set, learning curve on stage-1 data to decide whether stage 2 is worth buying.
+3. Omnisphere: neither AU nor VST3 carries parameter meaning ("Param 0..511" plus MIDI CC slots). Demo options, both untested in FL: assign Omnisphere controls to host-automation slots inside Omnisphere, or drive its VST3 "MIDI CC 0|1" (mod wheel) parameter, which most patches use.
+4. Training: overnight session on the Mac (`docs/mapping-train-session-prompt.md`; 96 ms per step on MPS for the 9.2M parser, about 30 minutes per run), then the session with Noa's sentences (`docs/mapping-next-session-prompt.md`).
 5. Plugin integration (resolver, chips, credit) with the hill-climb line that owns `plugin/`.
 6. The main session merges SPEC_PROPOSAL.md into the spec.
 
 ## Cost
 
-Baseten ledger at the end of the session: 29.43 $ over 1,939 requests (details in RESULT.md, Spend); about 70 $ of the 100 $ credit left. Every request is logged in `data/mapping/spark/ledger.jsonl`; `uv run tools/mapping/spark.py ledger` prints requests, tokens and $ per run for README and demo.
+Baseten ledger at the end of the session: 34.57 $ over 2,560 requests (details in RESULT.md, Spend); about 65 $ of the 100 $ credit left. The full round-trip over all stage-1 sentences (5.1 $) keeps 8,003 of 13,128 sentences without intent, invert, source or route mismatch. Every request is logged in `data/mapping/spark/ledger.jsonl`; `uv run tools/mapping/spark.py ledger` prints requests, tokens and $ per run for README and demo.
