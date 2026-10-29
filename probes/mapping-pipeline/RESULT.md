@@ -25,7 +25,7 @@ Built with Muse Spark Open (`meta-models/muse-spark-open-1026`, Baseten Model AP
 
 - 906 AU components (types aumu, aufx, aumf, augn, aumi): 886 ok, 16 no parameters, 3 timeouts, 1 error; 122,664 parameters.
 - First pass had only 312 ok: Waves, UADx, Analog Lab V and others print to stdout while loading and broke the JSON on stdout. Writing the JSON to a file (`--out`) fixed it.
-- Omnisphere and FX-Omnisphere expose only "Param 0..511" with empty display strings (generic host-automation slots); no meaning can be read from them.
+- Omnisphere and FX-Omnisphere expose only "Param 0..511" with empty display strings (generic host-automation slots); no meaning can be read from them. The VST3 versions are the same: "Param 0..511" (display strings are just the slot number) plus 2,048 "MIDI CC <channel>|<cc>" parameters, 2,594 in total.
 - First full harvest: 574 s wall time.
 
 ## Parameter harvest (VST3)
@@ -80,6 +80,11 @@ uv run tools/mapping/roundtrip.py --run rt-s1 --sentences-run cmd-s1 --max-usd 3
 - Valid sentences by intent: map 6,641, modify 1,438, unmap 968, replace 810, role 652, preset 612, query 537, clear 446, none 384, undo 330, scale 310; English 9,201, German 3,927.
 - Template keyword sentences: 398 (only map edits with at most two routes and no modifiers besides range qualify).
 - Round-trip on 2,126 sentences (every inverted one plus 5 %), 88 requests, 0.91 $: agreement intent 0.933, routes 0.917, invert 0.849, sources 0.763, targets 0.656. 1,123 sentences have at least one mismatch: targets 554 (356 of them targets only), sources 326, routes 177, invert 145, intent 143. Targets-only mismatches are mostly lay wording read as a neighbouring class ("dreamier" as reverb vs delay); dropping them all would strip the lay sentences Noa asked for, so the training set drops intent, invert and source failures and keeps targets-only ones for a manual look.
+- Full round-trip over all stage-1 sentences (`roundtrip.py --run rt-s1-all --sentences-run cmd-s1 --all --max-usd 10`, 538 requests, about 5.1 $): 13,103 read back; agreement intent 0.888, routes 0.860, invert 0.842, sources 0.752, targets 0.691. 6,425 sentences (49 %) match on every field; 8,003 (61 %) have no intent, invert, source or route mismatch (kept per register: casual 2,112 of 3,447, beginner 1,150 of 1,849, terse 1,164 of 1,914, layperson 944 of 1,561, jargon 898 of 1,509, codeswitch 854 of 1,408, rambling 475 of 761, polite 406 of 654). Mismatches mix generator faults and reader faults; which share helps training is an open measurement (filtered 8,003 vs all 13,128, same step budget).
+
+## Training speed on the Mac
+
+`uv run probes/mapping-pipeline/train_bench.py --device mps|cpu` (random data, DESIGN.md parser shape: vocab 8k, encoder 6 x d256, decoder 2 x d256 with pointer scores, BIO head; batch 64, source 48 tokens, frame 24 tokens; AdamW): 9.20M parameters, MPS 96.0 / 104.8 ms per step (median / p95), CPU 452.5 / 476.2 ms. At 40k training samples that is about 1 minute per epoch on MPS.
 
 ## Outside review
 
@@ -87,4 +92,4 @@ uv run tools/mapping/roundtrip.py --run rt-s1 --sentences-run cmd-s1 --max-usd 3
 
 ## Spend
 
-Ledger total at the end of the session (2026-10-29): 29.43 $ over 1,939 requests (10.23M prompt tokens of which 6.00M cached, 5.47M output tokens of which 3.36M reasoning). Largest items: commands stage 1 11.14 $, AU priority labels 8.23 $, VST3 labels 4.76 $, AU bulk labels 2.03 $, glossary 1.28 $.
+Ledger total at the end of the session (2026-10-29): 34.57 $ over 2,560 requests (11.62M prompt tokens of which 6.97M cached, 6.52M output tokens of which 3.92M reasoning). Largest items: commands stage 1 11.14 $, AU priority labels 8.23 $, round-trip checks 6.2 $, VST3 labels 4.76 $, AU bulk labels 2.03 $, glossary 1.28 $.
