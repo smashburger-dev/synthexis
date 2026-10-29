@@ -45,7 +45,16 @@ GPU_RATES = {"H100": 0.001097, "L40S": 0.000542}
 #   L40S 1-prompt 300f chunks: 69.0/108.4 s -> 180-230 ms/fc incl. a
 #   ~20 s per-job session+IO overhead. Estimate = prompts x prop_ms
 #   + per-job overhead; the pilot guard re-estimates anyway.
-EST_MS_PER_FRAME_CONCEPT = {"H100": 80.0, "L40S": 150.0}
+# image mode, variant "grouped" (backbone once per 8-frame batch, all
+# prompts in one grounding call), measured by compare_modes on S1
+# chunk_0009 (L40S, 2026-10-29): 24.55 ms/fc ($0.0133/1000fc) vs video
+# $0.104/1000fc; seq variant 81.8 ms/fc. 35 ms leaves headroom for the
+# 1.3x pilot guard (probes/label-image-mode/RESULT.md).
+EST_MS_PER_FRAME_CONCEPT = {
+    "video": {"H100": 80.0, "L40S": 150.0},
+    "image": {"L40S": 35.0},
+}
+IMAGE_VARIANT = "grouped"
 EST_JOB_OVERHEAD_S = 20.0
 VOL_FRAMES_REMOTE = "frames"
 VOL_RAW_REMOTE = "raw"
@@ -184,7 +193,27 @@ def missing_specs(chunks, remote_files) -> list[dict]:
     return specs
 
 
-def download_raw(vol, session, cam, labels_root: Path, force: bool = False):
+def add_redo_specs(specs, chunks, redo: set) -> list[dict]:
+    """Treat `redo` concepts as not cached in every chunk that has them."""
+    by_chunk = {s["chunk"]: s for s in specs}
+    for c in chunks:
+        extra = [p for p in c["prompts"] if p["concept"] in redo]
+        if not extra:
+            continue
+        s = by_chunk.get(c["chunk"])
+        if s is None:
+            s = {**c, "prompts": []}
+            by_chunk[c["chunk"]] = s
+            specs.append(s)
+        have = {p["concept"] for p in s["prompts"]}
+        s["prompts"].extend(p for p in extra if p["concept"] not in have)
+    return specs
+
+
+def download_raw(
+    vol, session, cam, labels_root: Path, force: bool = False,
+    force_names: set | None = None,
+):
     remote_root = f"{VOL_RAW_REMOTE}/{session}/{cam}"
     n = 0
     try:
@@ -198,7 +227,11 @@ def download_raw(vol, session, cam, labels_root: Path, force: bool = False):
     for fi in files:
         rel = fi.path[len(remote_root) + 1 :]
         dest = labels_root / cam / rel
-        if dest.exists() and not force:
+        if (
+            dest.exists()
+            and not force
+            and not (force_names and dest.name in force_names)
+        ):
             continue
         dest.parent.mkdir(parents=True, exist_ok=True)
         dest.write_bytes(b"".join(vol.read_file(fi.path)))
@@ -335,7 +368,9 @@ def run_jobs(app, labeler_cls, specs, max_usd, upfront_est_usd, rate):
                     f"ABORT: pilot re-estimate ${new_est:.2f} > --max-usd "
                     f"{max_usd}. Cached chunks stay usable; rerun later."
                 )
-            if new_est > 1.3 * upfront_est_usd:
+            # 0.10 $ absolute slack: on cent-sized redo jobs the ratio alone
+            # aborts on noise ($0.03 -> $0.04, S2 demo_object 2026-10-29)
+            if new_est > 1.3 * upfront_est_usd and new_est - upfront_est_usd > 0.10:
                 raise SystemExit(
                     f"ABORT: pilot re-estimate ${new_est:.2f} > 1.3x the "
                     f"up-front estimate ${upfront_est_usd:.2f}. Investigate "
@@ -449,9 +484,19 @@ def main():
     ap.add_argument("--fps", type=int, default=15)
     ap.add_argument("--chunk-size", type=int, default=300)
     ap.add_argument("--gpu", choices=sorted(GPU_RATES), default="L40S")
+    ap.add_argument("--mode", choices=["video", "image"], default="video")
+    ap.add_argument(
+        "--redo-concepts",
+        default="",
+        help="comma list: treat these concepts as not cached and "
+        "overwrite their local raw files on download",
+    )
     ap.add_argument("--force", action="store_true")
     args = ap.parse_args()
+    if args.mode == "image" and args.gpu != "L40S":
+        ap.error("--mode image only has an L40S worker (ImageLabelerL40S)")
 
+    redo = {c.strip() for c in args.redo_concepts.split(",") if c.strip()}
     rate = GPU_RATES[args.gpu]
     root = repo_root()
     session_dir = args.session_dir.resolve()
@@ -511,6 +556,10 @@ def main():
         missing = missing_specs(cam_chunks, remote_files)
         if args.force:
             missing = cam_chunks
+        elif redo:
+            missing = add_redo_specs(missing, cam_chunks, redo)
+        if args.mode == "image":
+            missing = [{**s, "variant": IMAGE_VARIANT} for s in missing]
         todo += missing
         print(
             f"  {cam}: {len(cam_chunks)} chunks, "
@@ -519,7 +568,7 @@ def main():
 
     n_fp = sum(len(s["frames"]) * len(s["prompts"]) for s in todo)
     est = (
-        n_fp * EST_MS_PER_FRAME_CONCEPT[args.gpu] / 1000
+        n_fp * EST_MS_PER_FRAME_CONCEPT[args.mode][args.gpu] / 1000
         + len(todo) * EST_JOB_OVERHEAD_S
     ) * rate
     print(
@@ -539,9 +588,17 @@ def main():
 
     results = []
     if todo:
-        print(f"[6/8] label {len(todo)} chunk-job(s) on {args.gpu}")
+        print(
+            f"[6/8] label {len(todo)} chunk-job(s) on {args.gpu} "
+            f"({args.mode} mode)"
+        )
+        labeler_cls = (
+            sam_label.ImageLabelerL40S
+            if args.mode == "image"
+            else sam_label.LABELERS[args.gpu]
+        )
         results, leftover = run_jobs(
-            sam_label.app, sam_label.LABELERS[args.gpu], todo,
+            sam_label.app, labeler_cls, todo,
             args.max_usd, est, rate,
         )
         if leftover:
@@ -551,7 +608,10 @@ def main():
 
     print("[7/8] download raw labels + local processing")
     for cam in extract_stats["cams"]:
-        n = download_raw(vol, session, cam, labels_root, args.force)
+        n = download_raw(
+            vol, session, cam, labels_root, args.force,
+            force_names={f"raw_{c}.json" for c in redo},
+        )
         print(f"  {cam}: {n} new raw files")
         cam_chunks = [c for c in chunks if c["cam"] == cam]
         for c in cam_chunks:
@@ -566,6 +626,7 @@ def main():
         "split": split,
         "fps": args.fps,
         "gpu": args.gpu,
+        "mode": args.mode,
     }
     total_gpu_s = 0.0
     total_hist_s = 0.0

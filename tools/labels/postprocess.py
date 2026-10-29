@@ -4,7 +4,8 @@ Reads raw_<concept>.json files (per-frame COCO RLE instances produced by
 the GPU worker) and applies everything that does not need a GPU:
 
   * top-k per class (person 1, object 1, hand 2)
-  * eye/mouth instances must be >=80% inside the same frame's face union
+  * eye/mouth instances must be >=80% inside the same frame's face boxes
+    (each face mask's bounding box grown by 10 % per side)
   * hand-area filter: per chunk and track (obj_id; score-rank fallback)
     drop instances larger than 2.5x the track's median area
   * semantic uint8 PNG painting in priority order
@@ -39,6 +40,7 @@ KEEP_TOP_K = {
     "eye": None,
 }
 FACE_INSIDE_MIN = 0.8
+FACE_BOX_PAD = 0.10
 HAND_AREA_OUTLIER = 2.5
 
 
@@ -109,18 +111,30 @@ def process_chunk(chunk_dir: Path, frame_names: list[str], frames_dir: Path) -> 
                 insts.append(i)
             per_frame[concept][fn] = _topk(insts, KEEP_TOP_K.get(cls_of[concept]))
 
-    # face union per frame
+    # face region per frame: union of each face mask's bounding box grown by
+    # FACE_BOX_PAD per side. Pixel masks fail with glasses: SAM's face mask
+    # leaves parts of the lenses out, so correct eyes fell below 80 % inside
+    # (S2, 2026-10-29). Boxes still reject lips drawn on the wallpaper.
     face_union = {}
     for concept, cls in cls_of.items():
         if cls != "face":
             continue
         for fn in frame_names:
             insts = per_frame[concept][fn]
-            face_union[fn] = (
-                np.logical_or.reduce([i["mask"] for i in insts])
-                if insts
-                else None
-            )
+            if not insts:
+                face_union[fn] = None
+                continue
+            region = np.zeros_like(insts[0]["mask"])
+            h, w = region.shape
+            for i in insts:
+                ys, xs = np.nonzero(i["mask"])
+                if len(ys) == 0:
+                    continue
+                py = int((ys.max() - ys.min()) * FACE_BOX_PAD)
+                px = int((xs.max() - xs.min()) * FACE_BOX_PAD)
+                region[max(0, ys.min() - py):min(h, ys.max() + py + 1),
+                       max(0, xs.min() - px):min(w, xs.max() + px + 1)] = True
+            face_union[fn] = region
 
     # eye/mouth must be >=80% inside face
     face_removed = 0

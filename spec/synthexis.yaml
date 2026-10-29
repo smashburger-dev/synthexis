@@ -5,7 +5,7 @@
 
 meta:
   version: 0.1
-  updated: 2026-10-26
+  updated: 2026-10-29
   track: indie
   theme: build-for-your-world
   deadline: "2026-11-04T21:00:00-05:00"
@@ -76,7 +76,8 @@ sources:
   src.camera:
     what: "Any AVCaptureDevice: built-in FaceTime camera, USB webcam, iPhone via Continuity Camera. One capture session per device, shared by all synthexis instances in the host process."
     multi: "N cameras at once; entity ids carry the camera index (cam0, cam1, ...)."
-    status: planned
+    note: "iPhone via Continuity delivered 30 fps even with a 60 fps format selected (H1, open)"
+    status: building
   src.headphones:
     what: "Powerbeats Pro 2 head attitude (yaw, pitch, roll) and user acceleration via CMHeadphoneMotionManager."
     evidence: "hypothesis: Apple lists head tracking for Powerbeats Pro on Mac; third-party access untested (probe P4)"
@@ -156,13 +157,15 @@ bridge:
   bridge.midi_out: {what: "Route B: plugin MIDI out to other channels (FL: MIDI output port -> channel input port)", status: probe}
   bridge.fl_script:
     what: "Route C, FL deep bridge: FL Python MIDI controller script + CoreMIDI virtual ports. Script lists plugins and parameter names (plugins.getParamName), sends them to synthexis via SysEx, sets values on request (plugins.setParamValue)."
-    evidence: "doc: FL Studio Python API plugins module gets/sets parameters of plugins incl. 3rd-party VST/AU; automation recording of script-set values untested (probe P3)"
-    status: probe
+    evidence: "P3 passed on the probe VST3. Open bug: on the synthexis skeleton FL never forwards plugins.setParamValue to the plugin (nih-plug wrapper log shows no setParamNormalized, no process change; FL's getParamValue answers from its own mirror). general.processRECEvent(getRecEventId(ch) + REC_Chan_Plugin_First + idx, v * 2^30, REC_MIDIController) works and is the bridge set path. Rejected by test: missing MIDI input, own edits blocking. Untested candidates: SAMPLE_ACCURATE_AUTOMATION (probe true, synthexis false), parameter count or flags, the host_context_available patch (docs/session-2026-10-28-hillclimb.md, Open 1)"
+    test_bridge: "probes/fl-camera-plugin/bridge/: FL script 'synthexis bridge' + CoreMIDI daemon flbridged + flb.py; test-only, never shipped"
+    status: building
   bridge.harvest: {what: "Parameter dump of installed plugins (names, ranges, units, value strings) via the FL script and via pedalboard on macOS", status: planned}
 
 recording:
-  rec.automation: "macro and anchor params changed through the host parameter API (begin/perform/end edit) so FL records automation; whether that works with the editor closed is probe P2"
+  rec.automation: "macro and anchor params changed through the host parameter API (begin/perform/end edit) on the main thread, so FL records automation with the plugin window open or closed (P2). Gate passed in FL with the skeleton: camera-driven Signal 1/2 and a test triangle on Signal 32 recorded and played back (range 0.744, empty pattern flat)"
   rec.midi: "notes emitted on the plugin MIDI out are recorded by FL into the target channel's pattern"
+  rec.latency_comp: "planned feature: FL compensates audio, not plugin automation (FL manual, audio settings). The plugin records takes with t_capture timestamps and exports them shifted by the measured latency (automation clip or .mid drag-out); live, note triggers can snap to the host grid; motion prediction 50-100 ms ahead is a hypothesis"
 
 # ---------------------------------------------------------------------------
 # 8. Gestures and MIDI engine
@@ -248,7 +251,8 @@ map:
 train:
   train.protocol: "scripted recording sessions: each segment is one known finger state / face action / object, so gesture labels come from the script. Built-in camera + iPhone, two lighting setups, held-out session on another day."
   train.synthetic: "Muse Image ($0.01 per image) renders varied people, hands, gestures, rooms and light; gesture label from the prompt; Muse Spark Open checks it"
-  train.teacher: "SAM 3.1 open weights on Modal (video mode, concepts: person, face, eye, mouth, hand, object in hand, demo objects). Meta API used for snapshots and a cross-check sample."
+  train.teacher: "SAM 3.1 open weights on Modal, image mode 'grouped' since 2026-10-29 (backbone once per frame, all prompts in one grounding call; a third to a sixth of video-mode cost, agrees on person/face/hand and finds more blurred hands; probes/label-image-mode/RESULT.md). Concepts: person, face, eye, mouth, hand, block-E objects. Meta API used for snapshots and a cross-check sample."
+  train.labels_status: "S1 labelled (video mode, objects redone in image mode), S2 labelled 2026-10-29 in image mode (13,558 frames, $2.76). Open: S2 eye masks are about 2.2x larger relative to the face than S1 (glasses, lens painted as eye); proposal: ignore the eye class in the loss for S2 frames, decide before the first training run. S3 and S4 without glasses."
   train.students: "synthexis-seg and synthexis-hand trained on Modal GPUs, exported to CoreML FP16"
   train.setup:
     data: "packed on the Mac before upload: frames downscaled to training size (seg 384x216), hand and face crops of 128 px cut from the full-resolution frames using SAM boxes (D10), labels alongside, written as tar shards of about 2,000 samples. Modal Volumes work best below 50,000 files (doc: modal.com/docs/guide/volumes); S1-S3 as loose JPEGs and PNGs would exceed that. The container copies its shards to local disk at start."
@@ -268,12 +272,14 @@ budget:
     hand_p95_ms: 1.5     # per crop; probe B candidates: 0.48-0.55 ms
     perception_frame_p95_ms: 5   # seg + 2 hand crops + geometry; Apple Vision alone needs 46.6 ms p95 (probe C)
     note: "headroom allows a larger seg input or backbone if quality needs it; re-measure with trained weights"
+    camera_to_param_fl_ms: "116-126 median, 142-145 p95 (built-in camera, plugin skeleton in FL; camera delivery PTS to callback 117-135 ms median, features 0.7 ms median; probes/fl-camera-plugin/RESULT.md, Welle-3-Gate)"
+    light_to_callback_ms: "built-in 154 / 178, iPhone Continuity 100 / 116 (median / p95; probes/camera-latency/RESULT.md); built-in floor about 80-90 ms (derived from the fast delivery state, hypothesis)"
   budget.quality:
     seg_miou_vs_teacher: {person: 0.85, face: 0.85, hand: 0.85, eye: 0.70, mouth: 0.70}
     finger_state_accuracy: 0.95
     signal_mae: {mouth_open: 0.05, hand_openness: 0.05}
   budget.money:
-    modal_usd: "credits: 25 until 2026-10-31 (expires), 30 from 2026-11-01; plus up to 12.50 paid overage that Noa allows (real money, use only when needed). Spent by 2026-10-27: about 18.2 (S1 labels 17.51, computed from container seconds, 2x over estimate because post-processing ran on the H100). Students train on Modal too (Noa 2026-10-27), as efficiently as possible. Every paid run: pilot chunk, runtime spend guard, per-run cap."
+    modal_usd: "credits: 25 until 2026-10-31 (expires), 30 from 2026-11-01; plus up to 12.50 paid overage that Noa allows (real money, use only when needed). Spent by 2026-10-27: about 18.2 (S1 labels 17.51, computed from container seconds, 2x over estimate because post-processing ran on the H100). Modal billing report 2026-10-29 (workspace billing API, gross): October total 24.996 (Oct 1-2: 4.15, Oct 19: 0.11, Oct 26: 0.48, Oct 27: 19.39, Oct 28: 0.88), so the October credit is used up and every run before 2026-11-01 comes out of the 12.50 overage. Noa 2026-10-29: label S2 today; caps pilot 0.75, S1 mug/pen redo 0.30, S2 6.50; students train only after S4 is labelled. Spent 2026-10-29 (method GPU seconds): pilot 0.17, S1 redo about 0.07, S2 2.76, S2 reverse check 0.26. Students train on Modal too (Noa 2026-10-27), as efficiently as possible. Every paid run: pilot chunk, runtime spend guard, per-run cap."
     meta_api_usd: 150
     baseten_usd: "100 granted 2026-10-27; Muse Spark Open Model API ($1.25 per 1M input, $4.25 per 1M output tokens, litellm/openrouter listing 2026-10)"
     fireworks_usd: "25 if granted"
@@ -282,7 +288,8 @@ budget:
 # 12. Plugin and UI
 # ---------------------------------------------------------------------------
 plugin:
-  framework: "nih-plug (Rust): CLAP + VST3; AUv2 via clap-wrapper (stretch, also for Logic)"
+  framework: "nih-plug (Rust): CLAP + VST3; AUv2 via clap-wrapper (stretch, also for Logic). FL records automation only from the VST3 with the window closed (P2)."
+  skeleton: "plugin/ (Welle 3, gate passed 2026-10-28): camera engine, signal contract, conditioning chain, 32 macros, hand-role params, main-thread writes, latency log, minimal editor; vendored nih-plug de42101 with a host_context_available hook so it writes without the window ever opening (plugin/vendor/PATCHES.md). CLAP and AU without-window writes unchecked."
   gui: "egui via nih_plug_egui; design language: design-glass skill"
   ui.canvas: "camera view with masks, keypoints, live values, anchors; multi-camera picture-in-picture"
   ui.panel: "below the canvas: routes, conditioners, targets, selected element parameters"
@@ -292,7 +299,7 @@ plugin:
 # 13. Decisions (Noa can override any of these in FigJam)
 # ---------------------------------------------------------------------------
 decisions:
-  D1: {topic: process model, chosen: "perception in-process on its own threads, one engine per host process shared by all instances", alt: "separate helper app over shared memory (crash isolation)", status: proposed}
+  D1: {topic: process model, chosen: "perception in-process on its own threads, one engine per host process shared by all instances; host parameter edits are dispatched to the main thread (P2: FL records only those with the window closed)", alt: "separate helper app over shared memory (crash isolation)", status: proposed}
   D2: {topic: plugin format, chosen: "nih-plug VST3 + CLAP now, AUv2 via clap-wrapper later", status: proposed}
   D3: {topic: keypoints, chosen: "students only at runtime: synthexis-seg + synthexis-hand (about 1.2 ms per frame on the ANE); Apple Vision runs offline as keypoint teacher and eval baseline", why: "probe C: Vision hand+face+body 29.6 ms median, 46.6 ms p95 per frame vs probe B students under 1 ms each", alt: "Vision live as fallback at 10-15 fps", status: proposed, changed: "2026-10-26 after probes B and C (was: Vision live in v1)"}
   D4: {topic: SAM 3.1 path, chosen: "open weights on Modal for bulk labels (SAM License allows derivatives and commercial use); Meta API for snapshots and a cross-check sample", why: "probe A real weights: H100 video mode about 75 ms/frame per concept = $0.082 per 1000 frames vs API $0.20", status: proposed}
@@ -302,7 +309,7 @@ decisions:
   D9: {topic: proxy teacher, chosen: "two-step distillation: SAM 3.1 masks train a mid-size proxy (about 20-30M params, higher input resolution); the proxy labels every recorded frame at 30 fps with soft per-pixel probabilities, and those train the tiny students together with the SAM masks", why: "EUPE (Meta, arXiv 2603.22387, ablation Table 2): direct distillation from huge teachers into small students loses signal, an intermediate proxy recovers it; the proxy also labels frames SAM never saw at no Modal SAM cost", status: proposed}
   D10: {topic: resolution and crops, chosen: "full frame at low resolution (384x216) for person, hand, object; face crop (about 128 px, from the full-res frame) for eye and mouth, the same way hands use 128 px crops", why: "at 384x216 an eye is about 10 px wide, too small for a reliable mask; crops keep compute low and detail high (MediaPipe-style detector + ROI)", status: proposed}
   D11: {topic: temporal prior, chosen: "the seg student gets the previous frame's mask as an extra input channel (or a small recurrent state) and a temporal-consistency loss between neighbouring frames", why: "MobileSAM2 (arXiv 2607.12297) distils SAM2's temporal knowledge explicitly; recurrent matting nets reach stable masks at small size. Reimplemented, no code copied.", status: proposed}
-  D12: {topic: backbone family, chosen: "CNNs that map well to the Neural Engine: MobileNetV4-Conv-Small (measured, probe B) first, RepViT-M0.9 as challenger; EfficientViT-B0 (0.7M) only if latency allows its attention ops on the ANE", why: "EfficientSAM3 (arXiv 2511.15833) distils SAM3 into RepViT, TinyViT and EfficientViT students from 0.7M to 21M params; YOLO26-seg excluded (AGPL-3.0)", status: proposed}
+  D12: {topic: backbone family, chosen: "CNNs that map well to the Neural Engine: MobileNetV4-Conv-Small (measured, probe B) first, RepViT-M0.9 as challenger; EfficientViT-B0 dropped: it fails to convert to CoreML (attention context module; probes/coreml-student-latency/RESULT.md, D10-D12 export check). MobileNetV4-Conv-Small, its 0.5 variant and RepViT-M0.9 convert at 384x216 and 320x180 with and without a previous-mask channel; latency and quality pick after the first trained student", why: "EfficientSAM3 (arXiv 2511.15833) distils SAM3 into RepViT, TinyViT and EfficientViT students from 0.7M to 21M params; YOLO26-seg excluded (AGPL-3.0)", status: proposed}
   D8: {topic: design language, chosen: "design-glass tokens and the chiasma UI lessons (chiasma/docs/STYLE.md), implemented fresh in egui via the design-rust skill; no chiasma code copied (hackathon new-work rule)", status: decided, decided: 2026-10-26}
 
 # ---------------------------------------------------------------------------
@@ -312,9 +319,10 @@ probes:
   A: {what: "SAM 3.1 on Modal: install, throughput, cost per 1000 frames", status: done, result: "real weights (facebook/sam3.1 multiplex, 2026-10-27), H100: video mode 69-98 ms/frame avg per concept (eye slowest), p95 157-165 ms, peak 28.2 GiB; image mode 58.2 / 59.3 ms per text prompt (median / p95). About $0.082 per 1000 frames per concept in video mode. Contact sheet: person, face, eye, hand correct on all 20 frames; mouth also fires on lips drawn on the wallpaper, so eye/mouth must be constrained to the face mask. Random-weight run: video 46.8 ms/frame.", see: probes/sam31-modal/RESULT.md}
   B: {what: "CoreML latency of student candidates on M1 Pro", status: done, result: "all candidates under 1.2 ms median on the ANE; cpuAndGPU slower than cpuOnly", see: probes/coreml-student-latency/RESULT.md}
   C: {what: "Apple Vision hand/face/body latency on M1 Pro", status: done, result: "hand 18.4 ms, combined 29.6 ms median; too slow for live use next to the students", see: probes/apple-vision-fps/RESULT.md}
-  P1: {what: "Camera inside a nih-plug plugin in FL Studio 2026 (permission prompt, frames, CPU)", status: planned}
-  P2: {what: "FL records automation of synthexis macros changed from the perception thread, editor open and closed", status: planned}
-  P3: {what: "FL Python script lists and sets parameters of a 3rd-party plugin; does FL record it", status: planned}
+  P1: {what: "Camera inside a nih-plug plugin in FL Studio 2026 (permission prompt, frames, CPU)", status: done, result: "camera runs inside the VST3 in FL at 29.7-30 fps", see: probes/fl-camera-plugin/RESULT.md}
+  P2: {what: "FL records automation of synthexis macros changed from the perception thread, editor open and closed", status: done, result: "winner: VST3 parameter edits (begin/perform/end) dispatched to the main thread record with the plugin window closed (playback range 0.98-0.99). From a background thread FL records only with the window open; the CLAP bundle records nothing with the window closed. MIDI path not needed.", see: "probes/fl-camera-plugin/RESULT.md, section H2 in FL Studio 2026"}
+  P3: {what: "FL Python script lists and sets parameters of a 3rd-party plugin; does FL record it", status: done, result: "plugins.setParamValue on our probe VST3 during recording is recorded (range 0.987, 127 values); commercial plugin not tested. On the synthexis skeleton FL does not forward setParamValue at all (open, see bridge.fl_script)", see: probes/fl-script-bridge/RESULT.md}
+  H1: {what: "camera latency, light to callback, screen-flash judge", status: done, result: "built-in camera 154 / 178 ms (median / p95); four one-change levers rejected; iPhone via Continuity 100 / 116 ms; two delivery states about 65 ms apart, mechanism open", see: probes/camera-latency/RESULT.md}
   P4: {what: "CMHeadphoneMotionManager with Powerbeats Pro 2 on macOS 27", status: planned}
   P5: {what: "BLE heart rate from Powerbeats Pro 2 while connected as audio device", status: planned}
   P6: {what: "plugin MIDI out reaches another FL channel and gets recorded", status: planned}

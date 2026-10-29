@@ -14,6 +14,15 @@ to the synthexis-recordings volume. All filtering/painting happens
 locally in tools/labels/postprocess.py.
 
 Two class variants expose the GPU choice: LabelerH100 / LabelerL40S.
+
+ImageLabelerL40S is the image-mode variant: the Sam3Processor image model
+runs its backbone once per frame and grounds every prompt on the shared
+backbone state — no tracker, no per-prompt video session. It writes the
+same raw_<concept>.json contract (obj_id=None, no tracking) plus
+"mode": "image". spec["variant"]: "seq" (set_image once per frame, then
+set_text_prompt per prompt) or "grouped" (set_image_batch over B frames,
+one forward_text over all prompts, one forward_grounding for all
+frame x prompt pairs via FindStage img_ids/text_ids).
 """
 
 import modal
@@ -24,6 +33,8 @@ VOL_MOUNT = "/vol"
 VOL_FRAMES = f"{VOL_MOUNT}/frames"
 VOL_RAW = f"{VOL_MOUNT}/raw"
 FUNCTION_TIMEOUT_S = 3600  # ~$3.95 hard cap per container on H100
+IMAGE_FUNCTION_TIMEOUT_S = 1800
+IMAGE_BATCH = 8
 
 image = (
     modal.Image.debian_slim(python_version="3.12")
@@ -274,4 +285,321 @@ class LabelerL40S(_LabelerBase):
     pass
 
 
+class _ImageLabelerBase:
+    """Image-mode labeler: backbone once per frame, prompts grounded on it."""
+
+    @modal.enter()
+    def load(self):
+        import time
+
+        import sam3.model_builder as mb
+        from sam3.model.sam3_image_processor import Sam3Processor
+
+        t0 = time.time()
+        ckpt_path = mb.download_ckpt_from_hf(version="sam3.1")
+        self.model = mb.build_sam3_image_model(
+            checkpoint_path=ckpt_path,
+            load_from_HF=False,
+            device="cuda",
+            eval_mode=True,
+        )
+        self.processor = Sam3Processor(self.model, device="cuda")
+        self.build_s = time.time() - t0
+        print(
+            f"container ready, image model build {self.build_s:.1f}s",
+            flush=True,
+        )
+
+    @staticmethod
+    def _det_json(masks, boxes, scores, mask_utils):
+        """masks [N,H,W] bool / boxes [N,4] xyxy px / scores [N]
+        -> [{obj_id, score, box_xywh, rle}] (same contract as video)."""
+        import numpy as np
+
+        masks = np.asarray(masks).reshape(
+            len(scores), *np.asarray(masks).shape[-2:]
+        )
+        boxes = np.asarray(boxes).reshape(len(scores), 4)
+        inst = []
+        for i in range(len(scores)):
+            m = np.asfortranarray(masks[i].astype(np.uint8))
+            rle = mask_utils.encode(m)
+            x0, y0, x1, y1 = (float(v) for v in boxes[i])
+            inst.append(
+                {
+                    "obj_id": None,
+                    "score": float(np.asarray(scores[i])),
+                    "box_xywh": [x0, y0, x1 - x0, y1 - y0],
+                    "rle": {
+                        "size": list(rle["size"]),
+                        "counts": rle["counts"].decode("ascii"),
+                    },
+                }
+            )
+        return inst
+
+    def _seq_label(self, frames, prompts, in_dir, frames_json, prompt_gpu_s):
+        """Variant A: set_image once per frame, set_text_prompt per prompt."""
+        import time
+
+        import torch
+        from PIL import Image
+        from pycocotools import mask as mask_utils
+
+        backbone_s = 0.0
+        for fn in frames:
+            pil = Image.open(in_dir / fn).convert("RGB")
+            with torch.autocast(device_type="cuda", dtype=torch.bfloat16):
+                tb = time.time()
+                state = self.processor.set_image(pil)
+                torch.cuda.synchronize()
+                backbone_s += time.time() - tb
+                for p in prompts:
+                    tp = time.time()
+                    out = self.processor.set_text_prompt(p["prompt"], state)
+                    torch.cuda.synchronize()
+                    prompt_gpu_s[p["concept"]] += time.time() - tp
+                    frames_json[p["concept"]][fn] = self._det_json(
+                        out["masks"].cpu().numpy()[:, 0],
+                        out["boxes"].float().cpu().numpy(),
+                        out["scores"].float().cpu().numpy(),
+                        mask_utils,
+                    )
+        return backbone_s
+
+    def _grounding_batch(self, backbone_out, n_img, prompt_strs, hw_list):
+        """One forward_grounding over all (frame, prompt) pairs.
+
+        FindStage carries per-query img_ids/text_ids (sam3 runs the
+        encoder/decoder with the query count as its batch dim); the dummy
+        geometric prompt is built with num_prompts = n_img * n_prompts.
+        Post-processing mirrors Sam3Processor._forward_grounding per query.
+        Returns outs[query] -> (masks [N,H,W] bool np, boxes [N,4] xyxy px,
+        scores [N]) in (frame-major, prompt-minor) order.
+        """
+        import torch
+
+        with torch.inference_mode():
+            return self._grounding_batch_inner(
+                backbone_out, n_img, prompt_strs, hw_list
+            )
+
+    def _grounding_batch_inner(
+        self, backbone_out, n_img, prompt_strs, hw_list
+    ):
+        import torch
+        from sam3.model import box_ops
+        from sam3.model.data_misc import FindStage, interpolate
+
+        n_prompts = len(prompt_strs)
+        n_q = n_img * n_prompts
+        text_outputs = self.model.backbone.forward_text(
+            prompt_strs, device="cuda"
+        )
+        backbone_out.update(text_outputs)
+        find_input = FindStage(
+            img_ids=torch.tensor(
+                [i for i in range(n_img) for _ in range(n_prompts)],
+                device="cuda",
+                dtype=torch.long,
+            ),
+            text_ids=torch.tensor(
+                list(range(n_prompts)) * n_img,
+                device="cuda",
+                dtype=torch.long,
+            ),
+            input_boxes=None,
+            input_boxes_mask=None,
+            input_boxes_label=None,
+            input_points=None,
+            input_points_mask=None,
+        )
+        outputs = self.model.forward_grounding(
+            backbone_out=backbone_out,
+            find_input=find_input,
+            geometric_prompt=self.model._get_dummy_prompt(num_prompts=n_q),
+            find_target=None,
+        )
+        out_bbox = outputs["pred_boxes"]  # [Q, N, 4] cxcywh normalized
+        out_logits = outputs["pred_logits"]  # [Q, N, 1]
+        out_masks = outputs["pred_masks"]  # [Q, N, h, w]
+        out_probs = out_logits.sigmoid()
+        presence = outputs["presence_logit_dec"].sigmoid().unsqueeze(1)
+        out_probs = (out_probs * presence).squeeze(-1)  # [Q, N]
+        keep = out_probs > self.processor.confidence_threshold
+
+        outs = []
+        for q in range(n_q):
+            i = q // n_prompts
+            k = keep[q]
+            scores = out_probs[q][k]
+            boxes = box_ops.box_cxcywh_to_xyxy(out_bbox[q][k])
+            img_h, img_w = hw_list[i]
+            scale = torch.tensor(
+                [img_w, img_h, img_w, img_h], device=boxes.device
+            )
+            boxes = boxes * scale[None, :]
+            masks = (
+                interpolate(
+                    out_masks[q][k].unsqueeze(1),
+                    (img_h, img_w),
+                    mode="bilinear",
+                    align_corners=False,
+                )
+                .sigmoid()
+                > 0.5
+            )
+            outs.append(
+                (
+                    masks.squeeze(1).cpu().numpy(),
+                    boxes.float().cpu().numpy(),
+                    scores.float().cpu().numpy(),
+                )
+            )
+        return outs
+
+    def _grouped_label(self, frames, prompts, in_dir, frames_json, prompt_gpu_s):
+        """Variant B: backbone over B-frame batches, one grounding call for
+        all frame x prompt pairs."""
+        import time
+
+        import torch
+        from PIL import Image
+        from pycocotools import mask as mask_utils
+
+        # S2 (2026-10-29): 4,260 of 5,039 GPU-seconds went to reading JPEGs
+        # one by one from the volume. Read all chunk files in parallel first.
+        import io
+        from concurrent.futures import ThreadPoolExecutor
+
+        t_io = time.time()
+        with ThreadPoolExecutor(32) as ex:
+            blobs = dict(
+                zip(frames, ex.map(lambda fn: (in_dir / fn).read_bytes(), frames))
+            )
+        self.io_s = time.time() - t_io
+
+        backbone_s = 0.0
+        for b0 in range(0, len(frames), IMAGE_BATCH):
+            part = frames[b0 : b0 + IMAGE_BATCH]
+            pils = [Image.open(io.BytesIO(blobs[fn])).convert("RGB") for fn in part]
+            with torch.autocast(device_type="cuda", dtype=torch.bfloat16):
+                tb = time.time()
+                state = self.processor.set_image_batch(pils)
+                torch.cuda.synchronize()
+                backbone_s += time.time() - tb
+                tg = time.time()
+                outs = self._grounding_batch(
+                    state["backbone_out"],
+                    len(part),
+                    [p["prompt"] for p in prompts],
+                    list(
+                        zip(
+                            state["original_heights"],
+                            state["original_widths"],
+                        )
+                    ),
+                )
+                torch.cuda.synchronize()
+                gdt = time.time() - tg
+            for qi, (masks, boxes, scores) in enumerate(outs):
+                i, j = divmod(qi, len(prompts))
+                frames_json[prompts[j]["concept"]][part[i]] = self._det_json(
+                    masks, boxes, scores, mask_utils
+                )
+            # one call covered every prompt; split its time evenly so the
+            # per-concept shares sum to the real GPU time
+            for p in prompts:
+                prompt_gpu_s[p["concept"]] += gdt / len(prompts)
+        return backbone_s
+
+    @modal.method()
+    def label_chunk(self, spec: dict) -> dict:
+        import json
+        import time
+        import uuid
+        from pathlib import Path
+
+        t_method0 = time.time()
+        call_id = uuid.uuid4().hex[:12]
+        frames = spec["frames"]
+        prompts = spec["prompts"]
+        variant = spec.get("variant", "seq")
+        self.io_s = 0.0
+        in_dir = Path(VOL_FRAMES) / spec["session"] / spec["cam"]
+        out_dir = Path(spec["out_dir"])
+        out_dir.mkdir(parents=True, exist_ok=True)
+
+        frames_json = {
+            p["concept"]: {fn: [] for fn in frames} for p in prompts
+        }
+        prompt_gpu_s = {p["concept"]: 0.0 for p in prompts}
+        if variant == "grouped":
+            backbone_s = self._grouped_label(
+                frames, prompts, in_dir, frames_json, prompt_gpu_s
+            )
+        else:
+            backbone_s = self._seq_label(
+                frames, prompts, in_dir, frames_json, prompt_gpu_s
+            )
+
+        gpu_s = time.time() - t_method0
+        det_counts = {}
+        raws = []
+        for p in prompts:
+            fj = frames_json[p["concept"]]
+            det_counts[p["concept"]] = {
+                "frames_with_det": sum(1 for v in fj.values() if v),
+                "instances": sum(len(v) for v in fj.values()),
+            }
+            raws.append(
+                {
+                    "concept": p["concept"],
+                    "cls": p["cls"],
+                    "prompt": p["prompt"],
+                    "call_id": call_id,
+                    "prompt_gpu_s": round(prompt_gpu_s[p["concept"]], 2),
+                    "method_gpu_s": round(gpu_s, 2),
+                    "mode": "image",
+                    "variant": variant,
+                    "frames": fj,
+                }
+            )
+        for raw in raws:
+            (out_dir / f"raw_{raw['concept']}.json").write_text(
+                json.dumps(raw)
+            )
+        recordings_vol.commit()
+
+        n_prompt_frames = len(frames) * len(prompts)
+        return {
+            "chunk": spec["chunk"],
+            "cam": spec["cam"],
+            "call_id": call_id,
+            "frames": len(frames),
+            "prompts": len(prompts),
+            "gpu_s": round(gpu_s, 2),
+            "ms_per_frame_concept": round(1000 * gpu_s / n_prompt_frames, 2),
+            "prompt_gpu_s": {k: round(v, 2) for k, v in prompt_gpu_s.items()},
+            "det_counts": det_counts,
+            "container_build_s": round(self.build_s, 2),
+            "mode": "image",
+            "variant": variant,
+            "backbone_gpu_s": round(backbone_s, 2),
+            "io_s": round(getattr(self, "io_s", 0.0), 2),
+        }
+
+
+@app.cls(
+    gpu="L40S",
+    timeout=IMAGE_FUNCTION_TIMEOUT_S,
+    max_containers=4,
+    secrets=[modal.Secret.from_name("huggingface")],
+    volumes={WEIGHTS_MOUNT: weights_vol, VOL_MOUNT: recordings_vol},
+)
+class ImageLabelerL40S(_ImageLabelerBase):
+    pass
+
+
 LABELERS = {"H100": LabelerH100, "L40S": LabelerL40S}
+IMAGE_LABELERS = {"L40S": ImageLabelerL40S}
