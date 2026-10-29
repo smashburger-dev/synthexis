@@ -2,9 +2,11 @@
   "default": {
     "mug": "soda can",
     "phone": "phone",
-    "pen": "pen",
+    "pen": "drumstick",
     "ball": "ball",
     "demo_object": "air freshener"
   },
-  "sessions": {}
+  "sessions": {
+    "2026-10-29-S2": {"demo_object": "bottle"}
+  }
 }
