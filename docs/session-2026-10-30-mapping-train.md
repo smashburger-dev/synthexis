@@ -21,9 +21,25 @@ Entry point for the next mapping session. Numbers and commands: `probes/mapping-
 
 ## Open
 
-1. Stage 2 commands run with the weighted edit sampler, then retrain at 16,000 steps (Baseten spend needs Noa's go).
+1. Done the same day, see "Stage 2 (afternoon)" below.
 2. Noa's 50 calibration and 100 eval sentences (`docs/mapping-next-session-prompt.md`); the chip-fallback threshold comes from them, not from the synthetic coverage numbers.
 3. Label audit needs cross-fitting: the parser saw every audited sentence, so 99.97 % agreement only shows memorisation.
 4. param-sense: val (6 vendors) and test (19 vendors) disagree by 24 points top-1; a vendor-grouped cross-validation would give a usable number. unsafe needs more examples or a rule.
-5. The 2x-steps run (`p-all-100-s0-long`, 0.639 challenge) is not exported; the shipped blob is `p-all-100-s0`. The difference is inside seed noise.
+5. Superseded: the shipped blob is now `p-v2-cat-s0` (see below).
 6. Rust loader for the blobs in the plugin (hill-climb line owns `plugin/`).
+
+## Stage 2 (afternoon)
+
+Numbers in `probes/mapping-pipeline/RESULT.md`, section "stage 2 on Baseten and parser v2". Code in commit 9579e9b.
+
+- Baseten: 8,374 weighted edits (more 2-3 routes, invert, modify, German, layperson), 12,767 valid sentences for 12.74 $, no round-trip. Ledger 47.72 $.
+- New, free augmentation: two map sentences joined with "and"/"und" into one 2-3 route sentence (train_cat, +25 %).
+- Queue `run_s2.sh`, 10:06 to 13:19, all rc=0. Parser v2 `p-v2-cat-s0`: route_edit 0.712 challenge (v1 0.628), 0.768 dev (v1 0.697), 0.708 on the new stage-2 dev set. Second seed also 0.712 on the challenge set.
+- Concatenation beats the plain set on the stage-2 dev set (87 vs 50 sentences fixed by one side only, p 0.002) and lifts 3+ routes from 0.25 to 0.38 there; on the stage-1 sets it is a tie.
+- Invert errors on the challenge set fell from 89 to 50, target errors from 94 to 64. 24,000 steps again bring nothing.
+- Exported `p-v2-cat-s0`: 9.2 ms median on one CPU thread, int8 9.4 MB.
+
+Open after stage 2:
+
+1. Doubling the edits gave +7.5 points, half of the v1 curve. Before another 13 $ stage: try a higher concat rate and a small targeted batch for map with modifiers and 3 routes.
+2. Items 2, 3, 4 and 6 above stay open; the real-speech sentences from Noa now matter more than more synthetic data.
