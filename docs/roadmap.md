@@ -44,7 +44,7 @@ Hard dates: S3 and S4 recorded 10-30/10-31, training from 11-01 (new Modal credi
 - [ ] `setParamValue` root cause (bridge only, not blocking)
 - [ ] UI in the glass language (last, after perception and routes are stable)
 
-## Mapping assistant (own session; state in `docs/session-2026-10-29-mapping.md`)
+## Mapping assistant (own session; state in `docs/session-2026-10-30-mapping-train.md`)
 
 - [x] Taxonomy final: 44 classes plus ontology of sources, targets, intents, modifiers (`tools/mapping/ontology.yaml`; spec merge proposed in `probes/mapping-pipeline/SPEC_PROPOSAL.md`)
 - [x] Parameter harvest AU (886 of 906 plugins, 122,664 params) and VST3 (405 of 549 bundles) with own tools (`tools/mapping/harvest/`)
@@ -53,8 +53,11 @@ Hard dates: S3 and S4 recorded 10-30/10-31, training from 11-01 (new Modal credi
 - [x] Glossary EN/DE (11,333 phrases, 416 concepts)
 - [x] Synthetic commands generator v3 with validators and round-trip check; stage 1 (8,000 edits) generated
 - [ ] Noa: 50 calibration sentences and 100 eval sentences, typed as he would (`map.eval`), never trained
-- [ ] param-sense v1 trained, vendor-holdout eval; known-plugin table exported
-- [ ] Parser v1 (about 8M, span-pointer frame decoder) trained; challenge set; threshold calibrated on Noa's 50
+- [x] param-sense v1 trained (top-1 0.728, macro F1 0.511 on unseen vendors); known-plugin table exported (63,625 rows)
+- [x] Parser v1 (9.30M, span-pointer frame decoder) trained on the Mac; challenge set 548 sentences; route_edit 0.628 challenge, 0.697 dev; int8 blob 9.4 MB, 9 ms median on one CPU thread
+- [x] Filter ablation and learning curve: all sentences beat the round-trip filter by 11 points; +13-16 points per doubling of edits, so stage 2 goes ahead
+- [ ] Stage 2 commands (about 8,000 edits weighted to multi-route, invert, modify, German, layperson; about 11 $), then retrain
+- [ ] Threshold for the chip fallback calibrated on Noa's 50
 - [ ] Resolver and chip fallback in the plugin, "Built with Muse Spark Open" credit
 
 ## Demo and submission

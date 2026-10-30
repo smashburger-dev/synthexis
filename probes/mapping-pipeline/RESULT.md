@@ -93,3 +93,76 @@ uv run tools/mapping/roundtrip.py --run rt-s1 --sentences-run cmd-s1 --max-usd 3
 ## Spend
 
 Ledger total at the end of the session (2026-10-29): 34.57 $ over 2,560 requests (11.62M prompt tokens of which 6.97M cached, 6.52M output tokens of which 3.92M reasoning). Largest items: commands stage 1 11.14 $, AU priority labels 8.23 $, round-trip checks 6.2 $, VST3 labels 4.76 $, AU bulk labels 2.03 $, glossary 1.28 $.
+
+# RESULT: overnight training on the Mac (2026-10-30)
+
+Code in `tools/mapping/` (commit 9e64d3a); data and runs in the git-ignored `data/mapping/train/`. The queue `caffeinate -dimsu zsh tools/mapping/run_overnight.sh` ran from 00:19 to 04:45, eleven steps, all rc=0. Full table with every run: `data/mapping/train/REPORT.md` (`uv run tools/mapping/report.py`). Accuracy below is route_edit (intent, routes and route-free items equal as multisets) with Wilson 95 % intervals unless marked otherwise.
+
+## Data
+
+```
+uv run tools/mapping/challenge.py            # 300 edits, edits.py --seed 99, prompts/challenge.md
+uv run tools/mapping/dataset.py --out ds-v1 --seed 13
+uv run tools/mapping/tokenizer.py
+```
+
+- Challenge set: 300 new edits, 612 requested variants, 548 valid (89.5 %), 0.408 $. Not round-trip checked, never in training.
+- ds-v1: train_all 20,012 sentences (6,093 edits, 7,808 of them glossary span substitutions), train_filtered 12,993 (3,843 edits, 5,397 substitutions). The filter keeps a sentence only if its full round-trip (rt-s1-all) has no mismatch outside targets; it reproduces the 8,003 kept stage-1 sentences. Dev 805 sentences from 418 edits (10 % of edit ids, twins with their original, clean sentences only, no substitutions). Frame length max 35, mean 8.9 tokens.
+- Tokenizer tok-v1: SentencePiece unigram 8k, byte fallback, nmt_nfkc_cf, split digits; trained on 20,012 training sentences, 11,333 glossary phrases and 56,680 harvested plugin and parameter names. 18.6 pieces per training sentence on average, max 84 (encoder limit 96).
+
+## param-sense v1
+
+`uv run tools/mapping/train_paramsense.py --name ps-v1 --epochs 20` (0.80M parameters, CPU, 0.7 min). 787,756 labelled rows, capped at 60 per plugin and class: 78,846. Vendor split: train 38 vendors / 64,954 rows, val 6 / 3,020, test 19 / 10,872. Best epoch by val: 5.
+
+| test (unseen vendors) | top-1 | macro F1 | F1 unsafe | F1 ctl.switch | F1 ctl.select | F1 system | direction acc |
+|---|---|---|---|---|---|---|---|
+| runtime-only features | 0.728 | 0.511 | 0.357 | 0.654 | 0.550 | 0.958 | 0.993 |
+| with value strings | 0.741 | 0.512 | 0.305 | 0.761 | 0.577 | 0.948 | 0.992 |
+
+- Val (6 vendors) gives top-1 0.485 against 0.728 on test (19 vendors): the per-vendor spread is large, so one number per split says little. unsafe is the weakest class.
+- Known-plugin table: 63,625 rows from the priority runs (not rule-labelled), `runs/ps-v1/known_plugins.json`; weights f16 1.6 MB.
+
+## Parser v1
+
+`uv run tools/mapping/train_parser.py --name <run> --train train_all|train_filtered [--frac F] [--seed S] --steps 16000`. 9.30M parameters (encoder 6 x d256, pointer decoder 2 x d256, BIO head), batch 64, AdamW 5e-4 with warmup 600 and cosine to 5 %, weight EMA 0.999, grammar-constrained greedy decoding, best of raw and EMA weights by dev. 16,000 steps take 33 min on MPS (about 124 ms per step including six dev evaluations). A 64-sample overfit check reached 64/64 exact; no pointer span was lost in train, dev or challenge.
+
+| run | train | samples | dev | challenge | challenge exact |
+|---|---|---|---|---|---|
+| p-filt-100-s0 | filtered | 12,993 | 0.647 [0.614, 0.679] | 0.516 [0.475, 0.558] | 0.509 |
+| p-all-100-s0 | all | 20,012 | 0.697 [0.664, 0.728] | 0.628 [0.587, 0.667] | 0.617 |
+| p-all-100-s1 | all | 20,012 | 0.684 [0.652, 0.716] | 0.635 [0.594, 0.674] | 0.630 |
+| p-all-100-s2 | all | 20,012 | 0.694 [0.662, 0.725] | 0.620 [0.579, 0.660] | 0.606 |
+| p-all-50-s0 | all, 50 % of edits | 9,889 | 0.554 [0.519, 0.588] | 0.494 [0.453, 0.536] | 0.491 |
+| p-all-25-s0 | all, 25 % of edits | 4,915 | 0.399 [0.365, 0.433] | 0.338 [0.299, 0.378] | 0.338 |
+| p-all-100-s0-long | all, 32,000 steps | 20,012 | 0.709 [0.677, 0.740] | 0.639 [0.598, 0.678] | 0.630 |
+
+- Seeds 0/1/2 at 100 %: dev 0.692 (sd 0.007), challenge 0.628 (sd 0.007).
+- Filter ablation: the unfiltered set wins by 11 points on the challenge set (0.628 vs 0.516, intervals do not overlap) and 5 points on the clean dev set. The filtered set also lies below the learning curve of the unfiltered set: log-linear between the 50 % and 100 % points, 12,993 sentences would give about 0.55 on the challenge set (interpolated, not measured), the filtered run reached 0.516. The sentences the round-trip drops help the parser more than they hurt it.
+- Learning curve: each doubling of training edits adds 15.6 points (25 → 50 %) and 13.4 points (50 → 100 %) on the challenge set. No flattening yet.
+- Steps: twice the steps (32,000) adds 1.1 points on the challenge set, inside 1.5 seed sd; its best dev checkpoint was step 16,000. More steps do not help at this data size.
+- Per field (p-all-100-s0, dev / challenge): intent 0.983 / 0.942, sources 0.899 / 0.880, targets 0.821 / 0.829, invert 0.866 / 0.838, scope 0.929 / 0.898.
+- Errors by number of routes in the gold frame (p-all-100-s0, dev / challenge): 0 routes 0.94 / 0.84, 1 route 0.73 / 0.63, 2 routes 0.35 / 0.38, 3 or more 0.07 / 0.00 (29 / 23 sentences). Of the 204 failed challenge sentences, 94 have a wrong target, 89 a wrong invert, 66 wrong sources; 40 fail on targets alone. By intent on the challenge set: map 0.53 (295), modify 0.38 (56), clear 0.59 (22); the rest 0.84-1.00. German 0.57 (185) vs English 0.66 (363); layperson 0.53 is the weakest register.
+- Confidence (frame log-prob) ranks well: the most confident 50 % of challenge sentences are 0.898 correct, the most confident 30 % 0.963. Coverage at 95 % accuracy: 0.33 on the challenge set, 0.48 on dev. The threshold for the chip fallback still has to come from Noa's 50 calibration sentences.
+
+## Export and latency
+
+`uv run tools/mapping/export_parser.py --run p-all-100-s0` (M1 Pro, CPU, torch 2.15.0, batch 1, tokenize + encode + constrained greedy decode, 200 dev and challenge sentences after 10 warm-up runs).
+
+| threads | median ms | p95 ms |
+|---|---|---|
+| 1 | 9.03 | 21.51 |
+| 4 | 11.63 | 27.74 |
+
+- Four threads are slower than one at batch 1; the plugin should run the parser on one thread.
+- Weight blobs for Rust: `weights.f16.bin` 18.6 MB, `weights.int8.bin` 9.4 MB (per-row symmetric int8 for 2-D weights with f16 row scales, f16 for the rest); tensor tables with name, shape, dtype, offset and byte count in `export.json`. f32, f16 and int8 weights give the same dev and challenge accuracy to four decimals.
+- RSS of the Python process: 217.5 MB after importing torch, 296.9 MB after loading model and data, 349.0 MB peak during inference. A Rust runtime will need far less; not measured.
+- Label audit: the parser trained on train_all reproduces 99.97 % of the round-trip-kept and 100 % of the dropped training sentences, so the audit only shows memorisation. It needs a model that has not seen the audited half (cross-fitting); `audit_suspects.jsonl` is nearly empty.
+
+## Stage-2 decision
+
+Stage 2 on Baseten is worth it. Data is the bottleneck: +13 to +16 points per doubling of edits against +1 point for doubling the steps. Rules for stage 2:
+
+- Use every validated sentence (train_all); the round-trip filter costs 11 points and is no longer needed for training, which saves its 5 $ per 13k sentences.
+- Weight the edit sampler towards what fails: 2 and 3 routes per sentence, invert, modify, map with modifiers, German and layperson wording.
+- Size: about as many edits again as stage 1 (8,000). At the stage-1 rate of 0.00085 $ per valid sentence that is about 11 $ (estimate from stage 1, not measured); the ledger stands at 34.98 $.
+- Then the same 16,000 steps on the doubled set, plus one seed, to see whether the curve keeps its slope.
