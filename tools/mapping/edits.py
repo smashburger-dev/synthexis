@@ -5,9 +5,10 @@
 """Deterministic sampler of structured edits (no LLM).
 
   uv run tools/mapping/edits.py --run <name> --n <edits> --seed <s>
-      [--glossary-run <name>]
+      [--glossary-run <name>] [--override edits-s2.yaml] [--id-prefix f]
 
-Implements edits.yaml exactly; writes
+Implements edits.yaml exactly (blocks in --override replace or update the
+ones of the same name); writes
 data/mapping/commands/<run>/edits.jsonl and prints the realised
 distribution for comparison with edits.yaml.
 """
@@ -491,7 +492,19 @@ def load_harvest_names() -> list:
     return names
 
 
-def build_edit(n: int, ctx: Ctx, lang: str) -> dict:
+def merge(base: dict, over: dict) -> dict:
+    """Override blocks; nested dicts update key by key."""
+    out = dict(base)
+    for k, v in over.items():
+        if isinstance(v, dict) and isinstance(out.get(k), dict) \
+                and k not in ("routes_per_edit", "intents", "languages"):
+            out[k] = merge(out[k], v)
+        else:
+            out[k] = v
+    return out
+
+
+def build_edit(n: int, ctx: Ctx, lang: str, prefix: str = "e") -> dict:
     intent = ctx.wc(ctx.cfg["intents"])
     ctx.slots, ctx.counters = {}, Counter()
     routes, payload = [], {}
@@ -521,7 +534,7 @@ def build_edit(n: int, ctx: Ctx, lang: str) -> dict:
     ctx.maybe_correction()
     ctx.apply_say(lang, routes)
     return {
-        "id": f"e{n:06d}", "lang": lang, "variants": variants,
+        "id": f"{prefix}{n:06d}", "lang": lang, "variants": variants,
         "intent": intent, "slots": ctx.slots, "routes": routes,
         "payload": payload}
 
@@ -532,9 +545,13 @@ def main() -> None:
     ap.add_argument("--n", type=int, required=True)
     ap.add_argument("--seed", type=int, required=True)
     ap.add_argument("--glossary-run", default=None)
+    ap.add_argument("--override", default=None)
+    ap.add_argument("--id-prefix", default="e")
     args = ap.parse_args()
 
     cfg = yaml.safe_load((HERE / "edits.yaml").read_text())
+    if args.override:
+        cfg = merge(cfg, yaml.safe_load((HERE / args.override).read_text()))
     onto = yaml.safe_load((HERE / "ontology.yaml").read_text())
     rng = random.Random(args.seed)
     glossary = load_glossary(args.glossary_run)
@@ -550,7 +567,7 @@ def main() -> None:
     with (out_dir / "edits.jsonl").open("w") as f:
         for n in range(1, args.n + 1):
             lang = ctx.wc(cfg["languages"])
-            e = build_edit(n, ctx, lang)
+            e = build_edit(n, ctx, lang, args.id_prefix)
             f.write(json.dumps(e, ensure_ascii=False) + "\n")
             if e["intent"] == "map" and \
                     rng.random() < cfg["minimal_pairs"]["fraction"]:

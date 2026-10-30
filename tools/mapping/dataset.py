@@ -5,11 +5,16 @@
 """Parser datasets: frames, BIO spans, dev split, glossary augmentation.
 
   uv run tools/mapping/dataset.py [--out ds-v1] [--seed 13]
+      [--stage2 cmd-s2,kw-s2] [--cat 0.25]
 
 Reads cmd-s1 sentences, the rt-s1-all round-trip, kw-s1 keyword sentences,
 gloss-v1 and the ch-s1 challenge set from data/mapping/. Writes
-data/mapping/train/<out>/{train_filtered,train_all,dev,challenge}.jsonl
-and counts.json. Deterministic for a given seed.
+data/mapping/train/<out>/{train_filtered,train_all,train_cat,dev,
+challenge}.jsonl and counts.json. Deterministic for a given seed.
+--stage2 adds sentence runs without a round-trip: their dev edits go to
+dev_s2.jsonl, so dev.jsonl stays the stage-1 dev set. train_cat is
+train_all plus --cat x len(train_all) concatenations of two map sentences
+of the same language ("A and B"), which gives frames with 2-3 routes.
 
 Record: {id, edit_id, text, frame, bio, aug}. frame is a list of closed
 tokens and pointer items [start_char, end_char] (span pointers, see
@@ -213,6 +218,56 @@ def augment(rec: dict, gidx: dict, rng: random.Random):
             "spans": new_spans, "aug": True}
 
 
+CONNECT = {"en": [" and ", ", and ", ". Also, ", "; ", ", plus ", " and also "],
+           "de": [" und ", ", und ", ". Und ", "; ", ", außerdem ", " und auch "]}
+
+
+def cat_ok(r: dict) -> bool:
+    e = r["edit"]
+    return (r["register"] != "keyword" and e["intent"] == "map"
+            and bool(e["routes"]) and len(e["routes"]) <= 2
+            and not any(rt.get("ref") for rt in e["routes"])
+            and not any(s["kind"] in ("rejected", "ref")
+                        or str(s.get("value")).startswith("ref:")
+                        for s in e["slots"].values()))
+
+
+def concat(a: dict, b: dict, rng: random.Random):
+    """One map sentence with the routes of a and then b; slots of b get a
+    "b_" prefix. None if the side check fails on the joined text."""
+    conn = rng.choice(CONNECT[a["lang"]])
+    ta, tb = a["text"].rstrip(), b["text"]
+    if ta[-1:] in ".!?" and all(sp["end"] < len(ta) for sp in a["spans"]):
+        if conn.startswith("."):
+            conn = conn[1:]
+            ta = ta[:-1] + "."
+        else:
+            ta = ta[:-1]
+    if a["lang"] == "en" and tb[:2].istitle() \
+            and not tb.startswith(("I ", "I'")):
+        tb = tb[0].lower() + tb[1:]
+    off = len(ta) + len(conn)
+    eb = b["edit"]
+    ren = {k: "b_" + k for k in eb["slots"]}
+    edit = {"id": a["edit_id"], "lang": a["lang"], "intent": "map",
+            "slots": {**a["edit"]["slots"],
+                      **{ren[k]: v for k, v in eb["slots"].items()}},
+            "routes": a["edit"]["routes"] + [
+                {k: [ren[x] for x in v] if isinstance(v, list) else v
+                 for k, v in rt.items()} for rt in eb["routes"]],
+            "payload": {}}
+    text = ta + conn + tb
+    spans = a["spans"] + [{**sp, "slot": ren[sp["slot"]],
+                           "start": sp["start"] + off,
+                           "end": sp["end"] + off} for sp in b["spans"]]
+    spans = [{**sp, "text": text[sp["start"]:sp["end"]]} for sp in spans]
+    if commands.side_check(edit, spans, text):
+        return None
+    return {"id": f"{a['id']}+{b['id']}", "edit_id": a["edit_id"],
+            "lang": a["lang"], "register": a["register"], "text": text,
+            "spans": spans, "edit": edit, "aug": True}
+
+
 def to_record(r: dict) -> tuple:
     frame, bio = build(r["text"], r["spans"], r["edit"])
     if frame is None:
@@ -226,12 +281,17 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", default="ds-v1")
     ap.add_argument("--seed", type=int, default=13)
+    ap.add_argument("--stage2", default="")
+    ap.add_argument("--cat", type=float, default=0.25)
     args = ap.parse_args()
     rng = random.Random(args.seed)
 
     cmd = load_jsonl(DATA / "commands" / "cmd-s1" / "sentences.jsonl")
     kw = load_jsonl(DATA / "commands" / "kw-s1" / "sentences.jsonl")
     ch = load_jsonl(DATA / "commands" / "ch-s1" / "sentences.jsonl")
+    s2 = [r for run in filter(None, args.stage2.split(","))
+          for r in load_jsonl(DATA / "commands" / run / "sentences.jsonl")]
+    s2_ids = {r["id"] for r in s2}
     rt = {r["id"]: r["mismatch"] for r in load_jsonl(
         DATA / "roundtrip" / "rt-s1-all" / "roundtrip.jsonl")}
 
@@ -243,12 +303,16 @@ def main() -> None:
     gidx = gloss_index()
     counts, drops = Counter(), Counter()
     sets = defaultdict(list)
-    for r in cmd + kw:
+    pool = defaultdict(list)            # concat candidates per language
+    for r in cmd + kw + s2:
         kwd = r["register"] == "keyword"
         dev = is_dev(r["edit_id"], args.seed)
         ok = kwd or clean(r)
-        names = (["dev"] if ok else []) if dev else \
-            (["train_all", "train_filtered"] if ok else ["train_all"])
+        if r["id"] in s2_ids:           # no round-trip for stage 2
+            names = ["dev_s2"] if dev else ["train_all"]
+        else:
+            names = (["dev"] if ok else []) if dev else \
+                (["train_all", "train_filtered"] if ok else ["train_all"])
         if not names:
             continue
         recs = [r]
@@ -256,6 +320,8 @@ def main() -> None:
             a = augment(r, gidx, rng)
             if a:
                 recs.append(a)
+        if not dev and cat_ok(r):
+            pool[r["lang"]].append(r)
         for x in recs:
             rec, why = to_record(x)
             if rec is None:
@@ -263,6 +329,24 @@ def main() -> None:
                 continue
             for n in names:
                 sets[n].append(rec)
+    crng = random.Random(args.seed + 1)  # own stream: other sets unchanged
+    sets["train_cat"] = list(sets["train_all"])
+    langs = sorted(pool)
+    weights = [len(pool[l]) for l in langs]
+    for _ in range(round(args.cat * len(sets["train_all"]))):
+        lang = crng.choices(langs, weights=weights)[0]
+        a = crng.choice(pool[lang])
+        b = crng.choice(pool[lang])
+        if b["edit_id"].rstrip("b") == a["edit_id"].rstrip("b") or \
+                len(a["edit"]["routes"]) + len(b["edit"]["routes"]) > 3:
+            drops["cat skipped"] += 1
+            continue
+        c = concat(a, b, crng)
+        rec, why = to_record(c) if c else (None, "cat side check")
+        if rec is None:
+            drops[why] += 1
+            continue
+        sets["train_cat"].append(rec)
     for r in ch:
         rec, why = to_record(r)
         if rec is None:

@@ -68,6 +68,8 @@ def encode(sp, rec: dict, tok_id: dict):
     """-> sample dict or None when a pointer span is not coverable."""
     text = rec["text"]
     ids, offs = tokenize(sp, text)
+    if len(ids) >= MAX_SRC:         # truncated: the frame may name lost text
+        return None
     cb = char_to_byte(text)
     tgt = []
     for it in rec["frame"]:
