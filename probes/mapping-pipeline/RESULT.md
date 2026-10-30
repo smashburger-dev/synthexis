@@ -229,3 +229,25 @@ Route_edit by group (challenge / dev / dev_s2; counts in brackets for the challe
 
 - Data still pays more than steps, but less than in v1. A stage 3 of the same size would cost about 13 $; the measured return halved, so the next step is cheaper levers first: concatenation at a higher rate (0.25 was the only rate tried), and targeted generation for map with modifiers and 3 routes only.
 - Noa's 50 calibration and 100 eval sentences decide whether synthetic dev numbers carry over; nothing above is measured on real speech.
+
+## Concatenation rate sweep (2026-10-30, evening)
+
+```
+uv run tools/mapping/dataset.py --out ds-v2-c50 --stage2 cmd-s2,kw-s2 --cat 0.5
+uv run tools/mapping/dataset.py --out ds-v2-c100 --stage2 cmd-s2,kw-s2 --cat 1.0
+caffeinate -dimsu zsh tools/mapping/run_cat.sh      # 15:03 to 18:09, all rc=0
+```
+
+- train_cat 56,853 sentences at 0.5 (17,420 joined) and 74,252 at 1.0 (34,819 joined). Every other set is byte-identical to ds-v2, and the 0.5 train_cat starts with the 0.25 one, so only the amount of joined sentences changes. Same model, 16,000 steps, seeds 0 and 1 per rate.
+
+| rate | challenge (s0, s1, mean) | dev | dev_s2 | challenge 3+ routes (2 seeds pooled) |
+|---|---|---|---|---|
+| 0 (p-v2-all-s0) | 0.703 | 0.768 | 0.681 | 0.22 |
+| 0.25 | 0.712, 0.712, 0.712 | 0.768, 0.785, 0.776 | 0.708, 0.699, 0.704 | 0.24 |
+| 0.5 | 0.719, 0.734, 0.726 | 0.773, 0.763, 0.768 | 0.714, 0.713, 0.713 | 0.28 |
+| 1.0 | 0.701, 0.717, 0.709 | 0.786, 0.773, 0.780 | 0.700, 0.707, 0.704 | 0.30 |
+
+- Paired McNemar against 0.25, seed-matched and pooled over both seeds: 0.5 fixes 48 challenge sentences that 0.25 misses and loses 32 (p 0.09), on dev_s2 127 vs 100 (p 0.08), on dev 49 vs 63 (p 0.22, the other way). 1.0 is a tie on all three sets (p 0.73 to 1.0).
+- Reading: any concatenation helps (0 → 0.25 on dev_s2, p 0.002, see above); the rate beyond 0.25 does not move the result outside seed noise. 3+ routes creep up with the rate on the challenge set (0.24 → 0.28 → 0.30, 46 sentence-runs each), too few to count.
+- No new export. `p-v2-c50-s1` has the highest challenge score (0.734), but picking the shipped run by its challenge score would tune on the test set; the shipped blob stays `p-v2-cat-s0`. Future runs use 0.5 (best mean on two of three sets, same cost).
+- The concat lever is used up. What is left for the parser: a targeted Baseten batch for map with modifiers and 3-route sentences (the weakest groups at 0.5-0.6 and 0.2-0.4), and Noa's real sentences to check that the synthetic gains carry over.

@@ -41,5 +41,5 @@ Numbers in `probes/mapping-pipeline/RESULT.md`, section "stage 2 on Baseten and 
 
 Open after stage 2:
 
-1. Doubling the edits gave +7.5 points, half of the v1 curve. Before another 13 $ stage: try a higher concat rate and a small targeted batch for map with modifiers and 3 routes.
+1. Doubling the edits gave +7.5 points, half of the v1 curve. Concat rate tested in the evening (0.5 and 1.0, two seeds each, `run_cat.sh`): no rate beats 0.25 outside seed noise (challenge means 0.712 / 0.726 / 0.709, McNemar p 0.09 for 0.5). Next data step: a small targeted Baseten batch for map with modifiers and 3 routes, not a full stage 3.
 2. Items 2, 3, 4 and 6 above stay open; the real-speech sentences from Noa now matter more than more synthetic data.

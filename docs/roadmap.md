@@ -57,7 +57,8 @@ Hard dates: S3 and S4 recorded 10-30/10-31, training from 11-01 (new Modal credi
 - [x] Parser v1 (9.30M, span-pointer frame decoder) trained on the Mac; challenge set 548 sentences; route_edit 0.628 challenge, 0.697 dev; int8 blob 9.4 MB, 9 ms median on one CPU thread
 - [x] Filter ablation and learning curve: all sentences beat the round-trip filter by 11 points; +13-16 points per doubling of edits, so stage 2 goes ahead
 - [x] Stage 2 commands (8,374 edits weighted to multi-route, invert, modify, German, layperson; 12.74 $) and parser v2 with sentence concatenation: route_edit 0.712 challenge, 0.768 dev; exported `p-v2-cat-s0`
-- [ ] Next parser data step: higher concat rate and a targeted batch for map with modifiers and 3 routes, before any stage 3
+- [x] Concat rate sweep (0.25 / 0.5 / 1.0, two seeds each): no rate wins outside seed noise; future runs use 0.5
+- [ ] Next parser data step: targeted Baseten batch for map with modifiers and 3 routes, before any stage 3
 - [ ] Threshold for the chip fallback calibrated on Noa's 50
 - [ ] Resolver and chip fallback in the plugin, "Built with Muse Spark Open" credit
 
