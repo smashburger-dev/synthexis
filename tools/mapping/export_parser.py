@@ -4,7 +4,7 @@
 # ///
 """Latency, RSS and Rust-loadable weight blobs for a trained parser.
 
-  uv run tools/mapping/export_parser.py --run p-filt-100-s0
+  uv run tools/mapping/export_parser.py --run p-filt-100-s0 [--no-audit]
 
 CPU inference per sentence (tokenize + encode + grammar-constrained
 greedy decode), median and p95 over 200 dev and challenge sentences at
@@ -109,6 +109,7 @@ def main() -> None:
     ap.add_argument("--run", required=True)
     ap.add_argument("--ds", default="ds-v1")
     ap.add_argument("--n", type=int, default=200)
+    ap.add_argument("--no-audit", action="store_true")
     a = ap.parse_args()
     run = TRAIN / "runs" / a.run
     meta = json.loads((run / "meta.json").read_text())
@@ -177,7 +178,8 @@ def main() -> None:
                    + torch.__version__}
     (run / "export.json").write_text(json.dumps(export, indent=1))
     model.load_state_dict(state)
-    audit(model, grammar, vocab, sp, tok_id, ds, run)
+    if not a.no_audit:
+        audit(model, grammar, vocab, sp, tok_id, ds, run)
     print(json.dumps({k: export[k] for k in
                       ("bytes", "latency_cpu", "rss_mb")}))
 

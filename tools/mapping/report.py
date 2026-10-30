@@ -5,6 +5,8 @@
 
   uv run tools/mapping/report.py                 # writes REPORT.md
   uv run tools/mapping/report.py --pick-better   # prints train set name
+  uv run tools/mapping/report.py --pick A B      # prints the better run
+  uv run tools/mapping/report.py --main RUN      # per-field section for RUN
 
 Reads data/mapping/train/runs/*/metrics.json (and export.json) and writes
 data/mapping/train/REPORT.md. --pick-better compares p-filt-100-s0 and
@@ -30,11 +32,17 @@ def score(m: dict, split: str, f="route_edit") -> float:
     return m[split][f]["acc"] if m and split in m else -1.0
 
 
+def better(x: str, y: str) -> str:
+    """Run with the higher challenge route_edit; dev breaks ties."""
+    mx, my = load(x), load(y)
+    kx = (score(mx, "challenge"), score(mx, "dev"))
+    ky = (score(my, "challenge"), score(my, "dev"))
+    return y if ky > kx else x
+
+
 def pick_better() -> str:
-    filt, all_ = load("p-filt-100-s0"), load("p-all-100-s0")
-    a = (score(filt, "challenge"), score(filt, "dev"))
-    b = (score(all_, "challenge"), score(all_, "dev"))
-    return "train_all" if b > a else "train_filtered"
+    return "train_all" if better("p-filt-100-s0", "p-all-100-s0") \
+        == "p-all-100-s0" else "train_filtered"
 
 
 def cell(m: dict, split: str, f: str) -> str:
@@ -47,9 +55,14 @@ def cell(m: dict, split: str, f: str) -> str:
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--pick-better", action="store_true")
+    ap.add_argument("--pick", nargs=2)
+    ap.add_argument("--main", default=None)
     a = ap.parse_args()
     if a.pick_better:
         print(pick_better())
+        return
+    if a.pick:
+        print(better(*a.pick))
         return
     runs = sorted(p.parent.name for p in TRAIN.glob("runs/p-*/metrics.json"))
     L = ["# Overnight mapping training report", "",
@@ -61,15 +74,16 @@ def main() -> None:
     if ds.exists():
         L += ["## Data", "", "```", ds.read_text().strip(), "```", ""]
     L += ["## Parser runs", "",
-          "| run | train set | frac | seed | samples | best step | min | "
+          "| run | ds | train set | frac | seed | samples | best step | min | "
           "dev exact | dev route_edit | challenge exact | "
           "challenge route_edit | challenge cov@0.95 |",
-          "|---|---|---|---|---|---|---|---|---|---|---|---|"]
+          "|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
     for r in runs:
         m = load(r)
         ar = m["args"]
         L.append(
-            f"| {r} | {ar['train']} | {ar['frac']} | {ar['seed']} | "
+            f"| {r} | {ar['ds']} | {ar['train']} | {ar['frac']} | "
+            f"{ar['seed']} | "
             f"{m['train_samples']} | {m['best_step']} | "
             f"{m['train_minutes']} | {cell(m, 'dev', 'exact')} | "
             f"{cell(m, 'dev', 'route_edit')} | "
@@ -77,8 +91,8 @@ def main() -> None:
             f"{cell(m, 'challenge', 'route_edit')} | "
             f"{m.get('challenge', {}).get('coverage_at_0.95', '-')} |")
     L.append("")
-    main_run = "p-filt-100-s0" if pick_better() == "train_filtered" \
-        else "p-all-100-s0"
+    main_run = a.main or ("p-filt-100-s0" if pick_better() ==
+                          "train_filtered" else "p-all-100-s0")
     m = load(main_run)
     if m:
         L += [f"## Per-field accuracy ({main_run})", "",
@@ -95,7 +109,7 @@ def main() -> None:
                                    ["confidence_curve"]):
             L.append(f"| {c} | {d} | {ch} |")
         L.append("")
-    tag = "filt" if main_run == "p-filt-100-s0" else "all"
+    tag = "filt" if pick_better() == "train_filtered" else "all"
     seeds = [load(f"p-{tag}-100-s{s}") for s in (0, 1, 2)]
     seeds = [s for s in seeds if s]
     if len(seeds) > 1:
