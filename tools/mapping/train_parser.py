@@ -11,8 +11,8 @@
 Data from data/mapping/train/<ds>/, tokenizer data/mapping/train/<tok>/.
 Evaluates dev every --eval-every steps (grammar-constrained greedy) for
 the raw weights and their EMA, keeps the best dev route-edit state of
-either, then scores dev, the challenge set and dev_s2 (if the dataset
-has it). Writes data/mapping/train/runs/<name>/{model.pt, meta.json,
+either, then scores dev, the challenge set, dev_s2 and dev_s3 (if the
+dataset has them). Writes data/mapping/train/runs/<name>/{model.pt, meta.json,
 metrics.json, <split>_preds.jsonl, log.txt}.
 --frac keeps a deterministic fraction of base edit ids (learning curve).
 --overfit N trains and scores on the first N training samples only.
@@ -87,13 +87,13 @@ def main() -> None:
     train, lost_tr = fp.load(sp, ds / f"{a.train}.jsonl", tok_id)
     devset, lost_dev = fp.load(sp, ds / "dev.jsonl", tok_id)
     chal, lost_ch = fp.load(sp, ds / "challenge.jsonl", tok_id)
-    dev_s2 = fp.load(sp, ds / "dev_s2.jsonl", tok_id)[0] \
-        if (ds / "dev_s2.jsonl").exists() else []
+    extra = {n: fp.load(sp, ds / f"{n}.jsonl", tok_id)[0]
+             for n in ("dev_s2", "dev_s3") if (ds / f"{n}.jsonl").exists()}
     train = [s for s in train if keep_frac(s["edit_id"], a.frac)]
     if a.overfit:
         train = train[:a.overfit]
         devset = train
-        chal = dev_s2 = []
+        chal, extra = [], {}
     log(f"train {len(train)} (lost {lost_tr}) dev {len(devset)} "
         f"(lost {lost_dev}) challenge {len(chal)} (lost {lost_ch}) "
         f"frame vocab {fv}")
@@ -169,8 +169,8 @@ def main() -> None:
                "train_minutes": round(train_min, 1),
                "lost": {"train": lost_tr, "dev": lost_dev,
                         "challenge": lost_ch}}
-    for split, data in (("dev", devset), ("challenge", chal),
-                        ("dev_s2", dev_s2)):
+    for split, data in [("dev", devset), ("challenge", chal),
+                        *extra.items()]:
         if not data:
             continue
         met, rows = fp.evaluate(model, grammar, data, vocab, dev)

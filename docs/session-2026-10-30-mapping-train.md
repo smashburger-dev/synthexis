@@ -43,3 +43,15 @@ Open after stage 2:
 
 1. Doubling the edits gave +7.5 points, half of the v1 curve. Concat rate tested in the evening (0.5 and 1.0, two seeds each, `run_cat.sh`): no rate beats 0.25 outside seed noise (challenge means 0.712 / 0.726 / 0.709, McNemar p 0.09 for 0.5). Next data step: a small targeted Baseten batch for map with modifiers and 3 routes, not a full stage 3.
 2. Items 2, 3, 4 and 6 above stay open; the real-speech sentences from Noa now matter more than more synthetic data.
+
+## Stage 3 (night)
+
+- Targeted Baseten batch for map with modifiers and 2-3 routes: 3,749 valid sentences for 6.91 $ (estimate was 4.21 $; valid rate 58 %). Ledger 54.64 $.
+- Parser v3 `p-v3-c50-s0` (exported): dev 0.796, challenge 0.748, dev_s2 0.708. Against v2 at the same concat rate: dev +1.9 points (p 0.005), challenge +1.6 (p 0.08), dev_s2 flat. Simple sentences unchanged.
+- Rule from now on: runs are chosen on dev and dev_s2; the challenge set is only reported (`report.py --pick`).
+
+Open after stage 3:
+
+1. Stop synthetic batches. Diminishing return (+1.6 points for 6.91 $), and all sets share one generator, so more batches tune the parser to Spark Open. Next measurement is Noa's 50 calibration and 100 eval sentences, written or spoken without looking at the ontology.
+2. Why dev_s2 did not move in the targeted groups: read 50 failed dev_s2 sentences with modifiers and sort them into parser error vs label error.
+3. Items 2, 3, 4 and 6 from the first Open list stay open.

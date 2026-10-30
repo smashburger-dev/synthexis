@@ -5,14 +5,15 @@
 """Parser datasets: frames, BIO spans, dev split, glossary augmentation.
 
   uv run tools/mapping/dataset.py [--out ds-v1] [--seed 13]
-      [--stage2 cmd-s2,kw-s2] [--cat 0.25]
+      [--stage2 cmd-s2,kw-s2] [--stage3 cmd-s3,kw-s3] [--cat 0.25]
 
 Reads cmd-s1 sentences, the rt-s1-all round-trip, kw-s1 keyword sentences,
 gloss-v1 and the ch-s1 challenge set from data/mapping/. Writes
 data/mapping/train/<out>/{train_filtered,train_all,train_cat,dev,
 challenge}.jsonl and counts.json. Deterministic for a given seed.
 --stage2 adds sentence runs without a round-trip: their dev edits go to
-dev_s2.jsonl, so dev.jsonl stays the stage-1 dev set. train_cat is
+dev_s2.jsonl, so dev.jsonl stays the stage-1 dev set; --stage3 does the
+same with dev_s3.jsonl and leaves dev_s2 unchanged. train_cat is
 train_all plus --cat x len(train_all) concatenations of two map sentences
 of the same language ("A and B"), which gives frames with 2-3 routes.
 
@@ -282,6 +283,7 @@ def main() -> None:
     ap.add_argument("--out", default="ds-v1")
     ap.add_argument("--seed", type=int, default=13)
     ap.add_argument("--stage2", default="")
+    ap.add_argument("--stage3", default="")
     ap.add_argument("--cat", type=float, default=0.25)
     args = ap.parse_args()
     rng = random.Random(args.seed)
@@ -292,6 +294,9 @@ def main() -> None:
     s2 = [r for run in filter(None, args.stage2.split(","))
           for r in load_jsonl(DATA / "commands" / run / "sentences.jsonl")]
     s2_ids = {r["id"] for r in s2}
+    s3 = [r for run in filter(None, args.stage3.split(","))
+          for r in load_jsonl(DATA / "commands" / run / "sentences.jsonl")]
+    s3_ids = {r["id"] for r in s3}
     rt = {r["id"]: r["mismatch"] for r in load_jsonl(
         DATA / "roundtrip" / "rt-s1-all" / "roundtrip.jsonl")}
 
@@ -304,12 +309,14 @@ def main() -> None:
     counts, drops = Counter(), Counter()
     sets = defaultdict(list)
     pool = defaultdict(list)            # concat candidates per language
-    for r in cmd + kw + s2:
+    for r in cmd + kw + s2 + s3:     # stage 3 last: earlier sets unchanged
         kwd = r["register"] == "keyword"
         dev = is_dev(r["edit_id"], args.seed)
         ok = kwd or clean(r)
         if r["id"] in s2_ids:           # no round-trip for stage 2
             names = ["dev_s2"] if dev else ["train_all"]
+        elif r["id"] in s3_ids:
+            names = ["dev_s3"] if dev else ["train_all"]
         else:
             names = (["dev"] if ok else []) if dev else \
                 (["train_all", "train_filtered"] if ok else ["train_all"])

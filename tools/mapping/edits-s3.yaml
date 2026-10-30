@@ -1,0 +1,27 @@
+# Stage-3 overrides for edits.yaml (edits.py --override edits-s3.yaml): a small
+# targeted batch. Authored 2026-10-30 from parser v2 errors (p-v2-c50 s0+s1, map
+# sentences of challenge, dev, dev_s2; probes/mapping-pipeline/RESULT.md, "stage 3"):
+# map without modifiers 0.73, with quantize 0.48, gate 0.51, invert 0.52, amount 0.55,
+# hold 0.55, range 0.59, smooth 0.60, curve 0.61; 1 route 0.74, 2 routes 0.53, 3 routes 0.35.
+# Language and register weights as in edits-s2.yaml. Modifier rates stay below one
+# per route on average so sentences do not turn into lists.
+
+languages: {en: 60, de: 40}
+
+intents: {map: 80, modify: 12, unmap: 8}
+
+routes_per_edit: {1: 25, 2: 40, 3: 35}
+
+styles:
+  register: {casual: 24, terse: 12, polite: 5, rambling: 6, jargon: 11, beginner: 13, layperson: 17, codeswitch: 12}
+
+modifiers:
+  invert: 0.22
+  range: 0.2
+  amount: 0.2
+  curve: 0.1
+  smooth: 0.1
+  hold: 0.08
+  quantize: 0.08
+  gate: 0.08
+  time: 0.05
