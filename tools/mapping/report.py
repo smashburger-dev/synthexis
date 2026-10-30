@@ -10,8 +10,10 @@
 
 Reads data/mapping/train/runs/*/metrics.json (and export.json) and writes
 data/mapping/train/REPORT.md. --pick-better compares p-filt-100-s0 and
-p-all-100-s0 on challenge route-edit accuracy (dev breaks ties) and
-prints train_filtered or train_all.
+p-all-100-s0 and prints train_filtered or train_all. Runs are picked on
+the dev sets only (dev, plus dev_s2 when both runs have it); the challenge
+set is reported, never used to choose (changed 2026-10-30, it chose
+between runs until then).
 """
 
 import argparse
@@ -33,10 +35,12 @@ def score(m: dict, split: str, f="route_edit") -> float:
 
 
 def better(x: str, y: str) -> str:
-    """Run with the higher challenge route_edit; dev breaks ties."""
+    """Run with the higher dev route_edit (mean with dev_s2 if both have it)."""
     mx, my = load(x), load(y)
-    kx = (score(mx, "challenge"), score(mx, "dev"))
-    ky = (score(my, "challenge"), score(my, "dev"))
+    splits = ["dev"] + (["dev_s2"] if score(mx, "dev_s2") >= 0
+                        and score(my, "dev_s2") >= 0 else [])
+    kx = sum(score(mx, s) for s in splits)
+    ky = sum(score(my, s) for s in splits)
     return y if ky > kx else x
 
 

@@ -251,3 +251,47 @@ caffeinate -dimsu zsh tools/mapping/run_cat.sh      # 15:03 to 18:09, all rc=0
 - Reading: any concatenation helps (0 → 0.25 on dev_s2, p 0.002, see above); the rate beyond 0.25 does not move the result outside seed noise. 3+ routes creep up with the rate on the challenge set (0.24 → 0.28 → 0.30, 46 sentence-runs each), too few to count.
 - No new export. `p-v2-c50-s1` has the highest challenge score (0.734), but picking the shipped run by its challenge score would tune on the test set; the shipped blob stays `p-v2-cat-s0`. Future runs use 0.5 (best mean on two of three sets, same cost).
 - The concat lever is used up. What is left for the parser: a targeted Baseten batch for map with modifiers and 3-route sentences (the weakest groups at 0.5-0.6 and 0.2-0.4), and Noa's real sentences to check that the synthetic gains carry over.
+
+## Stage 3: targeted batch for map with modifiers and multi-route (2026-10-30, night)
+
+Error analysis before the batch (p-v2-c50 s0+s1, map sentences of challenge, dev and dev_s2 pooled): map without modifiers 0.73; with quantize 0.48, gate 0.51, invert 0.52, amount 0.55, hold 0.55, range 0.59, smooth 0.60, curve 0.61; 1 route 0.74, 2 routes 0.53, 3 routes 0.35.
+
+```
+uv run tools/mapping/edits.py --run edits-s3 --n 3000 --seed 31 --glossary-run gloss-v1 --override edits-s3.yaml --id-prefix g
+uv run tools/mapping/keywords.py --run kw-s3 --edits-run edits-s3 --glossary-run gloss-v1 --seed 37
+uv run tools/mapping/commands.py --run cmd-s3 --edits-run edits-s3 --reasoning-effort medium --workers 12 --max-usd 7
+uv run tools/mapping/dataset.py --out ds-v3 --stage2 cmd-s2,kw-s2 --stage3 cmd-s3,kw-s3 --cat 0.5
+caffeinate -dimsu zsh tools/mapping/run_s3.sh       # 19:39 to 21:10, both rc=0
+```
+
+- `edits-s3.yaml`: intents map 80 / modify 12 / unmap 8, routes per edit 1/2/3 = 25/40/35, every modifier rate raised (invert 0.22, range and amount 0.2, curve and smooth 0.1, hold, quantize and gate 0.08, time 0.05).
+- 3,215 edits, 161 jobs. The dry-run estimate was 4.21 $; the batch hit the 7 $ cap after 142 jobs (6.91 $, 194 requests). 3,749 valid sentences of 6,430 requested = 58.3 %, against 76.2 % in stage 2: long multi-route sentences lose side words more often (830 drops for a missing side). 0.0018 $ per valid sentence, about twice stage 2. The 19 remaining jobs were not resumed. Ledger 54.64 $.
+- ds-v3: train_all 45,685 (13,707 edits), train_cat 65,225. dev, dev_s2 and challenge byte-identical to ds-v2; stage-3 dev edits go to dev_s3 (416 sentences). dev_s3 has the targeted distribution by construction and is not used as evidence.
+- Overfitting guard from this step on: `report.py --pick` chooses on dev (plus dev_s2 when both runs have it); the challenge set is reported, never used to choose. Earlier choices (filter vs all, plain vs concat) came out the same under the new rule.
+
+Comparison with p-v2-c50 (same concat rate, same steps, seeds 0 and 1, paired McNemar pooled over seeds):
+
+| set | v2 c50 (s0, s1, mean) | v3 c50 (s0, s1, mean) | fixed only by v2 / only by v3 | p |
+|---|---|---|---|---|
+| dev | 0.773, 0.763, 0.768 | 0.796, 0.778, 0.787 | 42 / 73 | 0.005 |
+| dev_s2 | 0.714, 0.713, 0.713 | 0.708, 0.725, 0.716 | 115 / 123 | 0.65 |
+| challenge (reported) | 0.719, 0.734, 0.726 | 0.748, 0.737, 0.743 | 37 / 55 | 0.08 |
+
+| group (v2 → v3, mean of two seeds) | challenge | dev | dev_s2 |
+|---|---|---|---|
+| simple: 1 route, no modifier | 0.79 → 0.79 | 0.84 → 0.83 | 0.76 → 0.77 |
+| map with modifiers | 0.56 → 0.61 | 0.61 → 0.64 | 0.58 → 0.58 |
+| 2 routes | 0.53 → 0.57 | 0.52 → 0.57 | 0.56 → 0.56 |
+| 3+ routes | 0.28 → 0.43 | 0.41 → 0.43 | 0.35 → 0.37 |
+| intents other than map | 0.84 → 0.83 | 0.90 → 0.90 | 0.83 → 0.82 |
+
+- The batch helps on dev (+1.9 points, significant) and on the reported challenge set (+1.6), mostly in the targeted groups; simple sentences and other intents do not get worse.
+- On dev_s2, the set closest to the batch distribution, there is no gain, and map with modifiers stays at 0.58 there. Seed noise on dev_s2 alone does not explain that (1,380 sentences, both seeds flat). A plausible reading is that dev_s2 errors in these groups are harder cases or label noise that more generated sentences do not fix; not measured.
+- dev_s3 (targeted distribution, not evidence): 0.584 and 0.570. The batch's own kind of sentence is still the weakest material.
+- Exported `p-v3-c50-s0` (chosen on dev and dev_s2 over seed 1 and over the 24k v2 run): dev 0.796, challenge 0.748, dev_s2 0.708. int8 gives the same dev score and loses one challenge sentence (0.746). CPU median 10.3 ms, p95 26.5 ms on one thread; blobs 18.6 MB f16, 9.4 MB int8.
+
+Where synthetic data stands after three stages:
+
+- v1 → v3 on the unchanged sets: dev 0.697 → 0.796, challenge 0.628 → 0.748 (shipped runs).
+- Return per dollar falls: stage 2 (12.74 $) +7.5 challenge points; stage 3 (6.91 $) +1.6 points, insignificant on two of three sets.
+- Every set (training, dev, challenge) comes from the same generator, prompts, ontology and glossary. The numbers measure how well the parser reads Spark Open sentences. Real speech can only be measured with Noa's sentences, and further synthetic batches would tune the parser to the generator.
