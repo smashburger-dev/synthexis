@@ -69,7 +69,8 @@ Hard dates: S3 and S4 recorded 10-30/10-31, training from 11-01 (new Modal credi
 
 ## Demo and submission
 
-- [ ] FigJam diagrams regenerated from the spec
+- [x] FigJam updated for non-experts (10-31): status notes on the 8 planning diagrams, build plan coloured by status, new area "What six days taught us" (`docs/figjam-update-2026-10-31.md`)
+- [ ] FigJam: update again after Noa's sentences, the retrain and the FL test
 - [ ] Demo project in FL, 3-minute video with presets and behind the scenes (11-03)
 - [ ] README with real request counts, repo public (11-03)
 - [ ] Submission (11-04)
