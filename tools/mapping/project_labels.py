@@ -16,6 +16,10 @@ in probes/parser-errors/RESULT.md:
   side     side:either dropped (same as no side)
   pitch    T:param:osc.pitch and T:param:fx.pitch -> T:param:pitch (the
            resolver splits them by plugin type)
+  toggle   with --drop-toggle, training rows with a T:toggle target and no
+           switching word are dropped: 40 % of them only name the effect
+           ("my fist does the distortion"), which teaches the parser to read
+           a plain effect name as a switch
 Every file of the source dataset is written with projected frames; counts
 per rule go to <out>/projection.json. project() is shared with gates.py.
 """
@@ -38,6 +42,13 @@ MOM = re.compile(r"hold|while|as long as|momentar|only when|press|keep|"
 TOG = re.compile(r"toggle|each time|every time|on and off|on or off|again|"
                  r"and un|an und aus|ein und aus|jedes ?mal|umschalt|nochmal|"
                  r"erneut|und wieder|und un", re.I)
+SWITCH = re.compile(
+    r"\b(on|off|toggl\w*|switch\w*|an|aus|ein|bypass\w*|kill\w*|mute\w*|"
+    r"unmute\w*|enabl\w*|disabl\w*|activat\w*|deactivat\w*|schalt\w*|"
+    r"flip\w*|engag\w*|stumm\w*|start\w*|stop\w*|freez\w*|kick\w* in|"
+    r"einschalt\w*|ausschalt\w*|anmach\w*|ausmach\w*|aktivier\w*|"
+    r"deaktivier\w*|anschalt\w*|abschalt\w*)\b", re.I)
+TRAIN_FILES = ("train_all", "train_cat", "train_filtered")
 PITCH = {"T:param:osc.pitch": "T:param:pitch",
          "T:param:fx.pitch": "T:param:pitch"}
 
@@ -84,10 +95,18 @@ def project(frame: list, text: str, obj: dict, stats=None) -> list:
     return out
 
 
+def unswitched(frame: list, text: str) -> bool:
+    """A toggle target whose sentence has no switching word."""
+    return any(isinstance(t, str) and t.startswith("T:toggle")
+               for t in frame) and not SWITCH.search(text) \
+        and not TOG.search(text)
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--src", default="ds-v3")
     ap.add_argument("--out", default="ds-v4p")
+    ap.add_argument("--drop-toggle", action="store_true")
     a = ap.parse_args()
     src, out = DATA / "train" / a.src, DATA / "train" / a.out
     out.mkdir(parents=True, exist_ok=True)
@@ -98,6 +117,10 @@ def main() -> None:
         with open(out / f.name, "w") as w:
             for line in open(f):
                 r = json.loads(line)
+                if a.drop_toggle and f.stem in TRAIN_FILES and \
+                        unswitched(r["frame"], r["text"]):
+                    stats["toggle_dropped"] += 1
+                    continue
                 new = project(r["frame"], r["text"], obj, stats)
                 changed += new != r["frame"]
                 n += 1

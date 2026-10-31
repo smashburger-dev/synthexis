@@ -5,10 +5,10 @@
 """Deterministic sampler of structured edits (no LLM).
 
   uv run tools/mapping/edits.py --run <name> --n <edits> --seed <s>
-      [--glossary-run <name>] [--override edits-s2.yaml] [--id-prefix f]
+      [--glossary-run <name>] [--override edits-s4.yaml,edits-s5.yaml] [--id-prefix f]
 
-Implements edits.yaml exactly (blocks in --override replace or update the
-ones of the same name); writes
+Implements edits.yaml exactly (blocks in each --override file, in order,
+replace or update the ones of the same name); writes
 data/mapping/commands/<run>/edits.jsonl and prints the realised
 distribution for comparison with edits.yaml.
 """
@@ -29,6 +29,7 @@ EVENT_SOURCES = {
     "motion.throw", "motion.swipe", "motion.hold",
     "motion.grab", "motion.release", "motion.clap",
 }
+MOVE_SOURCES = {"hand.x", "hand.y", "hand.depth", "hand.roll", "hand.pitch"}
 HAND_PRESETS = {"filter_hand", "chord_hand", "pattern_hand"}
 FINGERS = ["thumb", "index", "middle", "ring", "pinky"]
 FINGER_SHAPE = {"thumb": "thumbs_up", "index": "point", "pinky": "pinky_up"}
@@ -286,7 +287,7 @@ class Ctx:
                 srcs.append(sid)
             used_params: set = set()
             values = [self.slots[x]["value"] for x in srcs]
-            gated = self.tilt_gate(srcs, mods)
+            gated = self.tilt_gate(srcs, mods) or self.pinch_hold(srcs, mods)
             for _ in range(self.wc(self.cfg["targets_per_route"])):
                 kind = self.draw_target_kind(srcs)
                 tgts.append(self.add_target(kind, used_params, mods))
@@ -377,6 +378,19 @@ class Ctx:
             mods.append(self.add("g", {"kind": "gate", "value": "hand.pinch",
                                        "shape": None, "side": side}))
         return [{"src": srcs, "tgt": [t], "scope": scope, "mods": mods}]
+
+    def pinch_hold(self, srcs: list, mods: list) -> bool:
+        """A hand movement that only counts while pinching ("pinch and
+        drag", "pinch and turn"): the pinch is the hold, not a source."""
+        if not self.cfg.get("pinch_hold"):
+            return False
+        moving = [x for x in srcs if self.slots[x]["value"] in MOVE_SOURCES]
+        if not moving or self.rng.random() >= self.cfg["pinch_hold"]:
+            return False
+        mods.append(self.add("g", {"kind": "gate", "value": "hand.pinch",
+                                   "shape": None,
+                                   "side": self.slots[moving[0]]["side"]}))
+        return True
 
     def tilt_gate(self, srcs: list, mods: list) -> bool:
         """Finger tilt only while that finger alone is shown (thumbs up)."""
@@ -702,8 +716,9 @@ def main() -> None:
     args = ap.parse_args()
 
     cfg = yaml.safe_load((HERE / "edits.yaml").read_text())
-    if args.override:
-        cfg = merge(cfg, yaml.safe_load((HERE / args.override).read_text()))
+    for name in (args.override or "").split(","):
+        if name:
+            cfg = merge(cfg, yaml.safe_load((HERE / name).read_text()))
     onto = yaml.safe_load((HERE / "ontology.yaml").read_text())
     rng = random.Random(args.seed)
     glossary = load_glossary(args.glossary_run)

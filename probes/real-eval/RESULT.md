@@ -89,6 +89,22 @@ Error types on the 51 calibration rows (v5 s0, v3 s0 in brackets):
 
 Reading: dev route_edit is 0.83, exact match on real sentences is 0.14 to 0.35. Stage 4 put the missing types into the synthetic text, and the real-set score did not move. The real sentences are longer, often describe both directions of one movement, and use pinch as a hold condition. A next batch may be shaped by calibration findings (rule below). More synthetic text of the same kind is not expected to close the gap.
 
+## Decode-time rules (2026-11-01)
+
+`tools/mapping/normalize.py`, measured with `uv run probes/decode-rules/measure.py` on the saved dev predictions of p-v5-s0 and p-v5-s1 and on the calibration rows only:
+
+| rule | dev sets, both seeds (won / lost) | calibration s0 | calibration s1 |
+|---|---|---|---|
+| none | | 16/51 | 16/51 |
+| pinch (S:hand.pinch next to another source becomes G:hand.pinch) | +0 / -13 | 17/51 | 16/51 |
+| pronoun (a later route without a target restates an earlier one or takes its target) | +0 / -0 | 16/51 | 19/51 |
+
+The pinch rule costs dev sentences where pinch and a movement both drive the target, so it stays off. The pronoun rule never fires on synthetic text and gains 0 and 3 calibration rows; it is kept for the plugin runtime. Neither closes the gap, so the next step changes the data.
+
+## Training-label noise found on the way
+
+Of 3,891 training sentences with a toggle target, 1,569 have no switching word ("my fist does the distortion"). They come from stages 1 to 3, where toggle targets reached Spark as "midi cc <family>" (fixed for stage 4). They teach the parser that a plain effect name is a switch, the error behind "reverb bigger" read as a reverb switch. `project_labels.py --drop-toggle` drops them from the training files; dev sets stay as they are.
+
 ## Open
 
 - Noa reviews the derived rows: do they sound like him, mean the original plus the listed change, and name the right plugin and parameter? Plugin context is inferred for all 34 originals; 5 are unknown, and their rows note the candidates.
