@@ -94,3 +94,37 @@ Triggered by Noa's question whether plugins with unusual sections (ShaperBox, Po
 ## map.adapt (new, optional, not for the demo)
 
 "Weight updates on the Mac are feasible: param-sense (0.80M parameters) trains on all 78,846 rows in 0.7 min on the CPU; the parser (9.30M) took 45 min for 16,000 steps on MPS. A user-triggered 'retrain' could tune a low-rank adapter or the output layers of the parser on the user's corrected sentences, mixed with replayed synthetic sentences, and keep the new weights only if the dev sets do not drop." Not proposed now: new plugins and names need no parser change (map.resolver), user wording lives in map.aliases, and an on-device training runtime is a large build for a small gain.
+
+# Spec proposal, demo requests (2026-10-31)
+
+Source: Noa's message (the XY pad of a plugin, Portal: MACRO 1 and MACRO 2 are the pad's axes) and the request types in his real sentences (`probes/real-eval/RESULT.md`). Each item says where the need showed up. Needs first seen in eval groups are marked "eval": if stage 4 or the retrain covers them, the final report scores those eval groups separately, so the number is not read as generalisation.
+
+## map.xy (new)
+
+"A two-axis target: one hand's x and y, or a pinch-held position, drive two parameters at once. 'The XY pad', 'X and Y' or 'both macros' expand to the plugin's pair: parameter names with Hor/Ver or X/Y (FabFilter Saturn 2, Timeless 3, Twin 2, Volcano 3: XY Controller N Hor/Ver; Serum 2: Filter 1 X/Y; Lunacy CUBE: Orb X/Y Position), else a per-plugin table for pads not exposed by name (Portal: MACRO 1 = x, MACRO 2 = y)." Measured: 6 of 405 harvested VST3 plugins name XY parameters; Portal's pad needs the table. Seen in: Noa's message, eval.
+
+## cond.clutch (new)
+
+"Pinch as a clutch: while pinched, the route adds the source's change since the pinch began to the target's value at that moment; on release the value stays. Pinch and turn is a virtual knob (hand.roll under the clutch), pinch and drag a virtual fader (hand.x or hand.y). Without the clutch, a gated route jumps to the hand's absolute position when the gate opens." Seen in: calibration and eval; 6 of Noa's 34 sentences use a pinch.
+
+## cond.value (new)
+
+"A trigger sets a fixed value in the parameter's own units (a wavetable position by number, a range in octaves, a rate as a note value). The resolver converts with the parameter's value-to-text mapping: the harvest stores 11 samples per parameter; the plugin can ask for the text of any value at runtime." Measured on the harvest: Serum 2 A WT Pos reads 1 .. 256 and A Warp Mode reads its mode names, so both convert; Arp Range and Arp Rate read -100.0 .. 100.0, so octaves and note values need a per-plugin table or a live check. Seen in: eval.
+
+## cond.step (new)
+
+"A trigger steps a stepped or list parameter to its next value (warp mode, filter type) and wraps at the end. A target the plugin does not expose gets an answer instead of a guess: 'not automatable here', with chips for synthexis' own generator." Measured: Serum 2 has no arpeggiator pattern parameter in the harvest (Arp Enable, Rate, Range, Offset, Repeats, Gate, Chance and others exist). Seen in: eval.
+
+## cond.ramp_toggle (new)
+
+"A trigger on a continuous target starts a ramp; the next trigger reverses it. Speed from modifier time or words like 'slowly'." Seen in: eval.
+
+## midi_props (amend)
+
+"arp.style: the arpeggiator's note order (up, down, converge, diverge, pinky up, thumb up and the like), one per finger state when the user names one per finger." Seen in: calibration.
+
+## shapes (amend)
+
+"Any finger combination is a finger state (5-bit mask), not only the 12 named shapes; index and ring finger together is 01010." Seen in: eval.
+
+Already expressible, no change: one source driving several targets in different directions (routes sharing a source, each with its own invert), and a chord or a note roll per finger (midi.chord, midi.pattern with note and grid).
