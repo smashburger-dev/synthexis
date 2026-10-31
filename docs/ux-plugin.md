@@ -215,6 +215,8 @@ After Enter:
 - The moves list shows the diff as pending rows: new rows with +, removed rows struck through with -, changed cells as old -> new.
 - Pending rows already run, so Noa can try the move before keeping it. Discard restores the parameter values from before.
 - Enter or Accept keeps the whole diff as one undo step. Esc discards it.
+- A new sentence while rows are pending works on top of them ("nein, nimm Filter 2"), so a correction during listening needs no Esc first. Enter keeps the combined result as one step.
+- Pending rows stay pending until Enter or Esc; nothing is kept or dropped silently. Decided by Noa on 10-31: every result has to be checked by ear before it is kept.
 - Unsure terms (score below the calibrated threshold, or a small margin to the second candidate; `map.resolver`, P) open their chip with the top 3 and a search. Noa picks one, and the pick is stored as an alias (`map.aliases`, P), so the same phrase binds directly next time.
 - A sentence the parser marks `none` gets "not a command". A `query` gets an answer line and highlights the rows it means.
 - Voice: push-to-talk on the mic (`map.voice`, online, off by default; Noa decides). Later.
@@ -323,8 +325,9 @@ Decided by Noa on 10-31:
 - Profiles switch by a click on a numbered, renamable tab, at once, independent of the timeline.
 - No profile switching by gesture.
 
-Open:
-- Should a sentence apply at once with Undo as the way back, or first show its new rows marked, already running, with Enter to keep and Esc to cancel? The second is what this document describes; the first is simpler.
+- A sentence first shows its rows marked and already running, so the result can be checked by ear; Enter keeps, Esc restores.
+
+Nothing open from Noa's side.
 
 ## Spec proposal
 
@@ -372,7 +375,7 @@ For the main session to merge into `spec/synthexis.yaml`. Statements without a c
 
 ### ui.assistant (new)
 
-"Glass line over the bottom edge of the canvas, collapsible to a mic icon; scope chip from ui.target_picker, changeable per sentence. On Enter, map.parser and map.resolver produce a diff shown in ui.moves as pending rows (+ new, - removed, old -> new for changed cells). Pending rows run at once so the move can be tried; Accept keeps the diff as one history step, Discard restores the parameter values from before. Recognised terms are chips (map.fallback); a term below the resolver threshold or with a small margin opens its top 3 and a search, and the pick is stored in map.aliases. 'none' answers 'not a command', 'query' answers in a line and highlights rows. Mic for map.voice, off by default. Footer credit 'Built with Muse Spark Open' (map.license)." Check: keyboard input into an egui text field inside FL.
+"Glass line over the bottom edge of the canvas, collapsible to a mic icon; scope chip from ui.target_picker, changeable per sentence. On Enter, map.parser and map.resolver produce a diff shown in ui.moves as pending rows (+ new, - removed, old -> new for changed cells). Pending rows run at once so the move can be checked by ear; Accept keeps the diff as one history step, Discard restores the parameter values from before. A sentence typed while rows are pending is applied on top of them; pending rows stay until Accept or Discard (Noa 2026-10-31). Recognised terms are chips (map.fallback); a term below the resolver threshold or with a small margin opens its top 3 and a search, and the pick is stored in map.aliases. 'none' answers 'not a command', 'query' answers in a line and highlights rows. Mic for map.voice, off by default. Footer credit 'Built with Muse Spark Open' (map.license)." Check: keyboard input into an egui text field inside FL.
 
 ### ui.history (new)
 
