@@ -83,6 +83,13 @@ def preset_desc(onto: dict, pid: str) -> str:
     return ""
 
 
+def midi_prop_desc(onto: dict, pid: str) -> str:
+    for p in onto.get("midi_props", []):
+        if p["id"] == pid:
+            return p["desc"]
+    return ""
+
+
 def slot_line(sid: str, s: dict, onto: dict) -> str:
     k = s["kind"]
     if k == "source":
@@ -111,6 +118,9 @@ def slot_line(sid: str, s: dict, onto: dict) -> str:
             out = f'{sid} midi pattern "{s["value"]}"'
         elif t == "midi.chord":
             out = f"{sid} midi chords"
+        elif t == "midi.prop":
+            out = (f"{sid} midi generator {s['value']} "
+                   f"({midi_prop_desc(onto, s['value'])})")
         else:  # midi.cc
             out = f"{sid} midi cc {s['value']}"
         if s.get("say"):
@@ -126,6 +136,11 @@ def slot_line(sid: str, s: dict, onto: dict) -> str:
         return f'{sid} param name "{s["value"]}"'
     if k == "invert":
         return f"{sid} inverted"
+    if k == "bipolar":
+        return (f"{sid} centred (the middle position changes nothing, "
+                f"one direction lowers the target, the other raises it)")
+    if k == "chord":
+        return f"{sid} chord {s['value']}"
     if k == "range_lo":
         return f"{sid} {pct(s['value'])}"
     if k == "range_hi":
@@ -383,8 +398,11 @@ def side_check(e: dict, spans: list, plain: str) -> str | None:
 def validate_variant(e: dict, v: int, raw: str):
     """-> (ok, reason, sentence_dict)."""
     slot_ids = set(e["slots"])
-    required = {s for s in slot_ids
-                if not re.fullmatch(r"i\d+", s)}
+    # a chord target whose route names its chord is said by the chord name
+    named = {t for r in e.get("routes", []) for t in r["tgt"]
+             if any(e["slots"][m]["kind"] == "chord" for m in r["mods"])}
+    optional = {s for s in slot_ids if re.fullmatch(r"(i|bp)\d+", s)} | named
+    required = slot_ids - optional
     marks = list(RE_MARK.finditer(raw))
     if e["intent"] == "none" and marks:
         return False, "marks on none intent", None
@@ -405,7 +423,7 @@ def validate_variant(e: dict, v: int, raw: str):
     for sid in counts:
         if sid not in slot_ids:
             return False, f"unknown slot {sid}", None
-        if re.fullmatch(r"i\d+", sid):
+        if sid in optional:
             if counts[sid] > 1:
                 return False, f"{sid} marked twice", None
         elif re.fullmatch(r"[kpn]\d+", sid):

@@ -14,6 +14,11 @@ A list of edits. Each edit has an id like `E7`, a language, a style and a senten
 - `tm1 time ...`: a ramp or fade length ("over [[4 bars|tm1]]", "in [[500 ms|tm1]]").
 - `rf1 ref last route` refers back to the route(s) the user made just before; `k1 track ref last track` refers back to the track used just before. Write a referring phrase and mark only the referring words, not the action: "do [[the same|rf1]] for the [[bass|k1]]", "invert [[that one|rf1]]", "turn [[it|rf1]] down a bit", "[[das gleiche|rf1]] für den Bass", "[[wie eben|rf1]]", "reverb [[there|k1]] too", "[[dort|k1]] auch".
 - `w1 rejected ... instead of <slot>`: the user first names this wrong value by mistake, then corrects it ("[[right hand|w1]], no wait, [[left hand|s1]]", "[[Reverb|w1]] äh nee, [[Delay|t1]]"). Mark both.
+- `t1 midi generator <property>`: drives a property of synthexis' own MIDI output, not a plugin knob: chord size, chord voicing, arpeggiator rate, arpeggiator octave range, velocity or note length ("the more fingers I show, the more octaves the arp runs over", "je höher die Hand, desto schneller das Arp").
+- `ch1 chord ...`: the chord that route plays. Write it as given ("Am", "G7") or, for degrees, the way musicians say them ("the four chord", "the V", "Stufe vier"); mark only the chord.
+- `bp1 centred`: the source's middle position changes nothing, one direction lowers the target and the other raises it ("tilting my head left pitches it down, tilting it right pitches it up", "from the middle in both directions"). Like `i1`, mark it only if one short phrase says it; otherwise let the sentence structure carry it.
+- `h1 side ...` in a map edit with several finger routes: one hand whose fingers each do their own thing. Name the hand once and mark that word as `h1`; the finger sources then have no side of their own. A `midi chords` target whose route has a chord slot may stay unmarked when only the chord name says it ("on my [[left|h1]] hand the [[thumb|s1]] plays [[Am|ch1]], the [[index|s2]] plays [[F|ch2]] ...").
+- intent `role` with a track `k1` or plugin `p1` instead of a hand: what that track or plugin should receive from synthexis; `midi` = only notes, leave its knobs alone; `parameter` = only knob control, no notes; `off` = nothing ("[[Serum|p1]] only gets [[notes|ro1]] from me, don't touch its knobs").
 - `say: "..."` on a slot: use this wording (you may inflect it and add articles or "my") so rare phrasings appear in the data.
 
 Routes tell which sources drive which targets: `r1: s1 -> t1, t2 | on k1 | i1 a1` means s1 drives t1 and t2, both on track k1, inverted, with amount a1.
@@ -71,4 +76,36 @@ E1.1: can you make [[my right fist|s1]] control the [[reverb|t1]] and the [[dela
 E1.2: [[right fist|s1]] -> [[verb|t1]] + [[delay|t2]] on [[pad|k1]]
 E2.1: Je weiter ich den [[Mund aufmache|s1]], desto mehr geht der [[Cutoff|t1]] vom [[Bass|k1]] zu, aber nur zwischen [[20|lo1]] und [[70|hi1]] Prozent
 E3.1: too much! [[lifting my left hand|s1]] should only make it [[brighter|t1]] [[a little|a1]]
+```
+
+Input:
+```
+E4 lang=en variants: 1 casual
+  intent map
+  r1: s1 -> t1 | on k1 | ch1
+  r2: s2 -> t2 | on k1 | ch2
+  r3: s3 -> t3 | on k1 | ch3
+  h1 side left
+  s1 source hand.finger.thumb (thumb extension, 0 folded .. 1 straight)
+  s2 source hand.finger.index (index finger extension)
+  s3 source hand.finger.middle (middle finger extension)
+  t1 midi chords
+  t2 midi chords
+  t3 midi chords
+  k1 track "Keys"
+  ch1 chord Am
+  ch2 chord F
+  ch3 chord G
+E5 lang=de variants: 1 casual
+  intent map
+  r1: s1 -> t1 | bp1 lo1 hi1
+  s1 source head.roll (head tilt, 0 tilted to the left shoulder .. 1 tilted right)
+  t1 param osc.fine (fine tuning in cents)
+  bp1 centred (the middle position changes nothing, one direction lowers the target, the other raises it)
+  lo1 10 %   hi1 90 %
+```
+Output:
+```
+E4.1: on my [[left|h1]] hand I want each finger to play a chord on [[Keys|k1]]: [[thumb|s1]] [[Am|ch1]], [[index|s2]] [[F|ch2]], [[middle finger|s3]] [[G|ch3]]
+E5.1: wenn ich den [[Kopf zur Schulter neige|s1]], soll der Synth sich [[verstimmen|t1]], links runter, rechts hoch, aber nur zwischen [[10|lo1]] und [[90|hi1]] Prozent
 ```

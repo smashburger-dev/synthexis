@@ -1,4 +1,7 @@
-# synthexis mapping ontology v1 (2026-10-29)
+# synthexis mapping ontology v1 (2026-10-29), v1.1 (2026-10-31: hand and finger tilt,
+# finger count, MIDI generator properties, named chords, centred routes, roles per
+# track or plugin; perception for the new sources is proposed in
+# probes/mapping-pipeline/SPEC_PROPOSAL.md, not in the spec yet)
 #
 # Everything the mapping assistant can name, in one file:
 #   taxonomy   param-sense classes: what a plugin parameter means (list order = class index)
@@ -16,7 +19,7 @@
 # into hand.openness with invert. Directions are from the user's point of view
 # (hand.x = 1 is the user's right, even though the camera image is mirrored).
 
-version: 1
+version: 1.1
 
 taxonomy:
   # ---- level and space
@@ -163,6 +166,15 @@ sources:
   - {id: hand.pinch, side: true, desc: "thumb and index tips, 0 apart .. 1 touching"}
   - {id: hand.speed, side: true, desc: "how fast the hand moves, 0 still .. 1 fast"}
   - {id: hand.shape, side: true, discrete: true, desc: "a named finger state (see shapes), a trigger: on while held"}
+  # proposed 2026-10-31 (SPEC_PROPOSAL.md, feat.hand.orientation / finger direction / count)
+  - {id: hand.roll, side: true, centred: true, desc: "hand tilted sideways (palm rotating around the forearm), 0 tilted to the user's left .. 1 tilted right"}
+  - {id: hand.pitch, side: true, centred: true, desc: "hand tipped at the wrist, 0 fingers pointing down .. 1 fingers pointing up"}
+  - {id: hand.finger.thumb.tilt, side: true, centred: true, desc: "direction the thumb points, 0 down .. 1 up (thumbs down to thumbs up)"}
+  - {id: hand.finger.index.tilt, side: true, centred: true, desc: "direction the index finger points, 0 down .. 1 up"}
+  - {id: hand.finger.middle.tilt, side: true, centred: true, desc: "direction the middle finger points, 0 down .. 1 up"}
+  - {id: hand.finger.ring.tilt, side: true, centred: true, desc: "direction the ring finger points, 0 down .. 1 up"}
+  - {id: hand.finger.pinky.tilt, side: true, centred: true, desc: "direction the pinky points, 0 down .. 1 up"}
+  - {id: hand.finger_count, side: true, desc: "how many fingers are extended, 0 (fist) .. 1 (all five), in five steps"}
   # two hands
   - {id: hands.distance, desc: "distance between the palms, 0 together .. 1 far apart (stretch)"}
   - {id: orb.size, desc: "orb held between both palms, size = palm distance"}
@@ -223,7 +235,17 @@ targets:
   - {id: midi.chord, desc: "play chords in the project key on a channel"}
   - {id: midi.pattern, desc: "play a pattern slot (drum pattern, roll, arp) quantized to the host grid"}
   - {id: midi.cc, desc: "send a MIDI CC number on a channel"}
+  - {id: midi.prop, desc: "a property of synthexis' own MIDI generator (value: one of midi_props), not a plugin parameter"}
   - {id: toggle, desc: "switch an effect or plugin on and off (its bypass or on switch, class ctl.switch); value = effect family; mode toggle (each event flips it) or momentary (on while the source is on)"}
+
+# Properties of synthexis' MIDI generator (spec midi.chord, midi.patterns) a route can drive.
+midi_props:
+  - {id: chord.size, desc: "notes per chord, from a single note to a full chord"}
+  - {id: chord.voicing, desc: "how wide the chord is spread or which inversion it uses"}
+  - {id: arp.rate, desc: "arpeggiator speed"}
+  - {id: arp.octaves, desc: "how many octaves the arpeggiator runs over"}
+  - {id: velocity, desc: "how hard the generated notes are played"}
+  - {id: note.length, desc: "how long the generated notes are held (gate length)"}
 
 # Effect families for toggle targets and for 'the reverb' style plugin references.
 families: [reverb, delay, chorus, flanger, phaser, distortion, filter, eq, compressor, gate, pitch, plugin]
@@ -240,7 +262,7 @@ intents:
   - {id: clear, desc: "remove all routes of a source, a target, a track, or everything"}
   - {id: modify, desc: "change modifiers of existing routes (range, invert, curve, amount, smoothing)"}
   - {id: replace, desc: "move an existing route to a different target or source ('use the delay instead of the reverb')"}
-  - {id: role, desc: "set a hand's role: midi, parameter, motion, off (gest.hand_role)"}
+  - {id: role, desc: "set a hand's role: midi, parameter, motion, off (gest.hand_role); or what a track or plugin may receive: midi (notes only, parameters untouched), parameter, off"}
   - {id: preset, desc: "load a preset: filter_hand, chord_hand, pattern_hand, pong, orb"}
   - {id: scale, desc: "set key and scale for MIDI roles"}
   - {id: undo, desc: "undo or redo the last change"}
@@ -256,6 +278,8 @@ modifiers:
   hold: "hold | reset | freeze when the source disappears (cond.occlusion)"
   quantize: "steps N or scale degrees; words: 'in steps', 'in 8 steps', 'snap to the scale'"
   note: "MIDI note name, e.g. C4, F#2"
+  chord: "named chord for a midi.chord target: a symbol (Am, F, G7, Cmaj7) or a scale degree (I, IV, V, vi)"
+  bipolar: "centred route: the source's middle position leaves the target where it is, one side lowers it, the other raises it (head tilt left = pitch down, right = pitch up)"
   grid: "MIDI quantize grid, e.g. 1/16, 1/8, 1/4"
   delta: "relative change of an existing route's amount (modify only): +0.1 a bit more, +0.25 more, +0.5 much more, and the negatives"
   gate: "the route is active only while another source or finger state is on ('only while I hold a fist')"

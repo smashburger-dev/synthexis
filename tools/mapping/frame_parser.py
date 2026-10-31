@@ -23,7 +23,7 @@ TAGS = ["SRC", "TGT", "TRACK", "PLUGIN", "PNAME", "NUM", "AMT", "MOD",
 BIO = ["O"] + [f"{p}-{t}" for t in TAGS for p in "BI"]
 SPECIAL = ["<pad>", "<bos>", "<eos>", "<ptr>"]
 PAD, BOS, EOS, PTR = 0, 1, 2, 3
-PTR_KINDS = ("TRACK", "PLUGIN", "PNAME", "NOTE", "TIME")
+PTR_KINDS = ("TRACK", "PLUGIN", "PNAME", "NOTE", "TIME", "CHORD")
 MAX_SRC, MAX_STEPS, MAX_SPAN = 96, 48, 24
 
 

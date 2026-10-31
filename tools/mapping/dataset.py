@@ -48,9 +48,10 @@ BIO_TAG = {
     "quantize": "MOD", "invert": "MOD", "note": "NOTE", "gate": "GATE",
     "time": "TIME", "ref": "REF", "rejected": "REJ", "role": "ROLE",
     "side": "ROLE", "preset": "PRESET", "key": "KEY", "scale": "SCALE",
-    "undo": "UNDO", "delta": "DELTA"}
+    "undo": "UNDO", "delta": "DELTA",
+    "chord": "NOTE", "bipolar": "MOD"}      # chord spans share the NOTE tag
 PTR_KIND = {"plugin": "PLUGIN", "param_name": "PNAME", "note": "NOTE",
-            "time": "TIME", "track": "TRACK"}
+            "time": "TIME", "track": "TRACK", "chord": "CHORD"}
 
 
 def num(v) -> str:
@@ -89,6 +90,7 @@ def slot_tokens(s: dict, span) -> list | None:
                 out.append(f"{a}:{s[a]}")
         return out
     simple = {"invert": lambda v: "INV", "ref": lambda v: "REF",
+              "bipolar": lambda v: "BIP",
               "range_lo": lambda v: "lo:" + num(v),
               "range_hi": lambda v: "hi:" + num(v),
               "amount": lambda v: "amt:" + num(v),
@@ -228,7 +230,7 @@ def cat_ok(r: dict) -> bool:
     return (r["register"] != "keyword" and e["intent"] == "map"
             and bool(e["routes"]) and len(e["routes"]) <= 2
             and not any(rt.get("ref") for rt in e["routes"])
-            and not any(s["kind"] in ("rejected", "ref")
+            and not any(s["kind"] in ("rejected", "ref", "side")
                         or str(s.get("value")).startswith("ref:")
                         for s in e["slots"].values()))
 
