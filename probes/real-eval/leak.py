@@ -44,7 +44,7 @@ def main() -> None:
             r = json.loads(line)
             w = words(r["text"])
             n += 1
-            sm = difflib.SequenceMatcher(None, w)
+            sm = difflib.SequenceMatcher(None, b=w)
             top = 0.0
             for e in ev:
                 sm.set_seq1(e)

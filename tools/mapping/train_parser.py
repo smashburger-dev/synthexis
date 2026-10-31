@@ -11,7 +11,7 @@
 Data from data/mapping/train/<ds>/, tokenizer data/mapping/train/<tok>/.
 Evaluates dev every --eval-every steps (grammar-constrained greedy) for
 the raw weights and their EMA, keeps the best dev route-edit state of
-either, then scores dev, the challenge set, dev_s2 and dev_s3 (if the
+either, then scores dev, the challenge set, dev_s2, dev_s3 and dev_s4 (if the
 dataset has them). Writes data/mapping/train/runs/<name>/{model.pt, meta.json,
 metrics.json, <split>_preds.jsonl, log.txt}.
 --frac keeps a deterministic fraction of base edit ids (learning curve).
@@ -91,7 +91,8 @@ def main() -> None:
     devset, lost_dev = fp.load(sp, ds / "dev.jsonl", tok_id)
     chal, lost_ch = fp.load(sp, ds / "challenge.jsonl", tok_id)
     extra = {n: fp.load(sp, ds / f"{n}.jsonl", tok_id)[0]
-             for n in ("dev_s2", "dev_s3") if (ds / f"{n}.jsonl").exists()}
+             for n in ("dev_s2", "dev_s3", "dev_s4")
+             if (ds / f"{n}.jsonl").exists()}
     train = [s for s in train if keep_frac(s["edit_id"], a.frac)]
     if a.overfit:
         train = train[:a.overfit]
