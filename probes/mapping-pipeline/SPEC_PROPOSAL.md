@@ -29,3 +29,40 @@ For the main session to merge into `spec/synthexis.yaml`. Numbers cite `probes/m
 ## budget.money.baseten_usd (amend)
 
 "Muse Spark Open on Baseten: input 1.25 $/M, cached input 0.15 $/M, output 4.25 $/M (Baseten /v1/models, 2026-10-29). Per-token billing, no idle cost; caching is automatic for identical prompt prefixes, so every run keeps one fixed system prompt and a stable x-session-affinity per worker. Spend so far: see probes/mapping-pipeline/RESULT.md and `uv run tools/mapping/spark.py ledger`."
+
+# Spec proposal, ontology v1.1 (2026-10-31)
+
+Triggered by Noa's design examples below and by parser v3 failing all ten of them (`tools/mapping/predict.py`, RESULT.md "Real sentences, first look"). The ontology change is in `tools/mapping/ontology.yaml` v1.1; the perception and engine parts need the main session.
+
+## feat.hand.orientation (new)
+
+"Per hand: roll = rotation of the palm around the forearm (angle of the index-MCP to pinky-MCP line against the image horizontal, signed), pitch = wrist bend (angle of the wrist to middle-MCP ray against the vertical). Both normalised 0..1 with 0.5 = neutral hand. Sources hand.roll, hand.pitch." Hypothesis: computable from the 21 hand landmarks already used for finger extension; not measured.
+
+## feat.hand.finger (amend)
+
+"Per finger also a direction: angle of the MCP-to-tip ray, 0 pointing down .. 1 pointing up, 0.5 horizontal (sources hand.finger.<f>.tilt). Plus finger count: number of fingers with extension above the finger-state threshold, 0..5 mapped to 0..1 in five steps (source hand.finger_count)."
+
+## midi.chord, midi.patterns (amend)
+
+"Generator properties a route can drive (target midi.prop): chord.size, chord.voicing, arp.rate, arp.octaves, velocity, note.length. A midi.chord route may name its chord (symbol like Am, G7 or degree like IV); several finger routes on one hand give a chord per finger (F30)."
+
+## gest.hand_role (amend)
+
+"Roles also per track or plugin: midi (synthexis sends only notes there and never writes its parameters), parameter (only parameter control), off."
+
+## cond.range (amend)
+
+"Centred routes (bipolar): the source's neutral middle leaves the target at its current value; one direction lowers, the other raises it, up to the route's range. For pitch targets with no pitch parameter in the plugin, the resolver may fall back to the host channel's pitch (FL channel fine pitch); hypothesis, FL API not checked."
+
+## Design examples (Noa, 2026-10-31)
+
+Design input, not eval data: these sentences shaped ontology v1.1 and are never used to score the parser. Paraphrased from Noa's voice notes.
+
+- Open the fist: the synth opens (cutoff up); spreading the fingers at the same time makes it sharper (resonance up). Noa's own wording for the second part: "währenddessen", two routes that work at once.
+- Pinch and drag vertically: only the granulizer gets more intense (gate pinch, source hand height, plugin scope).
+- Tilt the hand from left to right: the plucks detune in that direction (centred route on hand roll).
+- Tilt the head to the left shoulder: the synth detunes down to about -100 cents; to the right up to about +100 (centred route on head roll; plugin pitch or host channel pitch).
+- Thumb drives the cutoff, index finger the resonance. Showing only the thumb and pointing it down closes the cutoff, pointing it up opens it; the same for the index finger and the resonance; both fingers shown and tilted move both. ("If I put my thumb down, close the cutoff; if I put my thumb up, open the cutoff.") Finger tilt gated by that finger's state.
+- The left hand plays a chord per finger.
+- The more fingers shown, the more octaves the arpeggiator plays.
+- A VST plugin should only receive MIDI from synthexis.

@@ -1,0 +1,50 @@
+# Stage-4 overrides for edits.yaml (edits.py --override edits-s4.yaml): the ontology
+# v1.1 concepts. Authored 2026-10-31 from Noa's design examples (SPEC_PROPOSAL.md,
+# "Design examples"): tilting the hand, a finger pointing up or down while only that
+# finger is shown, finger count driving the arpeggiator, a chord per finger, head tilt
+# detuning from the middle, "only MIDI" for a plugin, pinch-and-drag.
+# English weighted up for the demo. Everything else keeps its stage-2 weights so the
+# batch also refreshes the old concepts.
+
+languages: {en: 65, de: 35}
+
+intents: {map: 68, modify: 8, unmap: 5, replace: 3, role: 6, preset: 3, scale: 2, clear: 2, query: 1, undo: 1, none: 1}
+
+routes_per_edit: {1: 45, 2: 38, 3: 17}
+
+styles:
+  register: {casual: 24, terse: 12, polite: 5, rambling: 6, jargon: 11, beginner: 13, layperson: 17, codeswitch: 12}
+
+sources:
+  hand.roll: 6
+  hand.pitch: 3
+  hand.finger.thumb.tilt: 4
+  hand.finger.index.tilt: 3.5
+  hand.finger.middle.tilt: 1.5
+  hand.finger.ring.tilt: 1
+  hand.finger.pinky.tilt: 1.5
+  hand.finger_count: 4
+  head.roll: 4
+  hand.pinch: 5
+
+targets: {param: 55, macro: 4, midi.note: 7, midi.pattern: 7, midi.chord: 8, midi.cc: 3, toggle: 4, midi.prop: 12}
+shape_targets: {midi.pattern: 30, midi.note: 22, midi.chord: 20, macro: 6, toggle: 10, midi.prop: 12}
+
+midi_props: {chord.size: 20, chord.voicing: 15, arp.rate: 20, arp.octaves: 20, velocity: 15, note.length: 10}
+chord_named: 0.5
+chord_values: [Am, C, F, G, Dm, Em, G7, Cmaj7, Am7, Fmaj7, E7, Bb, D, Dm7, Gm, Eb, I, IV, V, vi, ii, iii]
+
+finger_set: 0.12               # share of map edits: one hand, a route per finger
+finger_set_sizes: {2: 25, 3: 25, 4: 15, 5: 35}
+finger_set_targets: {midi.chord: 40, midi.note: 20, midi.pattern: 15, param: 25}
+tilt_gate: 0.5                 # finger tilt only while that finger alone is shown
+
+role_scope: 0.5                # role intents about a track or plugin instead of a hand
+scoped_roles: {midi: 55, parameter: 25, off: 20}
+
+pair_say: 0.3                  # "opening my fist" for hand.openness, "closing my hand" for hand.fist
+
+modifiers:
+  bipolar: 0.35                # only drawn for centred sources (tilts, head roll)
+  gate: 0.06
+gate_sources: {hand.shape: 40, hand.fist: 12, hand.openness: 8, mouth.open: 8, eye.closed: 4, hand.pinch: 28}

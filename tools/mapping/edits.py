@@ -30,6 +30,8 @@ EVENT_SOURCES = {
     "motion.grab", "motion.release", "motion.clap",
 }
 HAND_PRESETS = {"filter_hand", "chord_hand", "pattern_hand"}
+FINGERS = ["thumb", "index", "middle", "ring", "pinky"]
+FINGER_SHAPE = {"thumb": "thumbs_up", "index": "point", "pinky": "pinky_up"}
 AMOUNT_WORD = {0.25: "subtle", 0.5: "medium", 0.75: "strong", 1.0: "full"}
 
 
@@ -42,6 +44,10 @@ class Ctx:
         self.harvest_names = harvest_names
         self.side_ids = {s["id"] for s in onto["sources"] if s.get("side")}
         self.named_ids = {s["id"] for s in onto["sources"] if s.get("named")}
+        self.centred_ids = {s["id"] for s in onto["sources"]
+                            if s.get("centred")}
+        self.pair = {s["id"]: s["pair"] for s in onto["sources"]
+                     if s.get("pair")}
         self.shape_ids = [s["id"] for s in onto["shapes"]]
         self.taxo_quantity = {t["id"]: t["quantity"] for t in onto["taxonomy"]}
         self.slots: dict = {}
@@ -142,6 +148,13 @@ class Ctx:
             tid = self.add("t", {
                 "kind": "target", "target": "midi.chord",
                 "value": None, "say": None})
+            if self.cfg.get("chord_named") and \
+                    self.rng.random() < self.cfg["chord_named"]:
+                self.add_chord(mods)
+        elif kind == "midi.prop":
+            tid = self.add("t", {
+                "kind": "target", "target": "midi.prop",
+                "value": self.wc(self.cfg["midi_props"]), "say": None})
         elif kind == "midi.cc":
             tid = self.add("t", {
                 "kind": "target", "target": "midi.cc",
@@ -151,9 +164,19 @@ class Ctx:
             raise ValueError(f"target kind {kind}")
         return tid
 
+    def add_chord(self, mods: list) -> None:
+        used = {self.slots[m]["value"] for m in self.slots
+                if self.slots[m]["kind"] == "chord"}
+        vals = [v for v in self.cfg["chord_values"] if v not in used] \
+            or self.cfg["chord_values"]
+        mods.append(self.add("ch", {"kind": "chord",
+                                    "value": self.rng.choice(vals)}))
+
     def add_modifier(self, kind: str, mods: list) -> None:
         rng = self.rng
-        if kind == "invert":
+        if kind == "bipolar":
+            mods.append(self.add("bp", {"kind": "bipolar", "value": True}))
+        elif kind == "invert":
             mods.append(self.add("i", {"kind": "invert", "value": True}))
         elif kind == "range":
             shape = self.wc(self.cfg["range_shapes"])
@@ -232,6 +255,9 @@ class Ctx:
     # --- intent bodies -------------------------------------------------
 
     def gen_map(self) -> list:
+        if self.cfg.get("finger_set") and \
+                self.rng.random() < self.cfg["finger_set"]:
+            return self.gen_finger_set()
         routes = []
         used_sources: set = set()
         first_k = None
@@ -243,6 +269,7 @@ class Ctx:
                 srcs.append(sid)
             used_params: set = set()
             values = [self.slots[x]["value"] for x in srcs]
+            gated = self.tilt_gate(srcs, mods)
             for _ in range(self.wc(self.cfg["targets_per_route"])):
                 kind = self.draw_target_kind(srcs)
                 tgts.append(self.add_target(kind, used_params, mods))
@@ -271,6 +298,11 @@ class Ctx:
                     "kind": "param_name",
                     "value": self.rng.choice(self.cfg["param_names"])}))
             for kind, prob in self.cfg["modifiers"].items():
+                if kind == "bipolar" and not any(
+                        v in self.centred_ids for v in values):
+                    continue
+                if kind == "gate" and gated:
+                    continue
                 p_eff = prob if (kind != "time" or time_boost)                     else prob / 3
                 if self.rng.random() < p_eff:
                     self.add_modifier(kind, mods)
@@ -286,6 +318,50 @@ class Ctx:
                                "value": self.draw_track()})
             routes[-1] = {"ref": "rf1", "src": [], "tgt": [],
                           "scope": [k], "mods": []}
+        return routes
+
+    def tilt_gate(self, srcs: list, mods: list) -> bool:
+        """Finger tilt only while that finger alone is shown (thumbs up)."""
+        if not self.cfg.get("tilt_gate"):
+            return False
+        for x in srcs:
+            s = self.slots[x]
+            parts = s["value"].split(".")
+            if len(parts) == 4 and parts[3] == "tilt" \
+                    and parts[2] in FINGER_SHAPE \
+                    and self.rng.random() < self.cfg["tilt_gate"]:
+                mods.append(self.add("g", {
+                    "kind": "gate", "value": "hand.shape",
+                    "shape": FINGER_SHAPE[parts[2]], "side": s["side"]}))
+                return True
+        return False
+
+    def gen_finger_set(self) -> list:
+        """One hand, each finger its own route ('left hand: thumb Am,
+        index F'); the hand side is one h slot for all routes."""
+        cfg, rng = self.cfg, self.rng
+        if rng.random() < 0.8:
+            self.add("h", {"kind": "side",
+                           "value": rng.choice(["left", "right"])})
+        n = self.wc(cfg["finger_set_sizes"])
+        fingers = sorted(rng.sample(FINGERS, n), key=FINGERS.index)
+        kind = self.wc(cfg["finger_set_targets"])
+        k = None
+        if rng.random() < 0.6:
+            k = self.add("k", {"kind": "track", "value": self.draw_track()})
+        used_params: set = set()
+        routes = []
+        for f in fingers:
+            s = self.add("s", {"kind": "source", "value": f"hand.finger.{f}",
+                               "side": None, "object": None, "shape": None,
+                               "say": None})
+            mods: list = []
+            t = self.add_target(kind, used_params, mods)
+            if kind == "midi.chord" and not any(
+                    self.slots[m]["kind"] == "chord" for m in mods):
+                self.add_chord(mods)
+            routes.append({"src": [s], "tgt": [t],
+                           "scope": [k] if k else [], "mods": mods})
         return routes
 
     def _ref(self) -> tuple[list, list]:
@@ -370,6 +446,15 @@ class Ctx:
             if scope != "all":
                 self.gen_scoped_slot(scope)
             return {"scope": scope}
+        if intent == "role" and cfg.get("role_scope") and \
+                self.rng.random() < cfg["role_scope"]:
+            if self.rng.random() < 0.5:
+                self.add("k", {"kind": "track", "value": self.draw_track()})
+            else:
+                self.add("p", {"kind": "plugin", "value": self.draw_plugin()})
+            self.add("ro", {"kind": "role",
+                            "value": self.wc(cfg["scoped_roles"])})
+            return {}
         if intent == "role":
             self.add("h", {"kind": "side",
                            "value": self.rng.choice(["left", "right"])})
@@ -431,7 +516,16 @@ class Ctx:
         for i, r in enumerate(routes):
             for tid in r["tgt"]:
                 tgt_route[tid] = i
+        pair_say = self.cfg.get("pair_say", 0)
         for sid, s in self.slots.items():
+            if pair_say and s["kind"] == "source" \
+                    and s["value"] in self.pair \
+                    and self.rng.random() < pair_say:
+                phr = self.say_phrase(
+                    lang, f"source:{self.pair[s['value']]}", -1)
+                if phr:
+                    s["say"] = phr
+                    continue
             if self.rng.random() >= p_say:
                 continue
             kind = s["kind"]
