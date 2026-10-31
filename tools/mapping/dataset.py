@@ -49,9 +49,11 @@ BIO_TAG = {
     "time": "TIME", "ref": "REF", "rejected": "REJ", "role": "ROLE",
     "side": "ROLE", "preset": "PRESET", "key": "KEY", "scale": "SCALE",
     "undo": "UNDO", "delta": "DELTA",
-    "chord": "NOTE", "bipolar": "MOD"}      # chord spans share the NOTE tag
+    "chord": "NOTE", "bipolar": "MOD",      # chord spans share the NOTE tag
+    "value": "NUM"}
 PTR_KIND = {"plugin": "PLUGIN", "param_name": "PNAME", "note": "NOTE",
-            "time": "TIME", "track": "TRACK", "chord": "CHORD"}
+            "time": "TIME", "track": "TRACK", "chord": "CHORD",
+            "value": "VALUE"}
 
 
 def num(v) -> str:

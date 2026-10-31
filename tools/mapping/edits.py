@@ -83,8 +83,19 @@ class Ctx:
             object_ = self.wc(self.cfg["objects"])
         if sid_value == "hand.shape":
             shape = self.rng.choice(self.shape_ids)
+            if self.cfg.get("shape_mask") and \
+                    self.rng.random() < self.cfg["shape_mask"]:
+                shape = self.mask_shape()
         return {"kind": "source", "value": sid_value, "side": side,
                 "object": object_, "shape": shape, "say": None}
+
+    def mask_shape(self) -> str:
+        """Any finger combination that is not a named shape: 'm01010'."""
+        named = {s["mask"] for s in self.onto["shapes"]}
+        while True:
+            m = format(self.rng.randrange(1, 32), "05b")
+            if m not in named:
+                return "m" + m
 
     def draw_track(self) -> str:
         lst = (self.cfg["tracks"]["roles"] if self.rng.random() < 0.7
@@ -155,6 +166,10 @@ class Ctx:
             tid = self.add("t", {
                 "kind": "target", "target": "midi.prop",
                 "value": self.wc(self.cfg["midi_props"]), "say": None})
+            if self.slots[tid]["value"] == "arp.style":
+                mods.append(self.add("v", {
+                    "kind": "value",
+                    "value": self.rng.choice(self.cfg["arp_styles"])}))
         elif kind == "midi.cc":
             tid = self.add("t", {
                 "kind": "target", "target": "midi.cc",
@@ -258,6 +273,8 @@ class Ctx:
         if self.cfg.get("finger_set") and \
                 self.rng.random() < self.cfg["finger_set"]:
             return self.gen_finger_set()
+        if self.cfg.get("xy") and self.rng.random() < self.cfg["xy"]:
+            return self.gen_xy()
         routes = []
         used_sources: set = set()
         first_k = None
@@ -273,6 +290,8 @@ class Ctx:
             for _ in range(self.wc(self.cfg["targets_per_route"])):
                 kind = self.draw_target_kind(srcs)
                 tgts.append(self.add_target(kind, used_params, mods))
+            if self.cfg.get("trigger_params"):
+                self.trigger_param(values, tgts, mods)
             time_boost = (
                 any(v in EVENT_SOURCES for v in values)
                 or any(self.slots[t]["target"] in
@@ -319,6 +338,45 @@ class Ctx:
             routes[-1] = {"ref": "rf1", "src": [], "tgt": [],
                           "scope": [k], "mods": []}
         return routes
+
+    def trigger_param(self, values: list, tgts: list, mods: list) -> None:
+        """A finger state or a single finger fires a parameter: jump to a
+        value (or from one value to another), step to the next setting, or
+        start a slow ramp that the next trigger reverses."""
+        if not any(v == "hand.shape" or v.startswith("hand.finger.")
+                   and not v.endswith("tilt") for v in values):
+            return
+        for t in tgts:
+            sl = self.slots[t]
+            if sl.get("target") != "param":
+                continue
+            how = self.wc(self.cfg["trigger_params"])
+            if how in ("step", "ramp"):
+                sl["mode"] = how
+            elif how in ("value", "from_to"):
+                for _ in range(1 if how == "value" else 2):
+                    mods.append(self.add("v", {
+                        "kind": "value",
+                        "value": self.rng.choice(self.cfg["param_values"])}))
+
+    def gen_xy(self) -> list:
+        """One hand moving around drives a two-axis pad (Portal's macros,
+        FabFilter XY controllers); sometimes only while pinching."""
+        side = self.wc(self.cfg["sides"])
+        side = None if side == "none" else side
+        srcs = [self.add("s", {"kind": "source", "value": v, "side": side,
+                               "object": None, "shape": None, "say": None})
+                for v in ("hand.x", "hand.y")]
+        t = self.add("t", {"kind": "target", "target": "xy", "value": None,
+                           "say": None})
+        scope, mods = [], []
+        if self.rng.random() < 0.5:
+            scope.append(self.add("p", {"kind": "plugin",
+                                        "value": self.draw_plugin()}))
+        if self.rng.random() < 0.4:
+            mods.append(self.add("g", {"kind": "gate", "value": "hand.pinch",
+                                       "shape": None, "side": side}))
+        return [{"src": srcs, "tgt": [t], "scope": scope, "mods": mods}]
 
     def tilt_gate(self, srcs: list, mods: list) -> bool:
         """Finger tilt only while that finger alone is shown (thumbs up)."""
