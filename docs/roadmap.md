@@ -62,6 +62,8 @@ Hard dates: S3 and S4 recorded 10-30/10-31, training from 11-01 (new Modal credi
 - [ ] Real-sentence eval (Noa's 50 + 100) before any further synthetic batch
 - [ ] Threshold for the chip fallback calibrated on Noa's 50
 - [ ] Resolver and chip fallback in the plugin, "Built with Muse Spark Open" credit
+- [x] Open-vocabulary probe: target text against live parameter names beats the class-only binding on unseen names (held-out top-1 0.68 / 0.81 against 0.13 / 0.12); live writes audible in Portal, Timeless, Galaxy Tape Echo (`probes/open-vocab-mapping/RESULT.md`, spec proposal "open-vocabulary parameters")
+- [ ] FL bridge write test with third-party plugins while the song plays: ShaperBox (module switch + band mix), Thermal, Portal
 
 ## Demo and submission
 
