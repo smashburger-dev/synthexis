@@ -117,3 +117,21 @@ Gates against `p-v3-c50-s0/s1`:
 - Scored on the original labels and on the text-supported labels of `analyze.py`.
 - A step is kept only if it improves dev overall and no slice, English included, drops with p < 0.05.
 - Challenge: reported only. Noa's 50 calibration sentences: thresholds. Noa's 100 eval sentences: one final comparison between v3 and the winner.
+
+## 7. Result of the bundled retrain (2026-10-31, `tools/mapping/run_v4.sh`)
+
+Two seeds each, pooled paired gates on dev + dev_s2 + dev_s3 (5,202 paired sentences, `tools/mapping/gates.py`):
+
+| step | labels | route_edit | won / lost | p | slices dropping (p < 0.05) |
+|---|---|---|---|---|---|
+| A (tok-v2) vs v3 | original | 0.716 -> 0.712 | 221 / 239 | 0.43 | none |
+| B (A + projected labels) vs A | projected | 0.761 -> 0.766 | 242 / 217 | 0.26 | none |
+| B vs A | original | 0.712 -> 0.666 | 178 / 422 | < 0.001 | many, by construction: B no longer guesses what the text does not say |
+| C (B + word hash) vs B | projected | 0.766 -> 0.768 | 244 / 235 | 0.71 | none |
+
+- Sentences with ß (58 in all dev sets and the challenge set): v3 23 and 17 right, A 21 and 25, B 24 and 26 (seeds 0 and 1).
+- Seed-to-seed spread of v3 itself: 0.716 -> 0.716 (130 / 128).
+
+Reading: no step moves the dev sets beyond seed noise, and none degrades a slice except by the label definition. The tokenizer fix helps the ß sentences a little. The projected labels match the runtime-binding principle at no cost. The word hash adds 1.07M parameters and a hashing step in the Rust runtime for no measured gain, so it is dropped.
+
+Final recipe: B on ds-v5p (ds-v3 + stage 4 with ontology v1.1 and v1.2, near-copies of the real-sentence set removed), `tools/mapping/run_v5.sh`.
