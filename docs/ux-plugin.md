@@ -9,7 +9,7 @@ Sources: Noa's voice note of 10-31 (paraphrased below), spec nodes `ui.canvas`, 
 - A target picker first: a mixer track, then a plugin on it, or simply the plugin FL has in focus. The mapping assistant then only sees that plugin's parameters.
 - Under the camera view a list of assigned moves. Per move a dropdown for the hand, then the finger, then the movement (whole hand, fist open, spread, pinch, pinch-drag, pinch-turn, finger), with icons: a fist, a spread hand, a finger.
 - Objects you add, which the camera recognises, and which you can name so the name helps the assistant.
-- Profiles 1, 2, 3 with presets per hand and per object, switchable live while the song plays, saved.
+- Profiles 1, 2, 3 with presets per hand and per object, switchable live, saved.
 - The assistant, typed or spoken, stays optional. Everything can be routed by hand.
 
 ## Facts that shape the design
@@ -182,23 +182,29 @@ For the demo: use objects that are in the recordings (the soda can, the drumstic
 
 ### 7. Profiles (`ui.profiles`, new)
 
-A profile holds all moves with their conditioning, roles and presets per hand, face and object, and the MIDI settings (key, scale, channel). Outside profiles, global per instance: camera choice, object names and looks, aliases, picker state, bridge settings.
+Decided by Noa on 10-31: a profile is a complete set of everything entered in the plugin, and switching is a click. Timeline and beat do not matter.
 
-Tabs 1, 2, 3 sit in the top bar; + adds more, up to 8. A double-click renames a tab ("Verse", "Drop").
+A profile holds:
+- all moves with their settings;
+- roles and presets per hand, face and object;
+- the object list with names;
+- the picked plugin;
+- MIDI key, scale and channel.
 
-Ways to switch while the song plays:
-- Click a tab.
-- FL automation: a host parameter "Profile" (1..8, stepped). An automation clip in the playlist switches profiles at song sections. The same parameter takes any MIDI controller through FL's Link to controller, so MIDI switching needs no MIDI code in synthexis.
-- Gesture (later, opt-in): a reserved shape held for 600 ms, with a ring timer on the canvas, for example the left hand showing N fingers. That shape is then excluded from moves; rows using it get a warning.
+Shared by all profiles: the camera choice and the learned words (`map.aliases`), because a word means the same thing in every profile.
 
-Switch timing: immediate, next beat or next bar, from the host transport (`midi.transport`). Default next beat. The tab blinks until the switch lands.
+This makes profiles for other plugins in the same project easy. Profile 1 drives Serum 2 on the Pad, profile 2 drives ShaperBox on the Bass, with the same hands and fingers.
 
-Values at a switch:
-- parameters the new profile does not drive keep their last value;
-- parameters it drives glide from their current value to the new route's value (`cond.reacquire`, default 150 ms) instead of jumping;
-- MIDI routes of the old profile send note-offs, so no note hangs.
+Tabs in the top bar show numbers 1, 2, 3. A double-click renames a tab ("Pad", "Bass FX"). + adds a profile, up to 8; a new profile starts as a copy of the current one or empty.
 
-Saving: profiles live in the plugin state (nih-plug `#[persist]`, JSON), so they are saved with the FL project and with synthexis presets in FL. Rows reference their target by track name, plugin name and slot. On load, a target that moved is rebound by name; a missing one shows the "missing" state. Export and import of a single profile as a file come later.
+Switching: a click on a tab, effective at once. At the switch:
+- the moves of the old profile stop;
+- every parameter stays where it is until a move of the new profile changes it;
+- notes the old profile holds get note-offs, so nothing hangs.
+
+Saving: profiles live in the plugin state (nih-plug `#[persist]`, JSON), so they are saved with the FL project and with synthexis presets in FL. Rows reference their target by track name, plugin name and slot. On load, a target that moved is rebound by name; a missing one shows the "missing" state.
+
+Not planned: switching from the FL timeline, a MIDI pad or a gesture. If it is ever wanted, a host parameter "Profile" would cover automation and MIDI at once.
 
 ### 8. Assistant line (`ui.assistant`, new; UI of `map.agent` and `map.fallback`)
 
@@ -218,7 +224,7 @@ Risk to check early: typing into an egui text field inside FL. If FL takes the k
 
 ### 9. History (`ui.history`, new)
 
-One undo stack per instance, for edits: a row change, a sentence, a preset, a profile rename. Playing is not history: live values and profile switches by automation stay out. Undo and redo sit in the assistant line; cmd+Z and shift+cmd+Z work if FL forwards keys to the plugin window (unchecked); the sentence "undo" or "rückgängig" works too (intent `undo`). A sentence that made three routes is one step. 50 steps, not saved with the project. Undoing an edit that changed a target restores the parameter value from before (read through the FL script).
+One undo stack per instance, for edits: a row change, a sentence, a preset, a profile rename. Playing is not history: live values and profile switches stay out. Undo and redo sit in the assistant line; cmd+Z and shift+cmd+Z work if FL forwards keys to the plugin window (unchecked); the sentence "undo" or "rückgängig" works too (intent `undo`). A sentence that made three routes is one step. 50 steps, not saved with the project. Undoing an edit that changed a target restores the parameter value from before (read through the FL script).
 
 ## Interactions
 
@@ -252,13 +258,11 @@ Picked plugin: Serum 2 on the Pad track. Noa types "Linke Faust auf öffnet den 
 
 If "den Filter" matches Filter 1 Freq and Filter 2 Freq with a small margin, its chip opens with both. Noa's pick becomes the alias "den Filter" -> Filter 1 Freq for Serum 2.
 
-### Switching profiles while the song plays
+### Switching profiles
 
-Setup: profile 1 "Verse" (left hand filter, right hand chords), profile 2 "Drop" (fist drives reverb and delay mix, head tilt detunes). An automation clip for "Profile" in the playlist: 1 in the verse, 2 at the drop.
+Setup: profile 1 "Pad" (left fist opens Filter 1 Freq of Serum 2 on the Pad, right hand plays chords), profile 2 "Bass" (left fist drives the band mix of ShaperBox on the Bass, head tilt detunes).
 
-At the drop the clip moves Profile to 2. synthexis switches on the next beat. The cutoff, not driven in profile 2, stays where it was. The reverb mix glides from its value to the fist's value over 150 ms. Chord notes held from profile 1 get note-offs.
-
-Without automation: click tab 2, or hit a pad linked to Profile in FL.
+Noa clicks tab 2. From now on the fist writes ShaperBox. The Serum 2 filter stays where it was. Chord notes held from profile 1 get note-offs. A click on tab 1 brings the Pad setup back.
 
 ### Several plugins of one kind
 
@@ -286,7 +290,7 @@ Freeze is in two days, the UI comes last in the plugin roadmap, and the hand sig
 | Targets | must: picked plugin's parameters (direct), Signal 1..32 | Learn, XY pad, On/off, MIDI targets in rows | `tgt.fl_param`, `tgt.macro` | proposals `map.language_learn`, `map.xy` | FL write into third-party plugin |
 | Target picker | must: manual list, Whole project | Follow FL focus, pin | `bridge.fl_script` | `ui.target_picker` new | probe fl-target-picker |
 | Hands cards: role, presets | should: role switch, Filter hand, Chord hand | Pattern hand, Pong, Orb, object cards | `gest.hand_role`, `gest.presets` | `ui.hands` new, `gest.hand_role` amended | |
-| Profiles | must: tabs 1-3 by click, host parameter Profile (automation, MIDI via Link to controller), saved in plugin state | switch timing, gesture switching, export/import, rename | `midi.transport`, `cond.reacquire` | `ui.profiles`, `tgt.profile`, `plugin.state` new | |
+| Profiles | must: tabs with numbers by click, rename, full settings per profile, saved in plugin state | export/import of one profile | `route.matrix`, `gest.hand_role` | `ui.profiles`, `plugin.state` new | |
 | Assistant line: diff rows, accept, discard | should | voice | `map.agent`, `map.parser`, `map.resolver` | `ui.assistant` new | resolver in the plugin (roadmap, open) |
 | Chips with top 3 | should | aliases stored | `map.fallback` | proposal `map.aliases` | threshold on the 51 calibration rows |
 | History | should | keyboard shortcuts | `map.agent` (undo) | `ui.history` new | |
@@ -296,7 +300,7 @@ Freeze is in two days, the UI comes last in the plugin roadmap, and the hand sig
 
 Build order if time runs short, each step usable on its own:
 1. Moves list by hand with targets as Signal N or direct, and the manual picker.
-2. Profiles: tabs, Profile parameter, persisted state.
+2. Profiles: tabs, full settings per profile, persisted state.
 3. Assistant line with pending rows, accept, discard, undo.
 4. Play view, objects with names, Follow FL focus.
 
@@ -308,16 +312,19 @@ Build order if time runs short, each step usable on its own:
 | 0:10 | "+ add move": left fist -> Filter 1 Freq; Noa plays | mapping by hand |
 | 0:30 | Noa types "Finger spreizen macht ihn schärfer"; a pending row appears; Noa tries it, Enter | mapping by sentence, diff |
 | 0:50 | Right hand to MIDI, preset Chord hand; chords in key | roles and presets |
-| 1:10 | The song reaches the drop; the Profile clip switches to "Drop" on the beat; the fist now drives the reverb | profiles live |
+| 1:10 | Noa clicks profile 2 "Bass"; the same fist now drives ShaperBox on the bass | profiles |
 | 1:30 | Noa shows the can, clicks it, names it "Can"; "Can höher, mehr Delay" | objects, if the student sees the can |
 | 1:50 | Undo twice; Play view | undo, play view |
 
-## Open questions for Noa
+## Decisions and open questions
 
-- Roles per profile, with the host-visible role parameters of the skeleton removed? Proposed: yes, so the Profile parameter is the only automatable switch.
-- Pending rows run before Accept ("try before keep")? Proposed: yes, Discard restores the values.
-- Default switch timing next beat?
-- Profile switching by gesture at all, and with which shape?
+Decided by Noa on 10-31:
+- A profile holds everything entered in the plugin; the host-visible role parameters go away.
+- Profiles switch by a click on a numbered, renamable tab, at once, independent of the timeline.
+- No profile switching by gesture.
+
+Open:
+- Should a sentence apply at once with Undo as the way back, or first show its new rows marked, already running, with Enter to keep and Esc to cancel? The second is what this document describes; the first is simpler.
 
 ## Spec proposal
 
@@ -345,7 +352,7 @@ For the main session to merge into `spec/synthexis.yaml`. Statements without a c
 
 ### gest.hand_role (amend)
 
-"Roles are stored per profile in plugin.state. The skeleton's host-visible hand_role_l and hand_role_r go away; tgt.profile is the one automatable switch."
+"Roles are part of the profile (plugin.state). The skeleton's host-visible parameters hand_role_l and hand_role_r go away: they would show one profile's roles in FL's automation list and fight the profile switch."
 
 ### ui.objects (new)
 
@@ -357,15 +364,11 @@ For the main session to merge into `spec/synthexis.yaml`. Statements without a c
 
 ### ui.profiles (new)
 
-"Profiles 1..8 (3 shown by default), tabs in the top bar, renamable. A profile holds moves with conditioning, roles and presets per hand, face and object, and MIDI key, scale and channel. Global per instance: camera, objects, aliases, picker, bridge settings. Switch by tab click, by tgt.profile (automation clips; MIDI controllers through FL's Link to controller) and, later and opt-in, by a reserved shape held 600 ms. Switch timing immediate, next beat (default) or next bar from midi.transport. At a switch, parameters the new profile does not drive keep their value, driven ones glide in through cond.reacquire, and MIDI routes of the old profile send note-offs."
-
-### tgt.profile (new)
-
-"Host-automatable stepped parameter 'Profile' 1..8. A tab click writes it through begin/perform/end edit on the main thread, so FL records profile switches like any automation (P2)."
+"Profiles 1..8 (3 shown by default) as numbered tabs in the top bar, renamable. A profile is a full set of the plugin's settings: moves with conditioning, roles and presets per hand, face and object, the object list with names, the picked plugin, MIDI key, scale and channel. Shared by all profiles: camera choice and map.aliases. A new profile starts as a copy of the current one or empty. Switching is a click and takes effect at once: the old profile's moves stop, parameters keep their values until a move of the new profile changes them, and notes held by the old profile get note-offs. No switching from the host timeline, MIDI or gestures (Noa 2026-10-31)."
 
 ### plugin.state (new)
 
-"Persisted with the project and with synthexis presets (nih-plug #[persist], JSON): profiles, objects with names and signatures, aliases, picker state. Rows reference targets by track name, plugin name and slot; on load a moved target is rebound by name, a missing one shows the row state 'missing'."
+"Persisted with the project and with synthexis presets (nih-plug #[persist], JSON): profiles (each a full set of the plugin's settings: moves, roles, presets, objects with names, picked plugin, MIDI key, scale and channel), aliases and the camera choice. Rows reference targets by track name, plugin name and slot; on load a moved target is rebound by name, a missing one shows the row state 'missing'."
 
 ### ui.assistant (new)
 
@@ -373,7 +376,7 @@ For the main session to merge into `spec/synthexis.yaml`. Statements without a c
 
 ### ui.history (new)
 
-"One undo stack per instance for edits (row edits, sentences, presets, profile renames), 50 steps, not persisted; live values and automated profile switches are not history. Undo and redo buttons, cmd+Z if FL forwards keys, and the undo intent. Undoing a target change restores the parameter value read before the edit."
+"One undo stack per instance for edits (row edits, sentences, presets, profile renames), 50 steps, not persisted; live values and profile switches are not history. Undo and redo buttons, cmd+Z if FL forwards keys, and the undo intent. Undoing a target change restores the parameter value read before the edit."
 
 ### ui.play_view (new)
 
