@@ -84,7 +84,8 @@ def main() -> None:
     tok_path = TRAIN / a.tok / "sp.model"
     sp = spm.SentencePieceProcessor(model_file=str(tok_path))
     vocab = fp.frame_vocab([ds / f"{n}.jsonl" for n in
-                            ("train_all", "dev", "challenge")])
+                            ("train_all", "dev", "challenge", "dev_s2",
+                             "dev_s3", "dev_s4") if (ds / f"{n}.jsonl").exists()])
     tok_id = {t: i for i, t in enumerate(vocab)}
     fv = len(vocab)
     train, lost_tr = fp.load(sp, ds / f"{a.train}.jsonl", tok_id)
