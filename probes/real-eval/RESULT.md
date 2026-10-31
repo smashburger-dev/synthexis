@@ -64,6 +64,31 @@ All checks pass. It also writes `data/mapping/eval/review.md` for Noa.
 
 These findings and the request types missing from the ontology are in `probes/mapping-pipeline/SPEC_PROPOSAL.md`, section "demo requests".
 
+## Parser runs (2026-10-31)
+
+Exact route match per row (`score.py`). Claude drafted the gold for the 34 originals and Noa has not checked it yet, so some misses may be gold errors (for example switch or plain parameter for a bypass).
+
+| run | calibration all | calibration orig | eval all | eval orig | eval route F1 |
+|---|---|---|---|---|---|
+| v3 s0 | 12/51 | 4/12 | 16/99 | 5/22 | 0.242 |
+| v3 s1 | 18/51 | 5/12 | 14/99 | 4/22 | 0.213 |
+| v5 s0 | 16/51 | 5/12 | 16/99 | 4/22 | 0.273 |
+| v5 s1 | 16/51 | 5/12 | 14/99 | 6/22 | 0.253 |
+
+v5 and v3 are level. Two seeds of one recipe differ as much as the two recipes do, and the eval split has only 20 groups.
+
+Needs first seen in eval groups (any finger mask, values, step, ramp toggle): none of their originals is exactly right with either v5 seed. Seed 1 gets 2 of 4 rows of the two-value request. v5 emits the new pieces (VALUE pointers, a finger pair where v3 had none, one finger per value) but not the whole route.
+
+Error types on the 51 calibration rows (v5 s0, v3 s0 in brackets):
+- target kind wrong: 27 (29)
+- sources wrong: 28 (26)
+- pinch read as a source where it holds another movement: 8 of 9 rows (8)
+- number of routes wrong: 15 (20)
+- invert wrong: 6 (13)
+- no target at all: 10 (6)
+
+Reading: dev route_edit is 0.83, exact match on real sentences is 0.14 to 0.35. Stage 4 put the missing types into the synthetic text, and the real-set score did not move. The real sentences are longer, often describe both directions of one movement, and use pinch as a hold condition. A next batch may be shaped by calibration findings (rule below). More synthetic text of the same kind is not expected to close the gap.
+
 ## Open
 
 - Noa reviews the derived rows: do they sound like him, mean the original plus the listed change, and name the right plugin and parameter? Plugin context is inferred for all 34 originals; 5 are unknown, and their rows note the candidates.

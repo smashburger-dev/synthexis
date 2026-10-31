@@ -63,15 +63,16 @@ Hard dates: S3 and S4 recorded 10-30/10-31, training from 11-01 (new Modal credi
 - [x] Stage 2 commands (8,374 edits weighted to multi-route, invert, modify, German, layperson; 12.74 $) and parser v2 with sentence concatenation: route_edit 0.712 challenge, 0.768 dev; exported `p-v2-cat-s0`
 - [x] Concat rate sweep (0.25 / 0.5 / 1.0, two seeds each): no rate wins outside seed noise; future runs use 0.5
 - [x] Targeted stage-3 batch (3,749 sentences, 6.91 $) and parser v3: dev 0.796, challenge 0.748; exported `p-v3-c50-s0`. Runs are now chosen on dev sets only
-- [ ] Real-sentence eval (calibration 51, eval 99 rows) before any further synthetic batch
+- [x] Real-sentence eval (calibration 51, eval 99 rows): v3 and v5 both get 14 to 18 of 51 calibration and 14 to 16 of 99 eval rows exactly right, while dev route_edit is 0.83 (`probes/real-eval/RESULT.md`, section "Parser runs")
 - [ ] Threshold for the chip fallback calibrated on the 51 calibration rows
 - [ ] Resolver and chip fallback in the plugin, "Built with Muse Spark Open" credit
 - [x] Open-vocabulary probe: target text against live parameter names beats the class-only binding on unseen names (held-out top-1 0.68 / 0.81 against 0.13 / 0.12); live writes audible in Portal, Timeless, Galaxy Tape Echo (`probes/open-vocab-mapping/RESULT.md`, spec proposal "open-vocabulary parameters")
 - [ ] FL bridge write test with third-party plugins while the song plays: ShaperBox (module switch + band mix), Thermal, Portal (session fl-target-picker)
 - [ ] Full state lists for stepped parameters (992 parameters in 100 plugins have more states than the 11 harvested samples) and how to switch Serum 2 arp patterns (session plugin-states)
 - [x] Parser error analysis (`probes/parser-errors/RESULT.md`): ß missing from the tokenizer vocabulary; 29 % of object labels, 75 % of momentary labels and 6-8 % of invert labels are not expressed by their sentence; text-supported scoring +4.8 points en, +4.9 de
-- [ ] Bundled retrain A/B/C (tok-v2, projected labels, word hash embedding; 2 seeds each, gates per slice): running since 10-31 15:51 (`tools/mapping/run_v4.sh`)
-- [ ] Stage 4 commands: ontology v1.1 (hand roll, finger tilt, chords per finger, grid) is needed for 10 of Noa's 34 sentences, the demo requests (values, step, ramp toggle, arp style, any finger mask, clutch) for 6 more; v3 gives the same frame for a sentence and its translation in 2 of 34 pairs. Paid (dry run 10.94 $, 13 to 17 $ after the usual miss): waits for Noa's go
+- [x] Bundled retrain A/B/C (tok-v2, projected labels, word hash embedding): no step beyond seed noise, B kept, word hash dropped (`probes/parser-errors/RESULT.md` section 7)
+- [x] Stage 4 commands (8,691 sentences, 6.71 $, 59 near-copies of the real set dropped) and parser v5: dev 0.837, challenge 0.781, dev_s4 0.736; +1.1 points against v3 on projected labels (p 0.018, no slice drops); exported `p-v5-s0`, int8 9.4 MB, 10 ms median (section 8)
+- [ ] Gap between synthetic and real sentences: Noa checks the gold routes, then a batch shaped by calibration findings (pinch as hold condition, both directions in one sentence, long multi-target sentences) or a different lever; chip fallback is the main path until then
 
 ## Demo and submission
 

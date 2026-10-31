@@ -135,3 +135,23 @@ Two seeds each, pooled paired gates on dev + dev_s2 + dev_s3 (5,202 paired sente
 Reading: no step moves the dev sets beyond seed noise, and none degrades a slice except by the label definition. The tokenizer fix helps the ß sentences a little. The projected labels match the runtime-binding principle at no cost. The word hash adds 1.07M parameters and a hashing step in the Rust runtime for no measured gain, so it is dropped.
 
 Final recipe: B on ds-v5p (ds-v3 + stage 4 with ontology v1.1 and v1.2, near-copies of the real-sentence set removed), `tools/mapping/run_v5.sh`.
+
+## 8. Result of the final run v5 (2026-10-31, `tools/mapping/run_v5.sh`)
+
+Recipe B on ds-v5p: ds-v3 plus stage 4 (ontology v1.1 and v1.2, 8,691 sentences minus 59 near-copies of the real-sentence set), projected labels, tok-v2. Two seeds, 16,000 steps, 42 min each.
+
+| run | dev | challenge | dev_s2 | dev_s3 | dev_s4 (new types) |
+|---|---|---|---|---|---|
+| p-v5-s0 | 0.837 | 0.781 | 0.777 | 0.659 | 0.736 |
+| p-v5-s1 | 0.827 | 0.790 | 0.788 | 0.625 | 0.738 |
+
+Gates against v3, pooled over both seeds (dev + dev_s2 + dev_s3, 5,202 pairs):
+
+| labels | route_edit | won / lost | p | slices dropping (p < 0.05) |
+|---|---|---|---|---|
+| projected | 0.766 -> 0.777 | 307 / 250 | 0.018 | none; de 0.715 -> 0.739 (p 0.003) |
+| original | 0.716 -> 0.671 | 226 / 457 | < 0.001 | many, by construction as in section 7 |
+
+On the 150 real sentences (`probes/real-eval/RESULT.md`, section "Parser runs") v5 is level with v3. The gain stays on synthetic text.
+
+Export of p-v5-s0 (`--ds ds-v5p --no-audit`): int8 blob 9.4 MB, int8 costs 0.1 points dev route_edit; 10 ms median, 25 ms p95 on one CPU thread.
