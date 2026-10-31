@@ -43,6 +43,8 @@ Hard dates: S3 and S4 recorded 10-30/10-31, training from 11-01 (new Modal credi
 - [ ] Hardware probes P4 headphone motion, P5 heart rate, P6 MIDI out
 - [ ] `setParamValue` root cause (bridge only, not blocking)
 - [ ] UI in the glass language (last, after perception and routes are stable)
+- [ ] Target picker: follow the plugin FL has focused, or pick mixer track then plugin; the assistant resolves only there (resolver top-1 0.676 with the plugin picked, 0.580 with 6 plugins, 0.538 with 30: `probes/open-vocab-mapping/picker.py`); FL side in session fl-target-picker
+- [ ] UX structure (session plugin-ux, `docs/ux-plugin.md`): assigned-moves panel per hand, finger and movement class with icons; objects you add and name; profiles 1..n with routes and presets per hand and object, switchable live while the song plays, saved with the project
 
 ## Mapping assistant (own session; state in `docs/session-2026-10-30-mapping-train.md`)
 
@@ -65,9 +67,11 @@ Hard dates: S3 and S4 recorded 10-30/10-31, training from 11-01 (new Modal credi
 - [ ] Threshold for the chip fallback calibrated on the 51 calibration rows
 - [ ] Resolver and chip fallback in the plugin, "Built with Muse Spark Open" credit
 - [x] Open-vocabulary probe: target text against live parameter names beats the class-only binding on unseen names (held-out top-1 0.68 / 0.81 against 0.13 / 0.12); live writes audible in Portal, Timeless, Galaxy Tape Echo (`probes/open-vocab-mapping/RESULT.md`, spec proposal "open-vocabulary parameters")
-- [ ] FL bridge write test with third-party plugins while the song plays: ShaperBox (module switch + band mix), Thermal, Portal
+- [ ] FL bridge write test with third-party plugins while the song plays: ShaperBox (module switch + band mix), Thermal, Portal (session fl-target-picker)
+- [ ] Full state lists for stepped parameters (992 parameters in 100 plugins have more states than the 11 harvested samples) and how to switch Serum 2 arp patterns (session plugin-states)
 - [x] Parser error analysis (`probes/parser-errors/RESULT.md`): ß missing from the tokenizer vocabulary; 29 % of object labels, 75 % of momentary labels and 6-8 % of invert labels are not expressed by their sentence; text-supported scoring +4.8 points en, +4.9 de
-- [ ] Bundled retrain A/B/C (tok-v2, projected labels, word hash embedding; 2 seeds each, gates per slice) before stage 4
+- [ ] Bundled retrain A/B/C (tok-v2, projected labels, word hash embedding; 2 seeds each, gates per slice): running since 10-31 15:51 (`tools/mapping/run_v4.sh`)
+- [ ] Stage 4 commands: ontology v1.1 (hand roll, finger tilt, chords per finger, grid) is needed for 10 of Noa's 34 sentences, the demo requests (values, step, ramp toggle, arp style, any finger mask, clutch) for 6 more; v3 gives the same frame for a sentence and its translation in 2 of 34 pairs. Paid (dry run 10.94 $, 13 to 17 $ after the usual miss): waits for Noa's go
 
 ## Demo and submission
 
