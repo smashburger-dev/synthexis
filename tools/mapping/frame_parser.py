@@ -25,6 +25,7 @@ SPECIAL = ["<pad>", "<bos>", "<eos>", "<ptr>"]
 PAD, BOS, EOS, PTR = 0, 1, 2, 3
 PTR_KINDS = ("TRACK", "PLUGIN", "PNAME", "NOTE", "TIME", "CHORD")
 MAX_SRC, MAX_STEPS, MAX_SPAN = 96, 48, 24
+WH_BUCKETS, WH_DIM, WH_K = 1 << 14, 64, 24     # optional word hash embedding
 
 
 # ---------------------------------------------------------------- data
@@ -64,6 +65,53 @@ def span_text(text: str, offs: list, i: int, j: int) -> str:
     return b[offs[i][0]:offs[j][1]].decode("utf-8", "ignore")
 
 
+def fnv1a(s: str) -> int:
+    h = 0x811C9DC5
+    for b in s.encode():
+        h = ((h ^ b) * 0x01000193) & 0xFFFFFFFF
+    return h
+
+
+def word_hashes(text: str, offs: list) -> list:
+    """Per position: hashed char 3-5-grams of the whole word the piece lies
+    in (ids 1..WH_BUCKETS, at most WH_K), so 'schlie' + bytes + 'e' and a
+    typo still share most features with the clean word. BOS and pieces
+    without a letter or digit get none."""
+    b = text.encode()
+
+    def wordy(c: int) -> bool:          # ASCII letter/digit or any UTF-8 byte
+        return c >= 0x80 or chr(c).isalnum()
+
+    out = []
+    for i, (s, e) in enumerate(offs):
+        if i == 0 or not any(wordy(c) for c in b[s:e]):
+            out.append([])
+            continue
+        while s > 0 and wordy(b[s - 1]):
+            s -= 1
+        while e < len(b) and wordy(b[e]):
+            e += 1
+        w = "<" + b[s:e].decode("utf-8", "ignore").casefold() + ">"
+        ids = []
+        for n in (3, 4, 5):
+            for k in range(len(w) - n + 1):
+                h = fnv1a(w[k:k + n]) % WH_BUCKETS + 1
+                if h not in ids:
+                    ids.append(h)
+        out.append(ids[:WH_K])
+    return out
+
+
+def wh_tensor(samples: list, S: int) -> torch.Tensor:
+    wh = torch.zeros(len(samples), S, WH_K, dtype=torch.long)
+    for i, s in enumerate(samples):
+        hs = s.get("wh") or word_hashes(s["text"], s["offs"])
+        for p, ids in enumerate(hs[:S]):
+            if ids:
+                wh[i, p, :len(ids)] = torch.tensor(ids)
+    return wh
+
+
 def encode(sp, rec: dict, tok_id: dict):
     """-> sample dict or None when a pointer span is not coverable."""
     text = rec["text"]
@@ -89,7 +137,8 @@ def encode(sp, rec: dict, tok_id: dict):
             bio[p] = BIO.index(("B-" if k == 0 else "I-") + tag)
     bio[0] = -100
     return {"id": rec["id"], "edit_id": rec["edit_id"], "text": text,
-            "ids": ids, "offs": offs, "tgt": tgt, "bio": bio}
+            "ids": ids, "offs": offs, "tgt": tgt, "bio": bio,
+            "wh": word_hashes(text, offs)}
 
 
 def load(sp, path, tok_id: dict) -> tuple:
@@ -123,19 +172,23 @@ def collate(batch: list, fv: int, device):
         seq = [combined(t, fv) for t in s["tgt"]]
         yin[i, :len(seq) + 1] = torch.tensor([BOS] + seq)
         yout[i, :len(seq) + 1] = torch.tensor(seq + [EOS])
-    return x.to(device), bio.to(device), yin.to(device), yout.to(device)
+    return (x.to(device), bio.to(device), yin.to(device), yout.to(device),
+            wh_tensor(batch, S).to(device))
 
 
 # ---------------------------------------------------------------- model
 
 class Parser(nn.Module):
     def __init__(self, vocab: int, fv: int, d=256, heads=4, ff=1024,
-                 enc_layers=6, dec_layers=2, drop=0.1):
+                 enc_layers=6, dec_layers=2, drop=0.1, whash=0):
         super().__init__()
-        self.fv, self.d = fv, d
+        self.fv, self.d, self.whash = fv, d, whash
         self.cfg = dict(vocab=vocab, fv=fv, d=d, heads=heads, ff=ff,
                         enc_layers=enc_layers, dec_layers=dec_layers,
-                        drop=drop)
+                        drop=drop, whash=whash)
+        if whash:
+            self.wh = nn.Embedding(WH_BUCKETS + 1, WH_DIM, padding_idx=0)
+            self.wh_proj = nn.Linear(WH_DIM, d)
         self.src = nn.Embedding(vocab, d)
         self.spos = nn.Embedding(MAX_SRC, d)
         self.tgt = nn.Embedding(fv, d)
@@ -154,10 +207,14 @@ class Parser(nn.Module):
         self.bio = nn.Linear(d, len(BIO))
         self.drop = nn.Dropout(drop)
 
-    def encode(self, x):
+    def encode(self, x, wh=None):
         pad = x == PAD
         pos = torch.arange(x.shape[1], device=x.device)
-        h = self.drop(self.src(x) + self.spos(pos))
+        h = self.src(x) + self.spos(pos)
+        if self.whash and wh is not None:   # mean of the word's n-gram vectors
+            n = (wh > 0).sum(-1, keepdim=True).clamp(min=1)
+            h = h + self.wh_proj(self.wh(wh).sum(2) / n)
+        h = self.drop(h)
         return self.enc_norm(self.enc(h, src_key_padding_mask=pad)), pad
 
     def decode(self, mem, pad, y):
@@ -178,13 +235,13 @@ class Parser(nn.Module):
         ptr = ptr.masked_fill(no.unsqueeze(1), -1e9)
         return torch.cat([self.out(h), ptr], -1)
 
-    def forward(self, x, yin):
-        mem, pad = self.encode(x)
+    def forward(self, x, yin, wh=None):
+        mem, pad = self.encode(x, wh)
         return self.decode(mem, pad, yin), self.bio(mem)
 
 
-def loss_fn(model, x, bio, yin, yout, bio_w=0.5):
-    logits, bl = model(x, yin)
+def loss_fn(model, x, bio, yin, yout, bio_w=0.5, wh=None):
+    logits, bl = model(x, yin, wh)
     l1 = F.cross_entropy(logits.reshape(-1, logits.shape[-1]),
                          yout.reshape(-1), ignore_index=-100)
     l2 = F.cross_entropy(bl.reshape(-1, len(BIO)), bio.reshape(-1),
@@ -272,7 +329,8 @@ def greedy(model, grammar: Grammar, samples: list, device, bs=128):
         for i, s in enumerate(part):
             x[i, :len(s["ids"])] = torch.tensor(s["ids"])
         x = x.to(device)
-        mem, pad = model.encode(x)
+        wh = wh_tensor(part, S).to(device) if model.whash else None
+        mem, pad = model.encode(x, wh)
         y = torch.full((B, 1), BOS, dtype=torch.long, device=device)
         seqs = [[] for _ in range(B)]
         done = [False] * B

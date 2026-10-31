@@ -6,7 +6,7 @@
 
   uv run tools/mapping/train_parser.py --name p-filt-s0
       [--train train_filtered] [--frac 1.0] [--seed 0] [--steps 12000]
-      [--overfit 64] [--device mps]
+      [--overfit 64] [--device mps] [--whash 1]
 
 Data from data/mapping/train/<ds>/, tokenizer data/mapping/train/<tok>/.
 Evaluates dev every --eval-every steps (grammar-constrained greedy) for
@@ -16,6 +16,8 @@ dataset has them). Writes data/mapping/train/runs/<name>/{model.pt, meta.json,
 metrics.json, <split>_preds.jsonl, log.txt}.
 --frac keeps a deterministic fraction of base edit ids (learning curve).
 --overfit N trains and scores on the first N training samples only.
+--whash 1 adds the word hash embedding (char 3-5-grams of the whole word,
+about 1.07M parameters) to every subword embedding.
 """
 
 import argparse
@@ -61,6 +63,7 @@ def main() -> None:
     ap.add_argument("--ema", type=float, default=0.999)
     ap.add_argument("--overfit", type=int, default=0)
     ap.add_argument("--device", default="mps")
+    ap.add_argument("--whash", type=int, default=0)
     a = ap.parse_args()
 
     random.seed(a.seed)
@@ -98,10 +101,10 @@ def main() -> None:
         f"(lost {lost_dev}) challenge {len(chal)} (lost {lost_ch}) "
         f"frame vocab {fv}")
 
-    model = fp.Parser(sp.get_piece_size(), fv).to(dev)
+    model = fp.Parser(sp.get_piece_size(), fv, whash=a.whash).to(dev)
     n_params = sum(p.numel() for p in model.parameters())
     log(f"params {n_params / 1e6:.2f}M device {a.device}")
-    emb = ("src.", "spos.", "tgt.", "tpos.")
+    emb = ("src.", "spos.", "tgt.", "tpos.", "wh.")
     decay = [p for n, p in model.named_parameters()
              if p.dim() >= 2 and not n.startswith(emb)]
     no_decay = [p for n, p in model.named_parameters()
@@ -131,10 +134,11 @@ def main() -> None:
             cursor = 0
         idx = order[cursor:cursor + a.bs]
         cursor += a.bs
-        x, bio, yin, yout = fp.collate([train[i] for i in idx], fv, dev)
+        x, bio, yin, yout, wh = fp.collate([train[i] for i in idx], fv, dev)
         for g in opt.param_groups:
             g["lr"] = lr_at(step)
-        loss, l1, l2 = fp.loss_fn(model, x, bio, yin, yout, a.bio_w)
+        loss, l1, l2 = fp.loss_fn(model, x, bio, yin, yout, a.bio_w,
+                                  wh if a.whash else None)
         opt.zero_grad(set_to_none=True)
         loss.backward()
         torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)

@@ -45,7 +45,8 @@ def main() -> None:
     sp = spm.SentencePieceProcessor(model_file=str(ROOT / meta["tokenizer"]))
     cfg = meta["config"]
     model = fp.Parser(cfg["vocab"], cfg["fv"], cfg["d"], cfg["heads"],
-                      cfg["ff"], cfg["enc_layers"], cfg["dec_layers"], 0.0)
+                      cfg["ff"], cfg["enc_layers"], cfg["dec_layers"], 0.0,
+                      cfg.get("whash", 0))
     model.load_state_dict(torch.load(run / "model.pt", map_location="cpu"))
     grammar = fp.Grammar(vocab)
 
