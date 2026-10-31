@@ -66,3 +66,31 @@ Design input, not eval data: these sentences shaped ontology v1.1 and are never 
 - The left hand plays a chord per finger.
 - The more fingers shown, the more octaves the arpeggiator plays.
 - A VST plugin should only receive MIDI from synthexis.
+
+# Spec proposal, open-vocabulary parameters (2026-10-31)
+
+Triggered by Noa's question whether plugins with unusual sections (ShaperBox, Portal, Thermal, delays) and plugins added later can be mapped without retraining. Measurements in `probes/open-vocab-mapping/RESULT.md`. The rule behind all items: the parser learns how people talk; what plugins and parameters exist is data read live from the DAW, never weights.
+
+## map.resolver (amend)
+
+"Binds a target in this order: user alias (map.aliases) > target text against the live parameter names of the named plugin (char 3-gram Dice + word-prefix cover, digits must match) > param-sense class for meaning-only targets ('brighter', 'more space') > sound fingerprint (map.sound_probe). The target text is the sentence text from the first to the last TGT piece of the parser's BIO head, the plugin a parser span or, when the span matches no project plugin, a project plugin name found in the sentence. Module plugins: read module switches and slot types (ShaperBox 'NoiseShaper On', Portal 'SLOT 1 DELAY TYPE'), prefer active modules, break slot ties with them, and put 'switch module on' into the route diff when the target sits in an inactive module. Below a score threshold (calibrated on Noa's 50 calibration sentences) or with a small margin to the second candidate, show the top-3 as chips (map.fallback)." Measured on template sentences with unseen names, held-out seeds: top-1 0.68 / 0.81, top-3 0.77 / 0.87; the class-only binding reaches 0.13 / 0.12.
+
+## map.live_inventory (new)
+
+"When a plugin is inserted, the FL script reads its parameter count, names and value strings (`plugins.getParamCount/getParamName/getParamValueString`, as `tools/mapping/fl/device_synthexis_harvest.py` does) and param-sense labels them on the spot. A plugin never seen at build time is mappable seconds after insertion, offline." The dump path is built; reading one third-party plugin through the bridge is not tested yet.
+
+## map.sound_probe (new, research)
+
+"Names can mislead ('Gravity', 'Liquid', 'Tempest'); the sound does not. For each parameter, render a fixed test signal at a few raw values and keep a fingerprint of what changes: level, spectral centroid, stereo correlation, tail energy after the bursts, noise floor, odd/even harmonics. Fingerprints answer descriptor targets ('heller', 'breiter', 'dreckiger', 'mehr Raum') for parameters whose names say nothing." Example from the live test: Timeless 'Feedback' raw 0 -> 1 raises the level by 9.9 dB and lowers the centroid from 11.2 to 6.4 kHz. Open: ShaperBox renders unchanged without a host transport and Thermal does not load in pedalboard, so the probe has to run inside FL (offline render of a scratch project) or a host that supplies a song position. Related work maps words to effect settings for EQ and reverb only: SocialFX / Audealize (crowdsourced word-to-parameter data), Text2FX (CLAP-guided, differentiable effects, arXiv 2409.18847), LLM2Fx (LLM predicts EQ and reverb parameters, arXiv 2505.20770). None of them handles black-box third-party plugins.
+
+## map.language_learn (new)
+
+"MIDI learn for words. When a target stays unresolved, synthexis asks the user to move the control they mean; the FL script compares the plugin's parameter values before and after and binds the phrase to the changed parameter (stored in map.aliases)." Polling a parameter diff works with the existing script API; whether FL exposes the last tweaked parameter to scripts directly is not checked.
+
+## map.aliases (new)
+
+"Per user: phrase -> plugin parameter and phrase -> source, written whenever the user picks a chip or uses map.language_learn, checked first by the resolver. No weights change, so nothing is forgotten and every entry can be shown, edited and deleted; exportable as a small JSON file." The pattern of fixing a frozen on-device model through stored prototypes instead of retraining: Continual Error Correction on Low-Resource Devices (arXiv 2511.21652).
+
+## map.adapt (new, optional, not for the demo)
+
+"Weight updates on the Mac are feasible: param-sense (0.80M parameters) trains on all 78,846 rows in 0.7 min on the CPU; the parser (9.30M) took 45 min for 16,000 steps on MPS. A user-triggered 'retrain' could tune a low-rank adapter or the output layers of the parser on the user's corrected sentences, mixed with replayed synthetic sentences, and keep the new weights only if the dev sets do not drop." Not proposed now: new plugins and names need no parser change (map.resolver), user wording lives in map.aliases, and an on-device training runtime is a large build for a small gain.
