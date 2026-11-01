@@ -6,7 +6,13 @@ Every licence below was read on 2026-11-02 from the source named in the row (Hug
 
 ## Result in one paragraph
 
-Everything we train from or ship is usable in a public MIT repo and inside the plugin, with three duties: ship the licence texts next to the weights, show "Built with Muse Spark Open", and keep DeepSeek's name to a plain factual credit. One planned choice is blocked: Apple's developer terms forbid using output of an Apple model to train another AI model, so Apple Vision hand keypoints cannot be the training teacher for `synthexis-hand` as `perc.hand` plans. The plan is unchanged; alternatives with their licences are in "Blocked: Apple Vision as teacher". Noa decides.
+Everything we train from or ship is usable in a public MIT repo and inside the plugin, with three duties: ship the licence texts next to the weights, show "Built with Muse Spark Open", and keep DeepSeek's name to a plain factual credit. One planned choice is blocked: Apple's developer terms forbid using output of an Apple model to train another AI model, so Apple Vision hand keypoints cannot be the training teacher for `synthexis-hand` as `perc.hand` plans. Alternatives with their licences are in "Blocked: Apple Vision as teacher".
+
+## Decisions by Noa (2026-11-02)
+
+- Apple Vision: the `vision-keypoints` session stops using Vision as the teacher and takes the best licence-clean state-of-the-art alternative. My recommendation, sent to that session: SAM 3D Body (SAM License, Meta, hand decoder, Modal GPU under the money guards), MediaPipe Hand Landmarker as the free fallback and cross-check. HaMeR and WiLoR are out: they need the MANO model (non-commercial MANO licence), and WiLoR itself is CC-BY-NC-ND-4.0.
+- SAM 3.1: allowed, it is part of the Meta stack this entry promotes. The students ship with a copy of the SAM License as the cheap precaution; code stays MIT.
+- Trimmed mmBERT: stays. The README says it is the one asset carried over from earlier work (kleinhirn) and why it was worth taking.
 
 ## Table
 
@@ -35,23 +41,24 @@ Columns (a) to (d): (a) may we fine-tune it, (b) ship the weights or a derived s
 
 Both Apple agreements that can cover this work carry the same clause. The Apple Developer Program License Agreement (updated 2026-10-29), section 3.2, says You will not "use output generated from an Apple model to train, fine-tune, or improve another artificial intelligence model". The Xcode and Apple SDKs Agreement (EA2002, 2026-06-08), section 2.2 C, has the same words. "Apple model" has no definition in either text. Vision's hand pose request runs a neural network that Apple ships in macOS, so the plain reading counts its 21 keypoints as output of an Apple model, and `synthexis-hand` is another AI model trained on them. Running Vision offline on our own recordings does not change that; the clause is about what the output trains, not where it runs.
 
-Verdict: Apple Vision keypoints may not train `synthexis-hand`. Using Vision at runtime as a fallback and as an eval baseline is ordinary API use and stays allowed. The same block applies to the later body head (`perc.vision.body` as "offline teacher").
+Verdict: Apple Vision keypoints may not train `synthexis-hand`. Noa decided on 2026-11-02 to switch to the best licence-clean alternative. Using Vision at runtime as a fallback and as an eval baseline is ordinary API use and stays allowed. The same block applies to the later body head (`perc.vision.body` as "offline teacher").
 
 An Apple Developer Forums thread from April 2026 asks this exact question; I could not read the reply. Apple did not answer it in either agreement.
 
-Alternative teachers for the 21 hand keypoints, for Noa to pick from:
+Alternative teachers for the 21 hand keypoints:
 
 | Candidate | Source | Licence | Notes |
 |---|---|---|---|
 | MediaPipe Hand Landmarker (Google) | model card "Hand Tracking (Lite/Full) with Fairness, Oct 2021", `storage.googleapis.com/mediapipe-assets` | Apache-2.0 ("LICENSED UNDER Apache License, Version 2.0" on the model card) | Same 21-point layout as Vision, runs offline on the Mac CPU, no cost. Closest drop-in |
 | RTMPose hand (OpenMMLab) | `mmpose`; LiteRT export `litert-community/RTMPose-Hand-LiteRT` (`df8c0805`) | Apache-2.0 (code and HF tag); training-set terms (COCO-WholeBody hand and others) not checked | 21 points, runs on CPU |
-| SAM 3D Body (Meta) with MHR | `facebook/sam-3d-body-dinov3` (`11aaa346`, gated), `facebookresearch/MHR` | SAM License (same text as SAM 3); MHR Apache-2.0 | Fits the Meta showcase. Needs a GPU on Modal, so it costs money; Noa's call |
+| SAM 3D Body (Meta) with MHR | `facebook/sam-3d-body-dinov3` (`11aaa346`, gated), `facebookresearch/MHR` | SAM License (same text as SAM 3); MHR Apache-2.0 | README claims state-of-the-art human mesh recovery, with a hand decoder benchmarked on FreiHAND. Fits the Meta showcase. Needs a GPU on Modal, so it costs money. Recommended |
+| HaMeR, WiLoR | `geopavlakos/hamer`, `rolpotamias/WiLoR` | both need the MANO hand model (MANO licence, non-commercial); WiLoR models CC-BY-NC-ND-4.0 | Excluded |
 | Sapiens2 (Meta) | `facebook/sapiens2` (`41bde0b2`) | Sapiens2 License (own text, not read in full) | Sapiens v1 pose (`facebook/sapiens-pose-0.3b`) is CC-BY-NC-4.0, excluded |
 | No keypoint teacher | SAM hand masks plus script finger-state labels | ours | Drops per-finger extension and spread as regression targets |
 
 ## Verdicts
 
-- SAM 3.1: allowed for everything we do. The open question is whether a student trained only on SAM masks is a "derivative work" of the SAM Materials. The licence does not say. If it is, 1.b.i makes us distribute the student "only ... under the terms of this Agreement", which conflicts with MIT for those weights. Proposal: code stays MIT; the student weights ship with a copy of the SAM License and a notice that they are released under it to the extent they are derivative works. Noa decides.
+- SAM 3.1: allowed for everything we do. The open question is whether a student trained only on SAM masks is a "derivative work" of the SAM Materials. The licence does not say. If it is, 1.b.i makes us distribute the student "only ... under the terms of this Agreement", which conflicts with MIT for those weights. Decided by Noa on 2026-11-02: SAM 3.1 use is fine. Code stays MIT; the student weights ship with a copy of the SAM License and a notice that they are released under it to the extent they are derivative works.
 - Backbones (rows 4 to 7): Apache-2.0, no restriction beyond the notice.
 - mmBERT small: MIT, no restriction beyond the notice.
 - Muse Spark Open: allowed, and every model trained on its outputs is a Derivative with the "Built with Muse Spark Open" duty. The MIT repo is fine as long as the Muse licence and Usage Policy travel with the Derivative weights.
@@ -61,10 +68,10 @@ Alternative teachers for the 21 hand keypoints, for Noa to pick from:
 
 ## Open risks
 
-1. Apple clause (row 15). If keypoint labels from Vision already exist on disk (the `vision-keypoints` session is building `tools/vision/`), they can still serve as an eval baseline, but no student should train on them until Noa decides.
-2. SAM derivative status of the students (see verdicts). A conservative SAM License copy next to the weights costs nothing.
+1. Apple clause (row 15). Keypoint labels from Vision that already exist on disk (`tools/vision/` in the `vision-keypoints` session) may serve as an eval baseline only, never as training labels or for checkpoint selection.
+2. SAM derivative status of the students (see verdicts). Settled by shipping the SAM License copy next to the weights.
 3. SAM 3.1 weights are not pinned: `hf_hub_download` fetches whatever `main` of `facebook/sam3.1` is. Pin `revision="daa63191845a41281374e725f4c9e51c7a824460"` so the licence and weights we checked are the ones we used.
-4. Provenance of the trimmed mmBERT (row 9). The trim was made on 2026-09-28 in another Lifemaxxing project, before the hackathon window that starts 2026-10-26. The weights are a third-party public model with a reduced vocabulary, not new code, but `AGENTS.md` asks for new work from 2026-10-26. Options: say so in the README as a pretrained third-party asset, or re-run the vocabulary trim inside this repo with new code.
+4. Provenance of the trimmed mmBERT (row 9). The trim was made on 2026-09-28 in another Lifemaxxing project, before the hackathon window that starts 2026-10-26. The weights are a third-party public model with a reduced vocabulary, not new code, but `AGENTS.md` asks for new work from 2026-10-26. Noa's decision: keep it and say so in the README (section "Carried over from earlier work").
 5. ImageNet-1k. All backbone weights were trained on ImageNet-1k, whose dataset terms limit the images to non-commercial research. The weights themselves carry Apache-2.0. This is the common grey zone of every ImageNet-pretrained model; low risk for an MIT hackathon project, worth one line in the README.
 6. Muse Usage Policy. It says Muse Spark Open "is not intended for individuals under the age of 18" and forbids inferring sensitive information about individuals without the right to do so. `motion.labels` sends Noa's frames to Baseten under his consent of 2026-10-27; frames of any other person need their own consent first.
 7. DeepSeek trademark clause 5.2 reads "in any way". A factual credit line is ordinary nominative use, but no logo, no "powered by DeepSeek" badge, no placement next to the synthexis logo.

@@ -22,7 +22,7 @@ Use: Muse Glimmer 30B on Fireworks serverless inference as the second labeler ne
 
 ## Attributions and licence notices
 
-Required by the licences of the models and services synthexis uses. Source and reasoning for every line: `probes/licence-check/RESULT.md`. Proposed 2026-11-02; the SAM and Apple paragraphs depend on decisions Noa has not made yet (listed there). The plugin's About panel and the README carry the first line; the licence texts ship in a `LICENSES/` folder next to the weights in every release.
+Required by the licences of the models and services synthexis uses. Source and reasoning for every line: `probes/licence-check/RESULT.md`. Written 2026-11-02 after Noa's decisions recorded there. The plugin's About panel and the README carry the first line; the licence texts ship in a `LICENSES/` folder next to the weights in every release.
 
 ### Muse Spark Open
 
@@ -48,4 +48,4 @@ Part of the parser's synthetic training sentences (stage 6) and some teacher lab
 
 ### Apple Vision
 
-Used at runtime as an optional hand and face fallback and as an evaluation baseline; no attribution required. Apple's developer terms forbid training another AI model on Vision output, so this line holds for a release only once `perc.hand` has a teacher other than Vision: no synthexis model is trained on Apple Vision output.
+Used at runtime as an optional hand and face fallback and as an evaluation baseline; no attribution required. Apple's developer terms forbid training another AI model on Vision output, so no synthexis model is trained on Apple Vision output (Noa, 2026-11-02).
