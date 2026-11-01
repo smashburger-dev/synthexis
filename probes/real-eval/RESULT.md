@@ -157,6 +157,18 @@ Error types on eval (Spark): target kind wrong 20 of 99, sources wrong 10, pinch
 
 Reading: the gold and the frame language are learnable from the same spec the parser trains on; a large model gets almost two thirds of Noa's sentences exactly right and two thirds of the routes. The gap between v6 (22 %) and Spark (63 %) is the small model trained from scratch, not the task or the labels.
 
+## Teacher check: Spark against DeepSeek V4.1 Flash (2026-11-01)
+
+`probes/real-eval/teacher_check.py`, same prompt as the ceiling check, 100 map sentences from the synthetic dev_s5 split (DeepSeek processes in China and only sees synthetic text). Spark wrote dev_s5 itself, which may favour it.
+
+| teacher | exact | cost |
+|---|---|---|
+| Spark, reasoning high | 71/100 | 0.185 $ |
+| DeepSeek, thinking off | 67/100 | 0.004 $ |
+| DeepSeek, thinking high | 48/100 (one batch of 25 unparsed) | 0.061 $ |
+
+Where Spark and DeepSeek without thinking agree (68 of 100 sentences), 59 match the gold: 87 % against 71 % for Spark alone. Agreement of two different teachers is the label filter for teacher data.
+
 ## Open
 
 - Noa reviews the derived rows: do they sound like him, mean the original plus the listed change, and name the right plugin and parameter? Plugin context is inferred for all 34 originals; 5 are unknown, and their rows note the candidates.
