@@ -194,6 +194,16 @@ Needs first seen in eval groups (finger mask, values, step, ramp): v7 gets 2 and
 
 Reading: a pretrained encoder narrows the gap to Spark from 41 to 31 points exact and from 32 to 14 points on "right or one fix away". Teacher labels need a prompt that no selection set has shaped.
 
+## Parser v8: selection rule (written 2026-11-01, before any v8 arm was scored on the real set)
+
+Arms (`docs/parser-v8-session-prompt.md`): lever 1 decodes p-v7a-s0 and p-v7a-s1 differently (seed ensemble, grammar-constrained beam); lever 2 trains the v7a recipe on an encoder after domain MLM; lever 3 trains the v7a recipe on ds-v6p plus teacher rows from a neutral DeepSeek prompt; lever 4 (another encoder family) runs only if 1 to 3 leave room.
+
+1. Selection score: mean route_edit over the six synthetic dev sets of ds-v6p (dev, challenge, dev_s2 to dev_s5). A training arm's score is the mean of its two seeds. Calibration does not select: every arm trains on ds-v6p, whose stage 5 was written from calibration findings, so calibration rows are reported next to eval and nothing more.
+2. A training arm replaces v7a when its two-seed score is at least 0.005 above v7a's (0.7933; the two v7a seeds differ by 0.004). Between arms that pass, the higher score wins; within 0.003, the one without extra data or parameters.
+3. Decoding of the chosen arm: the seed ensemble when it lifts the score by at least 0.005 over the mean of its single seeds; beam width and length penalty only where they lift it over greedy of the same members.
+4. Eval is scored once, at the end, for every arm, with `probes/real-eval/score.py`. A gain is claimed only from two seeds: two single runs against both v7a seeds, or for an ensemble a second ensemble of two more seeds against the first's baseline. Paired McNemar on rows and a bootstrap over groups.
+5. "Right or one part wrong" (the 68 % of v7a): the route multiset equals the gold after removing all targets, or after removing all sources, gates and INV. This reproduces every number of the v7 table above.
+
 ## Open
 
 - Noa reviews the derived rows: do they sound like him, mean the original plus the listed change, and name the right plugin and parameter? Plugin context is inferred for all 34 originals; 5 are unknown, and their rows note the candidates.

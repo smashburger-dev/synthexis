@@ -405,6 +405,102 @@ def greedy(model, grammar: Grammar, samples: list, device, bs=128):
     return res
 
 
+@torch.no_grad()
+def beam(models: list, grammar: Grammar, samples: list, device, k=4,
+         alpha=0.0, bs=32):
+    """Grammar-constrained beam search over an ensemble of runs that share
+    tokenizer and frame vocab. Each step takes the mean of the members'
+    masked log-softmax, renormalised (product of experts). Finished beams
+    are ranked by log-prob / len ** alpha. -> same format as greedy."""
+    for m in models:
+        m.eval()
+    fv, res = models[0].fv, []
+    for c in range(0, len(samples), bs):
+        part = samples[c:c + bs]
+        B = len(part)
+        S = max(len(s["ids"]) for s in part)
+        x = torch.zeros(B, S, dtype=torch.long)
+        for i, s in enumerate(part):
+            x[i, :len(s["ids"])] = torch.tensor(s["ids"])
+        x = x.to(device)
+        wh = wh_tensor(part, S).to(device)
+        mems = []
+        for m in models:
+            mem, pad = m.encode(x, wh if m.whash else None)
+            mems.append((mem.repeat_interleave(k, 0),
+                         pad.repeat_interleave(k, 0)))
+        ns = [len(s["ids"]) for s in part for _ in range(k)]
+        seqs = [[] for _ in range(B * k)]
+        score = torch.full((B, k), float("-inf"), device=device)
+        score[:, 0] = 0.0
+        done = [False] * (B * k)
+        finished = [[] for _ in range(B)]
+        y = torch.full((B * k, 1), BOS, dtype=torch.long, device=device)
+        for _ in range(MAX_STEPS):
+            mask = np.zeros((B * k, fv + S), dtype=bool)
+            for j in range(B * k):
+                if done[j]:
+                    mask[j, PAD] = True
+                else:
+                    a = grammar.allowed(seqs[j], ns[j])
+                    mask[j, :len(a)] = a
+            mk = torch.from_numpy(mask).to(device)
+            lp = 0
+            for m, (mem, pad) in zip(models, mems):
+                lg = m.decode(mem, pad, y)[:, -1].float()
+                lp = lp + F.log_softmax(lg.masked_fill(~mk, float("-inf")), -1)
+            lp = F.log_softmax(lp / len(models), -1)
+            dn = torch.tensor(done, device=device)
+            lp = torch.where(dn.unsqueeze(1) & mk, torch.zeros_like(lp), lp)
+            tot = (score.reshape(-1, 1) + lp).reshape(B, -1)
+            top, idx = tot.topk(k, -1)
+            src = (idx // lp.shape[1]).cpu().tolist()
+            tok = (idx % lp.shape[1]).cpu().tolist()
+            top_l = top.cpu().tolist()
+            new_seqs, new_done, rows, nxt = [], [], [], []
+            for b in range(B):
+                for r in range(k):
+                    j = b * k + src[b][r]
+                    t, sc = tok[b][r], top_l[b][r]
+                    rows.append(j)
+                    nxt.append(t)
+                    if done[j] or sc == float("-inf"):
+                        new_seqs.append(seqs[j])
+                        new_done.append(True)
+                    elif t == EOS:
+                        new_seqs.append(seqs[j])
+                        new_done.append(True)
+                        finished[b].append(
+                            (sc / max(1, len(seqs[j]) + 1) ** alpha,
+                             seqs[j], sc))
+                    else:
+                        new_seqs.append(seqs[j] + [t])
+                        new_done.append(False)
+            for b in range(B):          # log-probs only fall: stop early
+                alive = [top_l[b][r] for r in range(k)
+                         if not new_done[b * k + r]]
+                if finished[b] and (not alive or len(finished[b]) >= k or (
+                        alpha == 0 and max(f[2] for f in finished[b])
+                        >= max(alive))):
+                    for r in range(k):
+                        new_done[b * k + r] = True
+            seqs, done = new_seqs, new_done
+            score = top.masked_fill(
+                torch.tensor(done, device=device).reshape(B, k),
+                float("-inf"))
+            if all(done):
+                break
+            y = torch.cat([y[rows], torch.tensor(nxt, device=device)
+                           .unsqueeze(1)], 1)
+        for b in range(B):
+            if finished[b]:
+                _, seq, sc = max(finished[b], key=lambda f: f[0])
+            else:                       # cannot happen: MAX_STEPS forces EOS
+                seq, sc = seqs[b * k], float("-inf")
+            res.append((seq, sc))
+    return res
+
+
 # ---------------------------------------------------------------- metrics
 
 def norm(s: str) -> str:
@@ -503,10 +599,12 @@ def wilson(k: int, n: int, z=1.96) -> list:
     return [round(c - h, 4), round(c + h, 4)]
 
 
-def evaluate(model, grammar, samples, vocab, device) -> tuple:
-    """-> (metrics dict, per-sentence rows)."""
+def evaluate(model, grammar, samples, vocab, device, decode=None) -> tuple:
+    """-> (metrics dict, per-sentence rows). decode(samples) replaces greedy
+    on model (beam, ensemble)."""
     fv = len(vocab)
-    preds = greedy(model, grammar, samples, device)
+    preds = decode(samples) if decode else \
+        greedy(model, grammar, samples, device)
     rows = []
     for s, (seq, lp) in zip(samples, preds):
         pt = items(seq, s, vocab)
