@@ -141,6 +141,22 @@ Needs first seen in eval groups (finger mask, values, step, ramp; 5 groups, 21 r
 
 Reading: the style batch moved the real-sentence score where stage 4 did not. Eval exact match goes from 15 % to 22 % (seed mean), route F1 from 0.26 to 0.34. Exact match on real sentences stays far below dev (0.83), so most of Noa's long sentences still need the chips to fix one or two routes. Gold is still Claude's draft; Noa's check can move every number in this section.
 
+## Ceiling: Spark parses the set directly (2026-11-01)
+
+`probes/real-eval/spark_parse.py`: Muse Spark Open (reasoning high) gets the frame language, the ontology sources and families, and 22 few-shot examples from the synthetic training set (ds-v6p train_cat; toggle examples only with a switching word). No real sentence is in the prompt. Batches of 25 sentences, 9 requests, 0.29 $. The replies are a measurement only and never go into training.
+
+| run | calibration all | calibration orig | eval all | eval orig | eval route F1 | eval orig route F1 |
+|---|---|---|---|---|---|---|
+| Spark | 40/51 | 9/12 | 62/99 | 14/22 | 0.667 | 0.636 |
+| v6 s0 | 19/51 | 5/12 | 25/99 | 7/22 | 0.347 | 0.419 |
+| v6 s1 | 21/51 | 6/12 | 18/99 | 5/22 | 0.339 | 0.444 |
+
+Against both v6 seeds on eval: 91 won, 10 lost, exact match +41 points, group bootstrap +19 to +61. The prompt rules on pinch and on both directions came from calibration errors, so eval is the fair number: 63 % exact.
+
+Error types on eval (Spark): target kind wrong 20 of 99, sources wrong 10, pinch read as a source 8 of 12, route count wrong 0, no target 0. Needs first seen in eval groups: 7 of 21 rows, 1 of 5 originals (the finger mask).
+
+Reading: the gold and the frame language are learnable from the same spec the parser trains on; a large model gets almost two thirds of Noa's sentences exactly right and two thirds of the routes. The gap between v6 (22 %) and Spark (63 %) is the small model trained from scratch, not the task or the labels.
+
 ## Open
 
 - Noa reviews the derived rows: do they sound like him, mean the original plus the listed change, and name the right plugin and parameter? Plugin context is inferred for all 34 originals; 5 are unknown, and their rows note the candidates.
