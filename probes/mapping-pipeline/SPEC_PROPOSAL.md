@@ -22,6 +22,10 @@ For the main session to merge into `spec/synthexis.yaml`. Numbers cite `probes/m
 
 "Training data: tools/mapping/edits.py samples structured edits from tools/mapping/edits.yaml; Spark Open verbalises each edit in two styles (en 60 %, de 40 %) and marks the words of every slot ([[text|slot]]), so spans and canonical values are known by construction (tools/mapping/commands.py). A glossary of EN/DE phrases per concept (tools/mapping/glossary.py) feeds rare wordings into the edits and allows span-substitution augmentation."
 
+## map.parser.model (amend, 2026-11-01)
+
+"The parser's encoder is a pretrained multilingual model (mmBERT small trimmed to German and English, 60M parameters), fine-tuned with the frame decoder; it ships as f16 (121 MB) and runs at 30 ms median per sentence on one CPU thread. RAM budget for the plugin: 500 to 800 MB including the image segmenter (Noa, 2026-11-01), so f16 weights are preferred over int8 (dynamic int8 costs 2.2 points route_edit)." Measured in probes/parser-errors/RESULT.md, section 10; real-sentence eval 31 % exact against 22 % for the from-scratch parser (probes/real-eval/RESULT.md, "Parser v7"). The plugin needs a ModernBERT runtime (open).
+
 ## map.glossary (new)
 
 "EN/DE phrases per concept (sources, shapes, params, intents, modifier values, tracks, presets, objects, sides, roles, scales) with form (noun/verb) and polarity, written by Spark Open at build time. Uses: rare wordings for synthetic commands, span substitution, the chip fallback (map.fallback) and ambiguity hints (phrases that belong to several concepts)."
