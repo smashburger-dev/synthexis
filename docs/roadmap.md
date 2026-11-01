@@ -18,12 +18,12 @@ Hard dates: S3 and S4 recorded 10-30/10-31, training from 11-01 (new Modal credi
 
 ## Data and teacher (main session)
 
-- [ ] S3: iPhone via Continuity, landscape, 20-30 degrees to the side and a bit higher, studio or demo light, no glasses, full protocol (Noa, 10-30)
-- [ ] S4: other day, other shirt, demo setup, short protocol, held out (Noa)
-- [ ] Label S3 and S4 in image mode (about 1 $ each, hypothesis), contact sheets checked
+- [x] S3: iPhone via Continuity, landscape, 20-30 degrees to the side and a bit higher, studio or demo light, no glasses, full protocol (Noa, recorded 11-01)
+- [x] S4: other shirt and cap, FaceTime camera, short protocol, held out (Noa, recorded 11-01, same day as S3)
+- [x] Label S3 and S4 in image mode (S3 1.22 $, S4 0.78 $), contact sheets checked
 - [ ] Decide: ignore S2 eye class in the loss (glasses)
 - [ ] Apple Vision hand keypoints offline on S1-S4 as targets for `perc.hand` (local, free)
-- [ ] Spark Open freestyle timelines and segment QA (`motion.labels`, Baseten)
+- [x] Spark Open freestyle timelines and segment QA (`motion.labels`, Baseten, 5.63 $; [result](../probes/motion-labels/RESULT.md))
 
 ## Training (main session, from 11-01)
 
