@@ -30,7 +30,7 @@ Shipping: the greedy ensemble of p-v7a-s0 and p-v7a-s1 (rule 3), f16 2 x 121 MB,
 ## Where the remaining gap is
 
 Spark with the same label spec reaches 63 %. Data levers stopped paying from v6 on, model size does not pay (mmBERT base, mDeBERTa), search does not pay. Candidates that are still untested:
-- Noa's check of the gold routes (11 eval misses are switch against knob); costs no training and can move every number.
+- Noa's check of the gold routes; costs no training and can move every number. The figure "11 eval misses are switch against knob" from the v7 handoff does not hold: measured, the shipped ensemble confuses switch and knob in 3 eval rows (03-s1, 05-s2, 22-s1, gold clearly a switch), Spark in the 5 rows of group 33 (ramp). Most misses are wrong gestures or routes merged or split. Gold routes as diagrams for Noa: https://claude.ai/artifact/UuASRSfAqEbYaviStxhYr7
 - A larger teacher with real agreement between different models (Spark plus DeepSeek reached 87 % precision in v7) for the dropped sentences, which needs Spark budget and Noa's OK.
 - Runtime fallback: the chips already cover "one part wrong" (74 %), so the plugin can lean on them for long sentences.
 
@@ -51,6 +51,6 @@ Spark with the same label spec reaches 63 %. Data levers stopped paying from v6 
 
 ## Open
 
-- Noa checks `data/mapping/eval/gold-routes.json` (`review.md`).
+- Noa checks `data/mapping/eval/gold-routes.json` (`review.md`, or the diagram page above).
 - ModernBERT runtime for the plugin (Rust side), now for two encoders if the ensemble stays.
 - FigJam row "Your real sentences" carries the v8 numbers.
