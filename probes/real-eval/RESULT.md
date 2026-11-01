@@ -204,6 +204,48 @@ Arms (`docs/parser-v8-session-prompt.md`): lever 1 decodes p-v7a-s0 and p-v7a-s1
 4. Eval is scored once, at the end, for every arm, with `probes/real-eval/score.py`. A gain is claimed only from two seeds: two single runs against both v7a seeds, or for an ensemble a second ensemble of two more seeds against the first's baseline. Paired McNemar on rows and a bootstrap over groups.
 5. "Right or one part wrong" (the 68 % of v7a): the route multiset equals the gold after removing all targets, or after removing all sources, gates and INV. This reproduces every number of the v7 table above.
 
+## Parser v8 (2026-11-01)
+
+Runs and dev numbers in `probes/parser-errors/RESULT.md`, section 11. What the rule picked on the dev sets:
+
+- Lever 1: the greedy ensemble of two v7a seeds lifts the dev score from 0.7933 to 0.8022, and a second pair (s2+s3) from 0.7912 to 0.8018. Beam (width 4 or 8, with or without length normalisation) does not beat greedy, alone or in the ensemble.
+- Lever 2 (domain MLM, `v8m`): 0.7908, below v7a.
+- Lever 3 (clean teacher rows, `v8t`): 0.7851, below v7a.
+- Lever 4 (mDeBERTa-v3-base, `v8d`): 0.7979, +0.0046 against v7a, under the 0.005 bar of rule 2. Its ensemble reaches 0.8085 on dev but needs about 1.1 GB in f16.
+
+The rule chose the v7a ensemble s0+s1, greedy. Then eval was scored once for every arm (`uv run probes/real-eval/arms.py table ...`):
+
+| run | calibration | eval all | eval orig | eval route F1 | eval right or one part wrong |
+|---|---|---|---|---|---|
+| v7a s0 (shipping until now) | 26/51 | 30/99 | 6/22 | 0.371 | 72/99 |
+| v7a s1 | 25/51 | 32/99 | 8/22 | 0.377 | 64/99 |
+| v7a s2 | 25/51 | 35/99 | 7/22 | 0.418 | 67/99 |
+| v7a s3 | 27/51 | 26/99 | 5/22 | 0.390 | 63/99 |
+| ensemble v7a s0+s1 (chosen) | 22/51 | 37/99 | 7/22 | 0.431 | 73/99 |
+| ensemble v7a s2+s3 (second pair) | 28/51 | 29/99 | 6/22 | 0.401 | 68/99 |
+| v8m s0 (domain MLM) | 22/51 | 32/99 | 6/22 | 0.360 | 62/99 |
+| v8m s1 | 27/51 | 27/99 | 6/22 | 0.345 | 67/99 |
+| v8t s0 (clean teacher rows) | 26/51 | 20/99 | 6/22 | 0.286 | 59/99 |
+| v8t s1 | 29/51 | 27/99 | 6/22 | 0.331 | 61/99 |
+| v8d s0 (mDeBERTa-v3-base) | 25/51 | 28/99 | 7/22 | 0.358 | 55/99 |
+| v8d s1 | 24/51 | 23/99 | 5/22 | 0.359 | 56/99 |
+| ensemble v8d s0+s1 | 25/51 | 25/99 | 6/22 | 0.358 | 56/99 |
+| Spark (ceiling) | 40/51 | 62/99 | 14/22 | 0.667 | 82/99 |
+
+Paired exact match on eval (`arms.py paired`):
+
+| comparison | won / lost | p | exact match diff | group bootstrap |
+|---|---|---|---|---|
+| both ensembles against their own two seeds | 17 / 8 | 0.11 | +2.3 points | [+0.2, +4.9] |
+| ensemble s0+s1 against v7a s0 and s1 | 13 / 1 | 0.002 | +6.1 points | [+1.5, +11.3] |
+| v8m against v7a (s0-s0, s1-s1) | 15 / 18 | 0.73 | -1.5 points | [-11.5, +7.4] |
+| v8t against v7a | 5 / 20 | 0.004 | -7.6 points | [-16.8, +0.5] |
+| v8d against v7a | 10 / 21 | 0.07 | -5.6 points | [-13.3, +1.5] |
+
+Reading: none of the four levers reaches 40 % exact and 75 % right or one part wrong. The chosen ensemble gets 37 % and 74 %, but the second pair of seeds gets 29 % and 68 %, so the ensemble gain on real sentences is about 2 points and not established (p 0.11); on the dev sets it repeats (+0.9 and +1.1 points). Calibration moves the other way (22/51 against 25 and 26). The three training levers lose on eval. Clean teacher rows cost 7.6 points (p 0.004): teacher labels hurt even without calibration-shaped rules, so v7's failure was label noise, not only the prompt (the neutral prompt labels 59 of 100 dev_s5 sentences right, and where both passes agree 52 of 81). mDeBERTa is the best single run on dev and among the weakest on eval: the synthetic dev sets rank encoder families badly (rank correlation of dev score and eval exact over the ten single runs 0.67). Seed spread on eval is large: four v7a seeds give 26 to 35 of 99.
+
+The ensemble ships by the rule (f16, 2 x 121 MB, 62 ms median and 138 ms p95 per sentence on one CPU thread, dev score unchanged in f16). p-v7a-s0 alone stays the fallback when RAM or latency count more than about 2 points.
+
 ## Open
 
 - Noa reviews the derived rows: do they sound like him, mean the original plus the listed change, and name the right plugin and parameter? Plugin context is inferred for all 34 originals; 5 are unknown, and their rows note the candidates.

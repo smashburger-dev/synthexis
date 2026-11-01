@@ -7,6 +7,10 @@
 
   uv run tools/mapping/predict.py --run p-v3-c50-s0 "open my fist to open the filter"
   uv run tools/mapping/predict.py --run p-v3-c50-s0 --file data/mapping/eval/eval.txt
+  uv run tools/mapping/predict.py --run p-v7a-s0,p-v7a-s1 [--beam 4] ...
+
+A comma list of runs decodes their ensemble (frame_parser.beam, greedy at
+--beam 1); runs must share tokenizer and frame vocab.
 
 Prints one line per sentence: confidence exp(frame log-prob), the sentence,
 and the frame with pointer spans as =text. --jsonl writes the same as JSON.
@@ -32,6 +36,8 @@ def main() -> None:
     ap.add_argument("--run", default="p-v3-c50-s0")
     ap.add_argument("--file", default=None)
     ap.add_argument("--jsonl", default=None)
+    ap.add_argument("--beam", type=int, default=1)
+    ap.add_argument("--alpha", type=float, default=0.0)
     ap.add_argument("text", nargs="*")
     a = ap.parse_args()
     texts = list(a.text)
@@ -39,8 +45,17 @@ def main() -> None:
         texts += [t.strip() for t in Path(a.file).read_text().splitlines()
                   if t.strip()]
 
-    model, sp, vocab = fp.load_run(TRAIN / "runs" / a.run)
+    loaded = [fp.load_run(TRAIN / "runs" / r) for r in a.run.split(",")]
+    models = [m for m, _, _ in loaded]
+    sp, vocab = loaded[0][1], loaded[0][2]
+    assert all(v == vocab for _, _, v in loaded), "frame vocabs differ"
     grammar = fp.Grammar(vocab)
+    cpu = torch.device("cpu")
+    if len(models) == 1 and a.beam == 1:
+        decode = lambda ss: fp.greedy(models[0], grammar, ss, cpu)  # noqa
+    else:
+        decode = lambda ss: fp.beam(models, grammar, ss, cpu, a.beam,  # noqa
+                                    a.alpha)
 
     samples = []
     for t in texts:
@@ -49,8 +64,7 @@ def main() -> None:
                         "offs": offs[:fp.MAX_SRC - 1]})
     rows = []
     with torch.no_grad():
-        for s, (seq, lp) in zip(samples, fp.greedy(model, grammar, samples,
-                                                   torch.device("cpu"))):
+        for s, (seq, lp) in zip(samples, decode(samples)):
             frame = fp.items(seq, s, vocab)
             rows.append({"text": s["text"], "conf": round(math.exp(lp), 3),
                          "frame": frame})

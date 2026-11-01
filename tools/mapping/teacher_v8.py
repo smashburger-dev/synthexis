@@ -197,6 +197,15 @@ def cmd_label(a) -> None:
     print(f"label {a.order}: {len(got)} new labels, {usd:.3f} $")
 
 
+def canon(f):
+    """TP.canon, None for a malformed teacher frame (</route> unopened,
+    a broken finger mask)."""
+    try:
+        return TP.canon(f)
+    except (TypeError, IndexError, ValueError):
+        return None
+
+
 def cmd_merge(a) -> None:
     rows = TP.jl(OUT / "pool.jsonl")
     ra = {r["pid"]: r["frame"] for r in TP.jl(OUT / "v8-ds-a.jsonl")}
@@ -218,8 +227,8 @@ def cmd_merge(a) -> None:
         if r["pid"] not in ra or r["pid"] not in rb:
             why["missing"] += 1
             continue
-        ca, cb = TP.canon(ra[r["pid"]]), TP.canon(rb[r["pid"]])
-        if ca != cb:
+        ca, cb = canon(ra[r["pid"]]), canon(rb[r["pid"]])
+        if ca is None or ca != cb:
             why["disagree"] += 1
             continue
         f = TP.edit_frame(r, edits[r["edit_id"]])
