@@ -43,6 +43,7 @@ Outputs (data/motion_labels/<session>/, never committed; faces):
 
 import argparse
 import base64
+import bisect
 import io
 import json
 import re
@@ -69,6 +70,9 @@ JPEG_Q = 82
 STRIP_FPS = 2.0
 WINDOW_S = 10.0
 QA_POINTS = (0.2, 0.5, 0.8)
+# count segments: the person animates counting up to the target, so look
+# late in the raw span where the target is reached
+QA_POINTS_COUNT = (0.35, 0.7, 0.98)
 # Baseten rejects more than 8 images per request; billing is per 28x28
 # patch, so tiles cost the same as single frames (no internal downscale
 # measured at 1536x864 and 2304x432)
@@ -127,6 +131,7 @@ Task: quality check of a scripted recording. Each segment had a German instructi
 Label conventions:
 - hand_R / hand_L finger states are 5 bits in the order thumb, index, middle, ring, pinky; 1 = extended. "00000" is a fist, "11111" an open hand, "01100" index and middle (peace). "absent" means that hand should be out of the image.
 - Other label values name the task (e.g. "open", "spread", "count3", "smile", "mug").
+- Count segments (ids with "_count", instruction "zählen"): the person acts out counting on that hand, raising fingers one after another from one finger up to the target (counting order: index, middle, ring, pinky, thumb), and starts again at one in every count segment, also when the targets go down. A frame showing fewer fingers than the target, on the way up in that order, is "ok". A frame right at the start may still show the end of the previous count: "unclear", not "wrong". "wrong" only for more fingers than the target, fingers outside the counting order, the other hand counting, or no counting at all. Frames are taken late in these segments, so the last frame should be at or near the target.
 - Movement instructions (wipe, throw, circle ...) cannot be fully judged from 3 frames: flag them only if the frames clearly show something else (wrong hand, no movement at all, hands absent).
 - Lighting, distance, blur and the hand moving through the image are expected variation, not errors.
 - Block E objects: the session note lists which real object stood in for each label (e.g. mug = soda can). A stand-in is not an error.
@@ -159,14 +164,23 @@ def load_session(session: str) -> dict:
         raise SystemExit(f"{session}: no SAM labels under {labels_cam}")
     objs = json.loads(OBJECTS.read_text())
     objmap = {**objs["default"], **objs["sessions"].get(session, {})}
-    return {"name": session, "segments": segs, "frames": index["frames"],
-            "fps": index["fps"], "instr": instr, "stem_chunk": stem_chunk,
+    frames = sorted(index["frames"], key=lambda f: f["t"])
+    return {"name": session, "segments": segs, "frames": frames,
+            "ts": [f["t"] for f in frames], "fps": index["fps"], "instr": instr, "stem_chunk": stem_chunk,
             "objects": objmap, "chunk_cache": {}}
 
 
 def frame_at(sess: dict, t: float) -> dict:
-    i = int(round(t * sess["fps"]))
-    return sess["frames"][max(0, min(i, len(sess["frames"]) - 1))]
+    # by time, not list position: frames of bad segments may be dropped
+    ts = sess["ts"]
+    i = bisect.bisect_left(ts, t)
+    if i > 0 and (i == len(ts) or t - ts[i - 1] <= ts[i] - t):
+        i -= 1
+    return sess["frames"][i]
+
+
+def has_frame(sess: dict, t: float) -> bool:
+    return abs(frame_at(sess, t)["t"] - t) <= 1.5 / sess["fps"]
 
 
 def hand_centres(sess: dict, stem: str) -> list[tuple[float, float]]:
@@ -323,7 +337,15 @@ def timeline_jobs(sess: dict, out: Path, suffix: str) -> tuple[list, dict]:
 
 
 def qa_jobs(sess: dict, out: Path, suffix: str) -> tuple[list, dict]:
-    scripted = [s for s in sess["segments"] if s["block"] != "G"]
+    scripted = []
+    for s in sess["segments"]:
+        if s["block"] == "G":
+            continue
+        lo, hi = seg_span(s)
+        if not has_frame(sess, (lo + hi) / 2):
+            print(f"  skip {s['id']}: frames dropped (bad={s.get('bad')})")
+            continue
+        scripted.append(s)
     jobs, meta = [], {}
     for b in range(0, len(scripted), QA_PER_JOB):
         group = scripted[b:b + QA_PER_JOB]
@@ -336,13 +358,17 @@ def qa_jobs(sess: dict, out: Path, suffix: str) -> tuple[list, dict]:
         for seg in group:
             p = sess["instr"].get(seg["id"], {})
             lo, hi = seg_span(seg)
+            points = QA_POINTS
+            if "_count" in seg["id"]:
+                lo, hi = seg["start_s_cam0"], seg["end_s_cam0"]
+                points = QA_POINTS_COUNT
             parts.append({"type": "text", "text": (
                 f"Segment {seg['id']} (block {seg['block']}). Instruction "
                 f"(German): \"{p.get('instruction_de', '?')}\". Labels: "
                 f"{json.dumps(seg.get('labels') or p.get('labels') or {})}. "
                 "Its 3 frames, left to right:")})
             imgs = [render(sess, lo + q * (hi - lo), f"{seg['id']} f{i + 1}")
-                    for i, q in enumerate(QA_POINTS)]
+                    for i, q in enumerate(points)]
             url = jpeg_b64(tile(imgs, len(imgs)),
                            out / "frames" / f"qa-{seg['id']}.jpg")
             parts.append({"type": "image_url", "image_url": {"url": url}})
