@@ -112,6 +112,8 @@ Serum 2's ARP module holds 12 arpeggiators per arp bank; each slot has its own s
 
 So a gesture can switch Serum 2 arp patterns by sending a note 0-11 on Serum's channel, if the loaded preset fills the slots. FL test that settles it: load the factory preset "ARP - Opus Arpeggio" (slots 1-12: default, Down, DownAndUp, UpAndDown, default, Down, Played, ThumbUD, Rand, DownUp, UpDown, ConvAndDiv; arp key zone from note 36), hold a chord above C2, play notes 0, 1, 2 from the piano roll and from `channels.midiNoteOn`, and listen for the default shape, Down, DownAndUp.
 
+Decision (Noa, 2026-11-01): the slot path for the demo is the FL script call `channels.midiNoteOn(indexGlobal, note, velocity)` with the trigger note 0-11 on Serum 2's channel, followed by a release of that note. Program change and state writes are dropped for this. The FL test above still has to pass before the demo.
+
 ## 4. Spec proposal
 
 Proposed text for the spec, items in the style of `probes/mapping-pipeline/SPEC_PROPOSAL.md` (not merged there; another session edits that file).
