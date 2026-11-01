@@ -68,7 +68,7 @@ Alternative teachers for the 21 hand keypoints:
 
 ## Open risks
 
-1. Apple clause (row 15). Keypoint labels from Vision that already exist on disk (`tools/vision/` in the `vision-keypoints` session) may serve as an eval baseline only, never as training labels or for checkpoint selection.
+1. Apple clause (row 15). Noa had the Vision keypoints already extracted for S1 to S4 (`data/keypoints/`, `vision-keypoints` session) discarded on 2026-11-02, so nothing trains on them by accident; the packer must not have read them.
 2. SAM derivative status of the students (see verdicts). Settled by shipping the SAM License copy next to the weights.
 3. SAM 3.1 weights are not pinned: `hf_hub_download` fetches whatever `main` of `facebook/sam3.1` is. Pin `revision="daa63191845a41281374e725f4c9e51c7a824460"` so the licence and weights we checked are the ones we used.
 4. Provenance of the trimmed mmBERT (row 9). The trim was made on 2026-09-28 in another Lifemaxxing project, before the hackathon window that starts 2026-10-26. The weights are a third-party public model with a reduced vocabulary, not new code, but `AGENTS.md` asks for new work from 2026-10-26. Noa's decision: keep it and say so in the README (section "Carried over from earlier work").
