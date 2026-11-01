@@ -1,6 +1,6 @@
 //! Parse sentences with the runtime parser and time it.
 //!
-//!   synthexis-parse --dir data/mapping/runtime --runs p-v7a-s0,p-v7a-s1 \
+//!   synthexis-parse --dir data/mapping/runtime --runs p-v9-s0,p-v9-s1 \
 //!       --file texts.txt [--jsonl out.jsonl] [--f32] [--threads 1] ["sentence" ...]
 //!
 //! Prints load time, resident memory after load, and per-sentence latency
@@ -25,7 +25,7 @@ fn rss_mb() -> Option<f64> {
 
 fn main() -> Result<()> {
     let mut dir = PathBuf::from("data/mapping/runtime");
-    let mut runs = String::from("p-v7a-s0,p-v7a-s1");
+    let mut runs = String::from("p-v9-s0,p-v9-s1");
     let mut texts: Vec<String> = Vec::new();
     let mut jsonl: Option<PathBuf> = None;
     let mut opt = Options::default();

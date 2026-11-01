@@ -27,7 +27,8 @@ is fine — FL hasn't loaded it). Log: ~/Library/Logs/synthexis.log.
 
 Mapping assistant parser (`parser/`, crate synthexis-parser): loads from
 $SYNTHEXIS_PARSER_DIR or ~/Library/Application Support/synthexis/parser
-(export: `uv run tools/mapping/export_runtime.py --run p-v7a-s0,p-v7a-s1`);
+(export: `uv run tools/mapping/export_runtime.py --run p-v9-s0,p-v9-s1`;
+$SYNTHEXIS_PARSER_RUNS picks other runs, e.g. p-v9-s0 or p-v7a-s0,p-v7a-s1);
 `SYNTHEXIS_PARSE="sentence"` logs that sentence's frame once loaded. See
 docs/parser-runtime-plan.md.
 

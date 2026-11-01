@@ -1,6 +1,6 @@
 # Parser runtime in the plugin (2026-11-01)
 
-Goal: the plugin turns a typed sentence into a route frame offline, with the shipped parser (greedy ensemble of p-v7a-s0 and p-v7a-s1, `docs/session-2026-11-01-parser-v8.md`). This file lists what is missing between "sentence typed in the plugin" and "routes applied", and what this session builds.
+Goal: the plugin turns a typed sentence into a route frame offline, with the shipped parser. The runtime was built and chosen on the v8 ensemble (p-v7a-s0 + p-v7a-s1, `docs/session-2026-11-01-parser-v8.md`); since the evening of 2026-11-01 the plugin defaults to the v9 ensemble (p-v9-s0 + p-v9-s1, `docs/session-2026-11-01-parser-v9.md` on branch claude/sleepy-spence-c37491), see "Parser v9 in the runtime". This file lists what is missing between "sentence typed in the plugin" and "routes applied", and what this session builds.
 
 Sources read: `spec/synthexis.yaml` (map.parser, map.resolver, map.fallback, map.agent, map.param_sense), `probes/mapping-pipeline/SPEC_PROPOSAL.md` (map.parser.model amend, map.resolver amend, map.aliases, map.live_inventory), `probes/mapping-pipeline/DESIGN.md` ("Training interfaces"), `docs/roadmap.md` (mapping assistant), `plugin/synthexis/src/` (no parser, resolver or text input exists yet).
 
@@ -31,7 +31,7 @@ Chosen: candle 0.11 (pure Rust) with Apple Accelerate for the f32 matrix product
 
 ## Measurements
 
-M1 Pro, one core (CPU time equals wall time; `VECLIB_MAXIMUM_THREADS=1` changes nothing), 200 synthetic dev sentences (`ds-v6p/dev.jsonl`, first 200), release build. Reference: `uv run tools/mapping/predict.py --run p-v7a-s0,p-v7a-s1 --f16` (shipped f16 weights computed in f32). Tool: `plugin/target/release/synthexis-parse`.
+Runtime choice, measured on the v7a ensemble. M1 Pro, one core (CPU time equals wall time; `VECLIB_MAXIMUM_THREADS=1` changes nothing), 200 synthetic dev sentences (`ds-v6p/dev.jsonl`, first 200), release build. Reference: `uv run tools/mapping/predict.py --run p-v7a-s0,p-v7a-s1 --f16` (shipped f16 weights computed in f32). Tool: `plugin/target/release/synthexis-parse`.
 
 | Variant | Frames equal | Max conf diff | Median | p95 | RSS after load |
 |---|---|---|---|---|---|
@@ -50,10 +50,25 @@ M1 Pro, one core (CPU time equals wall time; `VECLIB_MAXIMUM_THREADS=1` changes 
 - ONNX Runtime 1.31.1 through Python (same C library as the `ort` crate), encoder of p-v7a-s0 only, one intra-op thread (`probes/parser-runtime/ort_probe.py`): f32 model 22.6 ms median, p95 66.2, max abs diff to torch 3e-5; f16 model 24.1 ms median, p95 66.4, max abs diff 0.027. candle + Accelerate: 15.7 ms median, p95 26.5, exact. The f16 ONNX export also needed RoPE and mask casts kept in f32 to load.
 - In the plugin (standalone, camera engine running): load 228 ms, a two-route German sentence in 106 ms, frame in `~/Library/Logs/synthexis.log`.
 
+### Parser v9 in the runtime
+
+Same recipe as v7a (backbone, decoder, grammar), trained on ds-v9c; the frame vocab grows from 340 to 342 tokens (`shape:m00111`, `shape:m10101`), which the grammar handles without code changes. Reference `predict.py --run p-v9-s0,p-v9-s1 --f16`, first 200 rows of each set, same machine and tool.
+
+| Set | Runs | Frames equal | Max conf diff | Median | p95 | Max | Encoders median / p95 | Decode median / p95 |
+|---|---|---|---|---|---|---|---|---|
+| ds-v9c dev | p-v9-s0 + s1 | 200/200 | 0.000 | 39.0 ms | 67.8 ms | 87.9 ms | 29.9 / 40.6 ms | 8.9 / 27.1 ms |
+| ds-v9c dev_s6 | p-v9-s0 + s1 | 200/200 | 0.000 | 54.7 ms | 89.0 ms | 159.9 ms | 38.6 / 51.6 ms | 17.6 / 41.3 ms |
+| ds-v9c dev | p-v9-s0 (fallback) | 200/200 | 0.001 | 18.8 ms | 34.3 ms | 85.4 ms | 15.1 / 24.7 ms | 3.8 / 10.7 ms |
+
+- RSS after load 293 MB for the ensemble (164 MB for s0), peak footprint 324 MB, load 87 to 106 ms (219 ms in the plugin).
+- The stage-6 sentences are longer and carry more routes, so both encoder and decode take longer; one sentence of 200 crossed 150 ms.
+- In the plugin: `p-v9-s0,p-v9-s1 loaded in 219 ms`, a two-route English sentence in 78 ms.
+- The v7a ensemble stays selectable (`SYNTHEXIS_PARSER_RUNS=p-v7a-s0,p-v7a-s1`) and keeps its parity test.
+
 ## How to run
 
 ```bash
-uv run tools/mapping/export_runtime.py --run p-v7a-s0,p-v7a-s1
+uv run tools/mapping/export_runtime.py --run p-v9-s0,p-v9-s1
 ```
 
 ```bash
@@ -64,7 +79,7 @@ cd plugin && ./guarded-cargo.sh test -p synthexis-parser --release -- --include-
 plugin/target/release/synthexis-parse --dir data/mapping/runtime "mouth opens the bass filter"
 ```
 
-Plugin: `SYNTHEXIS_PARSER_DIR` (default `~/Library/Application Support/synthexis/parser`), `SYNTHEXIS_PARSER_RUNS` (default `p-v7a-s0,p-v7a-s1`, fallback `p-v7a-s0`), `SYNTHEXIS_PARSE="sentence"` for a headless check. `assistant::submit(text)` is the call the editor's text field will use.
+Plugin: `SYNTHEXIS_PARSER_DIR` (default `~/Library/Application Support/synthexis/parser`), `SYNTHEXIS_PARSER_RUNS` (default `p-v9-s0,p-v9-s1`, fallback `p-v9-s0`, previous ensemble `p-v7a-s0,p-v7a-s1`), `SYNTHEXIS_PARSE="sentence"` for a headless check. `assistant::submit(text)` is the call the editor's text field will use.
 
 ## Still open for the mapping assistant
 
