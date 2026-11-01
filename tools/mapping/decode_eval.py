@@ -17,6 +17,7 @@ import argparse
 import json
 import sys
 import time
+from collections import defaultdict
 from pathlib import Path
 
 import torch
@@ -49,7 +50,8 @@ def main() -> None:
     models = [m for m, _, _ in loaded]
     sp, vocab = loaded[0][1], loaded[0][2]
     assert all(v == vocab for _, _, v in loaded), "frame vocabs differ"
-    tok_id = {t: i for i, t in enumerate(vocab)}
+    # a gold token the runs never saw (newer dataset) becomes <pad>: a miss
+    tok_id = defaultdict(int, {t: i for i, t in enumerate(vocab)})
     grammar = fp.Grammar(vocab)
     dec = decoder(models, grammar, dev, a.beam, a.alpha)
     out = {"runs": a.runs, "beam": a.beam, "alpha": a.alpha, "ds": a.ds}

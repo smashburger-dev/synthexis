@@ -236,3 +236,23 @@ Decoding (`tools/mapping/decode_eval.py`, `frame_parser.beam`): mean of the memb
 The ensemble is the only lever that clears the rule on dev, twice. Beam never beats greedy: it finds frames with a higher log-probability that are wrong more often. On the real sentences none of it reaches the 40 % and 75 % goal; the ensemble s0+s1 gets 37 % and 74 %, the second pair 29 % and 68 %; the training arms lose against v7a (`probes/real-eval/RESULT.md`, section "Parser v8").
 
 Export of the chosen ensemble: p-v7a-s0 and p-v7a-s1 as f16 state dicts (2 x 121 MB, `export_hf.py` per run); with f16-rounded weights the ensemble keeps 0.8022 on dev. CPU, one thread: 62 ms median, 138 ms p95 per sentence (two encoders, grammar-constrained greedy over the mean). The plugin still has no runtime for the backbone.
+
+## 12. Parser v9: Noa's conventions and stage 6 (2026-11-01, `tools/mapping/run_v9.sh`)
+
+Plan and the checks behind it: `docs/parser-v9-plan.md`. Noa decided: a pinch next to a hand movement is a hold, parameters that move in different directions are separate routes, fingers shown together are one finger state, switching words mean a switch; an effect word ("opens up") gets no fixed parameter class.
+
+- Stage 6 (`edits-s6.yaml`, prompt `prompts/commands-s6.md`): 6,430 edits with two new forms in `edits.py` (one movement fanning out to 2 to 4 parameters with opposite directions; each finger setting one parameter to its own value, the parameter named once), pinch holds at 0.5, finger masks at 0.7 of shape sources, switches at 22 % of targets with a list of switching words (bypass, disable, engage, kick in, einschalten, zuschalten ...; FL Studio's own slot switch is "disable"). Written by DeepSeek V4.1 Flash (`commands.py --backend deepseek`), 4785 of 12860 variants pass the mark validation (37%; Spark passed 48 % on stage 5 and 60 % on stage 4), 0.87 $. 179 near-copies of the real set dropped by `leak.py`.
+- `conventions.py` relabels all splits (pinch next to a movement: 43 training rows of the old data; fingers shown together: 2), so v7a is re-scored on the same labels. Stage-6 rows go twice into train_cat. v7a recipe otherwise, two seeds on a Modal L4.
+
+| run | dev | challenge | dev_s2 | dev_s3 | dev_s4 | dev_s5 | dev_s6 | mean of six older | mean of seven |
+|---|---|---|---|---|---|---|---|---|---|
+| ensemble v7a s0+s1 | 0.882 | 0.849 | 0.843 | 0.721 | 0.814 | 0.700 | 0.351 | 0.8014 | 0.7371 |
+| p-v9-s0 | 0.876 | 0.841 | 0.834 | 0.728 | 0.820 | 0.712 | 0.610 | 0.8020 | 0.7745 |
+| p-v9-s1 | 0.878 | 0.829 | 0.833 | 0.721 | 0.825 | 0.702 | 0.593 | 0.7980 | 0.7687 |
+| ensemble v9 s0+s1 | 0.886 | 0.849 | 0.840 | 0.757 | 0.840 | 0.732 | 0.621 | 0.8171 | 0.7890 |
+
+(route_edit on ds-v9c; greedy.)
+
+v7a reads the new stage-6 sentences at 0.351; v9 at 0.62, and it gains 1.6 points on the older sets too. On the changed real set the v9 ensemble gets 42 of 102 exact (v7a ensemble 37) and route F1 0.537 (0.425); the route F1 gain holds over two seeds, the exact gain does not (`probes/real-eval/RESULT.md`, section "Parser v9").
+
+Export: p-v9-s0 and p-v9-s1 as f16 (2 x 121 MB), f16 equal to f32 on dev, 31 ms median per run on one CPU thread. The Rust runtime of `claude/parser-runtime-be3a3c` loads v7a; v9 needs `tools/mapping/export_runtime.py` re-run on the v9 runs there.

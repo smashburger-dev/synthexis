@@ -1,5 +1,7 @@
 # Parser v9: what Noa's sentences say, and the plan
 
+Result (same evening): `docs/session-2026-11-01-parser-v9.md`. Noa took conventions 1 to 4 of the plan, not the fixed filter-cutoff default for effect words, and had no time for a fresh dictated set (step 5).
+
 Written 2026-11-01 after Noa read the gold-route diagrams (https://claude.ai/artifact/UuASRSfAqEbYaviStxhYr7) and named his doubts per sentence. Each doubt below was checked against the training data (ds-v6p train_all, 42,922 map sentences), the synthetic dev sets, and probes on the shipped ensemble (p-v7a-s0 + p-v7a-s1). All of this looked at eval sentences, so eval is no longer a clean judge for anything v9 changes (see "Judge").
 
 ## Checked

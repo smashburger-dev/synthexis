@@ -260,6 +260,27 @@ Rule:
 2. Selection score: mean route_edit over the seven synthetic dev sets of ds-v9c (dev, challenge, dev_s2 to dev_s6), for the greedy two-seed ensemble of each arm. v9 replaces the v7a ensemble when it is at least 0.005 higher, and it may not lose more than 0.005 on the mean of the six older sets (dev_s6 is written in the new style and favours v9).
 3. Real set: every arm scored once at the end on the changed set, with the paired test against the v7a ensemble and both single seeds.
 
+## Parser v9 (2026-11-01)
+
+Runs in `probes/parser-errors/RESULT.md`, section 12. By the rule above v9 replaces the v7a ensemble: on the seven dev sets of ds-v9c its ensemble scores 0.789 against 0.737, on the six older sets 0.817 against 0.801, on the new stage-6 set 0.621 against 0.351. Then the changed real set was scored once (`arms.py`, files `preds-g2-*.jsonl`; v7a re-predicted on the changed set, Spark not re-run):
+
+| run | calibration | eval all | eval orig | eval route F1 | eval right or one part wrong |
+|---|---|---|---|---|---|
+| v7a s0 | 30/51 | 30/102 | 6/23 | 0.386 | 75/102 |
+| v7a s1 | 25/51 | 32/102 | 8/23 | 0.388 | 68/102 |
+| ensemble v7a s0+s1 (v8, shipping until now) | 26/51 | 37/102 | 7/23 | 0.425 | 77/102 |
+| ensemble v7a s2+s3 | 29/51 | 29/102 | 6/23 | 0.391 | 70/102 |
+| v9 s0 | 31/51 | 41/102 | 8/23 | 0.545 | 78/102 |
+| v9 s1 | 30/51 | 31/102 | 6/23 | 0.439 | 71/102 |
+| ensemble v9 s0+s1 (ships) | 30/51 | 42/102 | 8/23 | 0.537 | 75/102 |
+
+| comparison | won / lost | p | exact match diff | group bootstrap | route F1 diff | group bootstrap |
+|---|---|---|---|---|---|---|
+| v9 seeds against v7a seeds | 28 / 18 | 0.18 | +4.9 points | [-3.3, +13.4] | +0.104 | [+0.009, +0.213] |
+| v9 ensemble against v7a ensemble | 12 / 7 | 0.36 | +4.9 points | [-8.3, +17.9] | +0.111 | [-0.005, +0.227] |
+
+Reading: the v9 ensemble passes 40 % exact on this set (42 of 102, 41 %), and right or one part wrong stays at 74 % (75 of 102, v7a 77). The exact gain is not established (p 0.18 over two seeds); the route F1 gain of 10 points is, over two seeds. Of Noa's originals, 6 (each finger its own value on one parameter), 26 ("turn on" read as a switch) and 35 (one movement, two parameters in opposite directions) are now exactly right, 1 is now read as a command; 8 and 12 got worse, 36 (four parameters) is still wrong. The set was looked at to write the conventions, so these numbers are weaker evidence than v7's; a set Noa dictates fresh would settle it.
+
 ## Open
 
 - Noa reviews the derived rows: do they sound like him, mean the original plus the listed change, and name the right plugin and parameter? Plugin context is inferred for all 34 originals; 5 are unknown, and their rows note the candidates.
