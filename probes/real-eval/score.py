@@ -9,7 +9,8 @@
 Gold: data/mapping/eval/gold-routes.json for Noa's originals; each derived
 row gets its original's routes with its delta applied (side, finger,
 source, invert and route swaps; parameter, value, track and language
-changes leave the routes as they are). A route is one target with its
+changes leave the routes as they are). A preset is one route of its own
+(P:<preset>, with the side). A route is one target with its
 sources (side attached; a single finger, shown or extended, as F:<finger>;
 other finger states as 5-bit masks), gates, INV, the target kind, mode
 step/ramp and the number of values. Which parameter a route binds is the
@@ -60,7 +61,7 @@ def target(t: str, mode: str | None) -> str:
 
 def canon(frame: list) -> collections.Counter:
     """Frame tokens -> multiset of routes, one per target."""
-    routes, cur, rest_side = [], None, None
+    routes, cur, rest_side, preset = [], None, None, None
     for t in frame:
         if t == "<route>":
             cur = []
@@ -71,6 +72,8 @@ def canon(frame: list) -> collections.Counter:
             cur.append(t)
         elif t.startswith("side:"):
             rest_side = t[5:]          # finger set: one side for all routes
+        elif t.startswith("preset:"):
+            preset = t[7:]
     out = collections.Counter()
     for toks in routes:
         srcs, gates, tgts, inv, vals = [], [], [], False, 0
@@ -108,6 +111,8 @@ def canon(frame: list) -> collections.Counter:
             if mode in ("step", "ramp") and tk == "T:param":
                 r.append(f"mode:{mode}")
             out[tuple(sorted(r))] += 1
+    if preset:                          # a preset counts as one route of its own
+        out[(f"P:{preset}" + (f"|side:{rest_side}" if rest_side else ""),)] += 1
     return out
 
 

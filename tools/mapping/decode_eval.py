@@ -8,8 +8,8 @@
   uv run tools/mapping/decode_eval.py --runs p-v7a-s0,p-v7a-s1 --beam 4 \
       --name ens-b4 [--alpha 0.0] [--ds ds-v6p] [--device mps]
 
-Reads only the synthetic splits dev, challenge, dev_s2 to dev_s5 of --ds
-(never the real set). --beam 1 with one run is plain greedy. Writes
+Reads only synthetic splits of --ds (default dev, challenge, dev_s2 to
+dev_s5; --splits adds dev_s6 for ds-v9c), never the real set. --beam 1 with one run is plain greedy. Writes
 data/mapping/train/decode/<name>.json (route_edit and exact per split).
 """
 

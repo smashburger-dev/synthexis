@@ -246,6 +246,20 @@ Reading: none of the four levers reaches 40 % exact and 75 % right or one part w
 
 The ensemble ships by the rule (f16, 2 x 121 MB, 62 ms median and 138 ms p95 per sentence on one CPU thread, dev score unchanged in f16). p-v7a-s0 alone stays the fallback when RAM or latency count more than about 2 points.
 
+## Parser v9: changed set and selection rule (written 2026-11-01, before any v9 run exists)
+
+Noa reviewed the gold as diagrams (https://claude.ai/artifact/UuASRSfAqEbYaviStxhYr7) and decided label conventions (`docs/parser-v9-plan.md`). The real set changes accordingly; the v8 files stay as `expanded.v8.jsonl` and `gold-routes.v8.json`:
+- 19 also accepts the chord-hand preset on the right hand (`score.py` counts a preset as one route `P:<preset>`); 18 also accepts stepping synthexis' arp style (Serum exposes no arp pattern); 9 and 18 point to synthexis' arpeggiator.
+- 28 is removed. 35 and 36 replace it (written by Claude, eval): one movement drives two and four Serum 2 parameters in opposite directions, each with a translation and two swaps. Eval now has 102 rows, calibration 51.
+- 29 and 30 meant ShaperBox 3 (CrushShaper), not Portal; route gold unchanged.
+
+This set was looked at closely to write the conventions, so it is a seen set for v9: its numbers are reported, they do not select, and a gain on it is weaker evidence than v7 and v8 had. Noa has no time to dictate a fresh set.
+
+Rule:
+1. Labels: every dataset passes `tools/mapping/conventions.py` (pinch next to a movement is a hold; fingers shown together are one finger state), so v7a is re-scored on the same labels.
+2. Selection score: mean route_edit over the seven synthetic dev sets of ds-v9c (dev, challenge, dev_s2 to dev_s6), for the greedy two-seed ensemble of each arm. v9 replaces the v7a ensemble when it is at least 0.005 higher, and it may not lose more than 0.005 on the mean of the six older sets (dev_s6 is written in the new style and favours v9).
+3. Real set: every arm scored once at the end on the changed set, with the paired test against the v7a ensemble and both single seeds.
+
 ## Open
 
 - Noa reviews the derived rows: do they sound like him, mean the original plus the listed change, and name the right plugin and parameter? Plugin context is inferred for all 34 originals; 5 are unknown, and their rows note the candidates.
