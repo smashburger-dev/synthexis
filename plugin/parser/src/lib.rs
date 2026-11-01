@@ -17,6 +17,7 @@ mod decoder;
 mod encoder;
 mod grammar;
 mod nn;
+pub mod pin;
 mod text;
 
 use std::path::Path;
@@ -30,6 +31,7 @@ use tokenizers::Tokenizer;
 use decoder::Decoder;
 use encoder::Encoder;
 use grammar::Grammar;
+pub use pin::{pin, Frame, Pin, PinWhat};
 
 const BOS: u32 = 1;
 const EOS: u32 = 2;
