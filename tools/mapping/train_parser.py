@@ -1,6 +1,7 @@
 # /// script
 # requires-python = ">=3.11"
-# dependencies = ["torch", "sentencepiece", "protobuf", "numpy"]
+# dependencies = ["torch", "sentencepiece", "protobuf", "numpy",
+#                 "transformers>=4.48", "tokenizers"]
 # ///
 """Train parser v1 (frame decoder with span pointers) on this Mac.
 
@@ -18,6 +19,9 @@ metrics.json, <split>_preds.jsonl, log.txt}.
 --overfit N trains and scores on the first N training samples only.
 --whash 1 adds the word hash embedding (char 3-5-grams of the whole word,
 about 1.07M parameters) to every subword embedding.
+--backbone <name> replaces the encoder with a pretrained model from
+data/mapping/backbones/<name> (its tokenizer instead of --tok, d = its
+width, decoder heads/ff by --heads/--ff); it trains at --enc-lr.
 """
 
 import argparse
@@ -64,6 +68,11 @@ def main() -> None:
     ap.add_argument("--overfit", type=int, default=0)
     ap.add_argument("--device", default="mps")
     ap.add_argument("--whash", type=int, default=0)
+    ap.add_argument("--backbone", default="")
+    ap.add_argument("--enc-lr", type=float, default=5e-5)
+    ap.add_argument("--heads", type=int, default=6)
+    ap.add_argument("--ff", type=int, default=1536)
+    ap.add_argument("--amp", type=int, default=0)     # bf16 autocast on cuda
     a = ap.parse_args()
 
     random.seed(a.seed)
@@ -82,7 +91,11 @@ def main() -> None:
 
     ds = TRAIN / a.ds
     tok_path = TRAIN / a.tok / "sp.model"
-    sp = spm.SentencePieceProcessor(model_file=str(tok_path))
+    if a.backbone:
+        sp = fp.HFTok(a.backbone)
+        fp.MAX_SRC = fp.HF_MAX_SRC
+    else:
+        sp = spm.SentencePieceProcessor(model_file=str(tok_path))
     vocab = fp.frame_vocab([ds / f"{n}.jsonl" for n in
                             ("train_all", "dev", "challenge", "dev_s2",
                              "dev_s3", "dev_s4", "dev_s5") if (ds / f"{n}.jsonl").exists()])
@@ -103,17 +116,27 @@ def main() -> None:
         f"(lost {lost_dev}) challenge {len(chal)} (lost {lost_ch}) "
         f"frame vocab {fv}")
 
-    model = fp.Parser(sp.get_piece_size(), fv, whash=a.whash).to(dev)
+    if a.backbone:
+        import transformers
+        d = transformers.AutoConfig.from_pretrained(
+            fp.backbone_dir(a.backbone)).hidden_size
+        model = fp.Parser(sp.get_piece_size(), fv, d=d, heads=a.heads,
+                          ff=a.ff, whash=a.whash, hf=a.backbone).to(dev)
+    else:
+        model = fp.Parser(sp.get_piece_size(), fv, whash=a.whash).to(dev)
     n_params = sum(p.numel() for p in model.parameters())
     log(f"params {n_params / 1e6:.2f}M device {a.device}")
     emb = ("src.", "spos.", "tgt.", "tpos.", "wh.")
-    decay = [p for n, p in model.named_parameters()
-             if p.dim() >= 2 and not n.startswith(emb)]
-    no_decay = [p for n, p in model.named_parameters()
-                if not (p.dim() >= 2 and not n.startswith(emb))]
-    opt = torch.optim.AdamW([{"params": decay, "weight_decay": 0.01},
-                             {"params": no_decay, "weight_decay": 0.0}],
-                            lr=a.lr, betas=(0.9, 0.98))
+    groups = {}
+    for n, p in model.named_parameters():
+        hf = n.startswith("hf.")
+        wd = p.dim() >= 2 and not n.startswith(emb) and "norm" not in n \
+            and "embeddings" not in n
+        groups.setdefault((hf, wd), []).append(p)
+    opt = torch.optim.AdamW(
+        [{"params": ps, "weight_decay": 0.01 if wd else 0.0,
+          "scale": a.enc_lr / a.lr if hf else 1.0}
+         for (hf, wd), ps in groups.items()], lr=a.lr, betas=(0.9, 0.98))
 
     def lr_at(step: int) -> float:
         if step < a.warmup:
@@ -138,9 +161,10 @@ def main() -> None:
         cursor += a.bs
         x, bio, yin, yout, wh = fp.collate([train[i] for i in idx], fv, dev)
         for g in opt.param_groups:
-            g["lr"] = lr_at(step)
-        loss, l1, l2 = fp.loss_fn(model, x, bio, yin, yout, a.bio_w,
-                                  wh if a.whash else None)
+            g["lr"] = lr_at(step) * g["scale"]
+        with torch.autocast("cuda", dtype=torch.bfloat16, enabled=bool(a.amp)):
+            loss, l1, l2 = fp.loss_fn(model, x, bio, yin, yout, a.bio_w,
+                                      wh if a.whash else None)
         opt.zero_grad(set_to_none=True)
         loss.backward()
         torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
@@ -193,7 +217,7 @@ def main() -> None:
         torch.save(best_state, out / "model.pt")
         (out / "meta.json").write_text(json.dumps(
             {"config": model.cfg, "frame_vocab": vocab, "bio": fp.BIO,
-             "tokenizer": str(tok_path.relative_to(ROOT)),
+             "tokenizer": a.backbone or str(tok_path.relative_to(ROOT)),
              "max_src": fp.MAX_SRC, "max_steps": fp.MAX_STEPS,
              "max_span": fp.MAX_SPAN}, indent=1))
     log(f"done in {train_min:.1f} min, best dev route_edit {best} "

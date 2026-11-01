@@ -3,8 +3,13 @@
 Shared by train_parser.py and export_parser.py. Shape per DESIGN.md
 "Training interfaces": SentencePiece ids -> encoder 6 x d256 -> 2-layer
 decoder over closed frame tokens plus pointer steps into the encoder
-positions, auxiliary BIO head on the encoder.
+positions, auxiliary BIO head on the encoder. With a backbone (v7) the
+encoder is a pretrained Hugging Face model (mmBERT small, German and
+English) read from data/mapping/backbones/<name> or $SYNTHEXIS_BACKBONES,
+tokenized by its own tokenizer.json (HFTok).
 """
+
+import os
 
 import json
 import math
@@ -26,6 +31,26 @@ PAD, BOS, EOS, PTR = 0, 1, 2, 3
 PTR_KINDS = ("TRACK", "PLUGIN", "PNAME", "NOTE", "TIME", "CHORD", "VALUE")
 MAX_SRC, MAX_STEPS, MAX_SPAN = 96, 48, 24
 WH_BUCKETS, WH_DIM, WH_K = 1 << 14, 64, 24     # optional word hash embedding
+HF_MAX_SRC = 128
+
+
+def backbone_dir(name: str) -> Path:
+    root = os.environ.get("SYNTHEXIS_BACKBONES") or \
+        Path(__file__).resolve().parents[2] / "data" / "mapping" / "backbones"
+    return Path(root) / name
+
+
+class HFTok:
+    """Backbone tokenizer with the SentencePiece calls this module uses.
+    Its template adds <bos> (position 0, never a span) and <eos>."""
+
+    def __init__(self, name: str):
+        from tokenizers import Tokenizer
+        self.tok = Tokenizer.from_file(str(backbone_dir(name) /
+                                           "tokenizer.json"))
+
+    def get_piece_size(self) -> int:
+        return self.tok.get_vocab_size()
 
 
 # ---------------------------------------------------------------- data
@@ -41,6 +66,10 @@ def frame_vocab(paths: list) -> list:
 
 def tokenize(sp, text: str):
     """-> (ids with BOS, [(byte_begin, byte_end)] per position)."""
+    if isinstance(sp, HFTok):
+        enc = sp.tok.encode(text)
+        cb = char_to_byte(text)
+        return enc.ids, [(cb[b], cb[e]) for b, e in enc.offsets]
     pieces = sp.encode(text, return_type="proto").pieces[:MAX_SRC - 1]
     ids = [sp.bos_id()] + [p.id for p in pieces]
     offs = [(0, 0)] + [(p.begin, p.end) for p in pieces]
@@ -130,8 +159,8 @@ def encode(sp, rec: dict, tok_id: dict):
         tgt += [("P", pos[0]), ("P", pos[-1])]
     if len(tgt) + 1 > MAX_STEPS:
         return None
-    bio = [0] * len(ids)
-    for cs, ce, tag in rec["bio"]:
+    bio = [0] * len(ids) if rec["bio"] is not None else [-100] * len(ids)
+    for cs, ce, tag in rec["bio"] or []:      # null: teacher row, no BIO
         pos = covering(offs, cb[cs], cb[ce])
         for k, p in enumerate(pos):
             bio[p] = BIO.index(("B-" if k == 0 else "I-") + tag)
@@ -180,24 +209,32 @@ def collate(batch: list, fv: int, device):
 
 class Parser(nn.Module):
     def __init__(self, vocab: int, fv: int, d=256, heads=4, ff=1024,
-                 enc_layers=6, dec_layers=2, drop=0.1, whash=0):
+                 enc_layers=6, dec_layers=2, drop=0.1, whash=0, hf="",
+                 pretrained=True):
         super().__init__()
-        self.fv, self.d, self.whash = fv, d, whash
+        self.fv, self.d, self.whash, self.hf_name = fv, d, whash, hf
         self.cfg = dict(vocab=vocab, fv=fv, d=d, heads=heads, ff=ff,
                         enc_layers=enc_layers, dec_layers=dec_layers,
-                        drop=drop, whash=whash)
+                        drop=drop, whash=whash, hf=hf)
         if whash:
             self.wh = nn.Embedding(WH_BUCKETS + 1, WH_DIM, padding_idx=0)
             self.wh_proj = nn.Linear(WH_DIM, d)
-        self.src = nn.Embedding(vocab, d)
-        self.spos = nn.Embedding(MAX_SRC, d)
+        if hf:
+            from transformers import AutoConfig, AutoModel
+            path = backbone_dir(hf)
+            self.hf = AutoModel.from_pretrained(path) if pretrained else \
+                AutoModel.from_config(AutoConfig.from_pretrained(path))
+            assert self.hf.config.hidden_size == d, "d must be the backbone width"
+        else:
+            self.src = nn.Embedding(vocab, d)
+            self.spos = nn.Embedding(MAX_SRC, d)
+            self.enc = nn.TransformerEncoder(
+                nn.TransformerEncoderLayer(d, heads, ff, drop,
+                                           batch_first=True, norm_first=True),
+                enc_layers, enable_nested_tensor=False)
         self.tgt = nn.Embedding(fv, d)
         self.tpos = nn.Embedding(MAX_STEPS + 2, d)
         self.ptr_in = nn.Linear(d, d)
-        self.enc = nn.TransformerEncoder(
-            nn.TransformerEncoderLayer(d, heads, ff, drop, batch_first=True,
-                                       norm_first=True),
-            enc_layers, enable_nested_tensor=False)
         self.dec = nn.TransformerDecoder(
             nn.TransformerDecoderLayer(d, heads, ff, drop, batch_first=True,
                                        norm_first=True), dec_layers)
@@ -209,6 +246,9 @@ class Parser(nn.Module):
 
     def encode(self, x, wh=None):
         pad = x == PAD
+        if self.hf_name:
+            h = self.hf(input_ids=x, attention_mask=(~pad).long())
+            return self.enc_norm(self.drop(h.last_hidden_state)), pad
         pos = torch.arange(x.shape[1], device=x.device)
         h = self.src(x) + self.spos(pos)
         if self.whash and wh is not None:   # mean of the word's n-gram vectors
@@ -493,3 +533,23 @@ def evaluate(model, grammar, samples, vocab, device) -> tuple:
             best_cov = i / n
     met["coverage_at_0.95"] = round(best_cov, 4)
     return met, rows
+
+
+def load_run(run: Path, device="cpu"):
+    """Trained run dir -> (model, tokenizer, frame vocab); sets MAX_SRC."""
+    global MAX_SRC
+    meta = json.loads((run / "meta.json").read_text())
+    cfg = meta["config"]
+    MAX_SRC = meta.get("max_src", MAX_SRC)
+    if cfg.get("hf"):
+        sp = HFTok(cfg["hf"])
+    else:
+        import sentencepiece as spm
+        sp = spm.SentencePieceProcessor(
+            model_file=str(Path(__file__).resolve().parents[2]
+                           / meta["tokenizer"]))
+    model = Parser(cfg["vocab"], cfg["fv"], cfg["d"], cfg["heads"], cfg["ff"],
+                   cfg["enc_layers"], cfg["dec_layers"], 0.0,
+                   cfg.get("whash", 0), cfg.get("hf", ""), pretrained=False)
+    model.load_state_dict(torch.load(run / "model.pt", map_location=device))
+    return model.to(device), sp, meta["frame_vocab"]
