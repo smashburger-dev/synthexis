@@ -5,6 +5,7 @@
 //! main thread via the vendored host_context_available hook (H2: FL Studio
 //! records main-thread edits with the window closed). Audio: stereo silence.
 
+mod assistant;
 mod cond;
 mod editor;
 mod engine;
@@ -89,6 +90,8 @@ impl Plugin for Synthexis {
         _buffer_config: &BufferConfig,
         _context: &mut impl InitContext<Self>,
     ) -> bool {
+        // Not called during plugin scans; loads the parser in the background.
+        assistant::start();
         true
     }
 

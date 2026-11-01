@@ -10,7 +10,9 @@
   uv run tools/mapping/predict.py --run p-v7a-s0,p-v7a-s1 [--beam 4] ...
 
 A comma list of runs decodes their ensemble (frame_parser.beam, greedy at
---beam 1); runs must share tokenizer and frame vocab.
+--beam 1); runs must share tokenizer and frame vocab. --f16 loads each
+run's model.f16.pt (the shipped weights, computed in f32) instead of
+model.pt; the plugin runtime's parity test uses it.
 
 Prints one line per sentence: confidence exp(frame log-prob), the sentence,
 and the frame with pointer spans as =text. --jsonl writes the same as JSON.
@@ -38,6 +40,7 @@ def main() -> None:
     ap.add_argument("--jsonl", default=None)
     ap.add_argument("--beam", type=int, default=1)
     ap.add_argument("--alpha", type=float, default=0.0)
+    ap.add_argument("--f16", action="store_true")
     ap.add_argument("text", nargs="*")
     a = ap.parse_args()
     texts = list(a.text)
@@ -47,6 +50,11 @@ def main() -> None:
 
     loaded = [fp.load_run(TRAIN / "runs" / r) for r in a.run.split(",")]
     models = [m for m, _, _ in loaded]
+    if a.f16:
+        for m, r in zip(models, a.run.split(",")):
+            sd = torch.load(TRAIN / "runs" / r / "model.f16.pt",
+                            map_location="cpu")
+            m.load_state_dict({k: v.float() for k, v in sd.items()})
     sp, vocab = loaded[0][1], loaded[0][2]
     assert all(v == vocab for _, _, v in loaded), "frame vocabs differ"
     grammar = fp.Grammar(vocab)
