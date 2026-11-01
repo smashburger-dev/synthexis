@@ -1,8 +1,10 @@
 # Plugin UX (proposal, 2026-10-31)
 
-How the synthexis window is laid out, what each part does, how the main tasks flow, and what the demo needs by the feature freeze on 11-02. Nothing here is built.
+How the synthexis window is laid out, what each part does, how the main tasks flow, how to build it, and what the demo needs by the feature freeze on 11-02. Nothing here is built yet.
 
-Sources: Noa's voice note of 10-31 (paraphrased below), spec nodes `ui.canvas`, `ui.panel`, `gest.hand_role`, `gest.presets`, `map.agent`, `map.fallback`, `targets`, `bridge`, the proposals in `probes/mapping-pipeline/SPEC_PROPOSAL.md`, the vocabulary in `tools/mapping/ontology.yaml`, and the editor as it stands in `plugin/synthexis/src/editor.rs` (camera preview, 32 macro bars, Live and Test toggles, two hand-role combos). Wireframes: [FigJam board](https://www.figma.com/board/WJIE59w34hCSTXuq3XpKGH?node-id=18-1009), area "Plugin UX (proposal)" from x 31000, right of all earlier content, in eleven sections: 1 Edit view, 2 Components, 3 Move row, 4 Target picker, 5 Assistant, 6 Objects, 7 Profiles, 8 Play view, 9 Flows, 10 Scope, 11 Spec and questions. Spec text for the new `ui.*` nodes is in the last section of this file.
+The main path is clicking: hand, finger or object, movement, target, from menus. It has to work every time. Typing or saying a sentence is an optional shortcut on top that writes the same rows (Noa, 11-01).
+
+Sources: Noa's voice note of 10-31 (paraphrased below), spec nodes `ui.canvas`, `ui.panel`, `gest.hand_role`, `gest.presets`, `map.agent`, `map.fallback`, `targets`, `bridge`, the proposals in `probes/mapping-pipeline/SPEC_PROPOSAL.md`, the vocabulary in `tools/mapping/ontology.yaml`, and the editor as it stands in `plugin/synthexis/src/editor.rs` (camera preview, 32 macro bars, Live and Test toggles, two hand-role combos). Wireframes: [FigJam board](https://www.figma.com/board/WJIE59w34hCSTXuq3XpKGH?node-id=18-1009), area "Plugin UX (proposal)" from x 31000, right of all earlier content, in twelve sections: 1 Edit view, 2 Components, 3 Move row, 4 Target picker, 5 Assistant, 6 Objects, 7 Profiles, 8 Play view, 9 Flows, 10 Scope, 11 Spec and questions, 12 Architecture and build plan. Spec text for the new `ui.*` nodes is in the last section of this file.
 
 ## Noa's picture of the window
 
@@ -21,6 +23,17 @@ Sources: Noa's voice note of 10-31 (paraphrased below), spec nodes `ui.canvas`, 
 - Writes into a third-party plugin go through the FL script (`bridge.fl_script`, record-event path). A live write into a commercial plugin through FL is not tested yet (roadmap). Without the script, synthexis drives only its own 32 macros, which the user links in FL.
 - The parser takes 9 ms per sentence on one CPU thread, so the diff can appear while the user still looks at the field.
 
+## Main path: assign by clicking
+
+Decided by Noa on 11-01: mapping by clicking comes first and has to work every time. The parser is not reliable enough to carry the product; it stays a shortcut.
+
+What this means for the design:
+- No model sits between a click and a route. Every menu entry comes from a fixed catalog of movements (`ui.catalog`), and every choice writes a route as plain data. The assistant produces the same edit commands; it has no write path of its own.
+- The menus offer only what the camera can measure. Hands and fingers appear when the hand student runs, face parts when the segmenter delivers face, eyes and mouth, and an object only after the camera has found it and Noa has added it. Entries the perception cannot deliver are not offered, so a route on something the camera never sees cannot be made.
+- Each offered entry shows live whether it is seen right now. A new row shows the raw value of its movement before anything else, so a movement the camera does not track is visible at once.
+
+What "100 %" covers: a click puts exactly the chosen route into the plugin, it writes to the chosen target, and it is saved and restored with the project. That is ordinary software and can be tested to 100 % (see Architecture). Two things sit outside it and the UI shows both instead of hiding them: how well the students measure a fist or a finger (their gate in `budget.quality`: hand mIoU 0.85, finger states 0.95 on held-out data), and FL writes into third-party plugins, which are not tested yet.
+
 ## Layout
 
 One window, two views. A button in the top bar switches them.
@@ -35,7 +48,7 @@ Edit view, default 1000 x 720 pt, resizable. Top bar, camera canvas and assistan
 |     [fist] fist->open 0.62                                  [point] shape "point"        |
 |                                   [ Can #2 ]                                             |
 |                                                                                          |
-| [mic] Type what should happen ...                  in: Serum 2 (Pad) v    undo  redo     |
+| [mic] Optional: type or say it instead of clicking ...  in: Serum 2 (Pad) v  undo  redo  |
 +-----------------------------------------------------------+------------------------------+
 | MOVES                                                     | HANDS                        |
 | Left hand                                                 | Left  Param|MIDI|Motion|Off  |
@@ -93,7 +106,7 @@ The first time a plugin is picked, synthexis reads its parameter list through th
 
 ### 4. Moves list (`ui.moves`, new; replaces the routes part of `ui.panel`)
 
-One row is one route (`route.matrix`) with its conditioning (`cond.chain`). Rows are grouped by who moves: Left hand, Right hand, Both hands, Face and head, then one group per named object. Each group ends with "+ add move".
+This is the main path for mapping. One row is one route (`route.matrix`) with its conditioning (`cond.chain`). Rows are grouped by who moves: Left hand, Right hand, Both hands, Face and head, then one group per named object. Each group ends with "+ add move".
 
 | Cell | Content |
 |---|---|
@@ -106,7 +119,7 @@ One row is one route (`route.matrix`) with its conditioning (`cond.chain`). Rows
 | Quick | invert, mute |
 | More (...) | expands the row: range (two-handle slider), curve, smoothing, hold on loss, gate ("only while"), clutch, quantize, path, delete |
 
-Movements per part, with the source ids from `tools/mapping/ontology.yaml`. Proposed sources (SPEC_PROPOSAL, ontology v1.1 and demo requests) are marked P, planned motion primitives M.
+The Who, Part and Movement menus come from the catalog, filtered by what the perception delivers at the moment (see Main path). Each entry carries a dot: filled while the camera sees it, hollow while it does not. Movements per part, with the source ids from `tools/mapping/ontology.yaml`. Proposed sources (SPEC_PROPOSAL, ontology v1.1 and demo requests) are marked P, planned motion primitives M.
 
 Whole hand:
 - Fist <-> open: `hand.openness`
@@ -208,7 +221,7 @@ Not planned: switching from the FL timeline, a MIDI pad or a gesture. If it is e
 
 ### 8. Assistant line (`ui.assistant`, new; UI of `map.agent` and `map.fallback`)
 
-One glass line over the bottom edge of the canvas, collapsible to a mic icon. The placeholder reads in both languages. A scope chip at the right, "in: Serum 2 (Pad)", comes from the picker; a click changes it for this sentence only.
+An optional shortcut: everything it does can also be done by clicking. Collapsed by default to a small field over the bottom edge of the canvas; it opens on a click or a key. The placeholder reads in both languages. A scope chip at the right, "in: Serum 2 (Pad)", comes from the picker; a click changes it for this sentence only.
 
 After Enter:
 - The sentence stays above the field. Every recognised term is underlined as a chip: source ("Faust"), target ("Filter"), plugin or track ("Pad"), modifiers (invert, range).
@@ -236,10 +249,10 @@ One undo stack per instance, for edits: a row change, a sentence, a preset, a pr
 2. macOS asks for the camera once (P1). The canvas shows the camera with the hint "show both hands" until two hands are tracked; then the L and R tags appear.
 3. Bridge check. If the FL script answers, the dot fills. If not, a card says: "Direct control is off. Install the synthexis controller script (2 steps). Until then, moves drive Signal 1..32, which you link in FL."
 4. Target. The picker opens on Follow FL focus. Noa clicks the Serum 2 window in FL; the breadcrumb reads "Mixer 3 Pad > Serum 2" and synthexis reads its parameters.
-5. The empty moves list offers three starts: "Load a preset" (Filter hand on the left hand), "Say what you want", "Add a move by hand".
+5. The empty moves list offers three starts, in this order: "Add a move" (by clicking), "Load a preset" (Filter hand on the left hand), and the optional "Type it instead".
 6. Live is on. Moves write as soon as they exist.
 
-### Mapping by hand
+### Mapping by clicking (main path)
 
 1. "+ add move" under Left hand. The row opens with Part on Whole hand and the movement list open, icons first.
 2. Noa picks "Fist <-> open". The canvas lights the left palm and shows the live value; Noa opens and closes the hand to see it track.
@@ -249,7 +262,7 @@ One undo stack per instance, for edits: a row change, a sentence, a preset, a pr
 
 Pinch-turn as a virtual knob: Part Whole hand, Movement Pinch-turn. The clutch is on by default for this movement, so the knob moves only while pinched and stays where it is on release.
 
-### Mapping by sentence
+### Mapping by sentence (optional shortcut)
 
 Picked plugin: Serum 2 on the Pad track. Noa types "Linke Faust auf öffnet den Filter, Finger spreizen macht ihn schärfer".
 
@@ -278,6 +291,53 @@ Noa clicks tab 2. From now on the fist writes ShaperBox. The Serum 2 filter stay
 
 Noa accepts the two-route sentence above, then types "nein, nimm die Resonanz vom Filter 2". The diff shows the resonance row with target "Filter 1 Res -> Filter 2 Res". Noa keeps it. One undo brings back Filter 1 Res. A second undo removes both routes of the first sentence and puts cutoff and resonance back to their earlier values.
 
+## Architecture
+
+Starting point in `plugin/synthexis/src/`: the engine fans signal samples out to subscribers (`engine/mod.rs`); `writer.rs` holds a fixed `Vec<Route>` from `route::default_routes` (brightness, motion, test triangle to Signal 1, 2 and 32), runs `cond::Chain` per route and writes macros on the main thread (P2 path). Routes are code, not data, and nothing is persisted except the editor size. The design below turns routes into data that the UI edits.
+
+```
+camera -> students -> geometry -> signals (sig.contract) ------------------- samples ---+
+                                    |                                                    |
+                         capabilities + presence                                         v
+                                    |                                         engine thread:
+UI menus = catalog filtered --> Command --> State --> compile --> RouteTable --swap--> cond.chain per route
+assistant (optional) ---------> Command        (profiles, persisted)                     |
+                                                                                          v
+                                                       writers: macros (main thread) | FL bridge | MIDI out
+```
+
+Parts, each a small module:
+- `catalog.rs`: the static table behind the menus (`ui.catalog`). Pure data, no model.
+- Capabilities: the engine publishes which signal ids it can produce with the models it has loaded, plus `present` per entity from the latest samples. The menus are the catalog filtered by these ids. Today that list holds brightness, motion and the triangle; hands, fingers and face appear when the students load.
+- `state.rs`: `State { profiles, active, camera, aliases }`, `Profile { name, routes, roles, presets, objects, picked, midi }`, `RouteSpec { id, source, target, cond, muted }`. `source` is a catalog id plus side or object id; `target` is one of `Macro(n)`, `FlParam { track, plugin, slot, param_index, param_name }`, `Midi(..)`. Persisted with nih-plug `#[persist = "state"]` as JSON with a version field. The plugin crate needs `serde` and `serde_json` as direct dependencies (the vendored nih-plug already uses both).
+- `command.rs`: every edit is a `Command` (add, remove or change a route, set role, load preset, add or rename an object, add, rename or switch a profile). `apply(&mut State, Command) -> Command` returns the inverse, so undo is a stack of inverses. A pending diff is a group of applied commands not yet committed; Esc applies their inverses. The UI and the assistant both create commands; there is no second write path.
+- `compile.rs`: turns the active profile into a `RouteTable` (signal ids interned to indices, one `cond::Chain` per route, targets resolved to writer slots) and publishes it with a pointer swap. The engine thread picks up the new table on its next sample; the audio thread never touches it (`sig.contract` rule).
+- `route.rs`: `apply_sample` keeps its sum-and-clamp logic, generalised from `macro_index` to a target slot.
+- Writers: macros through the existing main-thread path; FL parameters through `bridge.fl_script` (record-event path); MIDI notes through the plugin's MIDI out in `process()`.
+- Rebinding on load: `FlParam` targets are matched by track name, plugin name, slot and parameter name; a target that cannot be found marks its row "missing" instead of writing somewhere else.
+
+How the click path is tested to 100 %:
+- Catalog: every entry's signal id pattern exists in `tools/mapping/ontology.yaml` and in the engine's list for the capability it names.
+- Commands: random command sequences, then all inverses, give back the starting state exactly (property test).
+- Persistence: state to JSON and back is identity, for every profile.
+- Routing: a recorded signal fixture through a compiled table gives the expected target values (golden test), including sum, clamp, invert and range.
+- In FL: the test bridge (`probes/fl-camera-plugin/bridge/`) adds a row by command, plays the fixture and reads the target back, for a macro and for a third-party parameter.
+- In the window: a new row shows its live source value and the value it writes; "not seen" when the camera does not track the entity.
+
+## Implementation plan
+
+For the line that owns `plugin/`. Each step lands with its tests and leaves the plugin working.
+
+1. `catalog.rs` and engine capabilities. Test: catalog against the ontology and the engine's signal list.
+2. `state.rs` with persistence; today's `default_routes` become the routes of profile 1. Test: JSON round trip.
+3. `command.rs` with history. Test: inverse property.
+4. `compile.rs` and the table swap; `writer.rs` reads the table; macro targets only. Test: golden fixture.
+5. Editor: moves list with the four menus, seen dots, live bars, invert, mute, range, delete; profile tabs; manual target list. Targets are Signal N until step 6.
+6. FL parameter targets through the bridge, after the third-party write test in FL passes.
+7. Assistant: parser and resolver output turned into commands, shown as pending rows. Optional.
+
+For the freeze on 11-02: steps 1 to 5 are the demo core, the click path end to end on macros. Step 6 joins if the FL write test passes; step 7 can follow after the freeze. The hand menus fill as soon as the students deliver hand signals; until then the same code runs on the signals that exist.
+
 ## Scope: demo by 11-02 against later
 
 Freeze is in two days, the UI comes last in the plugin roadmap, and the hand signals arrive with the students from 11-01. So the demo build should cover what the 2-minute playground part shows and nothing else.
@@ -293,15 +353,15 @@ Freeze is in two days, the UI comes last in the plugin roadmap, and the hand sig
 | Target picker | must: manual list, Whole project | Follow FL focus, pin | `bridge.fl_script` | `ui.target_picker` new | probe fl-target-picker |
 | Hands cards: role, presets | should: role switch, Filter hand, Chord hand | Pattern hand, Pong, Orb, object cards | `gest.hand_role`, `gest.presets` | `ui.hands` new, `gest.hand_role` amended | |
 | Profiles | must: tabs with numbers by click, rename, full settings per profile, saved in plugin state | export/import of one profile | `route.matrix`, `gest.hand_role` | `ui.profiles`, `plugin.state` new | |
-| Assistant line: diff rows, accept, discard | should | voice | `map.agent`, `map.parser`, `map.resolver` | `ui.assistant` new | resolver in the plugin (roadmap, open) |
+| Assistant line: diff rows, accept, discard | should, optional shortcut | voice | `map.agent`, `map.parser`, `map.resolver` | `ui.assistant` new | resolver in the plugin (roadmap, open) |
 | Chips with top 3 | should | aliases stored | `map.fallback` | proposal `map.aliases` | threshold on the 51 calibration rows |
 | History | should | keyboard shortcuts | `map.agent` (undo) | `ui.history` new | |
 | Objects: list, pick mode, name, chip | should | re-identification by look | `feat.object`, `perc.track` | `ui.objects` new, `perc.object_reid` new (research) | seg student with object class |
 | Play view | should (for the video) | | `ui.canvas` | `ui.play_view` new | |
 | First-run checks | must: bridge card | camera hint, coach marks | `bridge.fl_script` | `ui.first_run` new | |
 
-Build order if time runs short, each step usable on its own:
-1. Moves list by hand with targets as Signal N or direct, and the manual picker.
+Build order if time runs short, each step usable on its own (details in Implementation plan):
+1. Moves list by clicking with targets as Signal N or direct, and the manual picker.
 2. Profiles: tabs, full settings per profile, persisted state.
 3. Assistant line with pending rows, accept, discard, undo.
 4. Play view, objects with names, Follow FL focus.
@@ -327,6 +387,10 @@ Decided by Noa on 10-31:
 
 - A sentence first shows its rows marked and already running, so the result can be checked by ear; Enter keeps, Esc restores.
 
+Decided by Noa on 11-01:
+- Clicking is the main mapping path and has to work every time; typing or speaking is an optional shortcut.
+- Menus offer only what the camera can detect.
+
 Nothing open from Noa's side.
 
 ## Spec proposal
@@ -347,7 +411,11 @@ For the main session to merge into `spec/synthexis.yaml`. Statements without a c
 
 ### ui.moves (new)
 
-"Assigned-moves list, one row per route, grouped by who moves (left hand, right hand, both hands, face and head, each named object), each group ending in '+ add move'. Row cells: icon, who, part (whole hand, thumb .. pinky, finger shape as a 5-bit mask or a named shape), movement filtered by part and ordered by the hand's role, target (parameter of the picked plugin sorted by param-sense class, learn, XY pad, another plugin, synthexis MIDI target, Signal 1..32, on/off), live value as two bars (source, output) with the value in plugin units when a value string is known, invert, mute, and a detail area for range, curve, smoothing, hold, gate, clutch, quantize and delete. Row states: live, held, muted, pending (+ / -), sum (several rows on one parameter), missing (target gone). Each row shows its write path: direct (bridge.fl_script) or Signal N (tgt.macro, linked in FL)."
+"The main mapping path; it must work without the assistant. Assigned-moves list, one row per route, grouped by who moves (left hand, right hand, both hands, face and head, each named object), each group ending in '+ add move'. Row cells: icon, who, part (whole hand, thumb .. pinky, finger shape as a 5-bit mask or a named shape), movement filtered by part and ordered by the hand's role, target (parameter of the picked plugin sorted by param-sense class, learn, XY pad, another plugin, synthexis MIDI target, Signal 1..32, on/off), live value as two bars (source, output) with the value in plugin units when a value string is known, invert, mute, and a detail area for range, curve, smoothing, hold, gate, clutch, quantize and delete. Row states: live, held, muted, pending (+ / -), sum (several rows on one parameter), missing (target gone). Each row shows its write path: direct (bridge.fl_script) or Signal N (tgt.macro, linked in FL)."
+
+### ui.catalog (new)
+
+"Fixed table of every selectable movement: who, part, movement, icon, signal id pattern per sig.contract (e.g. cam{n}.hand.{side}.openness), kind (continuous, centred, trigger, event) and the perception capability it needs (hand keypoints, finger states, face parts, object track, motion primitives). The ui.moves menus show catalog entries whose signals the engine can deliver now, each with a live seen / not seen dot; objects appear only after they are added in ui.objects. A test fails when the catalog and tools/mapping/ontology.yaml disagree."
 
 ### ui.hands (new)
 
@@ -375,7 +443,7 @@ For the main session to merge into `spec/synthexis.yaml`. Statements without a c
 
 ### ui.assistant (new)
 
-"Glass line over the bottom edge of the canvas, collapsible to a mic icon; scope chip from ui.target_picker, changeable per sentence. On Enter, map.parser and map.resolver produce a diff shown in ui.moves as pending rows (+ new, - removed, old -> new for changed cells). Pending rows run at once so the move can be checked by ear; Accept keeps the diff as one history step, Discard restores the parameter values from before. A sentence typed while rows are pending is applied on top of them; pending rows stay until Accept or Discard (Noa 2026-10-31). Recognised terms are chips (map.fallback); a term below the resolver threshold or with a small margin opens its top 3 and a search, and the pick is stored in map.aliases. 'none' answers 'not a command', 'query' answers in a line and highlights rows. Mic for map.voice, off by default. Footer credit 'Built with Muse Spark Open' (map.license)." Check: keyboard input into an egui text field inside FL.
+"Optional shortcut for mapping; it writes the same ui.history commands as ui.moves and has no write path of its own. Collapsed by default over the bottom edge of the canvas; scope chip from ui.target_picker, changeable per sentence. On Enter, map.parser and map.resolver produce a diff shown in ui.moves as pending rows (+ new, - removed, old -> new for changed cells). Pending rows run at once so the move can be checked by ear; Accept keeps the diff as one history step, Discard restores the parameter values from before. A sentence typed while rows are pending is applied on top of them; pending rows stay until Accept or Discard (Noa 2026-10-31). Recognised terms are chips (map.fallback); a term below the resolver threshold or with a small margin opens its top 3 and a search, and the pick is stored in map.aliases. 'none' answers 'not a command', 'query' answers in a line and highlights rows. Mic for map.voice, off by default. Footer credit 'Built with Muse Spark Open' (map.license)." Check: keyboard input into an egui text field inside FL.
 
 ### ui.history (new)
 
