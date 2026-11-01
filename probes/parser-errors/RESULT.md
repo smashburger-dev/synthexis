@@ -177,3 +177,26 @@ Against v3 on projected labels: 0.766 -> 0.779, 308 / 238, p 0.003, no slice dro
 On the 150 real sentences v6 beats v5 and v3 (`probes/real-eval/RESULT.md`, section "Parser run v6"). The synthetic dev sets stay level, so the gain comes from the new sentence style and not from more of the old one.
 
 Export of p-v6-s0 (`--ds ds-v6p --no-audit`): int8 blob 9.4 MB, int8 costs 0.1 points dev route_edit; 10 ms median, 25 ms p95 on one CPU thread. p-v6-s0 replaces p-v5-s0. Seed 0 is taken by the same rule as v5; the eval split did not pick the seed.
+
+## 10. Parser v7: pretrained encoder (2026-11-01, `tools/mapping/modal_parser.py`)
+
+The from-scratch encoder (6 x d256, 9.3M parameters, tok-v2) is replaced by mmBERT small trimmed to German and English (ModernBERT, 22 layers, width 384, 32k vocabulary, from `kleinhirn-k24/models/k24/backbones/`). The frame decoder, grammar and labels stay. Decoder 2 layers, 6 heads, ff 1536; encoder at lr 5e-5, the rest at 5e-4; 10,000 steps, bf16, on a Modal L4 (20 min per run, about 125 ms per step against 600 ms on the Mac).
+
+Arms: `v7a` mmBERT small on ds-v6p; `v7` the same on ds-v7p (ds-v6p plus 4,838 teacher rows x2, `tools/mapping/teacher_pool.py`); `v7b` mmBERT base (full vocabulary, 328M parameters) on ds-v7p.
+
+| run | dev | challenge | dev_s2 | dev_s3 | dev_s4 | dev_s5 |
+|---|---|---|---|---|---|---|
+| p-v6-s0 | 0.829 | 0.772 | 0.783 | 0.632 | 0.758 | 0.658 |
+| p-v7a-s0 | 0.872 | 0.829 | 0.832 | 0.716 | 0.801 | 0.698 |
+| p-v7a-s1 | 0.872 | 0.841 | 0.835 | 0.733 | 0.798 | 0.693 |
+| p-v7-s0 | 0.881 | 0.830 | 0.818 | 0.714 | 0.807 | 0.685 |
+| p-v7-s1 | 0.877 | 0.823 | 0.816 | 0.680 | 0.801 | 0.695 |
+| p-v7b-s0 | 0.868 | 0.832 | 0.830 | 0.700 | 0.772 | 0.700 |
+
+(route_edit; dev_s4 loses 5 of 828 sentences to the new tokenizer.)
+
+Teacher data: the command batches of stages 2 to 5 dropped 13,950 sentences, mostly for an unmarked slot. 11,846 remain after dev edits, leftover slot ids, duplicates and 175 near-copies of the real set. Each has three readings (the edit, DeepSeek V4.1 Flash without thinking, Spark where those two disagree; 2,925 Spark rows within budget); a sentence is kept when two agree: 3,704 edit+DeepSeek, 320 edit+Spark, 814 DeepSeek+Spark. Cost 0.68 $ DeepSeek, 4.86 $ Spark.
+
+On the real sentences (`probes/real-eval/RESULT.md`, section "Parser v7") the encoder lifts eval exact match from 22 % to 31 % (both seeds, p 0.004); the teacher rows do not. mmBERT base is not better than small.
+
+Export of p-v7a-s0 (`tools/mapping/export_hf.py`): f16 state dict 121 MB, f16 costs nothing on dev (0.872); dynamic int8 costs 2.2 points (v7 with teacher rows: 5.6), so f16 ships. CPU, one thread, f32: 30 ms median, 68 ms p95 per sentence. The plugin runtime does not load backbone models yet (Rust side open). p-v7a-s0 replaces p-v6-s0.

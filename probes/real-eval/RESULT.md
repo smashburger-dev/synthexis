@@ -169,6 +169,31 @@ Reading: the gold and the frame language are learnable from the same spec the pa
 
 Where Spark and DeepSeek without thinking agree (68 of 100 sentences), 59 match the gold: 87 % against 71 % for Spark alone. Agreement of two different teachers is the label filter for teacher data.
 
+## Parser v7 (2026-11-01)
+
+Runs in `probes/parser-errors/RESULT.md`, section 10. Selection rule fixed before eval: best calibration, ties to the smaller model. It picked p-v7-s0 (31/51); mmBERT base got 25/51. Then eval was scored once for every arm:
+
+| run | calibration | eval all | eval orig | eval route F1 | eval right or one part wrong |
+|---|---|---|---|---|---|
+| v6 s0 | 19/51 | 25/99 | 7/22 | 0.347 | 49/99 |
+| v6 s1 | 21/51 | 18/99 | 5/22 | 0.339 | 51/99 |
+| v7 s0 (encoder + teacher rows) | 31/51 | 23/99 | 5/22 | 0.360 | 54/99 |
+| v7 s1 | 30/51 | 22/99 | 7/22 | 0.319 | 57/99 |
+| v7a s0 (encoder only) | 26/51 | 30/99 | 6/22 | 0.371 | 72/99 |
+| v7a s1 | 25/51 | 32/99 | 8/22 | 0.377 | 64/99 |
+| v7b s0 (mmBERT base + teacher rows) | 25/51 | 29/99 | 5/22 | 0.436 | 67/99 |
+| Spark (ceiling) | 40/51 | 62/99 | 14/22 | 0.667 | 82/99 |
+
+"One part wrong": only the gestures or only the targets of the sentence differ from the gold.
+
+v7 with teacher rows gains 10 calibration rows and nothing on eval (v7 against v6, both seeds: 21 won, 19 lost, p 0.87). The cause is the teacher prompt: its rules on pinch, both directions and chained targets were written from calibration errors, and the teacher labels carry them, so calibration stopped being an independent selection set for these runs. No real sentence reached training (0 exact matches; the 267 training sentences that share a word 6-gram with the real set share gesture phrases such as "when i open my left hand", almost all from stages 1 to 3, written before the real set; teacher rows reach a ratio of 0.55 at most).
+
+The encoder alone carries the gain. v7a seed 0 was looked at on eval before choosing it, so seed 1 was trained afterwards as a check of the recipe: 32/99. Both v7a seeds against both v6 seeds on eval: 30 won, 11 lost, p 0.004, exact match 22 % -> 31 %, group bootstrap -1.6 to +22 points. Right or one part wrong rises from 50 % to 68 %. p-v7a-s0 ships (seed 0 by the usual rule).
+
+Needs first seen in eval groups (finger mask, values, step, ramp): v7 gets 2 and 3 of 21 rows, no original besides the ramp one with seed 1.
+
+Reading: a pretrained encoder narrows the gap to Spark from 41 to 31 points exact and from 32 to 14 points on "right or one fix away". Teacher labels need a prompt that no selection set has shaped.
+
 ## Open
 
 - Noa reviews the derived rows: do they sound like him, mean the original plus the listed change, and name the right plugin and parameter? Plugin context is inferred for all 34 originals; 5 are unknown, and their rows note the candidates.
@@ -177,5 +202,5 @@ Where Spark and DeepSeek without thinking agree (68 of 100 sentences), 59 match 
 ## Rules
 
 - No row is used for training or for writing prompts.
-- Stage-4 and stage-5 prompts come from calibration findings only. Before training, every generated sentence is compared with `expanded.jsonl` (word 5-grams, closest-pair ratio), and hits are dropped.
+- Stage-4 and stage-5 prompts come from calibration findings only. A run trained on labels from such a prompt is not selected on calibration (section "Parser v7"). Before training, every generated sentence is compared with `expanded.jsonl` (word 5-grams, closest-pair ratio), and hits are dropped.
 - Needs first seen in eval groups are scored separately if stage 4 covers them.
