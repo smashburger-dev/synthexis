@@ -105,6 +105,42 @@ The pinch rule costs dev sentences where pinch and a movement both drive the tar
 
 Of 3,891 training sentences with a toggle target, 1,569 have no switching word ("my fist does the distortion"). They come from stages 1 to 3, where toggle targets reached Spark as "midi cc <family>" (fixed for stage 4). They teach the parser that a plain effect name is a switch, the error behind "reverb bigger" read as a reverb switch. `project_labels.py --drop-toggle` drops them from the training files; dev sets stay as they are.
 
+Measured with one seed (p-v5t-s0 on ds-v5t against p-v5-s0): rows predicted with a toggle on calibration fall from 5 to 2, but calibration drops from 16 to 14 of 51, and dev route_edit on the 755 dev sentences without a toggle gold falls from 0.861 to 0.842. The dropped rows carry more than the wrong label, so the drop is not used for v6.
+
+## Parser run v6 (2026-11-01)
+
+v6 adds stage 5, shaped by the calibration findings above (`probes/parser-errors/RESULT.md`, section 9). Scored once on eval.
+
+| run | calibration all | calibration orig | eval all | eval orig | eval route F1 | eval orig route F1 |
+|---|---|---|---|---|---|---|
+| v3 s0 | 12/51 | 4/12 | 16/99 | 5/22 | 0.242 | 0.295 |
+| v3 s1 | 18/51 | 5/12 | 14/99 | 4/22 | 0.213 | 0.254 |
+| v5 s0 | 16/51 | 5/12 | 16/99 | 4/22 | 0.273 | 0.286 |
+| v5 s1 | 16/51 | 5/12 | 14/99 | 6/22 | 0.253 | 0.312 |
+| v6 s0 | 19/51 | 5/12 | 25/99 | 7/22 | 0.347 | 0.419 |
+| v6 s1 | 21/51 | 6/12 | 18/99 | 5/22 | 0.339 | 0.444 |
+
+Paired exact match, both seeds pooled (McNemar on rows, 95 % interval from a bootstrap over groups):
+
+| comparison | split | won / lost | p | exact match diff | group bootstrap |
+|---|---|---|---|---|---|
+| v6 vs v5 | calibration | 10 / 2 | 0.039 | +7.8 points | [-0.8, +20.0] |
+| v6 vs v5 | eval | 22 / 9 | 0.029 | +6.6 points | [+0.5, +14.7] |
+| v6 vs v3 | calibration | 12 / 2 | 0.013 | +9.8 points | [+2.2, +19.0] |
+| v6 vs v3 | eval | 24 / 11 | 0.041 | +6.6 points | [-3.2, +18.6] |
+
+Error types on the calibration rows (v6 s0, v5 s0 in brackets):
+- target kind wrong: 22 (27)
+- sources wrong: 20 (28)
+- pinch read as a source where it holds another movement: 6 of 9 rows (8)
+- number of routes wrong: 11 (15)
+- invert wrong: 8 (6)
+- no target at all: 7 (10)
+
+Needs first seen in eval groups (finger mask, values, step, ramp; 5 groups, 21 rows): v6 gets 3 of 21 rows with either seed and 1 of 5 originals (the two-value request), v5 got 0 and 2 of 21. The routes that need these pieces are still mostly wrong.
+
+Reading: the style batch moved the real-sentence score where stage 4 did not. Eval exact match goes from 15 % to 22 % (seed mean), route F1 from 0.26 to 0.34. Exact match on real sentences stays far below dev (0.83), so most of Noa's long sentences still need the chips to fix one or two routes. Gold is still Claude's draft; Noa's check can move every number in this section.
+
 ## Open
 
 - Noa reviews the derived rows: do they sound like him, mean the original plus the listed change, and name the right plugin and parameter? Plugin context is inferred for all 34 originals; 5 are unknown, and their rows note the candidates.
@@ -113,5 +149,5 @@ Of 3,891 training sentences with a toggle target, 1,569 have no switching word (
 ## Rules
 
 - No row is used for training or for writing prompts.
-- Stage-4 prompts come from calibration findings only. Before training, every generated sentence is compared with `expanded.jsonl` (word 5-grams, closest-pair ratio), and hits are dropped.
+- Stage-4 and stage-5 prompts come from calibration findings only. Before training, every generated sentence is compared with `expanded.jsonl` (word 5-grams, closest-pair ratio), and hits are dropped.
 - Needs first seen in eval groups are scored separately if stage 4 covers them.

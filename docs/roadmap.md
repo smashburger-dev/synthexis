@@ -72,7 +72,8 @@ Hard dates: S3 and S4 recorded 10-30/10-31, training from 11-01 (new Modal credi
 - [x] Parser error analysis (`probes/parser-errors/RESULT.md`): ß missing from the tokenizer vocabulary; 29 % of object labels, 75 % of momentary labels and 6-8 % of invert labels are not expressed by their sentence; text-supported scoring +4.8 points en, +4.9 de
 - [x] Bundled retrain A/B/C (tok-v2, projected labels, word hash embedding): no step beyond seed noise, B kept, word hash dropped (`probes/parser-errors/RESULT.md` section 7)
 - [x] Stage 4 commands (8,691 sentences, 6.71 $, 59 near-copies of the real set dropped) and parser v5: dev 0.837, challenge 0.781, dev_s4 0.736; +1.1 points against v3 on projected labels (p 0.018, no slice drops); exported `p-v5-s0`, int8 9.4 MB, 10 ms median (section 8)
-- [ ] Gap between synthetic and real sentences: Noa checks the gold routes, then a batch shaped by calibration findings (pinch as hold condition, both directions in one sentence, long multi-target sentences) or a different lever; chip fallback is the main path until then
+- [x] Stage 5 commands shaped by calibration findings (4,476 sentences, 6.77 $, 125 near-copies dropped) and parser v6: real-sentence eval exact match 15 % -> 22 % against v5 (p 0.029, both seeds), route F1 0.26 -> 0.34, dev level at 0.83; exported `p-v6-s0`, int8 9.4 MB, 10 ms median (`probes/parser-errors/RESULT.md`, section 9). Last data run of this line
+- [ ] Noa checks the gold routes of the 34 originals (`data/mapping/eval/gold-routes.json`, `review.md`); the real-sentence numbers move with it. Chips stay the main path for long sentences: v6 gets about a fifth of them exactly right
 
 ## Demo and submission
 

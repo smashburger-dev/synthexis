@@ -155,3 +155,25 @@ Gates against v3, pooled over both seeds (dev + dev_s2 + dev_s3, 5,202 pairs):
 On the 150 real sentences (`probes/real-eval/RESULT.md`, section "Parser runs") v5 is level with v3. The gain stays on synthetic text.
 
 Export of p-v5-s0 (`--ds ds-v5p --no-audit`): int8 blob 9.4 MB, int8 costs 0.1 points dev route_edit; 10 ms median, 25 ms p95 on one CPU thread.
+
+## 9. Result of the style run v6 (2026-11-01, `tools/mapping/run_v6.sh`)
+
+Recipe B on ds-v6p: ds-v5 plus stage 5 (4,476 sentences in the style of the calibration findings: both directions of one movement, chained targets, pinch held while the hand moves, casual and rambling registers; 125 near-copies of the real set dropped; 6.77 $). Two seeds, 16,000 steps, 50 min each. This is the last data run of this line.
+
+| run | dev | challenge | dev_s2 | dev_s3 | dev_s4 | dev_s5 (new style) |
+|---|---|---|---|---|---|---|
+| p-v6-s0 | 0.829 | 0.772 | 0.783 | 0.632 | 0.758 | 0.659 |
+| p-v6-s1 | 0.826 | 0.792 | 0.796 | 0.651 | 0.758 | 0.651 |
+
+Gates against v5, pooled over both seeds (dev + dev_s2 + dev_s3, 5,202 pairs):
+
+| labels | route_edit | won / lost | p | slices dropping (p < 0.05) |
+|---|---|---|---|---|
+| projected | 0.777 -> 0.779 | 242 / 229 | 0.58 | none |
+| original | 0.671 -> 0.678 | 193 / 160 | 0.088 | none |
+
+Against v3 on projected labels: 0.766 -> 0.779, 308 / 238, p 0.003, no slice drops.
+
+On the 150 real sentences v6 beats v5 and v3 (`probes/real-eval/RESULT.md`, section "Parser run v6"). The synthetic dev sets stay level, so the gain comes from the new sentence style and not from more of the old one.
+
+Export of p-v6-s0 (`--ds ds-v6p --no-audit`): int8 blob 9.4 MB, int8 costs 0.1 points dev route_edit; 10 ms median, 25 ms p95 on one CPU thread. p-v6-s0 replaces p-v5-s0. Seed 0 is taken by the same rule as v5; the eval split did not pick the seed.
