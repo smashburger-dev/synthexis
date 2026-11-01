@@ -27,8 +27,8 @@ Hard dates: S3 and S4 recorded 10-30/10-31, training from 11-01 (new Modal credi
 
 ## Training (main session, from 11-01)
 
-- [ ] Packer: tar shards, 384x216 frames, 128 px hand and face crops, segment-level dev split (`train.setup`)
-- [ ] Mac preflight: 64 samples, 20 steps, CoreML export
+- [x] Packer: tar shards, 384x216 frames, 128 px hand and face crops, segment-level dev split (`train.setup`; 47,367 frames, 5.2 GB, 319 s; [result](../probes/train-packer/RESULT.md))
+- [x] Mac preflight: 64 samples, 20 steps, CoreML export (both students pass on MPS; [result](../probes/train-packer/RESULT.md))
 - [ ] Licence check of every pretrained weight file
 - [ ] Decide D9 (proxy teacher), D10 (crops), D11 (temporal prior), D12 (backbone)
 - [ ] Proxy teacher, then students seg and hand on Modal L4; eval on S4 against `budget.quality`
