@@ -1,6 +1,6 @@
 # RESULT: motion.labels, Spark Open freestyle timelines and segment QA
 
-Status 2026-11-01: tool built, segment QA run on S1 and S2 (second run after a frame-lookup fix and a count rule), timeline pilot on S2 (3 of 8 windows). S3 is recorded but not yet extracted or SAM-labelled; the timelines run on S1 to S4 in one go once S3 and S4 are labelled.
+Status 2026-11-01: tool built, S1 and S2 done: segment QA (second run after a frame-lookup fix and a count rule) and freestyle timelines with two passes. S3 is recorded but not yet extracted or SAM-labelled, S4 is being recorded; both run once SAM labels exist.
 
 Tool: `uv run tools/labels/motion_labels.py <session> [--max-usd 15] [--passes 1|2] [--only qa|timeline] [--limit-jobs N] [--dry-run]`, review page via `uv run tools/labels/motion_labels.py report <session>...`. Outputs under `data/motion_labels/<session>/` (not committed, faces): `timeline.json`, `qa.json`, `review.html`, `frames/` (the exact images sent). Runs need `SYNTHEXIS_BASETEN_CAP` above the ledger total (73.57 $ before this work; default 60), here 95.
 
@@ -27,9 +27,11 @@ Tool: `uv run tools/labels/motion_labels.py <session> [--max-usd 15] [--passes 1
 | S1 QA | 10 | 0.25 |
 | S1 QA rerun (fixed frames, count rule) | 10 | 0.26 |
 | S2 QA rerun (count rule) | 12 | 0.33 |
-| total motion-* | 56 | 1.37 |
+| S2 timeline, pass a rest and pass b | 13 | 0.24 |
+| S1 timeline, passes a and b | 16 | 0.27 |
+| total motion-* | 85 | 1.88 |
 
-Per request at medium reasoning: timeline 0.022 $, QA 0.025 to 0.029 $ (1,800 to 4,600 output tokens; reasoning is 85 to 90 % of output). Projection for S1 to S4: timelines 30 windows x 0.022 = 0.66 $ per pass, QA 42 requests x 0.028 = 1.2 $. Two timeline passes plus one QA pass about 2.5 $, far below the 15 $ cap. Ledger total after the reruns: about 74.9 $.
+Per request at medium reasoning: timeline 0.022 $, QA 0.025 to 0.029 $ (1,800 to 4,600 output tokens; reasoning is 85 to 90 % of output). Projection for S1 to S4: timelines 30 windows x 0.022 = 0.66 $ per pass, QA 42 requests x 0.028 = 1.2 $. Two timeline passes plus one QA pass about 2.5 $, far below the 15 $ cap. Ledger total after S1 and S2: about 75.4 $ of the 100 $ credit (the billing page needs Noa's login; the 2026-10-27 image test ran outside the ledger).
 
 ## Segment QA findings (second run, not yet spot-checked)
 
@@ -43,13 +45,18 @@ Per request at medium reasoning: timeline 0.022 $, QA 0.025 to 0.029 $ (1,800 to
 - Remaining flags are mostly single A frames with a neighbouring finger state (thumb or pinky), which fits a hand still forming the pose. Real deviations to look at in S2: C_neutral (pursed lips), C_wink_L (both eyes squinted), C_turned_mouth (pursed instead of open and close), D_lean_sweep (turn instead of lean), H_swipe_right and H_swipe_left (direction or fist), H_pinch_drag.
 - Training labels: extraction marks frames inside the margins of a count segment as `label_ok` with the target finger state (S1: 427 frames, S2: 354). While Noa counts up, the hand shows fewer fingers, so those labels are wrong for the first part of each count segment. S3 was recorded the same way. Not fixed here (label pipeline, `tools/labels/extract.py`).
 
-## Timeline pilot (S2, 3 windows, 24 events)
+## Timelines S1 and S2 (two passes)
 
-G_free_hands 0-10 s: 10 events (throw, hold, push_pull, grab_release, swipe, orb, other) with sides and directions; G_free_face 0-10 s: 8 events, mostly face_head with concrete descriptions (O mouth, grin, head back); G_free_play 10-20 s: 6 events, all `other` or face_head (air keyboard, knob twisting, fist pumping), which fits the instruction. 2 fps limits timing to about +-0.5 s, so `motion.eval`'s 100 ms latency target cannot be judged from these labels, only event F1.
+| session | windows | events pass a | matched in pass b | precision a vs b | recall a vs b |
+|---|---|---|---|---|---|
+| S1 | 8 | 63 | 44 of 57 | 0.70 | 0.77 |
+| S2 | 8 | 52 | 34 of 47 | 0.65 | 0.72 |
+
+A match needs the same primitive and overlapping times (0.5 s slack). Pass a by primitive: S1 face_head 21, other 20, hold 14, the rest 8; S2 face_head 15, other 13, swipe 8, push_pull 6, throw 4, hold 4, the rest 2. The pilot windows read plausibly (G_free_hands: throw, hold, push_pull, grab_release, swipe, orb with sides and directions; G_free_face: face_head with concrete descriptions such as O mouth or head back; G_free_play: air keyboard, knob twisting, fist pumping as `other`). 2 fps limits timing to about +-0.5 s, so `motion.eval`'s 100 ms latency target cannot be judged from these labels, only event F1. Agreement between two readings of the same frames is about 70 %, so treat single-pass events as candidates and the matched ones as the firmer set.
 
 ## Open
 
 1. Noa spot-checks `data/motion_labels/2026-10-29-S2/review.html` and `2026-10-27-S1/review.html` (copy verdicts button); the pages show the second run.
 2. Noa: real balance on the Baseten billing page (needs his login).
-3. After S3 and S4 are recorded and SAM-labelled: timelines (two passes, agreement in `timeline.json`) on S1 to S4, QA on S3 and S4.
+3. After S3 and S4 are extracted and SAM-labelled: `SYNTHEXIS_BASETEN_CAP=95 uv run tools/labels/motion_labels.py <session> --max-usd 15 --passes 2` (QA plus two timeline passes), then tick the roadmap item. S4 uses the short protocol (no count segments, two G segments).
 4. Count-segment finger labels in extraction: keep only the end of each count segment, or drop count frames from finger-state training.
