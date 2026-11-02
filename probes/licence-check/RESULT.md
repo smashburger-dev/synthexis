@@ -11,6 +11,7 @@ Everything we train from or ship is usable in a public MIT repo and inside the p
 ## Decisions by Noa (2026-11-02)
 
 - Apple Vision: the `vision-keypoints` session stops using Vision as the teacher and takes the best licence-clean state-of-the-art alternative. My recommendation, sent to that session: SAM 3D Body (SAM License, Meta, hand decoder, Modal GPU under the money guards), MediaPipe Hand Landmarker as the free fallback and cross-check. HaMeR and WiLoR are out: they need the MANO model (non-commercial MANO licence), and WiLoR itself is CC-BY-NC-ND-4.0.
+- Status reported by the `vision-keypoints` session (probes/hand-keypoints/RESULT.md on branch `claude/vision-keypoints-ae6b72`): the `perc.hand` keypoint teacher is now MediaPipe Hand Landmarker, `hand_landmarker.task` (float16, Last-Modified 2023-04-26, sha256 `fbc2a30080c3c557093b5ddfc334698132eb341044ccee322ccf8bcf3607cde1`), run offline with mediapipe 1.2.0, Apache-2.0 per its model card. Noa approved SAM 3D Body as the stronger teacher, but `facebook/sam-3d-body-dinov3` and `-vith` are gated with manual approval and the HF token in the Modal secret gets 403. Noa has to request access; no SAM 3D Body output exists yet.
 - SAM 3.1: allowed, it is part of the Meta stack this entry promotes. The students ship with a copy of the SAM License as the cheap precaution; code stays MIT.
 - Trimmed mmBERT: stays. The README says it is the one asset carried over from earlier work (kleinhirn) and why it was worth taking.
 
@@ -49,9 +50,9 @@ Alternative teachers for the 21 hand keypoints:
 
 | Candidate | Source | Licence | Notes |
 |---|---|---|---|
-| MediaPipe Hand Landmarker (Google) | model card "Hand Tracking (Lite/Full) with Fairness, Oct 2021", `storage.googleapis.com/mediapipe-assets` | Apache-2.0 ("LICENSED UNDER Apache License, Version 2.0" on the model card) | Same 21-point layout as Vision, runs offline on the Mac CPU, no cost. Closest drop-in |
+| MediaPipe Hand Landmarker (Google) | model card "Hand Tracking (Lite/Full) with Fairness, Oct 2021", `storage.googleapis.com/mediapipe-assets` | Apache-2.0 ("LICENSED UNDER Apache License, Version 2.0" on the model card) | Same 21-point layout as Vision, runs offline on the Mac CPU, no cost. Closest drop-in. Chosen teacher since 2026-11-02 (`hand_landmarker.task`, sha256 `fbc2a300…cde1`) |
 | RTMPose hand (OpenMMLab) | `mmpose`; LiteRT export `litert-community/RTMPose-Hand-LiteRT` (`df8c0805`) | Apache-2.0 (code and HF tag); training-set terms (COCO-WholeBody hand and others) not checked | 21 points, runs on CPU |
-| SAM 3D Body (Meta) with MHR | `facebook/sam-3d-body-dinov3` (`11aaa346`, gated), `facebookresearch/MHR` | SAM License (same text as SAM 3); MHR Apache-2.0 | README claims state-of-the-art human mesh recovery, with a hand decoder benchmarked on FreiHAND. Fits the Meta showcase. Needs a GPU on Modal, so it costs money. Recommended |
+| SAM 3D Body (Meta) with MHR | `facebook/sam-3d-body-dinov3` (`11aaa346`, gated), `facebookresearch/MHR` | SAM License (same text as SAM 3); MHR Apache-2.0 | README claims state-of-the-art human mesh recovery, with a hand decoder benchmarked on FreiHAND. Fits the Meta showcase. Needs a GPU on Modal, so it costs money. Recommended; approved by Noa, blocked until he gets gated access (HF 403) |
 | HaMeR, WiLoR | `geopavlakos/hamer`, `rolpotamias/WiLoR` | both need the MANO hand model (MANO licence, non-commercial); WiLoR models CC-BY-NC-ND-4.0 | Excluded |
 | Sapiens2 (Meta) | `facebook/sapiens2` (`41bde0b2`) | Sapiens2 License (own text, not read in full) | Sapiens v1 pose (`facebook/sapiens-pose-0.3b`) is CC-BY-NC-4.0, excluded |
 | No keypoint teacher | SAM hand masks plus script finger-state labels | ours | Drops per-finger extension and spread as regression targets |

@@ -42,6 +42,10 @@ The mapping parser's encoder is mmBERT small (Marone et al. 2025, arXiv 2509.068
 
 MobileNetV4-Conv-Small (`timm/mobilenetv4_conv_small.e2400_r224_in1k`) and, if chosen, RepViT-M0.9 (`timm/repvit_m0_9.dist_300e_in1k`, upstream `THU-MIG/RepViT`) come from timm (Ross Wightman, Hugging Face) under the Apache License 2.0; both were pretrained on ImageNet-1k. The Apache text ships as `LICENSES/Apache-2.0.txt`, and the student weights are modified versions of these backbones.
 
+### MediaPipe Hand Landmarker
+
+The hand student learns its 21 keypoints from MediaPipe Hand Landmarker (Google), model bundle `hand_landmarker.task` (float16, sha256 `fbc2a300…cde1`, from Google's mediapipe-models bucket), run offline with mediapipe 1.2.0. The model card ("Hand Tracking (Lite/Full) with Fairness", Oct 2021) states "LICENSED UNDER Apache License, Version 2.0"; the mediapipe library is Apache-2.0 as well. The hand student weights carry this notice next to the timm backbones; the Apache text is the same `LICENSES/Apache-2.0.txt`.
+
 ### DeepSeek
 
 Part of the parser's synthetic training sentences (stage 6) and some teacher labels were written by DeepSeek V4.1 Flash through the DeepSeek Open Platform API, whose terms allow training other models on its outputs. Plain-text credit only: no DeepSeek logo, and no wording that suggests a partnership or endorsement (terms section 5).
