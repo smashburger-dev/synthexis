@@ -1,4 +1,4 @@
-"""Parser training on a Modal GPU (L4, else A10G or L40S; v7: mmBERT encoder).
+"""Parser training on a Modal GPU (train: L4 only, for cost; v7: mmBERT encoder).
 
 One-time setup (data and backbone go to the volume once, never into the image):
     modal volume create synthexis-parser
@@ -46,7 +46,7 @@ image = (
 )
 
 
-@app.function(image=image, gpu=["L4", "A10G", "L40S"], timeout=2 * 3600,
+@app.function(image=image, gpu="L4", timeout=4 * 3600,
               volumes={"/vol": vol})
 def train(name: str, args: str) -> dict:
     import json

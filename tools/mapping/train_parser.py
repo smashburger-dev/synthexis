@@ -22,6 +22,12 @@ about 1.07M parameters) to every subword embedding.
 --backbone <name> replaces the encoder with a pretrained model from
 data/mapping/backbones/<name> (its tokenizer instead of --tok, d = its
 width, decoder heads/ff by --heads/--ff); it trains at --enc-lr.
+--hf-layers N keeps only the lowest N backbone layers.
+--train takes a comma list of files in --ds (e.g. train_cat,pool).
+--teachers r1,r2,... distils their ensemble (mean of log-softmax, as
+decoded) into the student: loss (1 - kd) CE + kd T^2 KL(teacher || student)
+on frame and pointer steps, the same on the BIO head. --init <run> starts
+from that run's weights.
 """
 
 import argparse
@@ -37,6 +43,7 @@ from pathlib import Path
 import numpy as np
 import sentencepiece as spm
 import torch
+import torch.nn.functional as F
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import frame_parser as fp  # noqa: E402
@@ -48,6 +55,37 @@ TRAIN = ROOT / "data" / "mapping" / "train"
 def keep_frac(edit_id: str, frac: float) -> bool:
     h = hashlib.sha1(f"lc:{edit_id.rstrip('b')}".encode()).hexdigest()
     return int(h[:8], 16) % 1000 < frac * 1000
+
+
+def kd_loss(model, teachers, x, bio, yin, yout, bio_w, kd, temp):
+    """Gold CE mixed with KL to the teachers' ensemble distribution, which
+    is softmax of the mean member log-softmax (what greedy decodes)."""
+    logits, bl = model(x, yin)
+    with torch.no_grad():
+        tl = tb = 0.0
+        for t in teachers:
+            a, b = t(x, yin)
+            tl = tl + F.log_softmax(a.float() / temp, -1)
+            tb = tb + F.log_softmax(b.float() / temp, -1)
+        pt = F.softmax(tl / len(teachers), -1)
+        pb = F.softmax(tb / len(teachers), -1)
+
+    def kl(student, target, keep):
+        ls = F.log_softmax(student.float() / temp, -1)
+        k = F.kl_div(ls, target, reduction="none").sum(-1)
+        return (k * keep).sum() / keep.sum().clamp(min=1) * temp * temp
+
+    l1 = F.cross_entropy(logits.reshape(-1, logits.shape[-1]),
+                         yout.reshape(-1), ignore_index=-100)
+    has_bio = (bio != -100).any()
+    l2 = F.cross_entropy(bl.reshape(-1, len(fp.BIO)), bio.reshape(-1),
+                         ignore_index=-100) if has_bio else bl.sum() * 0
+    src = (x != fp.PAD).float()
+    src[:, 0] = 0
+    k1 = kl(logits, pt, (yout != -100).float())
+    k2 = kl(bl, pb, src)
+    loss = (1 - kd) * (l1 + bio_w * l2) + kd * (k1 + bio_w * k2)
+    return loss, l1, l2
 
 
 def main() -> None:
@@ -73,6 +111,11 @@ def main() -> None:
     ap.add_argument("--heads", type=int, default=6)
     ap.add_argument("--ff", type=int, default=1536)
     ap.add_argument("--amp", type=int, default=0)     # bf16 autocast on cuda
+    ap.add_argument("--hf-layers", type=int, default=0)
+    ap.add_argument("--teachers", default="")
+    ap.add_argument("--kd", type=float, default=0.5)
+    ap.add_argument("--kd-t", type=float, default=1.0)
+    ap.add_argument("--init", default="")
     a = ap.parse_args()
 
     random.seed(a.seed)
@@ -102,7 +145,11 @@ def main() -> None:
                             if (ds / f"{n}.jsonl").exists()])
     tok_id = {t: i for i, t in enumerate(vocab)}
     fv = len(vocab)
-    train, lost_tr = fp.load(sp, ds / f"{a.train}.jsonl", tok_id)
+    train, lost_tr = [], 0
+    for name in a.train.split(","):
+        part, lost = fp.load(sp, ds / f"{name}.jsonl", tok_id)
+        train += part
+        lost_tr += lost
     devset, lost_dev = fp.load(sp, ds / "dev.jsonl", tok_id)
     chal, lost_ch = fp.load(sp, ds / "challenge.jsonl", tok_id)
     extra = {n: fp.load(sp, ds / f"{n}.jsonl", tok_id)[0]
@@ -122,9 +169,18 @@ def main() -> None:
         d = transformers.AutoConfig.from_pretrained(
             fp.backbone_dir(a.backbone)).hidden_size
         model = fp.Parser(sp.get_piece_size(), fv, d=d, heads=a.heads,
-                          ff=a.ff, whash=a.whash, hf=a.backbone).to(dev)
+                          ff=a.ff, whash=a.whash, hf=a.backbone,
+                          hf_layers=a.hf_layers).to(dev)
     else:
         model = fp.Parser(sp.get_piece_size(), fv, whash=a.whash).to(dev)
+    if a.init:
+        model.load_state_dict(torch.load(TRAIN / "runs" / a.init / "model.pt",
+                                         map_location=dev))
+    teachers = []
+    for t in filter(None, a.teachers.split(",")):
+        tm, _, tv = fp.load_run(TRAIN / "runs" / t, dev)
+        assert tv == vocab, f"teacher {t} has another frame vocab"
+        teachers.append(tm.eval().requires_grad_(False))
     n_params = sum(p.numel() for p in model.parameters())
     log(f"params {n_params / 1e6:.2f}M device {a.device}")
     emb = ("src.", "spos.", "tgt.", "tpos.", "wh.")
@@ -164,8 +220,12 @@ def main() -> None:
         for g in opt.param_groups:
             g["lr"] = lr_at(step) * g["scale"]
         with torch.autocast("cuda", dtype=torch.bfloat16, enabled=bool(a.amp)):
-            loss, l1, l2 = fp.loss_fn(model, x, bio, yin, yout, a.bio_w,
-                                      wh if a.whash else None)
+            if teachers:
+                loss, l1, l2 = kd_loss(model, teachers, x, bio, yin, yout,
+                                       a.bio_w, a.kd, a.kd_t)
+            else:
+                loss, l1, l2 = fp.loss_fn(model, x, bio, yin, yout, a.bio_w,
+                                          wh if a.whash else None)
         opt.zero_grad(set_to_none=True)
         loss.backward()
         torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)

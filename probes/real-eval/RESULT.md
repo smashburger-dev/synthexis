@@ -344,6 +344,16 @@ Misses of the four-seed ensemble (conv), read by part as for v10 (calibration 21
 
 Smaller: a preset described by what it does ("every finger should be a chord", 19, 5 calibration rows; training names presets only by name); arpeggiator range and rate read as synthexis' MIDI generator where the gold has Serum's parameter (17), and pinch with both axes read as two routes where the gold has the XY pad (12): both are label questions for Noa.
 
+## Parser v10 lean: selection rule (written 2026-11-02, before any lean candidate is trained or scored)
+
+Goal: the reading of the four-seed v10 ensemble at lower RAM and latency. Reference: ensemble v10 s0 to s3, greedy over the mean log-softmax, then `rules.py conv,pronoun`; 4 x 121 MB in f16.
+
+1. Score: mean route_edit over the eight dev sets of ds-v10c after the rules (`decode_eval.py --ds ds-v10c --splits dev,challenge,dev_s2,dev_s3,dev_s4,dev_s5,dev_s6,dev_s7 --rules 'conv,pronoun'`, value `mean conv,pronoun`). The reference scores 0.7735 (0.7729 without rules, `decode/lean-ens4.json`).
+2. A candidate replaces the reference when it scores at least 0.7705 (at most 0.003 lower) and needs less weight memory. Among passing candidates the one with the least weight memory wins; within 10 % of that memory the lower median latency wins, then the higher score.
+3. Candidates: students distilled from the four-seed ensemble (variants of data, loss weight, depth), the mean of the four seeds' weights, and ggml Q8_0 / Q4_0 weights of a passing candidate. A quantised candidate is scored like any other. The single seeds (0.746 to 0.756 before rules) are reference points, not candidates.
+4. Cost: f16 weight bytes (quantised: ggml block bytes), median and p95 ms per sentence over 200 dev sentences on one CPU thread in torch (`tools/mapping/lean.py cost`).
+5. Real set: scored once at the end for the chosen candidate, with `predict.py --rules conv,pronoun`, `arms.py table` and `paired` against `g2-ens-v10-4-conv`. The set is seen; its numbers are reported and do not select.
+
 ## Open
 
 - Noa reviews the derived rows: do they sound like him, mean the original plus the listed change, and name the right plugin and parameter? Plugin context is inferred for all 34 originals; 5 are unknown, and their rows note the candidates.
