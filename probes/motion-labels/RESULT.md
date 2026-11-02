@@ -1,6 +1,8 @@
 # RESULT: motion.labels, Spark Open freestyle timelines and segment QA
 
-Status 2026-11-02: done for S1 to S4. Every session has a two-pass segment QA and two-pass freestyle timelines. S3 and S4 were extracted and SAM-labelled in image mode for this. Spend on Baseten for `motion-*` runs: 5.63 $ of the 15 $ cap. Noa's spot-check of the review pages is still open.
+Status 2026-11-02: done for S1 to S4. Every session has segment QA and two-pass freestyle timelines. S3 and S4 were extracted and SAM-labelled in image mode for this. Noa spot-checked S3 (`noa-review-2026-11-02.md`); a third round with a wider motion vocabulary and stricter QA rules followed. Spend on Baseten for `motion-*` runs: 8.06 $ of the 15 $ cap.
+
+Bottom line from Noa's review: Spark's "ok" is trustworthy (10 of 10 on S3), its flags are not (3 of 24 right in round 2). Script labels stay the truth for training; QA flags are hints for a human, never an automatic exclusion. Spark at 2 fps and 768x432 does not see fine finger actions (OK sign, pinch, knob turn) reliably, so freestyle timelines are event candidates, not ground truth.
 
 Tool: `uv run tools/labels/motion_labels.py <session> [--max-usd 15] [--passes 1|2] [--only qa|timeline] [--limit-jobs N] [--dry-run]`, review pages via `uv run tools/labels/motion_labels.py report <session>...`. Outputs under `data/motion_labels/<session>/` (not committed, faces): `timeline.json`, `qa.json`, `review.html`, `frames/` (the exact images sent). Runs need `SYNTHEXIS_BASETEN_CAP` above the ledger total (default 60), here 95.
 
@@ -24,13 +26,14 @@ Tool: `uv run tools/labels/motion_labels.py <session> [--max-usd 15] [--passes 1
 
 | item | $ |
 |---|---|
-| Baseten `motion-*`: limit probe, S2 pilot, first QA runs, reruns after the fixes, final two-pass QA and timelines on S1 to S4 | 5.63 |
+| Baseten `motion-*`: limit probe, S2 pilot, first QA runs, reruns after the fixes, two-pass QA and timelines on S1 to S4 | 5.63 |
+| Baseten `motion-*`, round 3 after Noa's review: QA one pass, timelines two passes, S1 to S4 | 2.43 |
 | Modal SAM image mode, S3 (13,089 frames, 44 chunks, estimate 1.76 $) | 1.22 |
 | Modal SAM image mode, S4 (8,801 frames, 29 chunks, estimate 1.17 $) | 0.78 |
 
-Baseten ledger total after this work: 79.20 $ of the 100 $ credit. The billing page needs Noa's login; the 2026-10-27 image test ran outside the ledger.
+Baseten ledger total after this work: 81.64 $ of the 100 $ credit. The billing page needs Noa's login; the 2026-10-27 image test ran outside the ledger.
 
-## Segment QA (final, two passes)
+## Segment QA, round 2 (two passes)
 
 | session | segments | ok | partial | mismatch | both passes mismatch | passes agree |
 |---|---|---|---|---|---|---|
@@ -39,7 +42,7 @@ Baseten ledger total after this work: 79.20 $ of the 100 $ credit. The billing p
 | S3 | 95 | 70 | 9 | 16 | 10 | 82 |
 | S4 (short) | 69 | 53 | 7 | 9 | 3 | 58 |
 
-Mismatches both passes agree on:
+Mismatches both passes agree on (superseded: Noa's review shows most of these are Spark errors, see the bottom line above):
 - S1: A_R_01110, A_R_01111, A_L_01110, A_both_01000_00000
 - S2: A_R_01001, A_L_00001, A_both_01000_00000, A_both_10001_01001, C_neutral, C_blink, H_throw_left, H_swipe_left, H_swipe_up
 - S3: A_R_01110, A_R_00001, A_L_00001, C_wink_L, C_wink_R, D_step_back, F_backlit, F_dim, H_throw_bottom, H_throw_left
@@ -47,10 +50,25 @@ Mismatches both passes agree on:
 
 Reading:
 - Most A flags sit on single finger states that recur across sessions (pinky only `00001`, `01110` against `01111`). Either the hand rotation in A (the instruction asks to turn the wrist) hides the finger, or Spark confuses pinky and index. One S4 frame checked by eye was not decidable at 768x432 either.
-- Winks (C_wink_L, C_wink_R) come out as both eyes closed in S2 to S4. If that holds on a look, the eye labels of those segments should not train a one-eye-closed class.
+- Winks (C_wink_L, C_wink_R) come out as both eyes closed in S2 to S4. Noa's review: the winks were performed correctly; Spark misreads them.
 - History of fixes: the first S1 QA flagged 51 of 78 segments. That was a bug in `motion_labels.frame_at`, which looked up frames by list position while extraction had dropped the 277 frames of S1's bad segment, so every later frame was 18.5 s late. `frame_at` now searches by timestamp. The count rule took most B flags away, the mirror rule most H swipe flags.
 
+## Segment QA, round 3 (one pass, after Noa's review)
+
+Changes: 6 frames for block H movements; a lost, cut or blurred hand is "unclear"; thumb warning for finger states; hand side from arm and thumb (S3 films from the side); lights may switch off midway; flag only what the pixels clearly show; mismatch needs at least half of the frames wrong.
+
+| session | ok | unsure | partial | mismatch |
+|---|---|---|---|---|
+| S1 | 66 | 1 | 3 | 7 |
+| S2 | 78 | 0 | 12 | 6 |
+| S3 | 81 | 0 | 7 | 7 |
+| S4 | 61 | 0 | 3 | 5 |
+
+Against Noa's S3 verdicts: of the 21 flags he called wrong, 10 are gone and 11 remain (A_L_11100, A_R_01100, A_R_01110, A_R_01111, A_R_11000, A_both_10001_01001, C_wink_L, C_wink_R, H_throw_bottom, H_throw_left, H_throw_top). Of his 3 confirmed problems only F_backlit is still flagged (D_step_back and F_dim now pass). None of the 10 confirmed oks is flagged. So the rules cut false alarms by half but also hide real problems; prompt work does not make Spark's finger and wink reading reliable at this resolution.
+
 ## Timelines (two passes)
+
+Round 2, original vocabulary:
 
 | session | windows | events pass a | matched in pass b | precision a vs b | recall a vs b |
 |---|---|---|---|---|---|
@@ -59,7 +77,18 @@ Reading:
 | S3 | 8 | 60 | 39 of 52 | 0.65 | 0.75 |
 | S4 (short) | 6 | 24 | 16 of 30 | 0.67 | 0.53 |
 
-A match needs the same primitive and overlapping times (0.5 s slack). Two readings of the same frames agree on about 70 % of events, so treat single-pass events as candidates and the matched ones as the firmer set. 2 fps limits timing to about +-0.5 s: `motion.eval`'s 100 ms latency target cannot be judged from these labels, only event F1.
+Round 3, wider vocabulary (`pinch_drag`, `knob_turn`, `catch_pull`, `finger_sign`, `air_instrument`, `orb` with tube):
+
+| session | events pass a | matched in pass b | precision a vs b | recall a vs b |
+|---|---|---|---|---|
+| S1 | 35 | 31 of 40 | 0.89 | 0.78 |
+| S2 | 43 | 31 of 41 | 0.72 | 0.76 |
+| S3 | 42 | 34 of 45 | 0.81 | 0.76 |
+| S4 (short) | 26 | 23 of 29 | 0.89 | 0.79 |
+
+The two readings now agree more, with fewer events. Against Noa's description of S3 (`noa-review-2026-11-02.md`): G_free_hands finds the knob turn around 12 to 14 s and the orb from 25 s, but misses the OK sign, the early pinch and knob turn, the projectile at 3.75 to 5 s and the pinch-drag from 14 s (read as orb and throws). G_free_play reads air drums and DJ moves; piano, air guitar from 16 s and violin from 23 s are missed. Agreement between two Spark readings is not accuracy.
+
+Round 2: A match needs the same primitive and overlapping times (0.5 s slack). Two readings of the same frames agree on about 70 % of events, so treat single-pass events as candidates and the matched ones as the firmer set. 2 fps limits timing to about +-0.5 s: `motion.eval`'s 100 ms latency target cannot be judged from these labels, only event F1.
 
 ## Changes to the label pipeline from this work
 
@@ -70,8 +99,11 @@ A match needs the same primitive and overlapping times (0.5 s slack). Two readin
 
 - Block H motion labels (`throw_right`, `swipe_left`, `circle_cw`, ...) are in the user's view, like `hand.x = 1` in `tools/mapping/ontology.yaml`. On unmirrored frames, x must be flipped (and cw/ccw swapped) before these labels and SAM hand positions line up.
 - S4 is the held-out set (`split=heldout` in its manifest), short protocol, FaceTime camera, other shirt and cap. S3 is iPhone via Continuity from the side, studio light.
+- No recording is mirrored, S3 included: checked on A_R/A_L of all four sessions (the left arm enters from the image right; a right hand with the palm to the camera has its thumb on the image right; in S1 and S2 the watch sits on the left wrist, on the image right). MediaPipe's handedness assumes a mirrored selfie image by default, so any hand side taken from it needs this check.
+- Spark QA flags do not exclude script labels. Only Noa-confirmed problems do: S3 D_step_back, S3 F_backlit and the part of S3 F_dim before the light went off.
+- Freestyle (block G) has no script label beyond "freestyle". For `motion.eval` on S4, a short annotation by Noa of S4's two freestyle segments (about 50 s) would be the reliable reference; Spark's events are candidates.
 
 ## Open
 
-1. Noa spot-checks the review pages (`data/motion_labels/<session>/review.html`, copy verdicts button), at least the flags both passes agree on and the winks.
-2. Noa: did the S3 B_L count segments use the left hand? One QA run read them as the right hand; the camera angle in S3 makes image position unreliable.
+1. Optional: Noa annotates S4's freestyle segments (G_free_hands, G_free_play) as the reference for `motion.eval`. The review pages show round 3.
+2. S3 B_L counts: Noa's review called the "right hand" flags wrong, so the left hand was used; closed.

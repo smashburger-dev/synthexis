@@ -73,6 +73,8 @@ QA_POINTS = (0.2, 0.5, 0.8)
 # count segments: the person animates counting up to the target, so look
 # late in the raw span where the target is reached
 QA_POINTS_COUNT = (0.35, 0.7, 0.98)
+# movement segments (block H): one frame shows too little of a throw or swipe
+QA_POINTS_MOVE = (0.08, 0.25, 0.42, 0.58, 0.75, 0.92)
 # Baseten rejects more than 8 images per request; billing is per 28x28
 # patch, so tiles cost the same as single frames (no internal downscale
 # measured at 1536x864 and 2304x432)
@@ -87,8 +89,9 @@ SEM_ALPHA = {5: 0.45, 6: 0.45}
 OUTLINE_ONLY = {2}         # face: outline, so expressions stay visible
 
 PRIMITIVES = [
-    "throw", "swipe", "push_pull", "hold", "pinch", "circle",
-    "grab_release", "stretch", "orb", "clap", "face_head", "other",
+    "throw", "swipe", "push_pull", "hold", "pinch", "pinch_drag",
+    "knob_turn", "catch_pull", "circle", "grab_release", "stretch", "orb",
+    "clap", "finger_sign", "air_instrument", "face_head", "other",
 ]
 HANDS = ["R", "L", "both", "none"]
 
@@ -97,6 +100,7 @@ COMMON = """You label video frames of one person in front of a webcam for synthe
 How to read the frames:
 - The video is NOT mirrored. The person's RIGHT hand appears on the LEFT side of the image, the LEFT hand on the right side. Always report the person's anatomical side (R = their right hand).
 - Directions (left, right, up, down, top border, ...) are in IMAGE coordinates as shown: "right" means towards the right edge of the image.
+- The camera can sit at an angle (one session films from 20-30 degrees to the side), so both hands can appear on the same side of the face. Tell the hands apart by the arm they belong to and the thumb side, not by image position.
 - Overlays come from an automatic segmenter and can be wrong or missing: green fill = hand mask, blue outline = face, orange fill = held object. A white ring marks each hand centre in this frame. Yellow dots mark where hand centres were during the previous 0.5 s (small and dark = older, large and bright = recent); they show the direction and speed of the movement that ended in this frame. Trust the pixels over the overlay.
 - Every image has its id and time burned into the top-left corner.
 Reply with one JSON object only, no prose before or after it."""
@@ -105,28 +109,35 @@ TIMELINE_SYS = COMMON + """
 
 Task: write a timeline of what the hands (and, in face freestyle, the face and head) do across the frames you get. Frames are 0.5 s apart, so fast movements show up as motion blur, a big jump between frames or a long trail.
 
-Primitive vocabulary (pick the closest; use "other" when none fits and describe it in name):
+Primitive vocabulary (pick the one that fits; freestyle is open-ended, so when none fits use "other" with a precise name instead of forcing a primitive):
 - throw: fast hand movement that ends in a release (hand opens) or a stop, like throwing a ball; params: direction (8 sectors: up, up_right, right, down_right, down, down_left, left, up_left), border (the image border the throw points at: top, right, bottom, left), speed (slow, medium, fast)
 - swipe: sustained movement of an open hand without a release; params: direction (8 sectors), speed, distance (short, medium, long)
 - push_pull: hand moves towards the camera (grows) or away (shrinks); params: direction (push or pull)
 - hold: hand stays still for at least 0.3 s; params: position (rough image area, e.g. "upper left"), finger_state (fist, open, index only, peace, count of fingers, ...)
-- pinch: thumb and index tip together, often dragged; params: drag (direction or "none")
+- pinch: thumb and index tip come together and stay in place; params: none
+- pinch_drag: pinch, move the pinched fingers across the image, then let go; params: direction (8 sectors), distance (short, medium, long)
+- knob_turn: fingers hold an imaginary knob and the wrist twists back and forth or in one direction; params: rotation (cw, ccw or both, as seen in the image)
+- catch_pull: hand closes around something in the air, then pulls it towards the body or camera, often turning it; params: then (pull, turn, hold)
 - circle: hand traces a circle; params: rotation (cw or ccw as seen in the image), radius (small, medium, large)
 - grab_release: hand closes (grab) or opens (release) in place; params: kind (grab or release)
 - stretch: both hands move apart or together like a rubber band; params: kind (apart or together)
-- orb: both palms face each other as if holding a ball; params: action (hold, grow, shrink, rotate, carry, throw)
+- orb: palms face each other as if holding a ball, or one or both hands hold an imaginary tube or rod; params: shape (ball or tube), action (hold, grow, shrink, rotate, carry, throw)
 - clap: hands meet fast; params: none
+- finger_sign: a held finger pose shown on purpose; params: sign (ok_sign = thumb and index tips touching with the other three fingers up, count with n fingers, peace, rock, thumbs_up, point, ...)
+- air_instrument: miming an instrument; params: instrument (piano, drums, guitar, violin, dj_deck, bass, other), hands
 - face_head: facial expression or head movement (blink, wink, smile, mouth open, nod, head turn or tilt); params: what
-- other: anything else (finger play, pointing, drumming in the air, playing an imaginary keyboard ...)
+- other: anything else, with a precise name
+
+In these freestyle segments the person often performs: an OK sign, pinch and drag, turning a virtual knob, shooting a projectile at a border, catching something and pulling it in, holding and throwing an orb or tube, air piano, air drums, air guitar, air violin. Consider these when the frames fit; do not invent them when they do not. Guitar and violin differ by the arm holding the neck (guitar: neck to the side at hip or chest height; violin: under the chin, the other arm bowing).
 
 Output format:
 {"events": [{"t_start": <s>, "t_end": <s>, "hand": "R|L|both|none", "primitive": "<one of the list>", "params": {...}, "name": "<short free-text name of what the person does, 2-8 words>", "confidence": <0..1>}],
  "summary": "<one sentence on the whole window>"}
-Rules: times in seconds as burned into the frames, t_start <= t_end, both inside the window. One event per distinct movement; split repeated throws into separate events. An event cut by the window start or end still gets an entry. If the hands do nothing noteworthy, return an empty events list."""
+Rules: times in seconds as burned into the frames, t_start <= t_end, both inside the window. One event per distinct movement; merge consecutive frames of the same action into one event; split repeated throws into separate events. Prefer fewer, correct events over many guessed ones. An event cut by the window start or end still gets an entry. If the hands do nothing noteworthy, return an empty events list."""
 
 QA_SYS = COMMON + """
 
-Task: quality check of a scripted recording. Each segment had a German instruction that the person read and followed; you see 3 frames from the middle part of each segment. Decide per segment whether the frames match the instruction and labels.
+Task: quality check of a scripted recording. Each segment had a German instruction that the person read and followed; you see 3 frames from the middle part of each segment (6 frames for movement segments of block H). Decide per segment whether the frames match the instruction and labels. Most segments were performed correctly: flag only what the pixels clearly show.
 
 Label conventions:
 - hand_R / hand_L finger states are 5 bits in the order thumb, index, middle, ring, pinky; 1 = extended. "00000" is a fist, "11111" an open hand, "01100" index and middle (peace). "absent" means that hand should be out of the image.
@@ -134,13 +145,16 @@ Label conventions:
 - Count segments (ids with "_count", instruction "zählen"): the person acts out counting on that hand, raising fingers one after another from one finger up to the target (counting order: index, middle, ring, pinky, thumb), and starts again at one in every count segment, also when the targets go down. A frame showing fewer fingers than the target, on the way up in that order, is "ok". A frame right at the start may still show the end of the previous count: "unclear", not "wrong". "wrong" only for more fingers than the target, fingers outside the counting order, the other hand counting, or no counting at all. Frames are taken late in these segments, so the last frame should be at or near the target.
 - Instructions and labels give left/right as the person saw them in the recorder's MIRRORED preview: "rechter Bildrand", "von links nach rechts", throw_right, swipe_right mean towards the LEFT edge of these (unmirrored) frames, and left means towards the right edge. "Im Uhrzeigersinn" (circle_cw) is counter-clockwise in these frames. Up and down are unchanged. Hand sides (rechte/linke Hand, hand_R/hand_L) are anatomical and not affected.
 - Do not decide which hand it is from its image position alone: hands move through the whole image and some sessions film from an angle. Use the arm and the thumb side.
-- Movement instructions (wipe, throw, circle ...) cannot be fully judged from 3 frames: flag them only if the frames clearly show something else (wrong hand, no movement at all, hands absent).
+- Movement instructions (wipe, throw, circle ...): the movement is repeated, so frames between two repetitions show the hand resting or returning; that is "ok". Flag a movement segment only if no frame shows the instructed movement or another hand clearly does it instead. A second hand that is merely visible is not an error.
+- Finger states: count extended fingers carefully. The thumb often points sideways or towards the camera and is easy to miss; "01111" (thumb folded) and "11111" differ only by the thumb. If a finger's state cannot be seen (turned wrist, overlap, blur), the frame is "unclear", not "wrong".
+- A frame where the hand is out of view, cut by the border, heavily blurred or lost by the segmenter is "unclear", not "wrong".
+- Lighting can change inside a lighting segment (the light may be switched off midway): judge the light state by the later frames.
 - Lighting, distance, blur and the hand moving through the image are expected variation, not errors.
 - Block E objects: the session note lists which real object stood in for each label (e.g. mug = soda can). A stand-in is not an error.
-- Judge every frame on its own; one wrong frame out of three still means match "no".
+- Judge every frame on its own. Match "no" only when a frame clearly shows something that contradicts the instruction.
 
 Output format:
-{"segments": [{"id": "<segment id>", "match": "yes|no|unsure", "frames": ["ok|wrong|unclear", "ok|wrong|unclear", "ok|wrong|unclear"], "issue": "<empty if yes, else what is wrong, short, in English>"}]}
+{"segments": [{"id": "<segment id>", "match": "yes|no|unsure", "frames": ["ok|wrong|unclear", ... one per frame shown], "issue": "<empty if yes, else what is wrong, short, in English>"}]}
 Return exactly one entry per segment id you were given, in the same order."""
 
 
@@ -355,12 +369,12 @@ def qa_jobs(sess: dict, out: Path, suffix: str) -> tuple[list, dict]:
         objs = ", ".join(f"{k} = {v}" for k, v in sess["objects"].items())
         parts = [{"type": "text", "text": (
             f"Session {sess['name']}: {len(group)} segments, 3 frames "
-            f"each. Objects actually used in this session (block E): "
+            f"each (6 for block H). Objects actually used in this session (block E): "
             f"{objs}.")}]
         for seg in group:
             p = sess["instr"].get(seg["id"], {})
             lo, hi = seg_span(seg)
-            points = QA_POINTS
+            points = QA_POINTS_MOVE if seg["block"] == "H" else QA_POINTS
             if "_count" in seg["id"]:
                 lo, hi = seg["start_s_cam0"], seg["end_s_cam0"]
                 points = QA_POINTS_COUNT
@@ -368,10 +382,11 @@ def qa_jobs(sess: dict, out: Path, suffix: str) -> tuple[list, dict]:
                 f"Segment {seg['id']} (block {seg['block']}). Instruction "
                 f"(German): \"{p.get('instruction_de', '?')}\". Labels: "
                 f"{json.dumps(seg.get('labels') or p.get('labels') or {})}. "
-                "Its 3 frames, left to right:")})
+                f"Its {len(points)} frames, left to right"
+                f"{', top row first' if len(points) > 3 else ''}:")})
             imgs = [render(sess, lo + q * (hi - lo), f"{seg['id']} f{i + 1}")
                     for i, q in enumerate(points)]
-            url = jpeg_b64(tile(imgs, len(imgs)),
+            url = jpeg_b64(tile(imgs, min(len(imgs), 3)),
                            out / "frames" / f"qa-{seg['id']}.jpg")
             parts.append({"type": "image_url", "image_url": {"url": url}})
             meta[seg["id"]] = {"job": jid, "block": seg["block"],
@@ -581,10 +596,12 @@ def write_qa(out: Path, meta: dict, res: dict) -> None:
         if b is not None and m["job"] in b:
             row["b"] = b[m["job"]][sid]
             verdicts.append(row["b"]["match"])
-        wrong = max(r["frames"].count("wrong") for r in
-                    [row["a"]] + ([row["b"]] if "b" in row else []))
+        reads = [row["a"]] + ([row["b"]] if "b" in row else [])
+        wrong = max(r["frames"].count("wrong") for r in reads)
+        n = max(len(r["frames"]) for r in reads) or 3
         if "no" in verdicts:
-            row["flag"] = "mismatch" if wrong >= 2 else "partial"
+            # 2 of 3 frames, or half of the 6 movement frames
+            row["flag"] = "mismatch" if wrong >= max(2, n // 2) else "partial"
         else:
             row["flag"] = "unsure" if "unsure" in verdicts else "ok"
         row["passes_agree"] = len(set(verdicts)) == 1
