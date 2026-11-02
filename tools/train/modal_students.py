@@ -58,7 +58,8 @@ def train(name: str, args: list[str], max_usd: float) -> dict:
     vol.reload()
     student = args[args.index("--student") + 1]
     local = Path("/tmp/packed")
-    shutil.copytree(f"/vol/packed/{student}", local / student)
+    # dirs_exist_ok: Modal reuses warm containers; without it every reused call died here (11-02)
+    shutil.copytree(f"/vol/packed/{student}", local / student, dirs_exist_ok=True)
     print(f"copied {student} shards in {time.time() - t0:.0f} s", flush=True)
     # the copy and the container start count against the cap too
     spent = (time.time() - t0) / 3600 * USD_PER_HOUR

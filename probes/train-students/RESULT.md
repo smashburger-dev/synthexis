@@ -130,6 +130,58 @@ All ops except three (const, cast, mul at the input) run on the ANE. Seg + 2 han
 
 Modal billing report for app `synthexis-students`, 2026-11-02: 3.39 $ (13 training runs at 0.13 to 0.94 $ each by container seconds, 2.73 $ in sum; two pairs of failed or cancelled starts; image builds). November total before this session 27.50 $; Noa's limit 42.50 $. The Mac preflight, timing epochs, gates, BN repair and exports cost nothing.
 
+## Hill-climb round 2 (2026-11-02 evening)
+
+Noa asked for every lever that could lift all students over the gate, without tuning on S4. S4 stayed closed until one final gate per student; levers were chosen on dev and on a leave-one-session-out fold (`train.py --holdout S3`: train S1+S2, validate on all S3 frames, a different day and the iPhone from the side), which is the closest stand-in for a live user the data allows.
+
+### Diagnoses (no training)
+
+- Face crops on S4 sit differently: eyes at y 40 px of 128 instead of 53 to 58, face 1.2x larger (eye-to-mouth 39.8 against 33 px). Ruled out as the eye cause: shifting and zooming S3 dev crops to S4 geometry leaves eye IoU at 0.59 (0.61 unshifted).
+- SAM's eye style differs by session: S4 masks cover the whole eye opening with the lid shadow, S3 only the visible opening, S1 (video mode) less. The student paints 0.34x the SAM eye area on S4.
+- Teacher misses: 33 % of S1 face crops have no SAM eye (S2 23 %, S3 and S4 9 %), across all blocks (step back 70 %, objects 63 %); about 100 of 3,154 are blink or closed-eye actions. These crops teach "open eye = other".
+- Finger geometry on the teacher keypoints (`students.finger_geometry`, logistic regression on the script labels of training crops) matches the script per finger at 0.94 (thumb) and 0.98 to 0.99 (others) on dev; confident calls (p > 0.9 or < 0.1) are right 98 to 99 % and cover 64 to 99 % of crops. (Its S4 numbers were printed once in the same call; no choice used them.)
+- A runtime trick that needs no training: the same geometry on the student's own keypoints, averaged with the finger head, and flip test-time augmentation; both bake into the CoreML model (`students.HandDeploy`) with the dev-calibrated thresholds folded into the logit, so the plugin keeps the contract.
+
+### Levers tested
+
+| lever | student | validation | result vs control | kept |
+|-------|---------|------------|-------------------|------|
+| pseudo finger labels from teacher-keypoint geometry on the 19k unlabelled crops | hand | LOSO S3, seed 0 | state accuracy 0.784 vs 0.756 (+2.8), keypoint error 12.5 vs 14.7 px | yes |
+| flip TTA (eval only) | hand | LOSO S3, seed 0 | control +1.5, with pseudo labels +0.2 | no (latency 0.78 / 1.27 ms for 0.2) |
+| geometry fusion (eval only) | hand | LOSO S3, seed 0 | -1.1 (control), -0.8 (pseudo) | no |
+| EMA 0.998 | hand | LOSO S3, seed 0 | -3.9 | no |
+| strong colour + wide crop augmentation | hand | LOSO S3, seed 0 | -4.9 | no |
+| strong colour augmentation (hue, gamma, blur, cast shadow) | face | LOSO S3, 3 seeds | mouth 0.620 vs 0.701 (-8.1) | no |
+| wide crops (scale 0.8-1.25, shift 10 %) | face | LOSO S3, 2 seeds | mouth -0.1, eye +10 but noise of 9 | no |
+| EMA 0.998 | face | LOSO S3, 2 seeds | mouth -5.2 | no |
+| ignore S1+S2 eye grown by 6 px | face | dev, 3 seeds | S3 eye 0.581 vs 0.600, S1 eye 0.00 | no |
+| ignore the eye zone of crops without a teacher eye | face | dev, 3 seeds | eye 0.505 vs 0.515, mouth 0.643 vs 0.686 | no |
+| self-prev 0.5 (scheduled sampling: own prediction as prev mask) | seg | LOSO S3, live-like own prev | person +0.7, face +0.1, hand +1.5 | yes |
+| strong colour augmentation | seg | LOSO S3 | person +0.1, face -1.6, hand +0.8 | no |
+| MobileNetV3-Large backbone (3.2M) | seg | LOSO S3 | SAM prev +1.4 / +1.8 / +0.1, mouth +30; own prev person -5.8, hand -9.2 | no (leans on the prev channel) |
+
+The LOSO fold says little about the eye: without S3 the only eye labels left are S1's small video-mode masks (eye on S3 0.04 for every lever). The hand levers have one seed each: the seed 1 and 2 calls died at start because Modal reused warm containers and `copytree` found its target (fixed: `dirs_exist_ok`). The hand LOSO calls of the first spawn died on a zsh quoting error (one argument string). Both failures cost container starts and no results.
+
+What the LOSO numbers say about the gate: on S3 the live-like seg hand IoU is 0.50 and person 0.75; the prev mask only helps when it is SAM's (hand 0.645 with SAM prev, 0.504 with zeros, 0.495 with the student's own). Live, D11's channel is worth nothing yet.
+
+### Second seg bug: every round-2 seg run trained crippled
+
+`seg-final` (self-prev, train + dev, 15 epochs, 1.13 $) came out below `seg-a-s0` on dev although it had trained on dev (own prev: person 0.830, face 0.753, hand 0.606). All round-2 seg runs, the control included, ended at about twice the cross-entropy of seg-a-s0 (0.16 against 0.067; epoch 0: 1.21 against 0.25), while hand and face of the same round trained normally. Cause: for self-prev, `seg_loss` now ran the gradient-free pass on frame t-1 first, inside the bf16 autocast region. On CUDA, autocast caches the bf16 copies of the weights for the region; copies made under `no_grad` carry no graph, so the graded pass reused them and the convolution weights got (almost) no gradient. CPU and MPS do not show it (tested), which is why the Mac preflight passed. Fix: that pass runs with autocast off (fp32). `seg-b` with the fix: running cross-entropy 0.14 at the end of epoch 0, as healthy as seg-a-s0. Consequence: the round-2 seg lever table above compares crippled runs and says nothing about the levers; `seg-final` is discarded.
+
+### Hand final (round 2 winner)
+
+`hand-final`: MobileNetV3-Small + pseudo finger labels, 20 epochs, seed 0, all S1-S3 train, 0.14 $. Dev state accuracy 0.887 (control hand-v3-s0 0.837), keypoint error 11.0 px (12.3). Variant by the cross-session evidence: head only (fusion -0.8 on LOSO, +1.2 on dev: no clear gain, no extra latency). Thresholds calibrated on dev and folded into the exported logits: 0.94, 0.89, 0.91, 0.87, 0.89.
+
+S4, gated once: state accuracy 0.892 (0.888 at 0.5), per finger 0.945 / 0.985 / 0.990 / 0.983 / 0.946, keypoints 8.9 px mean, 6.3 px median (hand-v3-s0: 0.885, 9.9 / 7.3). Per-state recall: 00000 1.00, 00001 0.88, 01000 0.79, 01001 0.67, 01100 0.98, 01110 0.76, 01111 0.90, 10000 0.94, 10001 0.95, 11000 0.97, 11100 0.71, 11111 0.94. Gate 0.95 missed; the five-bit state needs every finger right, and thumb and pinky at 0.95 each cap it near 0.90.
+
+### Eye
+
+The only S4-free calibration source for an eye bias and dilation is the LOSO fold, and it is degenerate for the eye (its only eye labels are S1's small masks): on all three seeds it picks the edge of the grid (bias 3, dilation 5) and still reaches only 0.08 to 0.27. Tuning the bias on S4 would be adaptive overfitting, so the shipped face model has no eye bias (face-a-s1, S4 eye 0.243, mouth 0.705). For eye signals the plugin should use Apple Vision face landmarks (runtime use is allowed) until the teacher masks agree across sessions.
+
+### Cost of round 2
+
+Billing 2026-11-02 for `synthexis-students`, all on A10G (the L4-first list never got an L4): 11.66 $ in total for the day (A10G 9.22, CPU 1.64, memory 0.80). By group: round 1 2.81 $ (13 runs), seg LOSO 3.36 $ (4), face levers 3.34 $ (18), hand levers 0.56 $ (4), failed and cancelled starts about 1.6 $. Round 2 bought mostly negative results; a one-seed screen first, seeds only for winners, would have cost about a third. Noa's November limit is 42.50 $; the month stood at 39.04 $ before the two final runs.
+
 ## Not done, next
 
 - Seg retrain with the BN fix from the start (about 0.95 $, 40 min on Modal) and a prev mask trained on noisier masks (morphological noise, the student's own prediction), so the prev channel helps live; or drop the channel if it still does not.

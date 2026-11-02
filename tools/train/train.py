@@ -78,8 +78,13 @@ WARMUP_FRAC = 0.03
 
 # --- data -------------------------------------------------------------------
 
-def shard_files(data, student, split):
-    return [p for s in SESSIONS for p in sorted((data / student / s).glob(f"{split}-*.tar"))]
+def shard_files(data, student, split, sessions=None):
+    return [p for s in (sessions or SESSIONS) for p in sorted((data / student / s).glob(f"{split}-*.tar"))]
+
+
+def session_names(short):
+    """'S1,S3' -> full session names."""
+    return [s for s in SESSIONS if s[-2:] in short.split(",")]
 
 
 def iter_tar(path):
@@ -114,6 +119,14 @@ def _u8(data, mode="RGB"):
     return np.asarray(img.convert(mode) if mode else img)
 
 
+def _grow(sel, px):
+    """Boolean mask grown by px pixels (square max filter)."""
+    if px <= 0 or not sel.any():
+        return sel
+    k = 2 * px + 1
+    return F.max_pool2d(sel[None, None].float(), k, stride=1, padding=px)[0, 0] > 0
+
+
 def decode_seg(s, meta, cfg):
     image = torch.from_numpy(_u8(s["jpg"]).copy()).permute(2, 0, 1)
     mask = torch.from_numpy(_u8(s["mask.png"], None).astype(np.uint8))
@@ -124,7 +137,7 @@ def decode_seg(s, meta, cfg):
     else:
         prev, prev_mask = torch.zeros_like(image), torch.zeros_like(mask)
     if meta["session"][-2:] in cfg["ignore_eye"]:
-        mask[mask == EYE["seg"]] = st.IGNORE
+        mask[_grow(mask == EYE["seg"], cfg.get("ignore_dilate", 0) // 3)] = st.IGNORE
     return {"image": image, "mask": mask, "prev_image": prev, "prev_mask": prev_mask,
             "has_prev": torch.tensor(float(has_prev)), "session": SESSIONS.index(meta["session"]),
             "idx": meta["idx"], "prev_idx": meta.get("prev_idx") or -1}
@@ -134,7 +147,16 @@ def decode_face(s, meta, cfg):
     image = torch.from_numpy(_u8(s["jpg"]).copy()).permute(2, 0, 1)
     mask = torch.from_numpy(_u8(s["mask.png"], None).astype(np.uint8))
     if meta["session"][-2:] in cfg["ignore_eye"]:
-        mask[mask == EYE["face"]] = st.IGNORE
+        mask[_grow(mask == EYE["face"], cfg.get("ignore_dilate", 0))] = st.IGNORE
+    if cfg.get("eye_fn_ignore") and not (mask == EYE["face"]).any() and \
+            not any(w in str(meta.get("face")) for w in ("blink", "wink", "closed")):
+        # SAM found no eye although the script says the eyes are open: in S1 a
+        # third of all face crops (step back, objects, hands), mostly misses.
+        # Do not teach "other" where the eyes would be: ignore everything above
+        # the mouth, or the upper 60 % when there is no mouth either.
+        rows = (mask == 2).any(1).nonzero()
+        top = int(rows[0]) if len(rows) else int(0.6 * mask.shape[0])
+        mask[:top] = st.IGNORE
     return {"image": image, "mask": mask, "session": SESSIONS.index(meta["session"])}
 
 
@@ -143,9 +165,17 @@ def decode_hand(s, meta, cfg):
     if fingers is None and kps is None:
         return None  # nothing to learn from
     pts = kps or [[0.0, 0.0, 0.0]] * st.NUM_JOINTS
+    target = torch.tensor(fingers or [0] * 5, dtype=torch.float32)
+    mask = torch.full((5,), 1.0 if fingers else 0.0)
+    if fingers is None and cfg.get("pseudo") and meta.get("kp_source") == "mediapipe":
+        # pseudo finger labels from the teacher keypoints, confident fingers only
+        prob = st.finger_geometry_prob(torch.tensor([[p[:2] for p in pts]]), cfg["pseudo"])[0]
+        sure = (prob > 0.9) | (prob < 0.1)
+        target, mask = (prob > 0.5).float(), sure.float()
     return {"image": torch.from_numpy(_u8(s["jpg"]).copy()).permute(2, 0, 1),
-            "fingers": torch.tensor(fingers or [0] * 5, dtype=torch.float32),
-            "finger_mask": torch.tensor(1.0 if fingers else 0.0),
+            "fingers": target,
+            "finger_mask": mask,
+            "script": torch.tensor(1.0 if fingers else 0.0),
             "kp": torch.tensor([p[:2] for p in pts], dtype=torch.float32),
             "kp_conf": torch.tensor([p[2] for p in pts], dtype=torch.float32),
             "kp_sam3d": torch.tensor(float(meta.get("kp_source") == "sam3dbody")),
@@ -219,15 +249,17 @@ def _u(gen, n, lo, hi, device):
     return torch.rand(n, generator=gen, device="cpu").to(device) * (hi - lo) + lo
 
 
-def random_theta(n, kind, gen, device):
-    """Affine maps output -> input in normalised coords, plus flip flags."""
+def random_theta(n, kind, gen, device, wide=False):
+    """Affine maps output -> input in normalised coords, plus flip flags.
+    wide: crops scale 0.8 to 1.25, rotate 15 deg, shift 10 % (student-derived boxes)."""
     flip = torch.rand(n, generator=gen) < 0.5
     if kind == "seg":  # zoom in only: the full frame has no border to pad
         s = _u(gen, n, 1.0, 1.25, device)
         rot = torch.zeros(n, device=device)
     else:
-        s = _u(gen, n, 0.9, 1.1, device)
-        rot = _u(gen, n, -math.radians(10), math.radians(10), device)
+        s = _u(gen, n, 0.8, 1.25, device) if wide else _u(gen, n, 0.9, 1.1, device)
+        r = math.radians(15 if wide else 10)
+        rot = _u(gen, n, -r, r, device)
     a = torch.zeros(n, 2, 2, device=device)
     a[:, 0, 0], a[:, 0, 1] = torch.cos(rot) / s, -torch.sin(rot) / s
     a[:, 1, 0], a[:, 1, 1] = torch.sin(rot) / s, torch.cos(rot) / s
@@ -236,7 +268,8 @@ def random_theta(n, kind, gen, device):
         room = 1 - 1 / s
         t = torch.stack([_u(gen, n, -1, 1, device) * room, _u(gen, n, -1, 1, device) * room], 1)
     else:
-        t = torch.stack([_u(gen, n, -0.12, 0.12, device), _u(gen, n, -0.12, 0.12, device)], 1)
+        m = 0.2 if wide else 0.12
+        t = torch.stack([_u(gen, n, -m, m, device), _u(gen, n, -m, m, device)], 1)
     return torch.cat([a, t.unsqueeze(2)], 2)
 
 
@@ -261,11 +294,33 @@ def warp_keypoints(kp, conf, theta):
     return out, conf * inside
 
 
-def photometric(gen, n, device):
+def photometric(gen, n, device, strong=False):
     p = {"b": _u(gen, n, 0.6, 1.4, device), "c": _u(gen, n, 0.7, 1.3, device),
          "s": _u(gen, n, 0.6, 1.4, device), "noise": _u(gen, n, 0.0, 0.03, device),
          "gain": torch.rand(n, 3, generator=gen).to(device) * 0.2 + 0.9}
+    if strong:
+        # another day: hue (shirt, lamp colour), gamma, focus blur, a shadow
+        # falling from a random side (cap brim, hair, lamp above)
+        p.update(hue=_u(gen, n, -0.06, 0.06, device), gamma=torch.exp(_u(gen, n, -0.4, 0.4, device)),
+                 blur=(torch.rand(n, generator=gen) < 0.3).to(device) * _u(gen, n, 0.5, 1.5, device),
+                 shadow=(torch.rand(n, generator=gen) < 0.5).to(device) * _u(gen, n, 0.2, 0.6, device),
+                 sh_dir=_u(gen, n, 0, 2 * math.pi, device), sh_off=_u(gen, n, -0.6, 0.6, device),
+                 sh_soft=_u(gen, n, 4, 20, device))
     return p
+
+
+def _blur(x, sigma):
+    """Per-sample Gaussian blur, 5x5 kernel; sigma 0 leaves the sample as it is."""
+    r = torch.arange(-2, 3, device=x.device, dtype=x.dtype)
+    k = torch.exp(-(r.view(1, -1) ** 2) / (2 * sigma.clamp(min=1e-3).view(-1, 1) ** 2))
+    k = k / k.sum(1, keepdim=True)
+    k = torch.where(sigma.view(-1, 1) > 0, k, (r == 0).to(x.dtype).expand_as(k))
+    n, c, h, w = x.shape
+    y = x.reshape(1, n * c, h, w)
+    kx = k.repeat_interleave(c, 0).view(n * c, 1, 1, 5)
+    y = F.conv2d(F.pad(y, (2, 2, 0, 0), mode="replicate"), kx, groups=n * c)
+    y = F.conv2d(F.pad(y, (0, 0, 2, 2), mode="replicate"), kx.transpose(2, 3), groups=n * c)
+    return y.view(n, c, h, w)
 
 
 def apply_photometric(x, p, gen):
@@ -275,12 +330,32 @@ def apply_photometric(x, p, gen):
     x = (x - mean) * v(p["c"]) + mean
     grey = x.mean(1, keepdim=True)
     x = (x - grey) * v(p["s"]) + grey
+    if "hue" in p:
+        # rotate chroma in YIQ
+        yiq = torch.tensor([[0.299, 0.587, 0.114], [0.596, -0.274, -0.322], [0.211, -0.523, 0.312]],
+                           device=x.device)
+        q = torch.einsum("ij,bjhw->bihw", yiq, x)
+        c, s_ = torch.cos(2 * math.pi * p["hue"]), torch.sin(2 * math.pi * p["hue"])
+        i2, q2 = q[:, 1] * c.view(-1, 1, 1) - q[:, 2] * s_.view(-1, 1, 1), q[:, 1] * s_.view(-1, 1, 1) + q[:, 2] * c.view(-1, 1, 1)
+        x = torch.einsum("ij,bjhw->bihw", torch.linalg.inv(yiq), torch.stack([q[:, 0], i2, q2], 1))
+        x = x.clamp(1e-4, 1) ** v(p["gamma"])
+        h, w = x.shape[-2:]
+        yy = torch.linspace(-1, 1, h, device=x.device).view(1, h, 1)
+        xx = torch.linspace(-1, 1, w, device=x.device).view(1, 1, w)
+        d = torch.cos(p["sh_dir"]).view(-1, 1, 1) * xx + torch.sin(p["sh_dir"]).view(-1, 1, 1) * yy
+        field = 1 - p["shadow"].view(-1, 1, 1) * torch.sigmoid(p["sh_soft"].view(-1, 1, 1) * (d - p["sh_off"].view(-1, 1, 1)))
+        x = x * field.unsqueeze(1)
+        x = _blur(x, p["blur"])
     x = x + torch.randn(x.shape, generator=gen).to(x.device) * v(p["noise"])
     return x.clamp(0, 1)
 
 
-def prepare(batch, student, device, gen=None):
-    """uint8 CPU batch -> float device batch; augments when gen is given."""
+def prepare(batch, student, device, gen=None, opts=None):
+    """uint8 CPU batch -> float device batch; augments when gen is given.
+    opts: strong (photometric), wide (crop geometry), self_prev (seg, share of
+    samples whose prev mask is the student's own prediction)."""
+    opts = opts or {}
+    strong, wide = opts.get("strong", False), opts.get("wide", False)
     b = {k: v.to(device, non_blocking=True) for k, v in batch.items() if torch.is_tensor(v)}
     image = b["image"].float() / 255
     n = len(image)
@@ -291,7 +366,7 @@ def prepare(batch, student, device, gen=None):
             theta = random_theta(n, "seg", gen, device)
             image, prev = warp(image, theta, "bilinear"), warp(prev, theta, "bilinear")
             mask, prev_mask = warp_label(mask, theta), warp_label(prev_mask, theta)
-            p = photometric(gen, n, device)
+            p = photometric(gen, n, device, strong)
             image, prev = apply_photometric(image, p, gen), apply_photometric(prev, p, gen)
             shift = torch.zeros(n, 2, 3, device=device)
             shift[:, 0, 0] = shift[:, 1, 1] = 1
@@ -302,21 +377,24 @@ def prepare(batch, student, device, gen=None):
         else:
             prev_in, keep = prev_mask, b["has_prev"]
         prev_in = prev_in.clamp(max=st.NUM_CLASSES - 1).unsqueeze(1).float() / (st.NUM_CLASSES - 1)
-        return {"image": image, "mask": mask, "prev_image": prev, "prev_mask": prev_mask,
-                "prev_mask_in": prev_in * keep.view(-1, 1, 1, 1), "has_prev": b["has_prev"]}
+        out = {"image": image, "mask": mask, "prev_image": prev, "prev_mask": prev_mask,
+               "prev_mask_in": prev_in * keep.view(-1, 1, 1, 1), "has_prev": b["has_prev"]}
+        if gen is not None and opts.get("self_prev"):
+            out["self_prev"] = (torch.rand(n, generator=gen) < opts["self_prev"]).to(device).float() * keep
+        return out
     if student == "face":
         mask = b["mask"].long()
         if gen is not None:
-            theta = random_theta(n, "crop", gen, device)
+            theta = random_theta(n, "crop", gen, device, wide)
             image, mask = warp(image, theta, "bilinear"), warp_label(mask, theta)
-            image = apply_photometric(image, photometric(gen, n, device), gen)
+            image = apply_photometric(image, photometric(gen, n, device, strong), gen)
         return {"image": image, "mask": mask}
     kp, conf = b["kp"], b["kp_conf"]
     if gen is not None:
-        theta = random_theta(n, "crop", gen, device)
+        theta = random_theta(n, "crop", gen, device, wide)
         image = warp(image, theta, "bilinear")
         kp, conf = warp_keypoints(kp, conf, theta)
-        image = apply_photometric(image, photometric(gen, n, device), gen)
+        image = apply_photometric(image, photometric(gen, n, device, strong), gen)
     return {"image": image, "fingers": b["fingers"], "finger_mask": b["finger_mask"], "kp": kp, "kp_conf": conf}
 
 
@@ -324,7 +402,7 @@ def prepare(batch, student, device, gen=None):
 
 def build(student, args, pretrained=True):
     if student == "seg":
-        return st.SegStudent(pretrained=pretrained)
+        return st.SegStudent(pretrained=pretrained, backbone=args.seg_backbone)
     if student == "face":
         return st.FaceStudent(pretrained=pretrained)
     return st.HandStudent(pretrained=pretrained, backbone=args.hand_backbone)
@@ -375,12 +453,13 @@ def evaluate(student, model, files, args, cfg, limit=None, sequential=False):
     model.eval()
     dev = args.device
     if student == "seg" and sequential:
-        return eval_seg_sequential(model, files, args, cfg)
+        return eval_seg_sequential(model, files, args, cfg, limit)
     ds = Shards(files, student, cfg, limit=limit)
     out = {"samples": 0}
     k = {"seg": st.NUM_CLASSES, "face": st.NUM_FACE_CLASSES}.get(student)
     cms = defaultdict(lambda: torch.zeros(k, k, dtype=torch.long)) if k else None
     probs, labels, kp_err, kp_src = [], [], [], []
+    variants = defaultdict(list)  # hand: flip TTA, keypoint geometry, fusions
     for raw in loader(ds, args.eval_batch, args.workers, dev, False):
         b = prepare(raw, student, dev)
         sess = raw["session"]
@@ -401,9 +480,19 @@ def evaluate(student, model, files, args, cfg, limit=None, sequential=False):
             else:
                 kp, logits = model(b["image"])
         if student == "hand":
-            fm = b["finger_mask"] > 0
-            probs.append(torch.sigmoid(logits.float())[fm].cpu())
+            fm = raw["script"].to(dev) > 0  # script labels only, never pseudo labels
+            head = torch.sigmoid(logits.float())
+            probs.append(head[fm].cpu())
             labels.append(b["fingers"][fm].cpu())
+            with autocast(dev):
+                kp_f, logits_f = model(b["image"].flip(-1))
+            tta = (head + torch.sigmoid(logits_f.float())) / 2
+            variants["tta"].append(tta[fm].cpu())
+            if getattr(args, "geo", None):
+                geo = st.finger_geometry_prob(kp.float(), args.geo)
+                variants["geo"].append(geo[fm].cpu())
+                variants["fused"].append(((head + geo) / 2)[fm].cpu())
+                variants["fused_tta"].append(((tta + geo) / 2)[fm].cpu())
             w = b["kp_conf"] > st.KP_MIN_CONF
             err = (kp.float() - b["kp"]).norm(dim=-1) * 128
             kp_err.append(err[w].cpu())
@@ -428,6 +517,9 @@ def evaluate(student, model, files, args, cfg, limit=None, sequential=False):
     out["finger_samples"] = int(len(labels))
     out["finger"] = finger_metrics(probs, labels, [0.5] * 5)
     out["_probs"], out["_labels"] = probs, labels
+    out["_variants"] = {"head": probs, **{k: torch.cat(v).numpy() for k, v in variants.items()}}
+    out["variants_state_accuracy"] = {k: finger_metrics(v, labels, [0.5] * 5)["state_accuracy"]
+                                      for k, v in out["_variants"].items()}
     out["score"] = out["finger"]["state_accuracy"]
     return out
 
@@ -461,7 +553,7 @@ def calibrate(probs, labels):
 
 
 @torch.no_grad()
-def eval_seg_sequential(model, files, args, cfg):
+def eval_seg_sequential(model, files, args, cfg, limit=None):
     """Live-like: frames in time order, the prev-mask input is the student's own
     previous prediction (zeros after a gap), as the plugin will run it."""
     dev, k = args.device, st.NUM_CLASSES
@@ -471,6 +563,7 @@ def eval_seg_sequential(model, files, args, cfg):
             m = json.loads(s["json"])
             items.append((SESSIONS.index(m["session"]), m["idx"], m.get("prev_idx"), s["jpg"], s["mask.png"]))
     items.sort(key=lambda x: (x[0], x[1]))
+    items = items[:limit] if limit else items
     cms = defaultdict(lambda: torch.zeros(k, k, dtype=torch.long))
     last_idx, last_sess, last_pred = None, None, None
     for sess, idx, prev_idx, jpg, png in items:
@@ -516,7 +609,26 @@ def main():
     ap.add_argument("--device", default="cuda" if torch.cuda.is_available() else
                     "mps" if torch.backends.mps.is_available() else "cpu")
     ap.add_argument("--ignore-eye", default="S2", help="sessions whose eye pixels are IGNORE, e.g. S1,S2")
+    ap.add_argument("--eye-fn-ignore", action="store_true",
+                    help="face: crops without a teacher eye (and no blink/wink/closed label) ignore the eye zone")
+    ap.add_argument("--ignore-dilate", type=int, default=0,
+                    help="grow the ignored eye region by this many face-crop pixels (seg: a third), so "
+                    "the rim of a too-small or glasses-shaped teacher eye does not teach 'other'")
     ap.add_argument("--hand-backbone", default=st.BACKBONE)
+    ap.add_argument("--seg-backbone", default=st.BACKBONE)
+    ap.add_argument("--holdout", default=None, help="leave-one-session-out: train without this session "
+                    "(e.g. S3) and validate on all of its frames instead of dev")
+    ap.add_argument("--strong-aug", action="store_true", help="hue, gamma, blur, cast shadow")
+    ap.add_argument("--wide-crops", action="store_true", help="crop scale 0.8-1.25, rot 15, shift 10 %%")
+    ap.add_argument("--self-prev", type=float, default=0.0, help="seg: share of samples fed their own prediction")
+    ap.add_argument("--pseudo-fingers", action="store_true",
+                    help="hand: confident finger labels from teacher-keypoint geometry on unlabelled crops")
+    ap.add_argument("--ema", type=float, default=0.0, help="EMA decay of the weights, 0 = off")
+    ap.add_argument("--include-dev", action="store_true",
+                    help="final run: train on train + dev of S1-S3, keep the last epoch (dev is then seen)")
+    ap.add_argument("--variant", default="head", help="hand gate and export: head, tta, geo, fused, fused_tta")
+    ap.add_argument("--eye-bias", type=float, default=0.0, help="face gate and export: added to the eye logit")
+    ap.add_argument("--eye-dilate", type=int, default=1, help="face gate and export: eye max-pool kernel")
     ap.add_argument("--eval-prev", default="sam,zero", help="seg dev eval: prev-mask input modes")
     ap.add_argument("--eval-limit", type=int, default=None, help="dev samples per epoch eval")
     ap.add_argument("--max-steps", type=int, default=None, help="stop after this many steps (timing)")
@@ -534,7 +646,8 @@ def main():
     run = args.runs / args.name
     run.mkdir(parents=True, exist_ok=True)
     data = args.data
-    cfg = {"ignore_eye": set(filter(None, args.ignore_eye.split(","))), "blocked_prev": set()}
+    cfg = {"ignore_eye": set(filter(None, args.ignore_eye.split(","))), "blocked_prev": set(),
+           "ignore_dilate": args.ignore_dilate, "eye_fn_ignore": args.eye_fn_ignore}
     # evaluation always drops only the S2 eye (glasses), so runs that ignore
     # more sessions in training stay comparable
     eval_cfg = {"ignore_eye": {"S2"}, "blocked_prev": set()}
@@ -550,13 +663,29 @@ def main():
     random.seed(args.seed)
     np.random.seed(args.seed)
     torch.manual_seed(args.seed)
-    train_files = shard_files(data, args.student, "train")
-    dev_files = shard_files(data, args.student, "dev")
+    opts = {"strong": args.strong_aug, "wide": args.wide_crops, "self_prev": args.self_prev}
+    if args.holdout:
+        train_sessions = [x for x in session_names("S1,S2,S3") if not x.endswith(args.holdout)]
+        train_files = shard_files(data, args.student, "train", train_sessions)
+        dev_files = shard_files(data, args.student, "train", session_names(args.holdout)) + \
+            shard_files(data, args.student, "dev", session_names(args.holdout))
+    else:
+        train_sessions = session_names("S1,S2,S3")
+        train_files = shard_files(data, args.student, "train")
+        dev_files = shard_files(data, args.student, "dev")
+        if args.include_dev:
+            train_files = train_files + dev_files
     assert train_files and dev_files, data
-    assert not any("heldout" in f.name for f in train_files + dev_files)
+    assert not any("heldout" in f.name or "S4" in str(f) for f in train_files + dev_files)
+    if args.student == "hand":
+        args.geo = fit_geometry(train_files)
+        (run / "geo.json").write_text(json.dumps(args.geo))
+        if args.pseudo_fingers:
+            cfg["pseudo"] = args.geo
     if args.student == "seg":
         # train frames whose previous frame is a dev frame: no dev pixels in training
-        cfg["blocked_prev"] = frame_keys(shard_files(data, "seg", "dev") + shard_files(data, "seg", "heldout"))
+        blocked = shard_files(data, "seg", "heldout") + ([] if args.include_dev else shard_files(data, "seg", "dev"))
+        cfg["blocked_prev"] = frame_keys(blocked)
     n_train = count_samples(train_files, args.student, cfg)
     steps_per_epoch = n_train // args.batch
     total_steps = steps_per_epoch * args.epochs
@@ -565,6 +694,10 @@ def main():
 
     model = build(args.student, args).to(args.device)
     params = sum(p.numel() for p in model.parameters())
+    ema = None
+    if args.ema:
+        ema = torch.optim.swa_utils.AveragedModel(
+            model, multi_avg_fn=torch.optim.swa_utils.get_ema_multi_avg_fn(args.ema), use_buffers=True)
     opt = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=args.wd)
     warm = max(1, int(WARMUP_FRAC * total_steps))
     sched = torch.optim.lr_scheduler.LambdaLR(opt, lambda s: min(1.0, (s + 1) / warm) * 0.5 *
@@ -578,7 +711,7 @@ def main():
         start_epoch, best, step = ck["epoch"] + 1, ck["best"], ck["step"]
         print(f"resumed at epoch {start_epoch}, step {step}", flush=True)
     (run / "args.json").write_text(json.dumps({**{k: str(v) if isinstance(v, Path) else v
-                                                  for k, v in vars(args).items()},
+                                                  for k, v in vars(args).items() if k != "geo"},
                                                "params": params, "n_train": n_train,
                                                "steps_per_epoch": steps_per_epoch}, indent=1))
     ds = Shards(train_files, args.student, cfg, shuffle_buffer=args.shuffle_buffer, seed=args.seed)
@@ -594,13 +727,15 @@ def main():
         n_ep = 0
         for raw in loader(ds, args.batch, args.workers, args.device, True):
             wait += time.time() - t_data
-            b = prepare(raw, args.student, args.device, gen)
+            b = prepare(raw, args.student, args.device, gen, opts)
             with autocast(args.device):
                 loss, part = loss_fn(args.student, model, b)
             opt.zero_grad(set_to_none=True)
             loss.backward()
             opt.step()
             sched.step()
+            if ema is not None:
+                ema.update_parameters(model)
             step += 1
             n_ep += 1
             losses.append(loss.item())
@@ -624,7 +759,8 @@ def main():
         sync(args.device)
         train_s = time.time() - t0
         t1 = time.time()
-        ev = evaluate(args.student, model, dev_files, args, eval_cfg, limit=args.eval_limit)
+        net = ema.module if ema is not None else model
+        ev = evaluate(args.student, net, dev_files, args, eval_cfg, limit=args.eval_limit)
         eval_s = time.time() - t1
         rec = {"epoch": epoch, "steps": n_ep, "step_total": step, "train_s": round(train_s, 1),
                "ms_per_step": round(1000 * train_s / max(1, n_ep), 1),
@@ -640,13 +776,14 @@ def main():
         print(f"epoch {epoch}: train {train_s:.0f} s ({rec['ms_per_step']} ms/step, data wait "
               f"{rec['data_wait_pct']} %), eval {eval_s:.0f} s, dev score {ev['score']}", flush=True)
         ck = {"model": model.state_dict(), "opt": opt.state_dict(), "sched": sched.state_dict(),
-              "epoch": epoch, "step": step, "best": max(best, ev["score"]), "args": vars(args) | {
-                  "data": str(args.data), "runs": str(args.runs)}}
+              "ema": ema.state_dict() if ema is not None else None,
+              "epoch": epoch, "step": step, "best": max(best, ev["score"])}
         torch.save(ck, run / "last.pt")
-        if ev["score"] > best:
+        if ev["score"] > best or args.include_dev:  # include-dev: dev is seen, keep the last epoch
             best = ev["score"]
-            torch.save({"model": model.state_dict(), "epoch": epoch, "score": best,
-                        "student": args.student, "hand_backbone": args.hand_backbone}, run / "best.pt")
+            torch.save({"model": net.state_dict(), "epoch": epoch, "score": best, "student": args.student,
+                        "hand_backbone": args.hand_backbone, "seg_backbone": args.seg_backbone,
+                        "geo": getattr(args, "geo", None)}, run / "best.pt")
         if epoch == start_epoch and args.usd_per_hour and args.max_usd and not stop:
             per_epoch = time.time() - t0
             projected = usd() + (args.epochs - epoch - 1) * per_epoch / 3600 * args.usd_per_hour
@@ -657,15 +794,39 @@ def main():
             print("STOP: " + stop, flush=True)
             break
     summary = {"name": args.name, "student": args.student, "best_dev_score": best, "stopped": stop,
-               "elapsed_s": round(time.time() - t_start, 1), "usd": round(usd(), 4) if args.usd_per_hour else 0}
+               "holdout": args.holdout}
+    if args.student == "seg" and not stop:
+        # live-like: own previous prediction as the prev mask, frames in time order
+        bm, _ = load_best(args, run)
+        seq = evaluate("seg", bm, dev_files, args, eval_cfg, limit=args.eval_limit, sequential=True)
+        summary["val_sequential"] = {k: v for k, v in seq.items() if k in ("iou_own", "score", "samples")}
+        print("sequential:", json.dumps(summary["val_sequential"]), flush=True)
+    summary.update(elapsed_s=round(time.time() - t_start, 1), usd=round(usd(), 4) if args.usd_per_hour else 0)
     (run / "summary.json").write_text(json.dumps(summary, indent=1))
     print(json.dumps(summary))
+
+
+def fit_geometry(files):
+    """Finger-extension rule on the MediaPipe keypoints of the script-labelled
+    training crops (students.finger_geometry); training files only."""
+    feats, labels = [], []
+    for f in files:
+        for _, s in iter_tar(f):
+            m = json.loads(s["json"])
+            if m["fingers"] is not None and m.get("kp_source") == "mediapipe":
+                feats.append([p[:2] for p in m["keypoints"]])
+                labels.append(m["fingers"])
+    kp = torch.tensor(feats, dtype=torch.float32)
+    return st.fit_finger_geometry(st.finger_geometry(kp), torch.tensor(labels, dtype=torch.float32))
 
 
 def load_best(args, run):
     path = run / "best.pt" if (run / "best.pt").exists() else run / "best_raw.pt"
     ck = torch.load(path, map_location="cpu", weights_only=False)
     args.hand_backbone = ck.get("hand_backbone", args.hand_backbone)
+    args.seg_backbone = ck.get("seg_backbone", st.BACKBONE)
+    if ck.get("geo"):
+        args.geo = ck["geo"]
     model = build(ck["student"], args, pretrained=False)
     model.load_state_dict(ck["model"])
     return model.to(args.device).eval(), ck
@@ -714,19 +875,24 @@ def gate(args, run, cfg):
                   "gate": {c: {"iou": ious[c], "min": m, "pass": (ious[c] or 0) >= m} for c, m in GATE["seg"].items()},
                   "eye_mouth_note": "seg eye/mouth at 384x216 reported, gated on the face student (D10)"}
     elif s == "face":
+        model = st.FaceDeploy(model, args.eye_bias, args.eye_dilate).eval()
+        dev = evaluate(s, model, shard_files(args.data, s, "dev"), args, cfg)
         held = evaluate(s, model, held_files, args, cfg)
         ious = held["iou_crop"]
         result = {"dev": dev, "heldout": held,
                   "gate": {c: {"iou": ious[c], "min": m, "pass": (ious[c] or 0) >= m} for c, m in GATE["face"].items()}}
     else:
-        thr = calibrate(dev["_probs"], dev["_labels"])
-        dev["finger_calibrated"] = finger_metrics(dev["_probs"], dev["_labels"], thr)
+        v = args.variant
+        thr = calibrate(dev["_variants"][v], dev["_labels"])
+        dev["finger_calibrated"] = finger_metrics(dev["_variants"][v], dev["_labels"], thr)
         held = evaluate(s, model, held_files, args, cfg)
-        held["finger_calibrated"] = finger_metrics(held["_probs"], held["_labels"], thr)
+        held["finger_calibrated"] = finger_metrics(held["_variants"][v], held["_labels"], thr)
+        held["variant"] = v
         acc = held["finger_calibrated"]["state_accuracy"]
         result = {"dev": strip(dev), "heldout": strip(held), "thresholds": thr,
                   "gate": {"finger_state_accuracy": {"value": acc, "min": 0.95, "pass": acc >= 0.95}}}
     result["epoch"] = ck["epoch"]
+    result["deploy"] = {"variant": args.variant, "eye_bias": args.eye_bias, "eye_dilate": args.eye_dilate}
     result["passed"] = all(g["pass"] for g in result["gate"].values())
     (run / "gate.json").write_text(json.dumps(result, indent=1, default=str))
     print(json.dumps(result["gate"], indent=1), "\nGATE " + ("PASSED" if result["passed"] else "FAILED"))
@@ -738,6 +904,18 @@ def export(args, run):
     import preflight as pf
     model, ck = load_best(args, run)
     model = model.float().cpu().eval()
+    deploy = {}
+    if args.student == "hand":
+        g = json.loads((run / "gate.json").read_text())
+        v = g["heldout"].get("variant", "head")
+        deploy = {"variant": v, "thresholds": g["thresholds"]}
+        model = st.HandDeploy(model, tta=v in ("tta", "fused_tta"), geo=args.geo if v in ("geo", "fused", "fused_tta")
+                              else None, thresholds=g["thresholds"]).eval()
+        if v == "geo":
+            raise SystemExit("geo-only variant is not exportable as a mean; pick fused")
+    elif args.student == "face":
+        deploy = {"eye_bias": args.eye_bias, "eye_dilate": args.eye_dilate}
+        model = st.FaceDeploy(model, args.eye_bias, args.eye_dilate).eval()
     out = ROOT / "data" / "models"
     name = args.student  # plugin/install.sh picks data/models/<student>*.mlpackage
     img = lambda h, w: ct.ImageType(name="image", shape=(1, 3, h, w),  # noqa: E731
@@ -753,7 +931,7 @@ def export(args, run):
     s = next(iter_tar(shard_files(args.data, args.student, "dev")[0]))[1]
     pimg = Image.open(io.BytesIO(s["jpg"])).convert("RGB")
     xt = torch.from_numpy(np.asarray(pimg).copy()).permute(2, 0, 1).float().unsqueeze(0) / 255
-    report = {"name": name, "epoch": ck["epoch"], "path": str(path)}
+    report = {"name": name, "epoch": ck["epoch"], "path": str(path), "deploy": deploy}
     with torch.no_grad():
         if args.student == "seg":
             pm = torch.zeros(1, 1, 216, 384)

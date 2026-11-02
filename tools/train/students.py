@@ -68,11 +68,11 @@ class LRASPP(nn.Module):
 
 
 class SegStudent(nn.Module):
-    def __init__(self, pretrained=True, prev_mask=True, num_classes=NUM_CLASSES, low_stride=8):
+    def __init__(self, pretrained=True, prev_mask=True, num_classes=NUM_CLASSES, low_stride=8, backbone=BACKBONE):
         super().__init__()
         self.prev_mask = prev_mask
         self.norm = Normalize()
-        self.backbone = timm.create_model(BACKBONE, pretrained=pretrained, features_only=True,
+        self.backbone = timm.create_model(backbone, pretrained=pretrained, features_only=True,
                                           in_chans=4 if prev_mask else 3)
         red, ch = self.backbone.feature_info.reduction(), self.backbone.feature_info.channels()
         self.i_low, self.i_high = red.index(low_stride), red.index(32)
@@ -165,15 +165,27 @@ def seg_loss(model, batch, dice_weight=DICE_WEIGHT):
     only for samples that have a previous frame (batch["has_prev"]).
     Pixels labelled IGNORE (S2 eye, glasses) drop out of every term.
     """
-    logits = model(batch["image"], batch["prev_mask_in"])
-    ce = F.cross_entropy(logits, batch["mask"], ignore_index=IGNORE)
-    dice = soft_dice(logits, batch["mask"])
     # The gradient-free pass on frame t-1 has an all-zero prev channel. It must
     # not update the BatchNorm running statistics: in seg-a-s0 it did, half of
     # all updates saw "no prev", and in eval mode a real prev mask then turned
     # hands into "object" (probes/train-students/RESULT.md).
-    with torch.no_grad(), frozen_bn_stats(model):
-        prev_logits = model(batch["prev_image"], torch.zeros_like(batch["prev_mask_in"]))
+    # It also runs before the graded pass (self-prev needs its output) and
+    # outside autocast: all round-2 seg runs that cast weights first under
+    # no_grad trained at twice the cross-entropy (CUDA autocast weight cache,
+    # probes/train-students/RESULT.md).
+    dev_type = batch["image"].device.type
+    with torch.no_grad(), frozen_bn_stats(model), torch.autocast(device_type=dev_type, enabled=False):
+        prev_logits = model(batch["prev_image"], torch.zeros_like(batch["prev_mask_in"])).float()
+    prev_in = batch["prev_mask_in"]
+    if "self_prev" in batch:
+        # live, the prev mask is the student's own last prediction, not SAM's:
+        # feed that on the selected samples (scheduled sampling, one step)
+        own = prev_logits.argmax(1, keepdim=True).float() / (NUM_CLASSES - 1)
+        sel = batch["self_prev"].view(-1, 1, 1, 1)
+        prev_in = sel * own + (1 - sel) * prev_in
+    logits = model(batch["image"], prev_in)
+    ce = F.cross_entropy(logits, batch["mask"], ignore_index=IGNORE)
+    dice = soft_dice(logits, batch["mask"])
     has_prev = batch.get("has_prev", torch.ones(len(logits), device=logits.device)).view(-1, 1, 1)
     stable = ((batch["mask"] == batch["prev_mask"]) & (batch["mask"] != IGNORE)).float() * has_prev
     stable = stable.unsqueeze(1)
@@ -193,11 +205,65 @@ def face_loss(model, batch, dice_weight=DICE_WEIGHT):
 def hand_loss(model, batch):
     keypoints, finger_logits = model(batch["image"])
     fm = batch["finger_mask"]
+    if fm.dim() == 1:  # one flag per sample -> per finger
+        fm = fm.unsqueeze(1).expand(-1, 5)
     finger = (F.binary_cross_entropy_with_logits(finger_logits, batch["fingers"], reduction="none")
-              .mean(1) * fm).sum() / fm.sum().clamp(min=1)
+              * fm).sum() / fm.sum().clamp(min=1)
     w = (batch["kp_conf"] > KP_MIN_CONF).float()
     kp = ((keypoints - batch["kp"]).abs().sum(-1) * w).sum() / w.sum().clamp(min=1)
     return finger + kp, {"finger_bce": finger.item(), "kp_l1": kp.item()}
+
+
+FINGER_CHAINS = [(1, 2, 3, 4), (5, 6, 7, 8), (9, 10, 11, 12), (13, 14, 15, 16), (17, 18, 19, 20)]
+
+
+def finger_geometry(kp):
+    """Per-finger extension features from 21 keypoints (B, 21, 2) -> (B, 5, 3).
+
+    straightness: tip-to-mcp distance over the bone path; reach: tip minus pip
+    distance from the wrist, over palm length; thumb: tip to index mcp and to
+    little mcp, over palm length. A logistic regression on these, fitted on the
+    script labels of the training crops, reads the teacher keypoints at 0.94
+    (thumb) and 0.98 to 0.99 (other fingers) per finger on dev.
+    """
+    w = kp[:, 0]
+    palm = (kp[:, 9] - w).norm(dim=-1).clamp(min=1e-6)
+    out = []
+    for f, (m, p, d, t) in enumerate(FINGER_CHAINS):
+        path = (kp[:, p] - kp[:, m]).norm(dim=-1) + (kp[:, d] - kp[:, p]).norm(dim=-1) + (kp[:, t] - kp[:, d]).norm(dim=-1)
+        straight = (kp[:, t] - kp[:, m]).norm(dim=-1) / path.clamp(min=1e-6)
+        if f == 0:
+            a = (kp[:, 4] - kp[:, 5]).norm(dim=-1) / palm
+            b = (kp[:, 4] - kp[:, 17]).norm(dim=-1) / palm
+        else:
+            a = ((kp[:, t] - w).norm(dim=-1) - (kp[:, p] - w).norm(dim=-1)) / palm
+            b = torch.zeros_like(a)
+        out.append(torch.stack([straight, a, b], -1))
+    return torch.stack(out, 1)
+
+
+def fit_finger_geometry(feats, labels, steps=200):
+    """Logistic regression per finger: feats (N, 5, 3), labels (N, 5) -> weights (5, 4)."""
+    mu, sd = feats.mean(0), feats.std(0).clamp(min=1e-6)
+    x = (feats - mu) / sd
+    w = torch.zeros(5, 4, requires_grad=True)
+    opt = torch.optim.LBFGS([w], max_iter=steps)
+
+    def closure():
+        opt.zero_grad()
+        z = (x * w[:, :3]).sum(-1) + w[:, 3]
+        loss = F.binary_cross_entropy_with_logits(z, labels) + 1e-3 * (w[:, :3] ** 2).sum()
+        loss.backward()
+        return loss
+    opt.step(closure)
+    return {"w": w.detach().tolist(), "mu": mu.tolist(), "sd": sd.tolist()}
+
+
+def finger_geometry_prob(kp, geo):
+    """P(extended) per finger from keypoints with fitted weights; kp (B, 21, 2)."""
+    x = (finger_geometry(kp) - torch.tensor(geo["mu"], device=kp.device)) / torch.tensor(geo["sd"], device=kp.device)
+    w = torch.tensor(geo["w"], device=kp.device)
+    return torch.sigmoid((x * w[:, :3]).sum(-1) + w[:, 3])
 
 
 def read_samples(path, n=None, keep=None):
@@ -258,3 +324,49 @@ def hand_batch(samples):
         "kp": torch.tensor(kp, dtype=torch.float32),
         "kp_conf": torch.tensor(kp_conf, dtype=torch.float32),
     }
+
+
+class HandDeploy(nn.Module):
+    """Hand student as shipped: same I/O as HandStudent (keypoints 1x21x2,
+    finger logits 1x5), with the runtime levers baked in. tta: mean of the
+    finger probabilities of the crop and its mirror (no output carries a side);
+    geo: mean with the finger-geometry probability of the predicted keypoints;
+    thresholds: dev-calibrated per finger, folded into the logit so that the
+    plugin reads "extended" as logit > 0."""
+
+    def __init__(self, model, tta=False, geo=None, thresholds=None):
+        super().__init__()
+        self.model, self.tta, self.use_geo = model, tta, geo is not None
+        if geo is not None:
+            self.register_buffer("g_w", torch.tensor(geo["w"]))
+            self.register_buffer("g_mu", torch.tensor(geo["mu"]))
+            self.register_buffer("g_sd", torch.tensor(geo["sd"]))
+        t = torch.tensor(thresholds or [0.5] * 5).clamp(1e-3, 1 - 1e-3)
+        self.register_buffer("bias", torch.log(t) - torch.log1p(-t))
+
+    def forward(self, image):
+        kp, logits = self.model(image)
+        p = torch.sigmoid(logits)
+        if self.tta:
+            p = (p + torch.sigmoid(self.model(image.flip(-1))[1])) / 2
+        if self.use_geo:
+            x = (finger_geometry(kp) - self.g_mu) / self.g_sd
+            p = (p + torch.sigmoid((x * self.g_w[:, :3]).sum(-1) + self.g_w[:, 3])) / 2
+        p = p.clamp(1e-4, 1 - 1e-4)
+        return kp, torch.log(p) - torch.log1p(-p) - self.bias
+
+
+class FaceDeploy(nn.Module):
+    """Face student as shipped: logits 1x3x128x128 with an eye bias (lower eye
+    threshold) and an eye dilation (max-pool of the eye logit, odd kernel)."""
+
+    def __init__(self, model, eye_bias=0.0, eye_dilate=1):
+        super().__init__()
+        self.model, self.eye_bias, self.k = model, float(eye_bias), int(eye_dilate)
+
+    def forward(self, image):
+        out = self.model(image)
+        eye = out[:, 1:2] + self.eye_bias
+        if self.k > 1:
+            eye = F.max_pool2d(eye, self.k, stride=1, padding=self.k // 2)
+        return torch.cat([out[:, :1], eye, out[:, 2:]], 1)
