@@ -1,7 +1,9 @@
 # synthexis mapping ontology v1 (2026-10-29), v1.1 (2026-10-31: hand and finger tilt,
 # finger count, MIDI generator properties, named chords, centred routes, roles per
 # track or plugin; perception for the new sources is proposed in
-# probes/mapping-pipeline/SPEC_PROPOSAL.md, not in the spec yet)
+# probes/mapping-pipeline/SPEC_PROPOSAL.md, not in the spec yet), v1.2 (2026-10-31: demo
+# requests: any finger combination as a shape, values in the parameter's own units,
+# step and ramp modes, the xy pad, arpeggiator style)
 #
 # Everything the mapping assistant can name, in one file:
 #   taxonomy   param-sense classes: what a plugin parameter means (list order = class index)
@@ -19,7 +21,7 @@
 # into hand.openness with invert. Directions are from the user's point of view
 # (hand.x = 1 is the user's right, even though the camera image is mirrored).
 
-version: 1.1
+version: 1.2
 
 taxonomy:
   # ---- level and space
@@ -211,6 +213,7 @@ sources:
   - {id: motion.clap, event: true, desc: "both hands clap"}
 
 # Named finger states: 5-bit masks thumb, index, middle, ring, pinky (1 = extended).
+# Any other combination is written as its mask: shape:m01010 = index and ring finger.
 shapes:
   - {id: fist, mask: "00000"}
   - {id: open, mask: "11111"}
@@ -236,6 +239,7 @@ targets:
   - {id: midi.pattern, desc: "play a pattern slot (drum pattern, roll, arp) quantized to the host grid"}
   - {id: midi.cc, desc: "send a MIDI CC number on a channel"}
   - {id: midi.prop, desc: "a property of synthexis' own MIDI generator (value: one of midi_props), not a plugin parameter"}
+  - {id: xy, desc: "a two-axis pad: the plugin's XY pad or its two macros; hand x drives one axis, hand y the other; the resolver expands it to the plugin's pair"}
   - {id: toggle, desc: "switch an effect or plugin on and off (its bypass or on switch, class ctl.switch); value = effect family; mode toggle (each event flips it) or momentary (on while the source is on)"}
 
 # Properties of synthexis' MIDI generator (spec midi.chord, midi.patterns) a route can drive.
@@ -246,6 +250,7 @@ midi_props:
   - {id: arp.octaves, desc: "how many octaves the arpeggiator runs over"}
   - {id: velocity, desc: "how hard the generated notes are played"}
   - {id: note.length, desc: "how long the generated notes are held (gate length)"}
+  - {id: arp.style, desc: "the arpeggiator's note order (up, down, converge, diverge, pinky up, thumb up ...), named by a value slot"}
 
 # Effect families for toggle targets and for 'the reverb' style plugin references.
 families: [reverb, delay, chorus, flanger, phaser, distortion, filter, eq, compressor, gate, pitch, plugin]
@@ -284,7 +289,8 @@ modifiers:
   delta: "relative change of an existing route's amount (modify only): +0.1 a bit more, +0.25 more, +0.5 much more, and the negatives"
   gate: "the route is active only while another source or finger state is on ('only while I hold a fist')"
   time: "ramp or fade length in beats, bars or ms ('over 4 bars', 'in 500 ms')"
-  mode: "toggle | momentary, for toggle targets"
+  mode: "toggle | momentary for toggle targets; step (each trigger moves a parameter to its next setting) | ramp (each trigger starts a slow move, the next reverses it) for parameter targets"
+  value: "a setting in the target's own units or names ('position 4', '3 octaves', 'sixteenths', 'Pinky Up'); two on one route = from the first to the second; the resolver converts through the parameter's value-to-text mapping"
   rejected: "a value the user names by mistake and then corrects ('right hand, no, left hand'); the parser must ignore it"
 
 tracks: [pad, bass, sub, "808", lead, pluck, keys, piano, rhodes, organ, strings, brass, choir, vocals, guitar, arp, synth, drums, kick, snare, clap, hi-hat, percussion, fx, riser, master]

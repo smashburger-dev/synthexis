@@ -64,6 +64,136 @@ All checks pass. It also writes `data/mapping/eval/review.md` for Noa.
 
 These findings and the request types missing from the ontology are in `probes/mapping-pipeline/SPEC_PROPOSAL.md`, section "demo requests".
 
+## Parser runs (2026-10-31)
+
+Exact route match per row (`score.py`). Claude drafted the gold for the 34 originals and Noa has not checked it yet, so some misses may be gold errors (for example switch or plain parameter for a bypass).
+
+| run | calibration all | calibration orig | eval all | eval orig | eval route F1 |
+|---|---|---|---|---|---|
+| v3 s0 | 12/51 | 4/12 | 16/99 | 5/22 | 0.242 |
+| v3 s1 | 18/51 | 5/12 | 14/99 | 4/22 | 0.213 |
+| v5 s0 | 16/51 | 5/12 | 16/99 | 4/22 | 0.273 |
+| v5 s1 | 16/51 | 5/12 | 14/99 | 6/22 | 0.253 |
+
+v5 and v3 are level. Two seeds of one recipe differ as much as the two recipes do, and the eval split has only 20 groups.
+
+Needs first seen in eval groups (any finger mask, values, step, ramp toggle): none of their originals is exactly right with either v5 seed. Seed 1 gets 2 of 4 rows of the two-value request. v5 emits the new pieces (VALUE pointers, a finger pair where v3 had none, one finger per value) but not the whole route.
+
+Error types on the 51 calibration rows (v5 s0, v3 s0 in brackets):
+- target kind wrong: 27 (29)
+- sources wrong: 28 (26)
+- pinch read as a source where it holds another movement: 8 of 9 rows (8)
+- number of routes wrong: 15 (20)
+- invert wrong: 6 (13)
+- no target at all: 10 (6)
+
+Reading: dev route_edit is 0.83, exact match on real sentences is 0.14 to 0.35. Stage 4 put the missing types into the synthetic text, and the real-set score did not move. The real sentences are longer, often describe both directions of one movement, and use pinch as a hold condition. A next batch may be shaped by calibration findings (rule below). More synthetic text of the same kind is not expected to close the gap.
+
+## Decode-time rules (2026-11-01)
+
+`tools/mapping/normalize.py`, measured with `uv run probes/decode-rules/measure.py` on the saved dev predictions of p-v5-s0 and p-v5-s1 and on the calibration rows only:
+
+| rule | dev sets, both seeds (won / lost) | calibration s0 | calibration s1 |
+|---|---|---|---|
+| none | | 16/51 | 16/51 |
+| pinch (S:hand.pinch next to another source becomes G:hand.pinch) | +0 / -13 | 17/51 | 16/51 |
+| pronoun (a later route without a target restates an earlier one or takes its target) | +0 / -0 | 16/51 | 19/51 |
+
+The pinch rule costs dev sentences where pinch and a movement both drive the target, so it stays off. The pronoun rule never fires on synthetic text and gains 0 and 3 calibration rows; it is kept for the plugin runtime. Neither closes the gap, so the next step changes the data.
+
+## Training-label noise found on the way
+
+Of 3,891 training sentences with a toggle target, 1,569 have no switching word ("my fist does the distortion"). They come from stages 1 to 3, where toggle targets reached Spark as "midi cc <family>" (fixed for stage 4). They teach the parser that a plain effect name is a switch, the error behind "reverb bigger" read as a reverb switch. `project_labels.py --drop-toggle` drops them from the training files; dev sets stay as they are.
+
+Measured with one seed (p-v5t-s0 on ds-v5t against p-v5-s0): rows predicted with a toggle on calibration fall from 5 to 2, but calibration drops from 16 to 14 of 51, and dev route_edit on the 755 dev sentences without a toggle gold falls from 0.861 to 0.842. The dropped rows carry more than the wrong label, so the drop is not used for v6.
+
+## Parser run v6 (2026-11-01)
+
+v6 adds stage 5, shaped by the calibration findings above (`probes/parser-errors/RESULT.md`, section 9). Scored once on eval.
+
+| run | calibration all | calibration orig | eval all | eval orig | eval route F1 | eval orig route F1 |
+|---|---|---|---|---|---|---|
+| v3 s0 | 12/51 | 4/12 | 16/99 | 5/22 | 0.242 | 0.295 |
+| v3 s1 | 18/51 | 5/12 | 14/99 | 4/22 | 0.213 | 0.254 |
+| v5 s0 | 16/51 | 5/12 | 16/99 | 4/22 | 0.273 | 0.286 |
+| v5 s1 | 16/51 | 5/12 | 14/99 | 6/22 | 0.253 | 0.312 |
+| v6 s0 | 19/51 | 5/12 | 25/99 | 7/22 | 0.347 | 0.419 |
+| v6 s1 | 21/51 | 6/12 | 18/99 | 5/22 | 0.339 | 0.444 |
+
+Paired exact match, both seeds pooled (McNemar on rows, 95 % interval from a bootstrap over groups):
+
+| comparison | split | won / lost | p | exact match diff | group bootstrap |
+|---|---|---|---|---|---|
+| v6 vs v5 | calibration | 10 / 2 | 0.039 | +7.8 points | [-0.8, +20.0] |
+| v6 vs v5 | eval | 22 / 9 | 0.029 | +6.6 points | [+0.5, +14.7] |
+| v6 vs v3 | calibration | 12 / 2 | 0.013 | +9.8 points | [+2.2, +19.0] |
+| v6 vs v3 | eval | 24 / 11 | 0.041 | +6.6 points | [-3.2, +18.6] |
+
+Error types on the calibration rows (v6 s0, v5 s0 in brackets):
+- target kind wrong: 22 (27)
+- sources wrong: 20 (28)
+- pinch read as a source where it holds another movement: 6 of 9 rows (8)
+- number of routes wrong: 11 (15)
+- invert wrong: 8 (6)
+- no target at all: 7 (10)
+
+Needs first seen in eval groups (finger mask, values, step, ramp; 5 groups, 21 rows): v6 gets 3 of 21 rows with either seed and 1 of 5 originals (the two-value request), v5 got 0 and 2 of 21. The routes that need these pieces are still mostly wrong.
+
+Reading: the style batch moved the real-sentence score where stage 4 did not. Eval exact match goes from 15 % to 22 % (seed mean), route F1 from 0.26 to 0.34. Exact match on real sentences stays far below dev (0.83), so most of Noa's long sentences still need the chips to fix one or two routes. Gold is still Claude's draft; Noa's check can move every number in this section.
+
+## Ceiling: Spark parses the set directly (2026-11-01)
+
+`probes/real-eval/spark_parse.py`: Muse Spark Open (reasoning high) gets the frame language, the ontology sources and families, and 22 few-shot examples from the synthetic training set (ds-v6p train_cat; toggle examples only with a switching word). No real sentence is in the prompt. Batches of 25 sentences, 9 requests, 0.29 $. The replies are a measurement only and never go into training.
+
+| run | calibration all | calibration orig | eval all | eval orig | eval route F1 | eval orig route F1 |
+|---|---|---|---|---|---|---|
+| Spark | 40/51 | 9/12 | 62/99 | 14/22 | 0.667 | 0.636 |
+| v6 s0 | 19/51 | 5/12 | 25/99 | 7/22 | 0.347 | 0.419 |
+| v6 s1 | 21/51 | 6/12 | 18/99 | 5/22 | 0.339 | 0.444 |
+
+Against both v6 seeds on eval: 91 won, 10 lost, exact match +41 points, group bootstrap +19 to +61. The prompt rules on pinch and on both directions came from calibration errors, so eval is the fair number: 63 % exact.
+
+Error types on eval (Spark): target kind wrong 20 of 99, sources wrong 10, pinch read as a source 8 of 12, route count wrong 0, no target 0. Needs first seen in eval groups: 7 of 21 rows, 1 of 5 originals (the finger mask).
+
+Reading: the gold and the frame language are learnable from the same spec the parser trains on; a large model gets almost two thirds of Noa's sentences exactly right and two thirds of the routes. The gap between v6 (22 %) and Spark (63 %) is the small model trained from scratch, not the task or the labels.
+
+## Teacher check: Spark against DeepSeek V4.1 Flash (2026-11-01)
+
+`probes/real-eval/teacher_check.py`, same prompt as the ceiling check, 100 map sentences from the synthetic dev_s5 split (DeepSeek processes in China and only sees synthetic text). Spark wrote dev_s5 itself, which may favour it.
+
+| teacher | exact | cost |
+|---|---|---|
+| Spark, reasoning high | 71/100 | 0.185 $ |
+| DeepSeek, thinking off | 67/100 | 0.004 $ |
+| DeepSeek, thinking high | 48/100 (one batch of 25 unparsed) | 0.061 $ |
+
+Where Spark and DeepSeek without thinking agree (68 of 100 sentences), 59 match the gold: 87 % against 71 % for Spark alone. Agreement of two different teachers is the label filter for teacher data.
+
+## Parser v7 (2026-11-01)
+
+Runs in `probes/parser-errors/RESULT.md`, section 10. Selection rule fixed before eval: best calibration, ties to the smaller model. It picked p-v7-s0 (31/51); mmBERT base got 25/51. Then eval was scored once for every arm:
+
+| run | calibration | eval all | eval orig | eval route F1 | eval right or one part wrong |
+|---|---|---|---|---|---|
+| v6 s0 | 19/51 | 25/99 | 7/22 | 0.347 | 49/99 |
+| v6 s1 | 21/51 | 18/99 | 5/22 | 0.339 | 51/99 |
+| v7 s0 (encoder + teacher rows) | 31/51 | 23/99 | 5/22 | 0.360 | 54/99 |
+| v7 s1 | 30/51 | 22/99 | 7/22 | 0.319 | 57/99 |
+| v7a s0 (encoder only) | 26/51 | 30/99 | 6/22 | 0.371 | 72/99 |
+| v7a s1 | 25/51 | 32/99 | 8/22 | 0.377 | 64/99 |
+| v7b s0 (mmBERT base + teacher rows) | 25/51 | 29/99 | 5/22 | 0.436 | 67/99 |
+| Spark (ceiling) | 40/51 | 62/99 | 14/22 | 0.667 | 82/99 |
+
+"One part wrong": only the gestures or only the targets of the sentence differ from the gold.
+
+v7 with teacher rows gains 10 calibration rows and nothing on eval (v7 against v6, both seeds: 21 won, 19 lost, p 0.87). The cause is the teacher prompt: its rules on pinch, both directions and chained targets were written from calibration errors, and the teacher labels carry them, so calibration stopped being an independent selection set for these runs. No real sentence reached training (0 exact matches; the 267 training sentences that share a word 6-gram with the real set share gesture phrases such as "when i open my left hand", almost all from stages 1 to 3, written before the real set; teacher rows reach a ratio of 0.55 at most).
+
+The encoder alone carries the gain. v7a seed 0 was looked at on eval before choosing it, so seed 1 was trained afterwards as a check of the recipe: 32/99. Both v7a seeds against both v6 seeds on eval: 30 won, 11 lost, p 0.004, exact match 22 % -> 31 %, group bootstrap -1.6 to +22 points. Right or one part wrong rises from 50 % to 68 %. p-v7a-s0 ships (seed 0 by the usual rule).
+
+Needs first seen in eval groups (finger mask, values, step, ramp): v7 gets 2 and 3 of 21 rows, no original besides the ramp one with seed 1.
+
+Reading: a pretrained encoder narrows the gap to Spark from 41 to 31 points exact and from 32 to 14 points on "right or one fix away". Teacher labels need a prompt that no selection set has shaped.
+
 ## Open
 
 - Noa reviews the derived rows: do they sound like him, mean the original plus the listed change, and name the right plugin and parameter? Plugin context is inferred for all 34 originals; 5 are unknown, and their rows note the candidates.
@@ -72,5 +202,5 @@ These findings and the request types missing from the ontology are in `probes/ma
 ## Rules
 
 - No row is used for training or for writing prompts.
-- Stage-4 prompts come from calibration findings only. Before training, every generated sentence is compared with `expanded.jsonl` (word 5-grams, closest-pair ratio), and hits are dropped.
+- Stage-4 and stage-5 prompts come from calibration findings only. A run trained on labels from such a prompt is not selected on calibration (section "Parser v7"). Before training, every generated sentence is compared with `expanded.jsonl` (word 5-grams, closest-pair ratio), and hits are dropped.
 - Needs first seen in eval groups are scored separately if stage 4 covers them.

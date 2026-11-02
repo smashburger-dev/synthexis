@@ -36,6 +36,13 @@ SMOOTH_WORD = {"low": "low (snappy)", "medium": "medium",
                "high": "high (smooth)"}
 HOLD_WORD = {"hold": "hold the value", "reset": "reset",
              "freeze": "freeze"}
+MODE_WORD = {
+    "momentary": "on only while the source is on",
+    "toggle": "each time the source fires it flips on or off",
+    "step": "each time the source fires, the parameter jumps to its next "
+            "setting",
+    "ramp": "each time the source fires, the parameter starts moving "
+            "slowly; the next time it moves back"}
 RE_LINE = re.compile(r"^E(\d+)\.(\d+):\s*(.+)$")
 RE_MARK = re.compile(r"\[\[([^\[\]|]+?)\|([a-z]+\d+)\]\]")
 
@@ -47,11 +54,12 @@ def pct(v) -> str:
 
 
 def shape_fingers(onto: dict, shape_id: str) -> str:
-    for s in onto["shapes"]:
-        if s["id"] == shape_id:
-            on = [FINGERS[i] for i, b in enumerate(s["mask"]) if b == "1"]
-            return ", ".join(on) if on else "none"
-    return ""
+    masks = {s["id"]: s["mask"] for s in onto["shapes"]}
+    mask = masks.get(shape_id) or (shape_id[1:] if shape_id.startswith("m")
+                                   else "")
+    on = [FINGERS[i] for i, b in enumerate(mask) if b == "1"]
+    return (", ".join(on) + " extended, the others folded") if on else \
+        ("" if not mask else "none")
 
 
 def source_desc(onto: dict, sid: str) -> str:
@@ -121,11 +129,22 @@ def slot_line(sid: str, s: dict, onto: dict) -> str:
         elif t == "midi.prop":
             out = (f"{sid} midi generator {s['value']} "
                    f"({midi_prop_desc(onto, s['value'])})")
+        elif t == "toggle":
+            out = f"{sid} toggle {s['value']}"
+        elif t == "xy":
+            out = (f"{sid} xy pad (the plugin's two-axis pad or its two "
+                   f"macros: left-right drives one, up-down the other)")
         else:  # midi.cc
             out = f"{sid} midi cc {s['value']}"
+        if s.get("mode"):
+            out += f" mode={s['mode']}"
+            if s["mode"] in MODE_WORD:
+                out += f" ({MODE_WORD[s['mode']]})"
         if s.get("say"):
             out += f' say: "{s["say"]}"'
         return out
+    if k == "value":
+        return f"{sid} value {s['value']}"
     if k == "track":
         if s["value"] == "ref:last_track":
             return f"{sid} track ref last track"

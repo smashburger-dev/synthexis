@@ -1,6 +1,7 @@
 # /// script
 # requires-python = ">=3.11"
-# dependencies = ["torch", "sentencepiece", "protobuf", "numpy"]
+# dependencies = ["torch", "sentencepiece", "protobuf", "numpy",
+#                 "transformers>=4.48", "tokenizers"]
 # ///
 """Parse free sentences with a trained parser run (CPU, constrained greedy).
 
@@ -17,7 +18,6 @@ import math
 import sys
 from pathlib import Path
 
-import sentencepiece as spm
 import torch
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -39,14 +39,7 @@ def main() -> None:
         texts += [t.strip() for t in Path(a.file).read_text().splitlines()
                   if t.strip()]
 
-    run = TRAIN / "runs" / a.run
-    meta = json.loads((run / "meta.json").read_text())
-    vocab = meta["frame_vocab"]
-    sp = spm.SentencePieceProcessor(model_file=str(ROOT / meta["tokenizer"]))
-    cfg = meta["config"]
-    model = fp.Parser(cfg["vocab"], cfg["fv"], cfg["d"], cfg["heads"],
-                      cfg["ff"], cfg["enc_layers"], cfg["dec_layers"], 0.0)
-    model.load_state_dict(torch.load(run / "model.pt", map_location="cpu"))
+    model, sp, vocab = fp.load_run(TRAIN / "runs" / a.run)
     grammar = fp.Grammar(vocab)
 
     samples = []

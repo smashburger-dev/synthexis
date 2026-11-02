@@ -5,6 +5,10 @@
 # detuning from the middle, "only MIDI" for a plugin, pinch-and-drag.
 # English weighted up for the demo. Everything else keeps its stage-2 weights so the
 # batch also refreshes the old concepts.
+# v1.2 (2026-10-31, demo requests in SPEC_PROPOSAL.md): any finger combination,
+# parameters fired by a finger (jump to a value, from one value to another, step,
+# slow ramp), the xy pad, arpeggiator style. Written from the request types only,
+# never from the wording of Noa's eval or calibration sentences.
 
 languages: {en: 65, de: 35}
 
@@ -28,9 +32,9 @@ sources:
   hand.pinch: 5
 
 targets: {param: 55, macro: 4, midi.note: 7, midi.pattern: 7, midi.chord: 8, midi.cc: 3, toggle: 4, midi.prop: 12}
-shape_targets: {midi.pattern: 30, midi.note: 22, midi.chord: 20, macro: 6, toggle: 10, midi.prop: 12}
+shape_targets: {midi.pattern: 22, midi.note: 16, midi.chord: 16, macro: 5, toggle: 12, midi.prop: 11, param: 18}
 
-midi_props: {chord.size: 20, chord.voicing: 15, arp.rate: 20, arp.octaves: 20, velocity: 15, note.length: 10}
+midi_props: {chord.size: 18, chord.voicing: 13, arp.rate: 18, arp.octaves: 18, velocity: 13, note.length: 9, arp.style: 11}
 chord_named: 0.5
 chord_values: [Am, C, F, G, Dm, Em, G7, Cmaj7, Am7, Fmaj7, E7, Bb, D, Dm7, Gm, Eb, I, IV, V, vi, ii, iii]
 
@@ -48,3 +52,9 @@ modifiers:
   bipolar: 0.35                # only drawn for centred sources (tilts, head roll)
   gate: 0.06
 gate_sources: {hand.shape: 40, hand.fist: 12, hand.openness: 8, mouth.open: 8, eye.closed: 4, hand.pinch: 28}
+
+shape_mask: 0.3                # finger states outside the 12 named shapes
+xy: 0.05                       # share of map edits: hand position drives an xy pad
+trigger_params: {none: 45, value: 20, from_to: 10, step: 13, ramp: 12}
+param_values: ["position 7", "position 12", "1", "2", "3", "4", "8", "64", "-12", "+7", "50 %", "25 %", "0 dB", "-6 dB", "1/4", "1/8", "1/16", "1/8 dotted", "half", "max", "zero", "Saw", "Square", "Sine", "Low Pass", "High Pass", "Band Pass", "Hall", "Plate", "Ping Pong", "Tape", "FM", "Sync", "Mirror", "Bend +", "Asym", "Mono", "Stereo", "C3", "A2", "250 ms", "1 s", "2 bars"]
+arp_styles: [up, down, up and down, down and up, converge, diverge, converge and diverge, pinky up, pinky up and down, thumb up, thumb up and down, random, play order, chord]

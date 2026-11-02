@@ -4,11 +4,12 @@
 # ///
 """SentencePiece unigram 8k with byte fallback for the parser.
 
-  uv run tools/mapping/tokenizer.py [--ds ds-v1] [--out tok-v1]
+  uv run tools/mapping/tokenizer.py [--ds ds-v1] [--out tok-v1] [--coverage 0.9995]
 
 Corpus: train_all sentences of the dataset (never dev, challenge or
 Noa's files), gloss-v1 phrases, harvested AU and VST3 plugin and
-parameter names (unique). Writes data/mapping/train/<out>/sp.model and
+parameter names (unique). tok-v2 = tok-v1 with --coverage 1.0, so rare
+letters such as ß get a piece instead of two raw bytes. Writes data/mapping/train/<out>/sp.model and
 summary.json (corpus counts, pieces per training sentence).
 """
 
@@ -39,6 +40,7 @@ def main() -> None:
     ap.add_argument("--ds", default="ds-v1")
     ap.add_argument("--out", default="tok-v1")
     ap.add_argument("--vocab", type=int, default=8000)
+    ap.add_argument("--coverage", type=float, default=0.9995)
     args = ap.parse_args()
     out = DATA / "train" / args.out
     out.mkdir(parents=True, exist_ok=True)
@@ -59,7 +61,7 @@ def main() -> None:
     spm.SentencePieceTrainer.train(
         input=str(corpus), model_prefix=str(out / "sp"),
         vocab_size=args.vocab, model_type="unigram", byte_fallback=True,
-        character_coverage=0.9995, normalization_rule_name="nmt_nfkc_cf",
+        character_coverage=args.coverage, normalization_rule_name="nmt_nfkc_cf",
         input_sentence_size=2_000_000, shuffle_input_sentence=True,
         split_digits=True, num_threads=8, pad_id=0, unk_id=1, bos_id=2,
         eos_id=3, minloglevel=2)
@@ -68,7 +70,7 @@ def main() -> None:
     summary = {"sentences": len(sents), "glossary": len(gloss),
                "harvested_names": len(harvested),
                "pieces_mean": round(sum(lens) / len(lens), 1),
-               "pieces_max": max(lens)}
+               "pieces_max": max(lens), "coverage": args.coverage}
     (out / "summary.json").write_text(json.dumps(summary, indent=1))
     corpus.unlink()
     print(json.dumps(summary))
