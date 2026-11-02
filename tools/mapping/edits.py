@@ -271,6 +271,12 @@ class Ctx:
     # --- intent bodies -------------------------------------------------
 
     def gen_map(self) -> list:
+        if self.cfg.get("fan_out") and \
+                self.rng.random() < self.cfg["fan_out"]:
+            return self.gen_fan_out()
+        if self.cfg.get("finger_values") and \
+                self.rng.random() < self.cfg["finger_values"]:
+            return self.gen_finger_values()
         if self.cfg.get("finger_set") and \
                 self.rng.random() < self.cfg["finger_set"]:
             return self.gen_finger_set()
@@ -434,6 +440,64 @@ class Ctx:
                 self.add_chord(mods)
             routes.append({"src": [s], "tgt": [t],
                            "scope": [k] if k else [], "mods": mods})
+        return routes
+
+    def gen_fan_out(self) -> list:
+        """One movement drives 2 to 4 parameters, each its own route, some
+        inverted ('tilt left: A up, B down, C up'); one plugin for all,
+        sometimes held by a pinch."""
+        cfg, rng = self.cfg, self.rng
+        s = self.add("s", self.source_slot(self.wc(cfg["fan_out_sources"])))
+        scope = []
+        if rng.random() < 0.7:
+            scope.append(self.add("p", {"kind": "plugin",
+                                        "value": self.draw_plugin()}))
+        gate = []
+        if self.slots[s]["value"] in MOVE_SOURCES and \
+                rng.random() < cfg.get("pinch_hold", 0):
+            gate.append(self.add("g", {"kind": "gate", "value": "hand.pinch",
+                                       "shape": None,
+                                       "side": self.slots[s]["side"]}))
+        used: set = set()
+        n = self.wc(cfg["fan_out_sizes"])
+        inv = [rng.random() < 0.5 for _ in range(n)]
+        if all(inv) or not any(inv):         # opposing directions are the point
+            inv[rng.randrange(n)] = not inv[0]
+        routes = []
+        for k in range(n):
+            mods = list(gate)
+            t = self.add_target("param", used, mods)
+            if inv[k]:
+                mods.append(self.add("i", {"kind": "invert", "value": True}))
+            routes.append({"src": [s], "tgt": [t], "scope": scope,
+                           "mods": mods})
+        return routes
+
+    def gen_finger_values(self) -> list:
+        """Each finger sets one parameter to its own value; the parameter is
+        named once and later clauses leave it out ('thumb is position one,
+        index four, middle eight')."""
+        cfg, rng = self.cfg, self.rng
+        if rng.random() < 0.5:
+            self.add("h", {"kind": "side",
+                           "value": rng.choice(["left", "right"])})
+        fingers = sorted(rng.sample(FINGERS, self.wc(cfg["finger_set_sizes"])),
+                         key=FINGERS.index)
+        mods0: list = []
+        t = self.add_target("param", set(), mods0)
+        scope = []
+        if rng.random() < 0.5:
+            scope.append(self.add("p", {"kind": "plugin",
+                                        "value": self.draw_plugin()}))
+        vals = rng.sample(cfg["param_values"], len(fingers))
+        routes = []
+        for f, v in zip(fingers, vals):
+            s = self.add("s", {"kind": "source", "value": f"hand.finger.{f}",
+                               "side": None, "object": None, "shape": None,
+                               "say": None})
+            mods = [self.add("v", {"kind": "value", "value": v})]
+            routes.append({"src": [s], "tgt": [t], "scope": scope,
+                           "mods": mods})
         return routes
 
     def _ref(self) -> tuple[list, list]:

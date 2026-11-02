@@ -64,12 +64,13 @@ def cost(usage: dict) -> float:
     return usd * (2 if peak else 1)
 
 
-def deepseek(messages: list, think: bool, k: str) -> tuple[str, float]:
+def deepseek(messages: list, think: bool, k: str, temperature: float = 0,
+             run: str = "teacher-check") -> tuple[str, float]:
     body = {"model": MODEL, "messages": messages, "max_tokens": 32000}
     if think:
         body |= {"thinking": {"type": "enabled"}, "reasoning_effort": "high"}
     else:
-        body |= {"thinking": {"type": "disabled"}, "temperature": 0}
+        body |= {"thinking": {"type": "disabled"}, "temperature": temperature}
     for attempt in range(4):
         try:
             r = httpx.post(API, json=body, timeout=600,
@@ -79,7 +80,7 @@ def deepseek(messages: list, think: bool, k: str) -> tuple[str, float]:
             usd = cost(js.get("usage", {}))
             DS_DIR.mkdir(parents=True, exist_ok=True)
             with open(DS_DIR / "ledger.jsonl", "a") as w:
-                w.write(json.dumps({"ts": time.time(), "run": "teacher-check",
+                w.write(json.dumps({"ts": time.time(), "run": run,
                                     "think": think, "usage": js.get("usage"),
                                     "cost_usd": usd}) + "\n")
             return js["choices"][0]["message"]["content"], usd

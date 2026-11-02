@@ -6,11 +6,15 @@
 
   uv run tools/mapping/commands.py --run <name> --edits-run <name>
       --max-usd <cap> [--limit-jobs N] [--workers 12] [--dry-run]
+      [--backend deepseek] [--prompt commands-s6.md]
 
 Reads data/mapping/commands/<edits-run>/edits.jsonl, renders jobs of
 edits.yaml:edits_per_job edits, validates the [[mark|slot]] output,
 and writes sentences.jsonl / drops.jsonl / summary.json into
 data/mapping/commands/<run>/.
+--backend deepseek writes with DeepSeek V4.1 Flash (thinking off, synthetic
+edits only) instead of Spark; raw replies are cached per job under
+<run>/raw/ so a rerun resumes, spend goes to data/mapping/deepseek/ledger.jsonl.
 """
 
 import argparse
@@ -396,6 +400,10 @@ def side_check(e: dict, spans: list, plain: str) -> str | None:
             continue                    # None / either need no word
         wanted = SIDE_WORDS[side]
         ok = False
+        if s["kind"] == "gate" and any(       # "pinch and turn my right hand"
+                o["kind"] == "source" and o.get("side") == side
+                for o in e["slots"].values()):
+            continue
         for sp in by_slot.get(sid, []):
             # words overlapping the span + the 4 words before it
             region = plain[:sp["end"]].casefold().split()[-7:]
@@ -465,7 +473,7 @@ def validate_variant(e: dict, v: int, raw: str):
         "edit": e}
 
 
-def make_parse():
+def make_parse(min_share: float = 0.5):
     def parse(job: spark.Job, text: str):
         edits = JOB_META[job.id]["edits"]
         requested = sum(len(e["variants"]) for e in edits)
@@ -508,11 +516,52 @@ def make_parse():
             drops.append({"edit_id": eid, "v": v,
                           "reason": "variant out of range",
                           "raw": raw})
-        if len(sentences) < requested / 2:
+        if len(sentences) < requested * min_share:
             raise spark.ParseError(
                 f"{len(sentences)}/{requested} valid variants")
         return {"sentences": sentences, "drops": drops}
     return parse
+
+
+def run_deepseek(run: str, jobs: list, parse, workers: int,
+                 temperature: float, max_usd: float) -> dict:
+    """Same contract as spark.run: {job id: parse result}; a job whose reply
+    does not parse is asked once more, then dropped."""
+    from concurrent.futures import ThreadPoolExecutor
+    sys.path.insert(0, str(ROOT / "probes" / "real-eval"))
+    import teacher_check as TC
+    key = TC.key()
+    raw = ROOT / "data" / "mapping" / "commands" / run / "raw"
+    raw.mkdir(parents=True, exist_ok=True)
+    spent = [0.0]
+
+    def one(j):
+        cache = raw / f"{j.id}.txt"
+        for attempt in range(2):
+            if attempt == 0 and cache.exists():
+                text = cache.read_text()
+            else:
+                if spent[0] > max_usd:
+                    return j.id, None
+                text, usd = TC.deepseek(j.messages, False, key, temperature,
+                                        run)
+                spent[0] += usd
+                cache.write_text(text)
+            try:
+                return j.id, parse(j, text)
+            except spark.ParseError:
+                continue
+        return j.id, None
+
+    out = {}
+    with ThreadPoolExecutor(workers) as ex:
+        for i, (jid, res) in enumerate(ex.map(one, jobs), 1):
+            if res is not None:
+                out[jid] = res
+            if i % 25 == 0:
+                print(f"  {i}/{len(jobs)} jobs, {spent[0]:.3f} $", flush=True)
+    print(f"deepseek: {len(out)}/{len(jobs)} jobs parsed, {spent[0]:.3f} $")
+    return out
 
 
 def main() -> None:
@@ -525,6 +574,8 @@ def main() -> None:
     ap.add_argument("--workers", type=int, default=12)
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--reasoning-effort", default="low")
+    ap.add_argument("--backend", default="spark", choices=["spark", "deepseek"])
+    ap.add_argument("--prompt", default="commands.md")
     args = ap.parse_args()
 
     ONTO = yaml.safe_load((HERE / "ontology.yaml").read_text())
@@ -533,7 +584,7 @@ def main() -> None:
                   / args.edits_run / "edits.jsonl")
     edits = [json.loads(l) for l in edits_path.read_text().splitlines()
              if l.strip()]
-    sys_prompt = (HERE / "prompts" / "commands.md").read_text()
+    sys_prompt = (HERE / "prompts" / args.prompt).read_text()
     jobs = build_jobs(edits, cfg["edits_per_job"], sys_prompt)
     if args.limit_jobs:
         jobs = jobs[: args.limit_jobs]
@@ -556,10 +607,14 @@ def main() -> None:
         print(f"dry-run: wrote {out_dir / 'sample_jobs.txt'}")
         return
 
-    parsed = spark.run(
-        args.run, jobs, make_parse(), max_usd=args.max_usd,
-        workers=args.workers, temperature=0.9,
-        reasoning_effort=args.reasoning_effort)
+    if args.backend == "deepseek":
+        parsed = run_deepseek(args.run, jobs, make_parse(0.15), args.workers,
+                              0.9, args.max_usd)
+    else:
+        parsed = spark.run(
+            args.run, jobs, make_parse(), max_usd=args.max_usd,
+            workers=args.workers, temperature=0.9,
+            reasoning_effort=args.reasoning_effort)
 
     n_sent = 0
     drop_reasons = Counter()
@@ -578,7 +633,8 @@ def main() -> None:
     total_req = sum(
         len(e["variants"]) for j in jobs for e in JOB_META[j.id]["edits"])
     spend = 0.0
-    lp = spark._ledger_path()
+    lp = spark._ledger_path() if args.backend == "spark" else \
+        ROOT / "data" / "mapping" / "deepseek" / "ledger.jsonl"
     if lp.exists():
         for line in lp.read_text().splitlines():
             try:

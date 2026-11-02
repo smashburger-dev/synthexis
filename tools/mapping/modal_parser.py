@@ -12,6 +12,12 @@ with it), then fetch only the run dir:
     python tools/mapping/modal_parser.py wait <call ids>
     modal volume get synthexis-parser /train/runs/p-v7-s0 data/mapping/train/runs/
 
+Domain MLM post-training of the encoder (v8): upload the corpus to
+/train/mlm/, then
+    python tools/mapping/modal_parser.py mlm <backbone name> "--corpus ..."
+writes /backbones/<name>; fetch it with `modal volume get` into
+data/mapping/backbones/ before local decoding.
+
 Cost rules: the image holds only pinned packages and two small source files,
 so it builds once and is cached; each spawn is one GPU container that starts
 training at once and exits when done (no keep-warm, no idle polling inside
@@ -35,6 +41,8 @@ image = (
                     "/app/tools/mapping/frame_parser.py")
     .add_local_file(str(HERE / "train_parser.py"),
                     "/app/tools/mapping/train_parser.py")
+    .add_local_file(str(HERE / "mlm_backbone.py"),
+                    "/app/tools/mapping/mlm_backbone.py")
 )
 
 
@@ -59,6 +67,27 @@ def train(name: str, args: str) -> dict:
                       .read_text())
 
 
+@app.function(image=image, gpu=["L4", "A10G", "L40S"], timeout=2 * 3600,
+              volumes={"/vol": vol})
+def mlm(name: str, args: str) -> dict:
+    """Domain MLM post-training (mlm_backbone.py train) onto the volume."""
+    import json
+    import shlex
+    import subprocess
+    vol.reload()
+    data = Path("/app/data/mapping")
+    data.mkdir(parents=True, exist_ok=True)
+    if not (data / "train").exists():
+        (data / "train").symlink_to("/vol/train")
+    try:
+        subprocess.run(["python", "/app/tools/mapping/mlm_backbone.py",
+                        "train", "--name", name, *shlex.split(args)],
+                       check=True)
+    finally:
+        vol.commit()
+    return json.loads(Path(f"/vol/backbones/{name}/mlm.json").read_text())
+
+
 @app.function(image=image, timeout=30 * 60, volumes={"/vol": vol})
 def pull(repo: str, name: str, revision: str) -> str:
     """CPU only: a Hugging Face backbone straight onto the volume."""
@@ -76,7 +105,9 @@ def main() -> None:
     if sys.argv[1] == "fetch":
         f = modal.Function.from_name("synthexis-parser", "pull")
         print(f.remote(*sys.argv[2:5]))
-    elif sys.argv[1] == "spawn":
+    elif sys.argv[1] in ("spawn", "mlm"):
+        if sys.argv[1] == "mlm":
+            fn = modal.Function.from_name("synthexis-parser", "mlm")
         it = iter(sys.argv[2:])
         for name, args in zip(it, it):
             print(name, fn.spawn(name, args).object_id)
