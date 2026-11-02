@@ -85,7 +85,7 @@ PREV_MAX_DT = 0.1  # s; previous extracted frame must be the direct neighbour at
 
 # Per-segment labels Noa confirmed wrong in his S3 spot-check (2026-11-02):
 # he did not step back fully, and the backlight setup failed. The Spark QA
-# list it replaces flagged 20 of 23 S3 segments wrongly.
+# list it replaces was wrong on 21 of 24 S3 flags.
 EXCLUDED = {
     "2026-11-01-S3": {"D_step_back", "F_backlit"},
 }
