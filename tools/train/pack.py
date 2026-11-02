@@ -14,10 +14,11 @@ Sets (one tar shard family each, about 2,000 samples per shard):
   proxy  proxy teacher (D9): frame 768x432 + mask, no previous frame.
   hand   128 px crops around SAM hand boxes, cut from the 1280x720 frame;
          finger state (5 bits thumb..pinky) only where label_ok, the segment
-         is not excluded and the hand side matches; 21 MediaPipe Hand
-         Landmarker keypoints (Apache-2.0) where the vision-keypoints tool
-         matched a keypoint hand to that SAM instance with train_ok. Apple
-         Vision output must never be packed (DPLA 3.2, Noa 2026-11-02).
+         is not excluded and the hand side matches; 21 teacher keypoints
+         where the vision-keypoints tool matched a hand to that SAM instance:
+         MediaPipe Hand Landmarker (Apache-2.0) first, SAM 3D Body where
+         MediaPipe missed it. Apple Vision output must never be packed
+         (DPLA 3.2, Noa 2026-11-02).
   face   128 px crop around the SAM face box; mask 0 other, 1 eye, 2 mouth.
 
 --sets limits a rerun to some sets: only their shards and manifest entries
@@ -39,7 +40,7 @@ Decisions where the spec is open (written down in probes/train-packer/RESULT.md)
   * crops: square, side = 1.25 x max(box w, h) (hands) or 1.3 x (faces),
     centred on the box, zero padding outside the frame. Hands need a box
     side >= 32 px, faces >= 48 px.
-  * hand side: MediaPipe chirality when the crop has keypoints; otherwise
+  * hand side: teacher chirality when the crop has keypoints; otherwise
     two hands in a frame -> image-left is the person's right
     hand (recordings are unmirrored); one hand -> left or right of the face
     centre (fallback person box centre, then frame centre), shifted by half
@@ -97,9 +98,12 @@ LABEL_FROM_S = {
 }
 
 # Hand keypoint teacher: named explicitly, never globbed from data/keypoints.
-KEYPOINT_SOURCE = "mediapipe-hand-landmarker"
-KEYPOINT_FILE = "keypoints_mediapipe.jsonl"
-KEYPOINT_META = "mediapipe_meta.json"
+KEYPOINT_FILE = "keypoints_teacher.jsonl"
+KEYPOINT_META = "teacher_meta.json"
+KEYPOINT_SOURCES = {"mediapipe": "mediapipe-hand-landmarker", "sam3dbody": "sam-3d-body"}
+# SAM 3D Body fingertips end short (hand about 10 % small, probes/hand-keypoints),
+# so they get conf 0 and drop out of the keypoint loss.
+SAM3DBODY_MASKED = {"thumb_tip", "index_tip", "middle_tip", "ring_tip", "little_tip"}
 JOINTS = [
     "wrist",
     "thumb_cmc", "thumb_mp", "thumb_ip", "thumb_tip",
@@ -131,18 +135,22 @@ def dev_segments(session, segments):
 
 
 def load_keypoints(session):
-    """SAM instance id '<chunk>/<file>#<n>' -> (joints 21x2 normalised, chirality), train_ok hands only."""
+    """SAM instance id '<chunk>/<file>#<n>' -> (joints 21x3 normalised with conf, chirality, source)."""
     d = DATA / "keypoints" / session / "cam0"
     if not (d / KEYPOINT_FILE).exists():
         return {}, None
     meta = json.loads((d / KEYPOINT_META).read_text())
-    assert meta["source"] == KEYPOINT_SOURCE, meta["source"]
+    for key, name in KEYPOINT_SOURCES.items():
+        assert meta["sources"][key]["source"] == name, meta["sources"][key]["source"]
     out = {}
     for line in (d / KEYPOINT_FILE).read_text().splitlines():
         for hand in json.loads(line)["hands"]:
-            if hand["train_ok"] and hand["sam_match"]:
-                out[hand["sam_match"]["sam_id"]] = ([hand["joints"][n][:2] for n in JOINTS], hand["chirality"])
-    return out, f"{KEYPOINT_SOURCE} ({KEYPOINT_FILE}, {meta.get('licence')})"
+            assert hand["source"] in KEYPOINT_SOURCES, hand["source"]
+            masked = SAM3DBODY_MASKED if hand["source"] == "sam3dbody" else set()
+            pts = [hand["joints"][n][:2] + [0.0 if n in masked else 1.0] for n in JOINTS]
+            out[hand["sam_id"]] = (pts, hand["chirality"], hand["source"])
+    licences = ", ".join(f"{v['source']}: {v['licence']}" for v in meta["sources"].values())
+    return out, f"{KEYPOINT_FILE} ({licences})"
 
 
 def load_session(session, limit=None):
@@ -314,18 +322,20 @@ def process(args):
         for n, (hb, geo_side) in enumerate(zip(hands, hand_sides(hands, ref, expected))):
             sq = square(hb["box"], HAND_PAD)
             kp = job["keypoints"].get(hb["n"])
-            # MediaPipe chirality is anatomical and agrees with the protocol on
+            # Teacher chirality is anatomical and agrees with the protocol on
             # 99 % or more of hands (probes/hand-keypoints); geometry is the fallback.
             side = kp[1][0].upper() if kp else geo_side
             fingers = finger_label(job, side)
             m = dict(meta, side=side, side_source="kp_chirality" if kp else "geometry",
                      sam_box=[round(v, 1) for v in hb["box"]], sam_score=hb["score"],
-                     crop_box=[round(v, 1) for v in sq], fingers=fingers, keypoints=None)
+                     crop_box=[round(v, 1) for v in sq], fingers=fingers, keypoints=None, kp_source=None)
             if kp:
                 x0, y0, side_px = sq
-                m["keypoints"] = [[round((px * w - x0) / side_px, 4), round((py * h - y0) / side_px, 4), 1.0]
-                                  for px, py in kp[0]]
+                m["keypoints"] = [[round((px * w - x0) / side_px, 4), round((py * h - y0) / side_px, 4), c]
+                                  for px, py, c in kp[0]]
+                m["kp_source"] = kp[2]
                 stats["hand"]["with_keypoints"] += 1
+                stats["kp_source"][kp[2]] += 1
                 stats["geometry_vs_kp_side"][f"{geo_side}_{side}"] += 1
             out["hand"].append((f"{key}_h{n}", {"jpg": encode(crop(frame, sq, Image.BILINEAR), "jpg"),
                                                 "json": json.dumps(m).encode()}))
@@ -414,7 +424,7 @@ def pack_session(session, sets, out_root, pool, limit):
             writers[name].close()
             shards = writers[name].shards
             groups = {"seg": ["frames_with_class", "pixels", "seg"], "proxy": ["frames_with_class", "pixels"],
-                      "hand": ["hand", "finger_state", "geometry_vs_kp_side"], "face": ["face", "face_label"]}[name]
+                      "hand": ["hand", "finger_state", "kp_source", "geometry_vs_kp_side"], "face": ["face", "face_label"]}[name]
             entry[name][split] = {
                 "samples": sum(s["samples"] for s in shards),
                 "frames": len(split_jobs),
