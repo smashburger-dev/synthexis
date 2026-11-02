@@ -31,9 +31,10 @@ Hard dates: S3 and S4 recorded 10-30/10-31, training from 11-01 (new Modal credi
 - [x] Packer: tar shards, 384x216 frames, 128 px hand and face crops, segment-level dev split (`train.setup`; 47,367 frames, 5.2 GB, 354 s; hand keypoints from the MediaPipe + SAM 3D Body teacher file on 38,004 of 43,753 crops, no Apple Vision data; [result](../probes/train-packer/RESULT.md))
 - [x] Mac preflight: 64 samples, 20 steps, CoreML export (all 20 checks pass on MPS, both students export; [result](../probes/train-packer/RESULT.md))
 - [ ] Licence check of every pretrained weight file (`probes/licence-check/RESULT.md`, 2026-11-02): 16 of 19 rows have a verdict; Apple Vision is blocked as the `perc.hand` teacher; Noa chose the best licence-clean alternative (2026-11-02). Missing: Meta Model API terms (SAM 3.1 API, Muse Image) and torchvision's weight terms for LR-ASPP MobileNetV3-Large
-- [ ] Decide D9 (proxy teacher), D10 (crops), D11 (temporal prior), D12 (backbone)
-- [ ] Proxy teacher, then students seg and hand on Modal L4; eval on S4 against `budget.quality`
-- [ ] H3: ANE latency of the trained students, end-to-end frame benchmark
+- [x] Decide D9 (proxy teacher), D10 (crops), D11 (temporal prior), D12 (backbone): D10 to D12 as packed (Noa yes, 11-02); D9 deferred, runs only if S4 misses and a proxy could fix the miss (it would not fix the misses found, [result](../probes/train-students/RESULT.md))
+- [x] Students seg, hand and face on Modal (3.39 $), gated once on S4 against `budget.quality`: mouth passes (0.705); seg person/face/hand 0.77/0.80/0.80 live-like (gate 0.85), finger states 0.885 (0.95; per finger 0.94 to 0.99, Apple Vision 0.962), face eye 0.24 (0.70). Models in `data/models/` ([result](../probes/train-students/RESULT.md))
+- [ ] Student hill-climb: seg retrain with the BN fix and a noisier prev mask, thumb labels, eye on S4 (Apple Vision face landmarks as runtime fallback meanwhile)
+- [x] H3: ANE latency of the trained students: seg 0.55 / 0.65 ms, hand 0.34 / 0.52 ms per crop, face 0.34 / 0.50 ms (median / p95); end-to-end frame bench in the perception session ([result](../probes/train-students/RESULT.md))
 
 ## Plugin (hill-climb line owns `plugin/`)
 

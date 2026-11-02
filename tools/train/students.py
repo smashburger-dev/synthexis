@@ -3,6 +3,8 @@
 seg:  MobileNetV4-Conv-Small (timm, ImageNet weights) with a 4th input
       channel for the previous frame's mask (D11), LR-ASPP head on the
       stride-8 and stride-32 features, 7 classes at 384x216.
+face: the same LR-ASPP on a 128 px face crop (D10), no prev-mask channel,
+      low branch on the stride-4 features, 3 classes (other, eye, mouth).
 hand: MobileNetV4-Conv-Small classifier on a 128 px crop -> 21 keypoints
       (x, y in crop coordinates, sigmoid) + 5 finger-state logits. Keypoint
       targets come from MediaPipe Hand Landmarker (Apache-2.0), or SAM 3D Body
@@ -19,6 +21,7 @@ import io
 import json
 import tarfile
 from collections import defaultdict
+from contextlib import contextmanager
 
 import numpy as np
 import timm
@@ -29,7 +32,10 @@ from PIL import Image
 
 BACKBONE = "mobilenetv4_conv_small.e2400_r224_in1k"
 NUM_CLASSES = 7
+NUM_FACE_CLASSES = 3  # other, eye, mouth
 NUM_JOINTS = 21
+IGNORE = 255  # label value that drops out of every loss term
+DICE_WEIGHT = 0.5
 MEAN = (0.485, 0.456, 0.406)
 STD = (0.229, 0.224, 0.225)
 KP_MIN_CONF = 0.3
@@ -62,15 +68,15 @@ class LRASPP(nn.Module):
 
 
 class SegStudent(nn.Module):
-    def __init__(self, pretrained=True, prev_mask=True):
+    def __init__(self, pretrained=True, prev_mask=True, num_classes=NUM_CLASSES, low_stride=8):
         super().__init__()
         self.prev_mask = prev_mask
         self.norm = Normalize()
         self.backbone = timm.create_model(BACKBONE, pretrained=pretrained, features_only=True,
                                           in_chans=4 if prev_mask else 3)
         red, ch = self.backbone.feature_info.reduction(), self.backbone.feature_info.channels()
-        self.i_low, self.i_high = red.index(8), red.index(32)
-        self.head = LRASPP(ch[self.i_low], ch[self.i_high], NUM_CLASSES)
+        self.i_low, self.i_high = red.index(low_stride), red.index(32)
+        self.head = LRASPP(ch[self.i_low], ch[self.i_high], num_classes)
 
     def forward(self, image, prev_mask=None):
         x = self.norm(image)
@@ -81,11 +87,25 @@ class SegStudent(nn.Module):
         return F.interpolate(out, size=image.shape[-2:], mode="bilinear", align_corners=False)
 
 
-class HandStudent(nn.Module):
+class FaceStudent(SegStudent):
+    """Eye and mouth on the 128 px face crop (D10): [other, eye, mouth].
+
+    An eye is about 10x5 px in the crop, so the LR-ASPP low branch reads the
+    stride-4 features (32x32) instead of stride 8.
+    """
+
     def __init__(self, pretrained=True):
+        super().__init__(pretrained, prev_mask=False, num_classes=NUM_FACE_CLASSES, low_stride=4)
+
+    def forward(self, image):
+        return super().forward(image)
+
+
+class HandStudent(nn.Module):
+    def __init__(self, pretrained=True, backbone=BACKBONE):
         super().__init__()
         self.norm = Normalize()
-        self.net = timm.create_model(BACKBONE, pretrained=pretrained, num_classes=NUM_JOINTS * 2 + 5)
+        self.net = timm.create_model(backbone, pretrained=pretrained, num_classes=NUM_JOINTS * 2 + 5)
 
     def forward(self, image):
         out = self.net(self.norm(image))
@@ -93,20 +113,81 @@ class HandStudent(nn.Module):
         return keypoints, out[:, NUM_JOINTS * 2:]
 
 
-def seg_loss(model, batch):
-    """Cross-entropy on SAM masks + temporal consistency with the previous frame.
+def soft_dice(logits, mask):
+    """1 - soft Dice per foreground class over the whole batch, averaged.
+
+    Eye and mouth cover 0.1 to 1 % of the pixels; cross-entropy alone
+    under-segments them, Dice pulls toward the IoU the gate measures.
+    """
+    valid = (mask != IGNORE).unsqueeze(1).float()
+    probs = logits.float().softmax(1) * valid
+    onehot = F.one_hot(mask.clamp(max=logits.shape[1] - 1), logits.shape[1]).permute(0, 3, 1, 2).float() * valid
+    inter = (probs * onehot).sum((0, 2, 3))[1:]
+    denom = (probs.sum((0, 2, 3)) + onehot.sum((0, 2, 3)))[1:]
+    return (1 - (2 * inter + 1) / (denom + 1)).mean()
+
+
+@contextmanager
+def frozen_bn_stats(model):
+    """Batch statistics still normalise, running statistics stay as they are."""
+    bns = [m for m in model.modules() if isinstance(m, nn.modules.batchnorm._BatchNorm)]
+    saved = [m.momentum for m in bns]
+    for m in bns:
+        m.momentum = 0.0
+    try:
+        yield
+    finally:
+        for m, mom in zip(bns, saved):
+            m.momentum = mom
+
+
+def recalibrate_bn(model, batches):
+    """Recompute BatchNorm running statistics as a plain average over batches
+    (forward only, train mode). Repairs a model whose running stats drifted."""
+    bns = [m for m in model.modules() if isinstance(m, nn.modules.batchnorm._BatchNorm)]
+    for m in bns:
+        m.reset_running_stats()
+        m.momentum = None  # cumulative average
+    model.train()
+    with torch.no_grad():
+        for args in batches:
+            model(*args)
+    for m in bns:
+        m.momentum = 0.1
+    return model.eval()
+
+
+def seg_loss(model, batch, dice_weight=DICE_WEIGHT):
+    """Cross-entropy + Dice on SAM masks + temporal consistency with the previous frame.
 
     The temporal term compares class probabilities of frame t and t-1 only on
-    pixels where both SAM masks agree (no motion there per the teacher).
+    pixels where both SAM masks agree (no motion there per the teacher), and
+    only for samples that have a previous frame (batch["has_prev"]).
+    Pixels labelled IGNORE (S2 eye, glasses) drop out of every term.
     """
     logits = model(batch["image"], batch["prev_mask_in"])
-    ce = F.cross_entropy(logits, batch["mask"])
-    with torch.no_grad():
+    ce = F.cross_entropy(logits, batch["mask"], ignore_index=IGNORE)
+    dice = soft_dice(logits, batch["mask"])
+    # The gradient-free pass on frame t-1 has an all-zero prev channel. It must
+    # not update the BatchNorm running statistics: in seg-a-s0 it did, half of
+    # all updates saw "no prev", and in eval mode a real prev mask then turned
+    # hands into "object" (probes/train-students/RESULT.md).
+    with torch.no_grad(), frozen_bn_stats(model):
         prev_logits = model(batch["prev_image"], torch.zeros_like(batch["prev_mask_in"]))
-    stable = (batch["mask"] == batch["prev_mask"]).float().unsqueeze(1)
+    has_prev = batch.get("has_prev", torch.ones(len(logits), device=logits.device)).view(-1, 1, 1)
+    stable = ((batch["mask"] == batch["prev_mask"]) & (batch["mask"] != IGNORE)).float() * has_prev
+    stable = stable.unsqueeze(1)
     diff = (logits.softmax(1) - prev_logits.softmax(1)).abs().sum(1, keepdim=True)
     temporal = (diff * stable).sum() / stable.sum().clamp(min=1)
-    return ce + TEMPORAL_WEIGHT * temporal, {"ce": ce.item(), "temporal": temporal.item()}
+    loss = ce + dice_weight * dice + TEMPORAL_WEIGHT * temporal
+    return loss, {"ce": ce.item(), "dice": dice.item(), "temporal": temporal.item()}
+
+
+def face_loss(model, batch, dice_weight=DICE_WEIGHT):
+    logits = model(batch["image"])
+    ce = F.cross_entropy(logits, batch["mask"], ignore_index=IGNORE)
+    dice = soft_dice(logits, batch["mask"])
+    return ce + dice_weight * dice, {"ce": ce.item(), "dice": dice.item()}
 
 
 def hand_loss(model, batch):
@@ -154,6 +235,11 @@ def seg_batch(samples):
         "prev_mask": prev_mask,
         "prev_mask_in": prev_mask.unsqueeze(1).float() / (NUM_CLASSES - 1),
     }
+
+
+def face_batch(samples):
+    return {"image": torch.stack([_rgb(s["jpg"]) for s in samples]),
+            "mask": torch.stack([_label(s["mask.png"]) for s in samples])}
 
 
 def hand_batch(samples):
