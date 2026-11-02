@@ -6,10 +6,12 @@
 """Score a decoder (greedy, beam, seed ensemble) on the synthetic dev sets.
 
   uv run tools/mapping/decode_eval.py --runs p-v7a-s0,p-v7a-s1 --beam 4 \
-      --name ens-b4 [--alpha 0.0] [--ds ds-v6p] [--device mps]
+      --name ens-b4 [--alpha 0.0] [--ds ds-v6p] [--device mps] [--rules 'conv;conv,pronoun']
 
 Reads only synthetic splits of --ds (default dev, challenge, dev_s2 to
-dev_s5; --splits adds dev_s6 for ds-v9c), never the real set. --beam 1 with one run is plain greedy. Writes
+dev_s5; --splits adds dev_s6 for ds-v9c), never the real set. --beam 1 with one run is plain greedy. --rules also scores the
+predictions after decode-time rules (rules.py; variants split by ';'), same
+decode, one pass. Writes
 data/mapping/train/decode/<name>.json (route_edit and exact per split).
 """
 
@@ -24,6 +26,7 @@ import torch
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import frame_parser as fp  # noqa: E402
+import rules as R  # noqa: E402
 
 TRAIN = Path(__file__).resolve().parents[2] / "data" / "mapping" / "train"
 SPLITS = ("dev", "challenge", "dev_s2", "dev_s3", "dev_s4", "dev_s5")
@@ -44,6 +47,7 @@ def main() -> None:
     ap.add_argument("--ds", default="ds-v6p")
     ap.add_argument("--splits", default=",".join(SPLITS))
     ap.add_argument("--device", default="mps")
+    ap.add_argument("--rules", default="")
     a = ap.parse_args()
     dev = torch.device(a.device)
     loaded = [fp.load_run(TRAIN / "runs" / r, dev) for r in a.runs.split(",")]
@@ -58,15 +62,25 @@ def main() -> None:
     for split in a.splits.split(","):
         data, _ = fp.load(sp, TRAIN / a.ds / f"{split}.jsonl", tok_id)
         t0 = time.time()
-        met, _ = fp.evaluate(models[0], grammar, data, vocab, dev, dec)
+        met, rows = fp.evaluate(models[0], grammar, data, vocab, dev, dec)
         out[split] = {"route_edit": met["route_edit"]["acc"],
                       "exact": met["exact"]["acc"], "n": met["n"]}
+        for rs in filter(None, a.rules.split(";")):
+            cmp = [fp.compare(R.apply(r["pred"], r["text"], rs), r["gold"])
+                   for r in rows]
+            out[split][rs] = {f: round(sum(c[f] for c in cmp) / len(cmp), 4)
+                              for f in ("route_edit", "exact")}
+            print(f"{a.name} {split} +{rs}: {out[split][rs]}")
         print(f"{a.name} {split}: route_edit {met['route_edit']['acc']} "
               f"exact {met['exact']['acc']} ({time.time() - t0:.0f} s)",
               flush=True)
     vals = [out[s]["route_edit"] for s in a.splits.split(",")]
     out["mean"] = round(sum(vals) / len(vals), 4)
     print(f"{a.name} mean route_edit {out['mean']}")
+    for rs in filter(None, a.rules.split(";")):
+        vals = [out[s][rs]["route_edit"] for s in a.splits.split(",")]
+        out[f"mean {rs}"] = round(sum(vals) / len(vals), 4)
+        print(f"{a.name} +{rs} mean route_edit {out[f'mean {rs}']}")
     d = TRAIN / "decode"
     d.mkdir(exist_ok=True)
     (d / f"{a.name}.json").write_text(json.dumps(out, indent=1))

@@ -281,6 +281,15 @@ Runs in `probes/parser-errors/RESULT.md`, section 12. By the rule above v9 repla
 
 Reading: the v9 ensemble passes 40 % exact on this set (42 of 102, 41 %), and right or one part wrong stays at 74 % (75 of 102, v7a 77). The exact gain is not established (p 0.18 over two seeds); the route F1 gain of 10 points is, over two seeds. Of Noa's originals, 6 (each finger its own value on one parameter), 26 ("turn on" read as a switch) and 35 (one movement, two parameters in opposite directions) are now exactly right, 1 is now read as a command; 8 and 12 got worse, 36 (four parameters) is still wrong. The set was looked at to write the conventions, so these numbers are weaker evidence than v7's; a set Noa dictates fresh would settle it.
 
+## Parser v10: selection rule (written 2026-11-02, before any v10 run exists)
+
+Plan and the slices behind it: `docs/parser-v10-plan.md`. The failure slices of the v9 ensemble on this set were read to write stage 7, so the set is seen for v10: its numbers are reported and do not select.
+
+1. Labels: ds-v10c = ds-v9 plus stage 7, through `project_labels.py` and `conventions.py`; stage-6 and stage-7 rows twice in train_cat. The seven older dev sets are the same sentences as in ds-v9c.
+2. Selection score: mean route_edit over the eight synthetic dev sets of ds-v10c (dev, challenge, dev_s2 to dev_s7), greedy two-seed ensemble per arm. v10 replaces v9 when its score is at least 0.005 higher and it loses no more than 0.005 on the mean of the seven older sets (dev_s7 is written in the new style and favours v10).
+3. Decoding: the conv rule (`rules.py`) applies to the chosen ensemble when it lowers no dev set. Four seeds replace two when the four-seed ensemble scores at least 0.005 higher on the eight-set mean.
+4. Real set: scored once at the end for every arm (v9 ensemble with and without conv, v10 seeds, v10 ensembles), paired against v9: seeds against seeds, ensemble against ensemble, McNemar and group bootstrap as before.
+
 ## Open
 
 - Noa reviews the derived rows: do they sound like him, mean the original plus the listed change, and name the right plugin and parameter? Plugin context is inferred for all 34 originals; 5 are unknown, and their rows note the candidates.

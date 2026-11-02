@@ -114,6 +114,10 @@ def slot_line(sid: str, s: dict, onto: dict) -> str:
             out += (f" shape={s['shape']} "
                     f"({shape_fingers(onto, s['shape'])})")
         out += f" ({source_desc(onto, s['value'])})"
+        if s.get("dir") == "low":
+            out += " dir: toward 0"
+        elif s.get("dir") == "both":
+            out += " dir: both ways"
         if s.get("say"):
             out += f' say: "{s["say"]}"'
         return out
@@ -144,6 +148,8 @@ def slot_line(sid: str, s: dict, onto: dict) -> str:
             out += f" mode={s['mode']}"
             if s["mode"] in MODE_WORD:
                 out += f" ({MODE_WORD[s['mode']]})"
+        if s.get("dir"):
+            out += f" dir: {s['dir']}"
         if s.get("say"):
             out += f' say: "{s["say"]}"'
         return out

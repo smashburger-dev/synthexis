@@ -25,6 +25,15 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
 HERE = Path(__file__).resolve().parent
+# sources with a direction: 0 end and 1 end (stage-7 direction phrasing)
+MOVING = {
+    "hand.openness", "hand.fist", "hand.spread", "hand.x", "hand.y",
+    "hand.depth", "hand.roll", "hand.pitch", "hands.distance",
+    "hand.finger.thumb.tilt", "hand.finger.index.tilt",
+    "hand.finger.middle.tilt", "hand.finger.ring.tilt",
+    "hand.finger.pinky.tilt", "head.roll", "head.pitch", "head.yaw",
+    "mouth.open",
+}
 EVENT_SOURCES = {
     "motion.throw", "motion.swipe", "motion.hold",
     "motion.grab", "motion.release", "motion.clap",
@@ -622,6 +631,60 @@ class Ctx:
             return {"scope": scope}
         return {}
 
+    # --- direction (stage 7) ---------------------------------------------
+
+    def same_effect(self, routes: list) -> None:
+        """Second route's first parameter becomes another control of the
+        first route's effect ('the reverb gets bigger when I open my hand
+        and longer when I spread my fingers')."""
+        if len(routes) < 2 or self.rng.random() >= self.cfg.get(
+                "same_effect", 0):
+            return
+        t0 = [t for t in routes[0].get("tgt", [])
+              if self.slots[t].get("target") == "param"]
+        t1 = [t for t in routes[1].get("tgt", [])
+              if self.slots[t].get("target") == "param"]
+        if not t0 or not t1:
+            return
+        fam = self.slots[t0[0]]["value"].rsplit(".", 1)[0]
+        sibs = [p for p in self.cfg["params"]
+                if p.rsplit(".", 1)[0] == fam
+                and p != self.slots[t0[0]]["value"]]
+        if sibs:
+            self.slots[t1[0]]["value"] = self.rng.choice(sibs)
+
+    def apply_direction(self, lang: str, routes: list) -> None:
+        """A moving source is said toward its 0 end ('lowering my hand',
+        'closing my fist') or with both directions in one phrase ('opening
+        and closing'); the parameter targets of its routes are told which
+        way they move, so the invert label stays the product of the two:
+        lowering the hand while the cutoff falls is not inverted."""
+        p_low = self.cfg.get("low_dir", 0)
+        p_both = self.cfg.get("both_dir", 0)
+        for sid, s in self.slots.items():
+            if s["kind"] != "source" or s["value"] not in MOVING:
+                continue
+            rs = [r for r in routes if sid in r.get("src", [])]
+            if not rs or any(self.slots[m]["kind"] == "bipolar"
+                             for r in rs for m in r["mods"]):
+                continue
+            params = [(r, t) for r in rs for t in r["tgt"]
+                      if self.slots[t].get("target") == "param"]
+            if not params:
+                continue
+            x = self.rng.random()
+            if x < p_low:
+                s["dir"] = "low"
+                s["say"] = self.say_phrase(lang, f"source:{s['value']}", -1)
+                for r, t in params:
+                    inv = any(self.slots[m]["kind"] == "invert"
+                              for m in r["mods"])
+                    self.slots[t]["dir"] = "rises" if inv else "falls"
+                    self.slots[t]["say"] = None
+            elif x < p_low + p_both:
+                s["dir"] = "both"
+                s["say"] = None
+
     # --- say ------------------------------------------------------------
 
     def say_phrase(self, lang: str, concept: str, pol: int):
@@ -763,6 +826,9 @@ def build_edit(n: int, ctx: Ctx, lang: str, prefix: str = "e") -> dict:
         for _ in range(ctx.cfg["variants_per_edit"])]
     ctx.maybe_correction()
     ctx.apply_say(lang, routes)
+    if intent == "map":
+        ctx.same_effect(routes)
+        ctx.apply_direction(lang, routes)
     return {
         "id": f"{prefix}{n:06d}", "lang": lang, "variants": variants,
         "intent": intent, "slots": ctx.slots, "routes": routes,
@@ -817,7 +883,7 @@ def main() -> None:
                     sid = rng.choice(cands)
                     sl = twin["slots"][sid]
                     sl["value"] = rng.choice(nb[sl["value"]])
-                    if glossary and \
+                    if glossary and not sl.get("dir") and \
                             rng.random() < cfg["say_probability"]:
                         c = (f"source:{sl['value']}"
                              if sl["kind"] == "source"
