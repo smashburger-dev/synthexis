@@ -179,13 +179,14 @@ unsafe fn luma_downscale(
     }
 }
 
-/// Nearest downscale BGRA -> RGBA preview (the only per-frame allocation).
+/// Nearest downscale BGRA -> RGBA preview (the only per-frame allocation),
+/// mirrored so the user sees themselves as in a mirror.
 unsafe fn preview_bgra(base: *const u8, stride: usize, w: usize, h: usize) -> Arc<[u8]> {
     let mut out = Vec::with_capacity(PREVIEW_W * PREVIEW_H * 4);
     for y in 0..PREVIEW_H {
         let row = base.add(y * h / PREVIEW_H * stride);
         for x in 0..PREVIEW_W {
-            let px = row.add(x * w / PREVIEW_W * 4);
+            let px = row.add((PREVIEW_W - 1 - x) * w / PREVIEW_W * 4);
             out.extend_from_slice(&[*px.add(2), *px.add(1), *px, 255]);
         }
     }
