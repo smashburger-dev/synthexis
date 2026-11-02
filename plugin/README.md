@@ -12,6 +12,8 @@ closed). Audio is stereo silence; perception never runs on the audio thread.
 
 ```
 ./guarded-cargo.sh test -p synthexis      # unit tests (cond, route)
+./guarded-cargo.sh test -p synthexis-parser --release -- --include-ignored
+                                          # parser parity (needs data/mapping/runtime)
 ./guarded-cargo.sh clippy -p synthexis --release
 ./guarded-cargo.sh xtask bundle synthexis --release
 ./install.sh                              # build+sign+install (see FL note)
@@ -22,6 +24,13 @@ SYNTHEXIS_TEST="test_signal=on" \
 install.sh refuses only when OsxFL is running AND the synthexis bundle is
 already installed (a loaded dylib can't be replaced safely; first install
 is fine — FL hasn't loaded it). Log: ~/Library/Logs/synthexis.log.
+
+Mapping assistant parser (`parser/`, crate synthexis-parser): loads from
+$SYNTHEXIS_PARSER_DIR or ~/Library/Application Support/synthexis/parser
+(export: `uv run tools/mapping/export_runtime.py --run p-v9-s0,p-v9-s1`;
+$SYNTHEXIS_PARSER_RUNS picks other runs, e.g. p-v9-s0 or p-v7a-s0,p-v7a-s1);
+`SYNTHEXIS_PARSE="sentence"` logs that sentence's frame once loaded. See
+docs/parser-runtime-plan.md.
 
 ## Vendored nih-plug patch
 

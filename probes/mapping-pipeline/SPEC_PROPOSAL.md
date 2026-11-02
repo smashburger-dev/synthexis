@@ -132,3 +132,9 @@ Source: Noa's message (the XY pad of a plugin, Portal: MACRO 1 and MACRO 2 are t
 "Any finger combination is a finger state (5-bit mask), not only the 12 named shapes; index and ring finger together is 01010." Seen in: eval.
 
 Already expressible, no change: one source driving several targets in different directions (routes sharing a source, each with its own invert), and a chord or a note roll per finger (midi.chord, midi.pattern with note and grid).
+
+# Spec proposal, parser runtime (2026-11-01)
+
+## map.parser.runtime (new)
+
+"The plugin runs the parser in Rust (crate plugin/parser): candle with Apple Accelerate, weights f16 in RAM and widened to f32 per matrix product, the HF tokenizer.json through the tokenizers crate, grammar-masked greedy decoding over the shipped ensemble (p-v9-s0 + p-v9-s1 since 2026-11-01 evening, before p-v7a-s0 + p-v7a-s1), p-v9-s0 alone as fallback. One worker thread per process loads it in the background when the plugin is initialised (never on the audio thread) and parses typed sentences. Measured on 200 synthetic dev sentences, M1 Pro, one core: frames equal to Python 200 of 200, 39 ms median, 68 ms p95, 293 MB RSS for both v9 runs (fallback: 19 ms, 164 MB); on the longer stage-6 sentences 55 ms median, 89 ms p95." Measured in docs/parser-runtime-plan.md; ONNX Runtime was slower on the encoder (22.6 against 15.7 ms median, p95 66 against 26.5) and drifts in f16. Replaces "The plugin needs a ModernBERT runtime (open)" in map.parser.model.

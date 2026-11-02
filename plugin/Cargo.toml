@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["synthexis", "xtask"]
+members = ["synthexis", "parser", "xtask"]
 exclude = ["vendor"]
 
 [workspace.lints.rust]
