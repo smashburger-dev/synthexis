@@ -2,11 +2,13 @@
 
 Roadmap items "Packer" and "Mac preflight" under `train.setup`, with D9 to D12 as chosen in `spec/synthexis.yaml` (all four still `status: proposed`). Everything ran locally on the M1 Pro, no paid compute.
 
+No Apple Vision output is in this pack. A first pack at 00:42 picked up Apple Vision hand keypoints for S1; Apple's DPLA 3.2 forbids training on Apple model output (licence-check session), so on Noa's order that pack and its preflight models were deleted, the keypoint path was removed from the code, and everything below comes from the repack.
+
 ## Commands
 
 ```
 uv run tools/train/pack.py                    # all four sessions, sets seg,proxy,hand,face
-uv run tools/train/pack.py --sets hand        # rerun once more keypoints.jsonl files exist
+uv run tools/train/pack.py --sets hand        # rewrite one set only
 uv run tools/train/preflight.py               # 64 samples, 20 steps, CoreML export
 ```
 
@@ -14,9 +16,9 @@ Output (gitignored): `data/packed/<set>/<session>/<split>-NNNNN.tar`, `data/pack
 
 ## Result
 
-- Pack time: 319 s wall for 47,367 frames (S1 120 s, S2 91 s, S3 69 s, S4 39 s; 8 worker processes, the S1 figure includes cold file cache).
+- Pack time: 392 s wall for 47,367 frames (S1 61 s, S2 116 s, S3 138 s, S4 77 s; 8 worker processes on a machine shared with other sessions; the first pack took 319 s).
 - Disk: 5.2 GB in 108 shard files plus the manifest (seg 2.0 GB, proxy 2.6 GB, hand 0.28 GB, face 0.35 GB). Well under the 50,000-file guideline for Modal Volumes.
-- Determinism: packing S3 twice gives byte-identical tar files (md5), identical to the main run. Tar members carry mtime 0.
+- Determinism: packing the S3 face set twice gives byte-identical tar files (md5), and the repack matches the first pack byte for byte. Tar members carry mtime 0.
 - Preflight: passed, all 19 checks. CoreML export of both students works.
 
 ### Samples per set and split
@@ -65,7 +67,7 @@ About one hand crop in seven carries a finger state (6,295 of 43,753): only bloc
 
 Face crops: 29,534 train, 6,609 dev, 8,411 heldout; eye pixels in 80 % of them, mouth pixels in 82 %. Block C labels (blink, wink_L, smile, ...) ride along in the sample JSON.
 
-Keypoints: only S1 had `data/keypoints/<s>/cam0/keypoints.jsonl` when the packer ran, so 9,528 of 10,352 S1 hand crops carry 21 keypoints; S2 to S4 crops have `keypoints: null`. On S1 the packer's hand side agrees with Vision's chirality on 92.6 % of crops (8,824 of 9,528).
+Keypoints: none. The hand samples carry crop, side, SAM box and finger state only. The manifest and all 26 hand shards were searched for `keypoint` and `chirality`: 0 hits.
 
 ### Dev segments
 
@@ -80,10 +82,10 @@ Keypoints: only S1 had `data/keypoints/<s>/cam0/keypoints.jsonl` when the packer
 
 | student | params | loss step 1 -> 20 | ms/step | CoreML FP16 vs PyTorch |
 |---------|-------:|-------------------|--------:|------------------------|
-| seg, MobileNetV4-Conv-Small + LR-ASPP, 384x216, prev-mask channel | 1,509,454 | 2.570 -> 0.214 (CE 2.554 -> 0.202) | 281 | argmax agreement 0.9997 |
-| hand, MobileNetV4-Conv-Small, 128 px -> 21x2 keypoints + 5 logits | 2,553,231 | 1.383 -> 0.363 (finger BCE 0.853 -> 0.022, keypoint L1 0.530 -> 0.342) | 105 | max abs diff 0.0053 keypoints, 0.0146 logits |
+| seg, MobileNetV4-Conv-Small + LR-ASPP, 384x216, prev-mask channel | 1,509,454 | 2.570 -> 0.214 (CE 2.554 -> 0.202) | 337 | argmax agreement 0.9997 |
+| hand, MobileNetV4-Conv-Small, 128 px -> 21x2 keypoints + 5 logits | 2,553,231 | 0.839 -> 0.031 (finger BCE only, keypoint loss masked) | 142 | max abs diff 0.0064 keypoints, 0.0196 logits |
 
-Seg ms/step includes the second, gradient-free forward pass on the previous frame for the temporal loss. Packages: 2.9 MB seg, 4.9 MB hand. torch 2.15.0, timm `mobilenetv4_conv_small.e2400_r224_in1k`, coremltools 9.0, target macOS 15. The 64 seg samples are the first 64 of `seg/S1/train-00000.tar` with a previous frame; the 64 hand samples are the first with a finger state or keypoints (21 with finger states, 64 with keypoints).
+Seg ms/step includes the second, gradient-free forward pass on the previous frame for the temporal loss. Packages: 2.9 MB seg, 4.9 MB hand. torch 2.15.0, timm `mobilenetv4_conv_small.e2400_r224_in1k`, coremltools 9.0, target macOS 15. The 64 seg samples are the first 64 of `seg/S1/train-00000.tar` with a previous frame; the 64 hand samples are the first 64 with a finger state. ms/step ran next to other sessions' jobs; the first, quieter run measured 281 and 105.
 
 ## Decisions where the spec is open
 
@@ -103,7 +105,7 @@ Seg ms/step includes the second, gradient-free forward pass on the previous fram
 
 - Dev covers 8 of 12 finger states (01100, 01111, 10000 and 10001 are missing) because the split is stratified over blocks, not states. S4 has all 12. For calibrating finger thresholds on dev, block A would need stratification by finger state.
 - The hand student has 2.55M params, slightly above the `perc.hand` budget of 2.5M. MobileNetV3-Small (1.52M, probe B) stays an option.
-- Keypoints for S2 to S4: rerun `pack.py --sets hand` after the vision-keypoints session writes their `keypoints.jsonl`.
+- The hand student's 21-keypoint output has no teacher. Apple Vision is ruled out; until a licence-clean keypoint source is chosen, the keypoint loss stays masked and only the finger logits train. `spec/synthexis.yaml` (`perc.hand`, `perc.vision.hand`) and the roadmap still name Vision as the teacher.
 - S2 eye class (glasses) is still undecided; samples carry their session so the trainer can mask the eye loss for S2.
 - D9 labels "every recorded frame at 30 fps"; the extracted frames are 15 fps, so the proxy labelling pass needs a 30 fps extraction from `cam0.mov`.
 - Face student (eye and mouth on the face crop) is packed but not part of this preflight.

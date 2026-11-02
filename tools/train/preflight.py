@@ -144,19 +144,15 @@ def run_hand(samples, args, report):
     rep = report["hand"]
     rep["samples"] = len(samples)
     rep["with_fingers"] = sum(1 for s in samples if s["meta"]["fingers"])
-    rep["with_keypoints"] = sum(1 for s in samples if s["meta"]["keypoints"])
+    rep["with_keypoints"] = sum(1 for s in samples if s["meta"].get("keypoints"))
     check(len(samples) == args.samples, f"hand: {len(samples)} samples", report)
-    check(rep["with_fingers"] > 0, f"hand: {rep['with_fingers']} samples carry finger states", report)
+    check(rep["with_fingers"] == len(samples), f"hand: {rep['with_fingers']} samples carry finger states", report)
     batches = [st.hand_batch(samples[i:i + BATCH]) for i in range(0, len(samples), BATCH)]
     b = batches[0]
     check(tuple(b["image"].shape[1:]) == (3, 128, 128), f"hand: image shape {tuple(b['image'].shape)}", report)
     fingers = torch.cat([x["fingers"] for x in batches]).unique().tolist()
     check(set(fingers) <= {0.0, 1.0}, f"hand: finger values {fingers} in {{0, 1}}", report)
-    kp = torch.cat([x["kp"][x["kp_conf"] > st.KP_MIN_CONF] for x in batches])
-    if len(kp):
-        inside = float(((kp >= 0) & (kp <= 1)).all(-1).float().mean())
-        rep["kp_inside_crop"] = round(inside, 4)
-        check(inside >= 0.95, f"hand: {inside:.3f} of confident keypoints inside the crop", report)
+    check(rep["with_keypoints"] == 0, f"hand: {rep['with_keypoints']} samples carry keypoints (must be 0)", report)
 
     model = st.HandStudent(pretrained=True)
     rep["params"] = sum(p.numel() for p in model.parameters())
@@ -198,8 +194,8 @@ def main():
     shard = PACKED / "seg" / args.session / "train-00000.tar"
     run_seg(st.read_samples(shard, args.samples, keep=lambda s: s["meta"]["has_prev"]), args, report)
     shard = PACKED / "hand" / args.session / "train-00000.tar"
-    run_hand(st.read_samples(shard, args.samples, keep=lambda s: s["meta"]["fingers"] is not None
-                             or s["meta"]["keypoints"] is not None), args, report)
+    run_hand(st.read_samples(shard, args.samples, keep=lambda s: s["meta"]["fingers"] is not None),
+             args, report)
 
     ok = all(c["ok"] for c in report["checks"])
     report["passed"] = ok

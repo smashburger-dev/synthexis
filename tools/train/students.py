@@ -4,7 +4,9 @@ seg:  MobileNetV4-Conv-Small (timm, ImageNet weights) with a 4th input
       channel for the previous frame's mask (D11), LR-ASPP head on the
       stride-8 and stride-32 features, 7 classes at 384x216.
 hand: MobileNetV4-Conv-Small classifier on a 128 px crop -> 21 keypoints
-      (x, y in crop coordinates, sigmoid) + 5 finger-state logits.
+      (x, y in crop coordinates, sigmoid) + 5 finger-state logits. The packed
+      data has no keypoint targets (Apple Vision output is ruled out), so the
+      keypoint loss stays masked to zero until a licence-clean teacher exists.
 
 Both models take RGB in 0..1 and normalise inside, so the CoreML export can
 use an ImageType with scale 1/255. The previous-mask channel carries the
@@ -158,7 +160,7 @@ def hand_batch(samples):
         m = s["meta"]
         fingers.append(m["fingers"] or [0] * 5)
         finger_mask.append(1.0 if m["fingers"] else 0.0)
-        pts = m["keypoints"] or [[0, 0, 0]] * NUM_JOINTS
+        pts = m.get("keypoints") or [[0, 0, 0]] * NUM_JOINTS
         kp.append([p[:2] for p in pts])
         kp_conf.append([p[2] for p in pts])
     return {
