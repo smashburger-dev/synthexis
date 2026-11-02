@@ -44,7 +44,11 @@ MobileNetV4-Conv-Small (`timm/mobilenetv4_conv_small.e2400_r224_in1k`) and, if c
 
 ### MediaPipe Hand Landmarker
 
-The hand student learns its 21 keypoints from MediaPipe Hand Landmarker (Google), model bundle `hand_landmarker.task` (float16, sha256 `fbc2a300…cde1`, from Google's mediapipe-models bucket), run offline with mediapipe 1.2.0. The model card ("Hand Tracking (Lite/Full) with Fairness", Oct 2021) states "LICENSED UNDER Apache License, Version 2.0"; the mediapipe library is Apache-2.0 as well. The hand student weights carry this notice next to the timm backbones; the Apache text is the same `LICENSES/Apache-2.0.txt`.
+The hand student learns most of its 21-point teacher keypoints from MediaPipe Hand Landmarker (Google), model bundle `hand_landmarker.task` (float16, sha256 `fbc2a300…cde1`, from Google's mediapipe-models bucket), run offline with mediapipe 1.2.0. The model card ("Hand Tracking (Lite/Full) with Fairness", Oct 2021) states "LICENSED UNDER Apache License, Version 2.0"; the mediapipe library is Apache-2.0 as well. The hand student weights carry this notice next to the timm backbones; the Apache text is the same `LICENSES/Apache-2.0.txt`.
+
+### SAM 3D Body and DINOv3
+
+The hand student also learns from SAM 3D Body (Meta, `facebook/sam-3d-body-dinov3` at `11aaa346`, code `facebookresearch/sam-3d-body`): 2,349 of 38,004 teacher hands and the left/right label of every hand it saw. SAM 3D Body is used under the SAM License; its DINOv3 backbone code (`facebookresearch/dinov3`) under the DINOv3 License (2025-08-19); its MHR body model under Apache-2.0. Copies of the SAM License and the DINOv3 License ship with the hand student weights (`LICENSES/SAM-LICENSE.txt`, `LICENSES/DINOv3-LICENSE.md`); to the extent those weights are derivative works of either set of materials, they are distributed under those agreements.
 
 ### DeepSeek
 

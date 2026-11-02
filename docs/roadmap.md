@@ -29,7 +29,7 @@ Hard dates: S3 and S4 recorded 10-30/10-31, training from 11-01 (new Modal credi
 
 - [ ] Packer: tar shards, 384x216 frames, 128 px hand and face crops, segment-level dev split (`train.setup`)
 - [ ] Mac preflight: 64 samples, 20 steps, CoreML export
-- [ ] Licence check of every pretrained weight file (`probes/licence-check/RESULT.md`, 2026-11-02): 13 of 16 rows have a verdict; Apple Vision is blocked as the `perc.hand` teacher; Noa chose the best licence-clean alternative (2026-11-02). Missing: Meta Model API terms (SAM 3.1 API, Muse Image) and torchvision's weight terms for LR-ASPP MobileNetV3-Large
+- [ ] Licence check of every pretrained weight file (`probes/licence-check/RESULT.md`, 2026-11-02): 16 of 19 rows have a verdict; Apple Vision is blocked as the `perc.hand` teacher; Noa chose the best licence-clean alternative (2026-11-02). Missing: Meta Model API terms (SAM 3.1 API, Muse Image) and torchvision's weight terms for LR-ASPP MobileNetV3-Large
 - [ ] Decide D9 (proxy teacher), D10 (crops), D11 (temporal prior), D12 (backbone)
 - [ ] Proxy teacher, then students seg and hand on Modal L4; eval on S4 against `budget.quality`
 - [ ] H3: ANE latency of the trained students, end-to-end frame benchmark
