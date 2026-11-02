@@ -22,7 +22,7 @@ By the rule v11 replaces v10 (+0.037 on the nine dev sets, +0.013 on the eight o
 
 The levers hit their groups: hand as subject 7 of 8 rows (before 0), fan-out targets in opposite directions 4 of 4 (2), "B warp" 6 of 6 (5). Two new misses are traceable:
 - A finger showing a MIDI pattern now gets a value (group 10, 2 to 0 of 7).
-- A later movement takes the side of the hand named before it (calibration 20, 4 to 1 of 5). The widened side check teaches that carry-over. The gold leaves that movement without a side, so this may be a gold question.
+- A later movement takes the side of the hand named before it (calibration 20, 4 to 1 of 5). The widened side check teaches that carry-over. Noa ruled afterwards that the carry-over is right; with the gold fixed, 20 goes from 1 to 4 of 5 and calibration to 35/51 (v10 32/51).
 
 ## Money
 
@@ -35,7 +35,8 @@ DeepSeek 0.77 $ (pilot and stage 8). Modal four runs on L4s, about 1.5 $ in cred
 
 ## Open
 
-- Gold questions for Noa, unchanged: 17 (arp range and rate: Serum's parameter or synthexis' MIDI generator), 12 (pinch with both axes: XY pad or two routes), and new: calibration 20 (does "spread my fingers" after "open my left hand" mean the left hand?).
+- Gold questions for Noa, unchanged: 17 (arp range and rate: Serum's parameter or synthexis' MIDI generator), 12 (pinch with both axes: XY pad or two routes).
+- Calibration 20 settled by Noa: the side carries over unless another hand is named. Gold 20 and 34 changed (`probes/real-eval/RESULT.md`, "Gold fix: side carry-over"); calibration is now v11 four-seed 35/51 against v10 32/51. v11 does not yet carry the side to "my hand" (34).
 - MIDI patterns read with a value (group 10): look at which stage-8 rows put VALUE next to a pattern.
 - The four-seed ensemble costs 4 x 121 MB; the session parser-v10-lean has the v11 run names for the same compression it applies to v10.
 - The Rust runtime still loads v9 and does not apply conv or the fold.
