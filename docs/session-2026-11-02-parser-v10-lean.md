@@ -28,6 +28,8 @@ The four-seed v10 ensemble reads the real set best (56 of 102 exact) but needs 4
 
 The dev sets cannot tell a single model from the four-seed ensemble on what matters here: they rate the ensemble's lead as zero and the student as almost equal, and the real set disagrees by 12 points. The rule's pick is cheap but reads Noa's sentences like one seed. The Q8_0 ensemble keeps the four-seed reading at 57 % of the memory; its latency stays that of four runs unless candle's quantised matmul is faster than the f16 path. Which one ships is Noa's decision; picking the Q8_0 ensemble would rest on the seen set.
 
+Applied to v11 the same day: the four v11 seeds in Q8_0 (`lean.py quant --runs p-v11-s0,p-v11-s1,p-v11-s2,p-v11-s3`) score 0.7761 on the nine dev sets of ds-v11c (f16 0.7745) and match f16 on the real set (66/102 exact, 89/102 right or one part wrong), with one calibration row less (34/51). 277 MB of weights.
+
 ## Money
 
 Modal: five student runs, about 4 GPU hours on L4 or A10G, 3 to 4.5 $ in credits (Modal does not log which GPU ran). Two spawns failed at start because another session redeployed the shared app `synthexis-parser` with an older `train_parser.py`; `SYNTHEXIS_MODAL_APP=synthexis-parser-lean` now gives this work its own deployment. L4 alone was out of capacity for 12 minutes, so the train function falls back to A10G (L40S removed). No DeepSeek, no Baseten.

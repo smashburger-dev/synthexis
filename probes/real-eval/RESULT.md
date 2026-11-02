@@ -376,6 +376,8 @@ Candidates and dev scores in `probes/parser-errors/RESULT.md`, section 14. By th
 
 Reading: the rule's pick does not keep the four-seed reading of Noa's sentences. It loses 12 points exact on eval (p 0.0075) and lands where single seeds land (38 to 51 of 102). The ensemble's lead on real sentences never showed on the dev sets (two and four seeds score the same there), and distillation on synthetic text copies what the dev sets measure. The four-seed ensemble in Q8_0 changes no exact match on either split and needs 277 MB of weights, inside Noa's 500 to 800 MB budget. Choosing it over the rule's pick would be a choice made on this seen set, so it is Noa's call.
 
+Q8_0 applied to the v11 four-seed ensemble (v11 rules and scorer at aeb198a, report only): eval 66/102 exact, route F1 0.727, 89/102 right or one part wrong, all equal to v11 in f16; calibration 34/51 against 35/51 (one row lost, p 1.0). Dev on ds-v11c 0.7761 against 0.7745.
+
 ## Open
 
 - Noa reviews the derived rows: do they sound like him, mean the original plus the listed change, and name the right plugin and parameter? Plugin context is inferred for all 34 originals; 5 are unknown, and their rows note the candidates.

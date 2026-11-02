@@ -318,3 +318,5 @@ Reading:
 - The real set (seen, report only, `probes/real-eval/RESULT.md` "Parser v10 lean") does not follow: the student gets 44 of 102 eval rows exact, the four-seed ensemble 56 (p 0.0075). The student reads Noa's sentences like one seed (38 to 51 of 102 for the four seeds). Distillation on synthetic text carried the ensemble's dev score, not its lead on real sentences, which the dev sets never showed. The four-seed ensemble in Q8_0 matches the f16 ensemble on dev and on the real set at 277 MB.
 
 Modal: five student runs on L4 or A10G (Modal does not log which), 21 to 71 minutes of training each, about 4 GPU hours in all, 3 to 4.5 $ in credits; two earlier spawns failed at start because another session redeployed the shared app (`SYNTHEXIS_MODAL_APP` now gives a session its own deployment).
+
+Applied to v11 (session parser-v11, runs p-v11-s0 to s3, scored with the v11 `rules.py` at aeb198a on the nine dev sets of ds-v11c): `lean.py quant --runs p-v11-s0,p-v11-s1,p-v11-s2,p-v11-s3` writes `p-v11-s*-q8`; the Q8_0 ensemble scores 0.7761 with `conv,pronoun` against 0.7745 in f16, 4 x 69 MB.

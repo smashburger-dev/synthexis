@@ -8,7 +8,8 @@ weight-only quantisation.
 
   uv run tools/mapping/lean.py cost --runs p-v10-s0,p-v10-s1 [--ds ds-v10c]
   uv run tools/mapping/lean.py soup --runs p-v10-s0,...,p-v10-s3 --out lean-soup4
-  uv run tools/mapping/lean.py quant --run lean-kd-a --bits 8 [--out ...]
+  uv run tools/mapping/lean.py quant --runs p-v11-s0,p-v11-s1 --bits 8
+      (writes <run>-q8 per run; --out names the dir for a single run)
 
 cost: f16 weight bytes and median / p95 ms per sentence (tokenize, encode,
 constrained greedy; an ensemble decodes as frame_parser.beam at k 1) over
@@ -100,18 +101,24 @@ def ggml_round_trip(w: torch.Tensor, bits: int) -> torch.Tensor:
 
 
 def quant(a) -> None:
-    sd = torch.load(RUNS / a.run / "model.pt", map_location="cpu")
+    runs = (a.runs or a.run).split(",")
+    for run in runs:
+        quant_run(run, a.bits, a.out if len(runs) == 1 else "")
+
+
+def quant_run(run: str, bits: int, name: str) -> None:
+    sd = torch.load(RUNS / run / "model.pt", map_location="cpu")
     out, qn, rest = {}, 0, 0
     for k, v in sd.items():
         if k.startswith("hf.") and v.dim() == 2 and v.shape[-1] % 32 == 0:
-            out[k] = ggml_round_trip(v.half(), a.bits)  # runtime holds f16
+            out[k] = ggml_round_trip(v.half(), bits)  # runtime holds f16
             qn += v.numel()
         else:
             out[k] = v.half().float() if v.is_floating_point() else v
             rest += v.numel()
-    mb = (qn * QBYTES[a.bits] + 2 * rest) / 1e6
-    new_run(a.run, a.out or f"{a.run}-q{a.bits}", out,
-            {"from": a.run, "bits": a.bits, "quantised_M": round(qn / 1e6, 1),
+    mb = (qn * QBYTES[bits] + 2 * rest) / 1e6
+    new_run(run, name or f"{run}-q{bits}", out,
+            {"from": run, "bits": bits, "quantised_M": round(qn / 1e6, 1),
              "f16_M": round(rest / 1e6, 1), "MB": round(mb, 1)})
 
 
