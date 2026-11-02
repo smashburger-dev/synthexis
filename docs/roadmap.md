@@ -22,7 +22,8 @@ Hard dates: S3 and S4 recorded 10-30/10-31, training from 11-01 (new Modal credi
 - [x] S4: other shirt and cap, FaceTime camera, short protocol, held out (Noa, recorded 11-01, same day as S3)
 - [x] Label S3 and S4 in image mode (S3 1.22 $, S4 0.78 $), contact sheets checked
 - [ ] Decide: ignore S2 eye class in the loss (glasses)
-- [ ] Apple Vision hand keypoints offline on S1-S4 as targets for `perc.hand` (local, free)
+- [x] Hand keypoints offline on S1-S4 as targets for `perc.hand`: MediaPipe Hand Landmarker (Apache-2.0), 0 $, about 6 min; Apple Vision dropped (Apple terms forbid training on its output) ([result](../probes/hand-keypoints/RESULT.md))
+- [ ] Decide: SAM 3D Body hand keypoints on Modal as stronger teacher (paid, needs a cap)
 - [x] Spark Open freestyle timelines and segment QA (`motion.labels`, Baseten, 5.63 $; [result](../probes/motion-labels/RESULT.md))
 
 ## Training (main session, from 11-01)

@@ -107,7 +107,7 @@ perception:
     candidates: "probe B: MobileNetV4-Conv-Small + LR-ASPP 1.51M params, 0.48 / 0.59 ms at 256 px and 0.66 / 1.62 ms at 320 px (median / p95, ANE); LRASPP-MobileNetV3-Large 3.22M, 0.74 / 1.67 ms at 256 px"
     status: planned
   perc.hand:
-    what: "synthexis-hand student: hand crop 128 px -> 21 keypoints (teacher: Apple Vision run offline on our recordings) + 5 finger-state logits (teacher: recording script)"
+    what: "synthexis-hand student: hand crop 128 px -> 21 keypoints (teacher: MediaPipe Hand Landmarker run offline on our recordings, hands matched to SAM, probes/hand-keypoints/RESULT.md; Apple Vision may not teach, Apple terms) + 5 finger-state logits (teacher: recording script)"
     role: "all live finger features: per-finger extension, spread, openness, discrete finger states"
     params_budget: "<= 2.5M"
     candidates: "probe B: MobileNetV3-Small 1.52M params 0.35 / 0.48 ms, MobileNetV4-Conv-Small 2.50M 0.38 / 0.55 ms (median / p95, ANE, 128 px)"
