@@ -67,6 +67,37 @@ Calibration (geom.rs `CAL_LANDMARKS`, vision.rs `SMILE_LIFT`), raw medians on S4
 
 The stand-in numbers judge 20 training steps on 64 frames of S1, not the pipeline.
 
+## FL Studio, live (2026-11-03)
+
+FL Studio with synthexis (VST3) on channel 1, backend `vision`, plugin window closed, Noa at the FaceTime camera. `fl_live.py` read the routed macros through the FL bridge at 20 Hz, 8 s per phase (run file `runs/1793662810-fl_live.json`).
+
+| macro | signal | task | range |
+|---|---|---|---:|
+| Signal 3 | `cam0.hand.R.openness` | right hand open and close | 0.34 (0.24 to 0.58) |
+| Signal 4 | `cam0.hand.L.openness` | left hand open and close | 0.00, see below |
+| Signal 6 | `cam0.hand.R.y` | right hand up and down | 0.37 |
+| Signal 7 | `cam0.hand.R.x` | right hand left and right | 0.56 |
+| Signal 8 | `cam0.hand.R.pinch` | pinch | 1.00 |
+| Signal 5 | `cam0.mouth.open` | mouth wide, closed | 0.99 |
+| Signal 9 | `cam0.eye.L.open` | close the left eye | 0.94 |
+| Signal 10 | `cam0.head.yaw` | head left and right | 1.00 |
+
+- Signal 4 stayed flat because Noa missed the instruction in the terminal. A second check with only the left hand up in front of the chest moved Signal 4 over 0.004 to 0.978, while Signal 3 held still (range 0.000), so the side was right. With the left arm held far out to the side nothing arrived; the hand was probably outside the frame.
+- Automation: 10 s of right-hand open and close recorded with Live on into pattern 60, then played back with Live off. Signal 3 followed the recording over 0.015 to 0.983 (verdict `recorded`). FL records the perception signal as automation.
+- Right-hand openness covered only 0.24 to 0.58 live, against 0 to 1 on S4. The live run used a slow open and close in 8 s; the calibration is from S4.
+
+Latency in FL, from `~/Library/Logs/synthexis.log`, 5 s windows over the run (all perception on its own thread, writes on the main thread):
+
+| | median | p95 |
+|---|---:|---:|
+| camera to FL parameter (`cam_to_param_ms`, slowest write per tick) | 71 to 148 ms | 157 to 212 ms |
+| Vision call per frame | 39 to 58 ms | 68 to 89 ms |
+| queue wait before perception | 26 to 44 ms | 60 to 83 ms |
+| camera callback to signal emit | 68 to 97 ms | 114 to 153 ms |
+
+- Vision takes about twice as long in FL as in the offline bench (21 to 31 ms median), because FL, the camera and other sessions' training share the machine. Perception processed about 20 of 30 frames per second; the bounded queue dropped the rest.
+- `cam_to_param_ms` medians match the 116 to 126 ms of the camera features alone (before perception), but p95 rises to about 200 ms. Vision blows the 5 ms frame budget by an order of magnitude here. The students (2.8 to 3.0 / 4.3 ms offline) would remove most of the 40 to 60 ms Vision call and the queue wait, once their side errors are fixed.
+
 ## Signal contract
 
 - Ids: `cam0.` + ontology source id, side after the first segment for sided sources: `cam0.hand.R.openness`, `cam0.hand.L.finger.index.tilt`, `cam0.eye.L.open`, `cam0.mouth.open`, `cam0.face.smile`, `cam0.head.yaw`, `cam0.hands.distance`, `cam0.object.x`. `S:hand.openness side:right` maps to `cam0.hand.R.openness`. The spec's example `cam0.face.mouth.open` (sig.contract) differs from the ontology's `mouth.open`; the code follows the ontology.

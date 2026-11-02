@@ -1,0 +1,93 @@
+{
+ "channel": 1,
+ "phases": [
+  {
+   "n": 160,
+   "min": 0.241,
+   "max": 0.58,
+   "range": 0.339,
+   "distinct": 89,
+   "macro": "Signal 3",
+   "signal": "cam0.hand.R.openness",
+   "task": "RIGHT hand up, open and close it slowly"
+  },
+  {
+   "n": 160,
+   "min": 0.0,
+   "max": 0.0,
+   "range": 0.0,
+   "distinct": 1,
+   "macro": "Signal 4",
+   "signal": "cam0.hand.L.openness",
+   "task": "LEFT hand up, open and close it slowly"
+  },
+  {
+   "n": 160,
+   "min": 0.0,
+   "max": 0.372,
+   "range": 0.372,
+   "distinct": 29,
+   "macro": "Signal 6",
+   "signal": "cam0.hand.R.y",
+   "task": "RIGHT hand open, move it up and down"
+  },
+  {
+   "n": 160,
+   "min": 0.292,
+   "max": 0.848,
+   "range": 0.556,
+   "distinct": 90,
+   "macro": "Signal 7",
+   "signal": "cam0.hand.R.x",
+   "task": "RIGHT hand open, move it left and right"
+  },
+  {
+   "n": 160,
+   "min": 0.001,
+   "max": 0.999,
+   "range": 0.998,
+   "distinct": 111,
+   "macro": "Signal 8",
+   "signal": "cam0.hand.R.pinch",
+   "task": "RIGHT hand: pinch thumb and index together, then apart"
+  },
+  {
+   "n": 160,
+   "min": 0.001,
+   "max": 0.993,
+   "range": 0.992,
+   "distinct": 114,
+   "macro": "Signal 5",
+   "signal": "cam0.mouth.open",
+   "task": "hands down, open and close your mouth wide"
+  },
+  {
+   "n": 160,
+   "min": 0.055,
+   "max": 0.999,
+   "range": 0.944,
+   "distinct": 105,
+   "macro": "Signal 9",
+   "signal": "cam0.eye.L.open",
+   "task": "close your LEFT eye, open it, repeat"
+  },
+  {
+   "n": 160,
+   "min": 0.001,
+   "max": 1.0,
+   "range": 0.999,
+   "distinct": 42,
+   "macro": "Signal 10",
+   "signal": "cam0.head.yaw",
+   "task": "turn your head left and right"
+  }
+ ],
+ "automation_replay": {
+  "n": 180,
+  "min": 0.015,
+  "max": 0.983,
+  "range": 0.967,
+  "distinct": 109,
+  "verdict": "recorded"
+ }
+}
