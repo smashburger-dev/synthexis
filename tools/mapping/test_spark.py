@@ -144,3 +144,13 @@ def test_finish_reason_length_is_retried(tmp_path):
     res = spark.run("t", [job(0)], lambda j, t: t, max_usd=5,
                     pilot=0, retries=1, transport=tr)
     assert res == {} and calls["n"] == 2
+
+
+def test_estimate_counts_images_by_part_not_base64_length():
+    big = "data:image/jpeg;base64," + "A" * 200_000
+    content = [{"type": "text", "text": "look"},
+               {"type": "image_url", "image_url": {"url": big}}]
+    with_img = spark._estimate_usd(job(0, content=content))
+    text_only = spark._estimate_usd(job(1, content=[content[0]]))
+    extra = (with_img - text_only) / spark.PRICE_IN
+    assert spark.IMAGE_TOKENS_EST * 0.9 < extra < spark.IMAGE_TOKENS_EST * 1.1

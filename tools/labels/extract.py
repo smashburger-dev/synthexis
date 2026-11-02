@@ -16,7 +16,12 @@ Index entry per kept frame:
   {idx, file, t, segment_id, labels, label_ok}
 Frames inside `bad` segments are dropped entirely (not indexed, counted
 in stats.dropped_bad). Frames inside margins/gaps keep their entry but
-get labels=None and label_ok=false.
+get labels=None and label_ok=false. So do count segments (`*_count*`):
+they are acted out as counting up from one finger, so the target finger
+state holds only at the end, not across the segment.
+
+Rerunning on an extracted session reuses the jpegs and re-labels the
+index with the current rules.
 
 Usage: uv run tools/labels/extract.py <session_dir> [--fps 15]
 """
@@ -130,7 +135,8 @@ def index_frames(
             kept.append({**f, "segment_id": None, "labels": None, "label_ok": False})
             continue
         m0, m1 = seg.get("margin_s", [0, 0])
-        label_ok = (seg[k0] + m0) <= t <= (seg[k1] - m1)
+        label_ok = ((seg[k0] + m0) <= t <= (seg[k1] - m1)
+                    and "_count" not in seg["id"])
         kept.append(
             {
                 **f,
@@ -180,9 +186,14 @@ def extract_session(
         if existing and idx_path.exists():
             print(f"  {cam}: {len(existing)} frames already extracted, reusing")
             index = json.loads(idx_path.read_text())
-            frames = index["frames"]
+            base = [{k: f[k] for k in ("idx", "file", "t")}
+                    for f in index["frames"]]
+            frames, _ = index_frames(base, segments, cam)
             dropped = index["stats"]["dropped_bad"]
             kept = len(frames)
+            index["frames"] = frames
+            index["stats"]["label_ok"] = sum(1 for f in frames if f["label_ok"])
+            idx_path.write_text(json.dumps(index, indent=1))
         else:
             frames_all = extract_cam(mov, out_dir, fps)
             frames, dropped = index_frames(frames_all, segments, cam)

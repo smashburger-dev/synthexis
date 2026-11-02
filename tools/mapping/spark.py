@@ -51,6 +51,7 @@ PRICE_IN = 1.25e-6          # $/token, uncached input
 PRICE_IN_CACHED = 0.15e-6   # $/token, cached input
 PRICE_OUT = 4.25e-6         # $/token, output incl. reasoning
 CHARS_PER_TOKEN = 3.2       # for the up-front estimate
+IMAGE_TOKENS_EST = 450      # per image part (768x432: 407); callers may raise it
 DEFAULT_CAP_ENV = "SYNTHEXIS_BASETEN_CAP"
 DEFAULT_CAP_USD = 60.0
 MIN_REQUEST_INTERVAL_S = 1.2   # <= 50 req/min per session-affinity id
@@ -153,7 +154,21 @@ def _content_text(content: Any) -> str:
 
 
 def _estimate_usd(job: Job) -> float:
-    in_tok = len(json.dumps(job.messages, ensure_ascii=False)) / CHARS_PER_TOKEN
+    # image parts are billed per 28x28 patch, not per base64 char
+    # (probes/budget-motion-labels: 768x432 = 407 tokens)
+    n_img, text = 0, []
+    for m in job.messages:
+        c = m.get("content")
+        if isinstance(c, list):
+            for p in c:
+                if p.get("type") == "image_url":
+                    n_img += 1
+                else:
+                    text.append(p)
+        else:
+            text.append(c)
+    in_tok = len(json.dumps(text, ensure_ascii=False)) / CHARS_PER_TOKEN \
+        + n_img * IMAGE_TOKENS_EST
     return in_tok * PRICE_IN + (job.est_out_tokens + 100) * PRICE_OUT
 
 
