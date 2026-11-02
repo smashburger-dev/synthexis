@@ -260,7 +260,7 @@ class Ctx:
         kmap = {"source": "source", "target": "target",
                 "track": "track"}
         cands = [sid for sid, sl in self.slots.items()
-                 if sl["kind"] == kmap[want]]
+                 if sl["kind"] == kmap[want] and not sl.get("name")]
         if not cands:
             return
         of = self.rng.choice(cands)
@@ -306,6 +306,7 @@ class Ctx:
             for _ in range(self.wc(self.cfg["targets_per_route"])):
                 kind = self.draw_target_kind(srcs)
                 tgts.append(self.add_target(kind, used_params, mods))
+            self.name_only(tgts, scope)
             if self.cfg.get("trigger_params"):
                 self.trigger_param(values, tgts, mods)
             time_boost = (
@@ -478,9 +479,26 @@ class Ctx:
             t = self.add_target("param", used, mods)
             if inv[k]:
                 mods.append(self.add("i", {"kind": "invert", "value": True}))
-            routes.append({"src": [s], "tgt": [t], "scope": scope,
+            sc = list(scope)
+            self.name_only([t], sc)
+            routes.append({"src": [s], "tgt": [t], "scope": sc,
                            "mods": mods})
         return routes
+
+    def name_only(self, tgts: list, scope: list) -> None:
+        """Stage 8: the route's first parameter target is said only by its
+        name as the plugin prints it ("Macro 5 goes down", "LFO 3 Rate
+        up"): T:param:macro or T:param:other plus the PNAME pointer."""
+        p = self.cfg.get("name_only", 0)
+        params = [t for t in tgts if self.slots[t].get("target") == "param"]
+        if not p or not params or self.rng.random() >= p:
+            return
+        name = self.rng.choice(self.cfg["name_only_names"])
+        n = self.add("n", {"kind": "param_name", "value": name})
+        t = self.slots[params[0]]
+        t["value"] = "macro" if name.startswith("Macro") else "other"
+        t["name"], t["say"] = n, None
+        scope.append(n)
 
     def gen_finger_values(self) -> list:
         """Each finger sets one parameter to its own value; the parameter is
@@ -641,9 +659,11 @@ class Ctx:
                 "same_effect", 0):
             return
         t0 = [t for t in routes[0].get("tgt", [])
-              if self.slots[t].get("target") == "param"]
+              if self.slots[t].get("target") == "param"
+              and not self.slots[t].get("name")]
         t1 = [t for t in routes[1].get("tgt", [])
-              if self.slots[t].get("target") == "param"]
+              if self.slots[t].get("target") == "param"
+              and not self.slots[t].get("name")]
         if not t0 or not t1:
             return
         fam = self.slots[t0[0]]["value"].rsplit(".", 1)[0]
@@ -661,6 +681,7 @@ class Ctx:
         lowering the hand while the cutoff falls is not inverted."""
         p_low = self.cfg.get("low_dir", 0)
         p_both = self.cfg.get("both_dir", 0)
+        fan_dir = self.cfg.get("fan_out_dir", False)
         for sid, s in self.slots.items():
             if s["kind"] != "source" or s["value"] not in MOVING:
                 continue
@@ -672,18 +693,22 @@ class Ctx:
                       if self.slots[t].get("target") == "param"]
             if not params:
                 continue
+            # stage 8: every target of a fan-out is told its direction
+            fan = fan_dir and len(rs) > 1
             x = self.rng.random()
-            if x < p_low:
+            low = x < p_low
+            if low:
                 s["dir"] = "low"
                 s["say"] = self.say_phrase(lang, f"source:{s['value']}", -1)
+            elif x < p_low + p_both and not fan:
+                s["dir"] = "both"
+                s["say"] = None
+            if low or fan:
                 for r, t in params:
                     inv = any(self.slots[m]["kind"] == "invert"
                               for m in r["mods"])
-                    self.slots[t]["dir"] = "rises" if inv else "falls"
+                    self.slots[t]["dir"] = "rises" if inv == low else "falls"
                     self.slots[t]["say"] = None
-            elif x < p_low + p_both:
-                s["dir"] = "both"
-                s["say"] = None
 
     # --- say ------------------------------------------------------------
 
@@ -731,6 +756,8 @@ class Ctx:
             concept = pol = None
             if kind == "source":
                 concept, pol = f"source:{s['value']}", 1
+            elif kind == "target" and s.get("name"):
+                continue                # said only by its name
             elif kind == "target" and s.get("target") == "param":
                 pol = 1
                 if tgt_route.get(sid) in inv_routes \

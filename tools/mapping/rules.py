@@ -6,7 +6,7 @@ pointer spans as =text) in the given order.
 conv:    Noa's label conventions (conventions.py) on the prediction, so a
          reading the labels would rewrite is rewritten the same way
          (pinch next to a movement is a hold, fingers shown together are
-         one finger state).
+         one finger state, closing the fist is openness inverted).
 pinch, pronoun: normalize.py.
 """
 
@@ -20,6 +20,7 @@ def apply(frame: list, text: str, names: str) -> list:
         if name == "conv":
             conventions.pinch_gate(frame)
             frame = conventions.finger_state(frame, text) or frame
+            frame = conventions.fold(frame) or frame
         else:
             frame = normalize.apply(frame, rules=(name,))
     return frame

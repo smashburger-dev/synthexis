@@ -354,3 +354,42 @@ Smaller: a preset described by what it does ("every finger should be a chord", 1
 - No row is used for training or for writing prompts.
 - Stage-4 and stage-5 prompts come from calibration findings only. A run trained on labels from such a prompt is not selected on calibration (section "Parser v7"). Before training, every generated sentence is compared with `expanded.jsonl` (word 5-grams, closest-pair ratio), and hits are dropped.
 - Needs first seen in eval groups are scored separately if stage 4 covers them.
+
+## Parser v11: selection rule (written 2026-11-02, before any v11 run exists)
+
+Plan and the gaps behind it: `docs/parser-v11-plan.md`. The four gaps come from the second slice of the v10 four-seed misses on this set, so the set is seen for v11: its numbers are reported and do not select.
+
+1. Labels: ds-v11c = the ds-v10 sources plus stage 8 (`cmd-s8`, and the stage-6 and stage-7 side drops accepted again under the widened side check, `cmd-s6r`, `cmd-s7r`), through `project_labels.py` and `conventions.py`, which now also folds `S:hand.fist` into `S:hand.openness` and `S:eye.closed` into `S:eye.open` with the route's INV flipped. Stage 6 to 8 rows twice in train_cat. The eight older dev sets are the same sentences as in ds-v10c; v10 is re-scored on the new labels.
+2. Selection score: mean route_edit over the nine dev sets of ds-v11c (dev, challenge, dev_s2 to dev_s8), greedy four-seed ensemble, decoded with `conv,pronoun`. v11 replaces v10 when its score is at least 0.005 higher than the v10 four-seed ensemble under the same decoding and it loses no more than 0.005 on the mean of the eight older sets (dev_s8 is written in the new style and favours v11).
+3. Real set: scored once at the end for the v11 seeds and the v11 four-seed ensemble (`predict.py --rules conv,pronoun`), `arms.py table`, and `arms.py paired` against `g2-ens-v10-4-conv` (ensemble against ensemble) and the v10 seeds (seeds against seeds), McNemar and group bootstrap as before. Gold questions 17 and 12 stay open for Noa and are not changed.
+
+## Parser v11 (2026-11-02)
+
+Runs in `probes/parser-errors/RESULT.md`, section 14. By the rule above v11 replaces v10: the v11 four-seed ensemble with conv,pronoun scores 0.7745 on the nine dev sets of ds-v11c against 0.7375 for the v10 four-seed ensemble under the same decoding and labels, and 0.7889 against 0.7755 on the eight older sets. Then the real set was scored once (files `preds-g2-*-convpro.jsonl`, conv,pronoun on every arm; the v10 rows are the same predictions as before, re-run with pronoun where no file existed):
+
+| run | calibration | eval all | eval orig | eval route F1 | eval right or one part wrong |
+|---|---|---|---|---|---|
+| ensemble v10 s0 to s3, conv | 30/51 | 56/102 | 13/23 | 0.630 | 84/102 |
+| ensemble v10 s0 to s3, conv, pronoun | 35/51 | 56/102 | 13/23 | 0.643 | 85/102 |
+| ensemble v10 s0+s1, conv, pronoun | 28/51 | 49/102 | 11/23 | 0.584 | 80/102 |
+| v10 s0 / s1 / s2 / s3, conv, pronoun | 29 / 29 / 30 / 34 | 53 / 49 / 41 / 51 | 14 / 11 / 8 / 11 | 0.613 / 0.570 / 0.521 / 0.647 | 84 / 80 / 72 / 74 |
+| v11 s0 / s1 / s2 / s3, conv, pronoun | 34 / 25 / 33 / 30 | 64 / 64 / 64 / 62 | 15 / 15 / 15 / 14 | 0.745 / 0.722 / 0.705 / 0.731 | 84 / 85 / 87 / 86 |
+| ensemble v11 s0+s1, conv, pronoun | 31/51 | 63/102 | 13/23 | 0.729 | 89/102 |
+| ensemble v11 s0 to s3, conv, pronoun (ships by the rule) | 32/51 | 66/102 | 15/23 | 0.727 | 89/102 |
+
+| comparison | split | won / lost | p | exact match diff | group bootstrap |
+|---|---|---|---|---|---|
+| four v11 seeds against four v10 seeds, conv, pronoun | eval | 90 / 30 | < 0.0001 | +14.7 points | [+5.2, +25.8] |
+| four v11 seeds against four v10 seeds, conv, pronoun | calibration | 23 / 23 | 1.0 | 0.0 points | [-8.0, +6.6] |
+| v11 four-seed against `g2-ens-v10-4-conv` | eval | 16 / 6 | 0.05 | +9.8 points | [-2.8, +23.3] |
+| v11 four-seed against `g2-ens-v10-4-conv` | calibration | 6 / 4 | 0.75 | +3.9 points | [-4.3, +13.7] |
+| v11 four-seed against v10 four-seed, both conv, pronoun | calibration | 3 / 6 | 0.51 | -5.9 points | [-21.3, +3.6] |
+
+Reading: the v11 ensemble gets 66 of 102 eval rows exact (65 %, v10 four-seed 55 %) and 89 right or one part wrong (87 %). Over four seeds the eval gain is established (+15 points, p < 0.0001, bootstrap above zero); every v11 seed alone (62 to 64) beats the best v10 seed (53). Between the two ensembles it is borderline (p 0.05). Calibration does not move over seeds; the ensemble loses 3 rows against v10 with pronoun.
+
+What the four levers fixed, by group (four-seed ensembles, v10 against v11): hand as subject 27 from 0 to 4 of 4 and 32 from 0 to 3 of 4; fan-out targets in opposite directions 35 from 2 to 4 of 4; "B warp" 07 from 5 to 6 of 6; a lone macro name 16 from 0 to 1 of 5; fist closing 23 from 7 to 8 of 10. New misses:
+- 10 (finger shows a MIDI pattern) from 2 to 0 of 7: v11 adds a VALUE to the pattern route and in three rows reads one finger's pattern as a parameter or chord.
+- calibration 20 ("when I open my left hand ... and when I spread my fingers") from 4 to 1 of 5: v11 gives the spread the side of the hand named earlier. The widened side check accepts a side word for a later source when no source of another side lies between them, so stage 8 and the recovered rows teach that the hand named once carries over. The gold leaves the spread without a side; whether Noa means the same hand is a gold question.
+- 17 (arp range and rate) from 2 to 0 of 4: v11 reads them as synthexis' MIDI generator; the gold question for Noa is still open.
+
+The set was seen while the four gaps were found, so these numbers are weaker evidence than a fresh set would give.

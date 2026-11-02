@@ -13,6 +13,9 @@ to every split of a dataset so training and dev labels agree.
    sentence that says they are shown together (at the same time, together,
    both, gleichzeitig, zusammen, beide) become one S:hand.shape with the
    5-bit mask of those fingers.
+3. one encoding per movement (parser v11): S:hand.fist becomes
+   S:hand.openness and S:eye.closed becomes S:eye.open, with the route's
+   INV flipped, as probes/real-eval/score.py canon reads them. Gates stay.
 Routes whose targets move in different directions are already separate in
 the labels (one INV per route); stage 6 adds such sentences. Writes
 <out>/conventions.json with the number of changed rows per split.
@@ -56,6 +59,28 @@ def pinch_gate(frame: list) -> bool:
     return changed
 
 
+FOLD = {"S:hand.fist": "S:hand.openness", "S:eye.closed": "S:eye.open"}
+
+
+def fold(frame: list) -> list | None:
+    """Closing the fist is the hand's openness inverted."""
+    if not any(isinstance(t, str) and t in FOLD for t in frame):
+        return None
+    out, last = [], 0
+    for a, b in routes(frame):
+        body = frame[a:b]
+        flips = sum(isinstance(t, str) and t in FOLD for t in body)
+        if not flips:
+            continue
+        body = [FOLD.get(t, t) if isinstance(t, str) else t for t in body]
+        if flips % 2:
+            body = ([t for t in body if t != "INV"] if "INV" in body
+                    else body + ["INV"])
+        out += frame[last:a] + body
+        last = b
+    return out + frame[last:]
+
+
 def finger_state(frame: list, text: str) -> list | None:
     if not TOGETHER.search(text):
         return None
@@ -89,7 +114,7 @@ def main() -> None:
     dst.mkdir(parents=True)
     stats = {}
     for f in sorted(src.glob("*.jsonl")):
-        n = {"rows": 0, "pinch": 0, "finger_state": 0}
+        n = {"rows": 0, "pinch": 0, "finger_state": 0, "fold": 0}
         with open(dst / f.name, "w") as w:
             for line in open(f):
                 r = json.loads(line)
@@ -99,6 +124,10 @@ def main() -> None:
                 if fs is not None:
                     r["frame"] = fs
                     n["finger_state"] += 1
+                fd = fold(r["frame"])
+                if fd is not None:
+                    r["frame"] = fd
+                    n["fold"] += 1
                 w.write(json.dumps(r, ensure_ascii=False) + "\n")
         stats[f.stem] = n
     for f in src.glob("*.json"):
