@@ -319,6 +319,31 @@ Runs in `probes/parser-errors/RESULT.md`, section 13. By the rule above v10 repl
 
 Reading: the shipped ensemble gets 47 of 102 eval rows exact (46 %, v9 41 %) and 79 right or one part wrong (77 %, v9 74 %). Over two seeds the eval gain is established (+11 points, p 0.004); between the two ensembles it is not (p 0.47). Stage 7 fixed what it aimed at: sources said in their low direction with a falling target (29, 30, 13: 8 rows) and both directions named (08: 3 rows). It broke two things. Calibration falls by 6 to 7 points (closing the fist while a cutoff goes down now gets an INV, 23; the opposite misses, 24; drag across the screen with a pinch now adds a route, 21). And "B warp" lost its target in all five rows of group 07: stage 7 put "B Warp" into the parameter-name list, where the name is a scope word next to a target, so the parser learned it is not the target. The four-seed ensemble is the best reading of the real set on both splits (54 of 102, 84 right or one part wrong, calibration 30), but the dev sets show no gain and this set is seen, so it does not ship by the rule.
 
+## Gold fix and second slice (2026-11-02, after the v10 scoring)
+
+`score.py derive` swapped fingers only in `F:` tokens, so the derived rows 13-s2 and 29-s1 ("Zeigefinger kippen") kept the thumb tilt of their originals. Fixed; every number above this section was scored before the fix. Re-scored (pronoun = `normalize.py` pronoun rule after conv; it lowers no dev set, 0.7897 with and without, but it was looked at on this set, so it does not count as selected):
+
+| run | calibration | eval all | eval orig | eval route F1 | eval right or one part wrong |
+|---|---|---|---|---|---|
+| ensemble v9 s0+s1 | 30/51 | 43/102 | 8/23 | 0.543 | 75/102 |
+| ensemble v9 s0+s1, conv, pronoun | 35/51 | 46/102 | 9/23 | 0.579 | 78/102 |
+| v10 s0 / s1 / s2 / s3 | 27 / 27 / 26 / 30 | 51 / 47 / 38 / 48 | 13 / 10 / 7 / 10 | 0.592 / 0.538 / 0.482 / 0.608 | 82 / 79 / 71 / 73 |
+| ensemble v10 s0+s1, conv (ships) | 25/51 | 49/102 | 11/23 | 0.572 | 79/102 |
+| ensemble v10 s0+s1, conv, pronoun | 28/51 | 49/102 | 11/23 | 0.584 | 80/102 |
+| ensemble v10 s0 to s3, conv | 30/51 | 56/102 | 13/23 | 0.630 | 84/102 |
+| ensemble v10 s0 to s3, conv, pronoun | 35/51 | 56/102 | 13/23 | 0.643 | 85/102 |
+
+v10 s0, s1 against v9 s0, s1 on eval: 43 won, 19 lost, p 0.003, +11.8 points, bootstrap [+1.0, +24.6]. The pronoun rule wins 3 and 5 calibration rows (group 20, "and when I spread my fingers it should get longer") and changes no eval row.
+
+Misses of the four-seed ensemble (conv), read by part as for v10 (calibration 21, eval 46 after the fix), point to four gaps in how the training data is made:
+
+1. The hand as subject: "my right hand should control the reverb size by pinching and turning". 0 of 8 rows right (groups 27, 32). The command validator drops a sentence when a source's side word is not inside its mark or among the 7 words before it; in stage 7, 558 of 1,251 such drops had the side word in the sentence, after the movement ("Finger spreizen mit der linken Hand") or further before it. The form Noa uses is filtered out of every stage.
+2. A parameter name as the only target ("macro 2 sinkt", "B warp"). In all 858 training rows that name a macro by number, the name is a `PNAME` pointer next to a family target; never the target alone. The parser then leaves the route without a target (16-o, 16-s1, 07-t1) or drops the route.
+3. Two encodings for one movement: closing the fist is labelled `S:hand.fist` 693 times and `S:hand.openness` (low direction) 297 times. `score.py` folds them (fist = openness with INV flipped), training does not, so INV has to be learnt twice; the remaining fist-closing INV misses are 23 and 24 (4 calibration rows).
+4. A target that rises while another falls on one movement (16, 35: 4 eval rows miss only the INV). Stage 7 told targets their direction only when the source was said in its low direction.
+
+Smaller: a preset described by what it does ("every finger should be a chord", 19, 5 calibration rows; training names presets only by name); arpeggiator range and rate read as synthexis' MIDI generator where the gold has Serum's parameter (17), and pinch with both axes read as two routes where the gold has the XY pad (12): both are label questions for Noa.
+
 ## Open
 
 - Noa reviews the derived rows: do they sound like him, mean the original plus the listed change, and name the right plugin and parameter? Plugin context is inferred for all 34 originals; 5 are unknown, and their rows note the candidates.

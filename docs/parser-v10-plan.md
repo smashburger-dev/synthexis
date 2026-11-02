@@ -60,3 +60,15 @@ DeepSeek for stage 7, about 1 $. Modal for four runs on an L4, about 2 $ (credit
 ## Selection rule
 
 Copied into `probes/real-eval/RESULT.md` ("Parser v10: selection rule") before training.
+
+## After v10: next levers (2026-11-02)
+
+From the second slice (`probes/real-eval/RESULT.md`, "Gold fix and second slice"), in order of rows at stake per unit of work:
+
+1. Side words anywhere in the clause: `commands.py side_check` accepts the side word after the movement and in a hand-as-subject clause ("my left hand should control X by spreading the fingers"); a stage-8 frame `instrumental` ("X by Y-ing", "X steuern, indem ich Y") with the hand as subject. 8 rows at 0 of 8.
+2. One encoding per movement: `conventions.py` folds `S:hand.fist` into `S:hand.openness` with INV flipped (and `eye.closed` into `eye.open`), as `score.py` already does. Needs no new text, only relabelling and a retrain.
+3. Parameter name as the only target: an edit form whose only target word is a parameter name, labelled `T:param:other` (or `T:param:macro` for macros) plus the `PNAME` pointer; drop names that are also targets elsewhere ("B Warp") from `param_names`.
+4. Direction hints for every parameter target in fan-out edits, not only for low-direction sources.
+5. Decoding: conv plus pronoun (lowers no dev set; +3 to +5 calibration rows).
+
+The four-seed ensemble is the strongest reading of the real set (56 of 102 exact, 85 right or one part wrong with pronoun, calibration 35 of 51) and is moved to a separate session to make it as cheap as two seeds (distillation into one student, shared encoder, quantisation).

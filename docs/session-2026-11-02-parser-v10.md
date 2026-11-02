@@ -24,6 +24,12 @@ Two regressions are traceable:
 - "B warp" (group 07, 5 rows) lost its target because stage 7 listed "B Warp" as a parameter name, which the frame treats as a scope word next to the target.
 - Closing the fist while a cutoff goes down (23) now gets an INV, and its mirror (24) loses one.
 
+## After the result
+
+- `score.py` derived 13-s2 and 29-s1 with the thumb tilt although the text says index finger; fixed. Re-scored: v9 ensemble 43, shipped v10 ensemble 49 (48 %), four-seed ensemble 56 of 102 (55 %); with the pronoun rule the four-seed ensemble reaches 85 of 102 right or one part wrong and 35 of 51 on calibration.
+- Second slice of the four-seed misses: the hand as subject ("my right hand should control X by pinching and turning", 0 of 8; the validator drops that form), a parameter name as the only target ("macro 2", "B warp"), two encodings for closing the fist, direction hints missing on fan-out targets. Next levers in `docs/parser-v10-plan.md`, "After v10".
+- Export: f16 equals f32 on dev (121 MB per run, 32 ms median on one CPU thread); torch dynamic int8 loses 2 to 4 dev points and is slower (43 to 47 ms). Making the four-seed ensemble cheap goes to its own session.
+
 ## Money
 
 DeepSeek 0.88 $ (pilot and stage 7). Modal four runs of 22 to 26 minutes on L4s, about 1.5 $ in credits. Baseten untouched.
