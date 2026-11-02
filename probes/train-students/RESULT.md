@@ -168,6 +168,8 @@ What the LOSO numbers say about the gate: on S3 the live-like seg hand IoU is 0.
 
 `seg-final` (self-prev, train + dev, 15 epochs, 1.13 $) came out below `seg-a-s0` on dev although it had trained on dev (own prev: person 0.830, face 0.753, hand 0.606). All round-2 seg runs, the control included, ended at about twice the cross-entropy of seg-a-s0 (0.16 against 0.067; epoch 0: 1.21 against 0.25), while hand and face of the same round trained normally. Cause: for self-prev, `seg_loss` now ran the gradient-free pass on frame t-1 first, inside the bf16 autocast region. On CUDA, autocast caches the bf16 copies of the weights for the region; copies made under `no_grad` carry no graph, so the graded pass reused them and the convolution weights got (almost) no gradient. CPU and MPS do not show it (tested), which is why the Mac preflight passed. Fix: that pass runs with autocast off (fp32). `seg-b` with the fix: running cross-entropy 0.14 at the end of epoch 0, as healthy as seg-a-s0. Consequence: the round-2 seg lever table above compares crippled runs and says nothing about the levers; `seg-final` is discarded.
 
+`seg-b` (fix + self-prev 0.5, 15 epochs, train only, 0.97 $), dev with its own prev in time order: person 0.886, face 0.870, hand 0.733, eye 0.479, mouth 0.628; seg-a-s0 on the same measure: 0.886, 0.870, 0.729, 0.454, 0.646. No change above the 1-point rule, so seg-a-s0 (BN recalibrated) stays the shipped seg, and seg-b was not gated: picking between two dev-equal models by S4 would be adaptive overfitting.
+
 ### Hand final (round 2 winner)
 
 `hand-final`: MobileNetV3-Small + pseudo finger labels, 20 epochs, seed 0, all S1-S3 train, 0.14 $. Dev state accuracy 0.887 (control hand-v3-s0 0.837), keypoint error 11.0 px (12.3). Variant by the cross-session evidence: head only (fusion -0.8 on LOSO, +1.2 on dev: no clear gain, no extra latency). Thresholds calibrated on dev and folded into the exported logits: 0.94, 0.89, 0.91, 0.87, 0.89.
@@ -180,11 +182,21 @@ The only S4-free calibration source for an eye bias and dilation is the LOSO fol
 
 ### Cost of round 2
 
-Billing 2026-11-02 for `synthexis-students`, all on A10G (the L4-first list never got an L4): 11.66 $ in total for the day (A10G 9.22, CPU 1.64, memory 0.80). By group: round 1 2.81 $ (13 runs), seg LOSO 3.36 $ (4), face levers 3.34 $ (18), hand levers 0.56 $ (4), failed and cancelled starts about 1.6 $. Round 2 bought mostly negative results; a one-seed screen first, seeds only for winners, would have cost about a third. Noa's November limit is 42.50 $; the month stood at 39.04 $ before the two final runs.
+Final, Modal billing report at 2026-11-03 00:4x CET: `synthexis-students` 13.92 $ in total (both rounds), November 41.42 $ of Noa's 42.50 $ limit. During round 2: billing 2026-11-02 for `synthexis-students`, all on A10G (the L4-first list never got an L4): 11.66 $ in total for the day (A10G 9.22, CPU 1.64, memory 0.80). By group: round 1 2.81 $ (13 runs), seg LOSO 3.36 $ (4), face levers 3.34 $ (18), hand levers 0.56 $ (4), failed and cancelled starts about 1.6 $. Round 2 bought mostly negative results; a one-seed screen first, seeds only for winners, would have cost about a third. Noa's November limit is 42.50 $; the month stood at 39.04 $ before the two final runs.
+
+## Shipped state (2026-11-03)
+
+| student | run | S4 | gate | ANE median / p95 ms |
+|---------|-----|----|------|---------------------|
+| seg | seg-a-s0, BN recalibrated | person 0.766, face 0.798, hand 0.797 (own prev, time order); mouth 0.659 | 0.85: no | 0.547 / 0.649 |
+| hand | hand-final, MobileNetV3-Small, pseudo finger labels | states 0.892; per finger 0.945 / 0.985 / 0.990 / 0.983 / 0.946; keypoints 8.9 / 6.3 px | 0.95: no | 0.416 / 0.682 |
+| face | face-a-s1 | mouth 0.705, eye 0.243 | 0.70: mouth yes, eye no | 0.339 / 0.500 |
+
+Hand logits now carry the dev-calibrated thresholds: extended = logit > 0. CoreML and PyTorch agree on the 5-bit state for 495 of 500 dev crops (the rest sit on the threshold in FP16). `data/models/students.json` records all of it.
 
 ## Not done, next
 
-- Seg retrain with the BN fix from the start (about 0.95 $, 40 min on Modal) and a prev mask trained on noisier masks (morphological noise, the student's own prediction), so the prev channel helps live; or drop the channel if it still does not.
+- Seg: the prev channel buys nothing live (own prev = zero prev on dev and S4); self-prev did not change that (seg-b). Next candidates, each needing a clean LOSO run: a larger backbone trained with self-prev (MobileNetV3-Large gained with SAM prev in the crippled round), or no prev channel at all.
 - Thumb: label check of the A-block thumb-tucked segments with Noa, then a finger-only fine-tune or more weight on the thumb bit.
 - Eye: the face student misses S4 eyes; Apple Vision face landmarks (runtime use allowed) can carry the eye signals until a fix. D9 proxy stays deferred: it learns from the same SAM masks and would not see the S4 look either.
 - Student-derived crops: the gate uses SAM boxes; the plugin cuts crops from the seg student's masks. The perception session's bench on S4 measures that path.
