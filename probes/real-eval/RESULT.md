@@ -290,6 +290,35 @@ Plan and the slices behind it: `docs/parser-v10-plan.md`. The failure slices of 
 3. Decoding: the conv rule (`rules.py`) applies to the chosen ensemble when it lowers no dev set. Four seeds replace two when the four-seed ensemble scores at least 0.005 higher on the eight-set mean.
 4. Real set: scored once at the end for every arm (v9 ensemble with and without conv, v10 seeds, v10 ensembles), paired against v9: seeds against seeds, ensemble against ensemble, McNemar and group bootstrap as before.
 
+## Parser v10 (2026-11-02)
+
+Runs in `probes/parser-errors/RESULT.md`, section 13. By the rule above v10 replaces v9: on the eight dev sets of ds-v10c the ensemble of v10 s0+s1 scores 0.7730 against 0.7542, on the seven older sets 0.7921 against 0.7890. The conv rule lowers no dev set and applies. The four-seed ensemble scores 0.7729 on dev, no gain over two seeds, so it is not chosen. Then the real set was scored once (`arms.py`, files `preds-g2-*.jsonl`, `-conv` with the rule):
+
+| run | calibration | eval all | eval orig | eval route F1 | eval right or one part wrong |
+|---|---|---|---|---|---|
+| ensemble v9 s0+s1 (shipping until now) | 30/51 | 42/102 | 8/23 | 0.537 | 75/102 |
+| ensemble v9 s0+s1, conv | 30/51 | 45/102 | 9/23 | 0.556 | 76/102 |
+| v10 s0 | 27/51 | 49/102 | 13/23 | 0.580 | 82/102 |
+| v10 s1 | 27/51 | 46/102 | 10/23 | 0.532 | 79/102 |
+| v10 s2 | 26/51 | 37/102 | 7/23 | 0.476 | 71/102 |
+| v10 s3 | 30/51 | 46/102 | 10/23 | 0.595 | 73/102 |
+| ensemble v10 s0+s1 | 25/51 | 46/102 | 10/23 | 0.553 | 78/102 |
+| ensemble v10 s0+s1, conv (ships) | 25/51 | 47/102 | 11/23 | 0.559 | 79/102 |
+| ensemble v10 s2+s3, conv | 31/51 | 50/102 | 10/23 | 0.624 | 79/102 |
+| ensemble v10 s0 to s3, conv (not chosen) | 30/51 | 54/102 | 13/23 | 0.617 | 84/102 |
+
+| comparison | split | won / lost | p | exact match diff | group bootstrap |
+|---|---|---|---|---|---|
+| v10 s0, s1 against v9 s0, s1 | eval | 42 / 19 | 0.004 | +11.3 points | [+1.0, +23.3] |
+| v10 s0, s1 against v9 s0, s1 | calibration | 12 / 19 | 0.28 | -6.9 points | [-17.0, +4.4] |
+| four v10 seeds against both v9 seeds | calibration | 49 / 73 | 0.04 | -5.9 points | [-12.9, +3.4] |
+| v10 ensemble, conv, against v9 ensemble | eval | 18 / 13 | 0.47 | +4.9 points | [-14.1, +23.8] |
+| v9 ensemble, conv, against v9 ensemble | eval | 3 / 0 | 0.25 | +2.9 points | [0.0, +9.6] |
+| four-seed against two-seed v10 ensemble, both conv | eval | 9 / 2 | 0.07 | +6.9 points | [0.0, +15.9] |
+| four-seed against two-seed v10 ensemble, both conv | calibration | 5 / 0 | 0.06 | +9.8 points | [+2.3, +15.5] |
+
+Reading: the shipped ensemble gets 47 of 102 eval rows exact (46 %, v9 41 %) and 79 right or one part wrong (77 %, v9 74 %). Over two seeds the eval gain is established (+11 points, p 0.004); between the two ensembles it is not (p 0.47). Stage 7 fixed what it aimed at: sources said in their low direction with a falling target (29, 30, 13: 8 rows) and both directions named (08: 3 rows). It broke two things. Calibration falls by 6 to 7 points (closing the fist while a cutoff goes down now gets an INV, 23; the opposite misses, 24; drag across the screen with a pinch now adds a route, 21). And "B warp" lost its target in all five rows of group 07: stage 7 put "B Warp" into the parameter-name list, where the name is a scope word next to a target, so the parser learned it is not the target. The four-seed ensemble is the best reading of the real set on both splits (54 of 102, 84 right or one part wrong, calibration 30), but the dev sets show no gain and this set is seen, so it does not ship by the rule.
+
 ## Open
 
 - Noa reviews the derived rows: do they sound like him, mean the original plus the listed change, and name the right plugin and parameter? Plugin context is inferred for all 34 originals; 5 are unknown, and their rows note the candidates.
