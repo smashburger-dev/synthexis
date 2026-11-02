@@ -6,9 +6,9 @@
 //! Model dir: $SYNTHEXIS_PARSER_DIR, else
 //! ~/Library/Application Support/synthexis/parser, laid out as
 //! tools/mapping/export_runtime.py writes it. Runs: $SYNTHEXIS_PARSER_RUNS,
-//! default the shipped v9 ensemble; "p-v9-s0" alone is the fallback (half
-//! the RAM and time), "p-v7a-s0,p-v7a-s1" the previous ensemble. Headless
-//! check: SYNTHEXIS_PARSE="sentence" parses that sentence once loaded.
+//! default the v11 four-seed ensemble, Q8_0 encoders and the conv,pronoun
+//! rules as its parser.json says (Noa's pick, 2026-11-02). Headless check:
+//! SYNTHEXIS_PARSE="sentence" parses that sentence once loaded.
 
 use std::path::PathBuf;
 use std::sync::OnceLock;
@@ -19,7 +19,7 @@ use synthexis_parser::{Options, Parser};
 
 use crate::log::log;
 
-const DEFAULT_RUNS: &str = "p-v9-s0,p-v9-s1";
+const DEFAULT_RUNS: &str = "p-v11-s0,p-v11-s1,p-v11-s2,p-v11-s3";
 
 static WORKER: OnceLock<Sender<String>> = OnceLock::new();
 

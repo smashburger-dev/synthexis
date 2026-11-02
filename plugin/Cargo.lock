@@ -3370,6 +3370,7 @@ dependencies = [
  "candle-nn",
  "half",
  "rayon",
+ "regex",
  "serde",
  "serde_json",
  "tokenizers 0.22.2",
