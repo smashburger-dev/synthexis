@@ -44,8 +44,9 @@ Decisions where the spec is open (written down in probes/train-packer/RESULT.md)
     hand (recordings are unmirrored); one hand -> left or right of the face
     centre (fallback person box centre, then frame centre), shifted by half
     the face width toward the side the script expects when it expects one.
-  * per-segment labels of the conservative exclusion list (Spark QA, both
-    passes flag a mismatch) are dropped; the SAM masks stay.
+  * per-segment labels Noa confirmed wrong (S3 D_step_back, F_backlit, and
+    F_dim before the light goes off) are dropped; the SAM masks stay. This
+    replaces the earlier Spark QA exclusion list.
   * block H motion labels are stored as 'motion_user' (as scripted, mirrored
     user view) and 'motion_rec' (x flipped to the recorded frame: left<->right,
     cw<->ccw).
@@ -82,15 +83,17 @@ SEED = 20261102
 JPEG_Q = 90
 PREV_MAX_DT = 0.1  # s; previous extracted frame must be the direct neighbour at 15 fps
 
-# Conservative exclusion list: segments both Spark QA passes flag as a
-# mismatch (side-session note motion-labels.md, 2026-11-02).
+# Per-segment labels Noa confirmed wrong in his S3 spot-check (2026-11-02):
+# he did not step back fully, and the backlight setup failed. The Spark QA
+# list it replaces flagged 20 of 23 S3 segments wrongly.
 EXCLUDED = {
-    "2026-10-27-S1": {"A_R_01110", "A_R_01111", "A_L_01110", "A_both_01000_00000"},
-    "2026-10-29-S2": {"A_R_01001", "A_L_00001", "A_both_01000_00000", "A_both_10001_01001",
-                      "C_neutral", "C_blink", "H_throw_left", "H_swipe_left", "H_swipe_up"},
-    "2026-11-01-S3": {"A_R_01110", "A_R_00001", "A_L_00001", "C_wink_L", "C_wink_R",
-                      "D_step_back", "F_backlit", "F_dim", "H_throw_bottom", "H_throw_left"},
-    "2026-11-01-S4": {"A_R_00001", "C_wink_L", "H_grab_release"},
+    "2026-11-01-S3": {"D_step_back", "F_backlit"},
+}
+# Labels valid only from this time on (cam0 seconds): S3 F_dim, the light went
+# off mid-segment; mean frame luminance falls from 69.5 at 641.0 s to 43.9 at
+# 641.2 s (probes/train-packer/RESULT.md).
+LABEL_FROM_S = {
+    ("2026-11-01-S3", "F_dim"): 641.1,
 }
 
 # Hand keypoint teacher: named explicitly, never globbed from data/keypoints.
@@ -173,7 +176,8 @@ def load_session(session, limit=None):
     for f in frames:
         sid = f["segment_id"]
         seg = seg_by_id.get(sid)
-        excluded = sid in EXCLUDED.get(session, set())
+        excluded = (sid in EXCLUDED.get(session, set())
+                    or f["t"] < LABEL_FROM_S.get((session, sid), float("-inf")))
         seg_labels = f["labels"] if f["label_ok"] and not excluded else None
         if seg_labels and "motion" in seg_labels:
             seg_labels = {"motion_user": seg_labels["motion"],
@@ -446,6 +450,7 @@ def main():
         "sizes": {"seg": SEG_SIZE, "proxy": PROXY_SIZE, "crop": CROP},
         "shard_samples": SHARD_SAMPLES, "seed": SEED, "dev_fraction": DEV_FRACTION,
         "excluded_segments": {s: sorted(v) for s, v in EXCLUDED.items()},
+        "labels_from_s": {f"{s}/{sid}": t for (s, sid), t in LABEL_FROM_S.items()},
     })
     with Pool(a.workers) as pool:
         for session in a.sessions:
