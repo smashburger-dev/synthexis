@@ -32,6 +32,12 @@ $SYNTHEXIS_PARSER_RUNS picks other runs, e.g. p-v9-s0 or p-v7a-s0,p-v7a-s1);
 `SYNTHEXIS_PARSE="sentence"` logs that sentence's frame once loaded. See
 docs/parser-runtime-plan.md.
 
+Sentence field completion (`complete/`, crate synthexis-complete): data from
+$SYNTHEXIS_COMPLETION_DIR or ~/Library/Application Support/synthexis/completion
+(export: `uv run tools/mapping/export_completion.py`). Chips become pinned
+spans on the parser's frame (`parser/src/pin.rs`). See
+docs/mapping-completion.md.
+
 ## Vendored nih-plug patch
 
 plugin/vendor/nih-plug is nih-plug @ de42101 with one additive hook:

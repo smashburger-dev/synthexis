@@ -112,6 +112,13 @@ pub struct SynthexisParams {
     /// Editor state (window size + user state across opens).
     #[persist = "editor-state"]
     pub editor_state: Arc<EguiState>,
+
+    /// Settings: completion in the sentence field on or off.
+    #[persist = "completion"]
+    pub completion: Arc<AtomicBool>,
+    /// Plugin id whose parameters complete (until the FL target picker).
+    #[persist = "completion-plugin"]
+    pub completion_plugin: Arc<RwLock<String>>,
 }
 
 impl SynthexisParams {
@@ -159,10 +166,14 @@ impl Default for SynthexisParams {
             test_signal: BoolParam::new("Test signal", test_on),
             hand_role_left: EnumParam::new("Hand role left", HandRole::Parameter),
             hand_role_right: EnumParam::new("Hand role right", HandRole::Parameter),
-            editor_state: EguiState::from_size(700, 700),
+            editor_state: EguiState::from_size(700, 760),
+            completion: Arc::new(AtomicBool::new(true)),
+            completion_plugin: Arc::new(RwLock::new(String::new())),
         }
     }
 }
 
 use nih_plug_egui::EguiState;
+use parking_lot::RwLock;
+use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
