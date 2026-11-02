@@ -7,7 +7,7 @@ Cost 0 $. Run time on the M1 Pro, 8 worker processes, IMAGE mode (no tracking): 
 ## Commands
 
 - `uv run tools/keypoints/mediapipe_hands.py <session> --workers 8` writes `data/keypoints/<session>/cam0/mediapipe.jsonl` and `mediapipe_meta.json`. Model `data/models/hand_landmarker.task` (float16, Google mediapipe-models bucket, Last-Modified 2023-04-26, sha256 `fbc2a300...cde1`, checked at start), mediapipe 1.2.0.
-- `uv run tools/keypoints/postprocess.py <session>...` writes `keypoints_mediapipe.jsonl` (per frame: hands with chirality, score, 21 joints `[x, y, z]`, box, `sam_match`, `train_ok`, plus unmatched SAM hands), `stats_mediapipe.json` and `data/keypoints/<session>/contact_sheet_mediapipe.jpg`.
+- `uv run tools/keypoints/postprocess.py [--source mediapipe|sam3dbody] <session>...` writes `keypoints_mediapipe.jsonl` (per frame: hands with chirality, score, 21 joints `[x, y, z]`, box, `sam_match`, `train_ok`, plus unmatched SAM hands), `stats_mediapipe.json` and `data/keypoints/<session>/contact_sheet_mediapipe.jpg`.
 - File names carry the source on purpose. A packer must name its keypoint source and train only on hands with `train_ok`.
 
 ## Numbers
@@ -37,7 +37,39 @@ Chirality: MediaPipe's docs say handedness assumes a mirrored selfie image, but 
 - Holding objects (block E): only 44 to 71 % of SAM hands get keypoints.
 - S3's side angle and fast H moves: mostly fine.
 
-## Open
+## SAM 3D Body (approved by Noa, blocked on access)
 
-- Noa's choice of "the best state-of-the-art alternative": licence-check recommends SAM 3D Body (SAM License, hand decoder) on Modal. That is a paid GPU run and needs a cap; not started. MediaPipe stays the free cross-check either way.
-- Packer: drop the Vision path in `tools/train/pack.py` and read `keypoints_mediapipe.jsonl` with `train_ok` explicitly.
+Noa approved SAM 3D Body (Meta, SAM License, DINOv3-H+ 840M, hand decoder, FreiHAND PA-MPJPE 5.5 mm per its README) as the stronger teacher on 2026-11-02. `tools/keypoints/sam3d_body.py` is ready:
+
+- Modal L40S, code `facebookresearch/sam-3d-body` at `b5c765a`, weights `facebook/sam-3d-body-dinov3` at `11aaa346`, inference `full` (body decoder, then the hand decoder on both hand crops), prompted with the SAM 3.1 person box. No detector, no FOV model.
+- Frames: the 37,207 of 51,517 frames where SAM 3.1 or MediaPipe saw a hand.
+- Output `sam3dbody.jsonl` in the MediaPipe schema. The body model always predicts both hands, also hidden ones, so `postprocess.py --source sam3dbody` counts only SAM-matched hands as visible.
+- Guards: up-front estimate refused above `--max-usd`, a pilot job re-estimates from measured s/frame before the rest is spawned, and a rolling stop counts finished plus in-flight container seconds, load time included.
+- `pilot` runs the same 24 S2 frames in fp32 and bf16 and reports s/frame, the bf16 joint drift in px and the full-run estimate.
+
+Blocker: both HF repos (`-dinov3`, `-vith`) are gated with manual approval, and the token in the Modal secret `huggingface` gets 403 "not in the authorized list". Noa has to request access at huggingface.co/facebook/sam-3d-body-dinov3 with the account behind that token. Then:
+
+```
+uv run tools/keypoints/sam3d_body.py pilot --max-usd 0.5
+uv run tools/keypoints/sam3d_body.py run 2026-10-27-S1 2026-10-29-S2 2026-11-01-S3 2026-11-01-S4 --max-usd 6 --s-per-frame <pilot value> [--bf16]
+uv run tools/keypoints/postprocess.py --source sam3dbody 2026-10-27-S1 2026-10-29-S2 2026-11-01-S3 2026-11-01-S4
+```
+
+Two pilot attempts on 2026-11-02 failed before any inference: first an import-time path bug (module-level `Path(__file__).parents[2]` inside the container, 13 crash-looping starts, stopped by hand), then the 403. Modal billed 0.005 $ for both.
+
+## Cost
+
+| item | $ |
+|---|---|
+| Apple Vision run (dropped, output deleted) | 0 |
+| MediaPipe on S1 to S4, M1 Pro CPU | 0 |
+| SAM 3D Body pilot attempts (Modal billing report, `synthexis-sam3d-body`) | 0.005 |
+| SAM 3D Body full run, estimate (hypothesis until the pilot: 0.30 s per frame on L40S, 37,207 frames, 4 container loads of 120 s, x1.15 overhead) | about 7.3; with `--stride 2` about 3.7 |
+
+Modal November credit: 30 $. Used by 2026-11-02 06:40 CET: parser 9.48, SAM labels 2.29 (S3, S4), SAM 3D Body 0.005, total 11.78, so about 18.2 $ left for student training and SAM 3D Body. Suggested SAM 3D Body cap 6 $, which keeps about 12 $ for training. If the pilot confirms about 0.3 s per frame, run with `--stride 2` (every second frame; 15 fps neighbours are near duplicates) or with `--bf16` if its drift is small.
+
+## Hand-over
+
+- Packer (`train-packer` session, told 2026-11-02): join `keypoints_mediapipe.jsonl` to its hand samples by `sam_match.sam_id` (chunk, file, instance index), use only `train_ok` hands, write the keypoint source into the manifest, never glob `data/keypoints`.
+- Licence notice for MediaPipe (Apache-2.0) belongs in the attributions section the licence-check branch adds to `docs/credits.md`; that session was asked to add it.
+- FigJam board updated 2026-11-02: Teachers section has "MediaPipe hand keypoints" (wired from the scripted sessions to "Masks and labels") and "SAM 3D Body hands: waiting for Meta access" (dashed); the Apple Vision box in live perception and the two stickies that called Vision a teacher now say fallback only; new stickies in Data engine and Open; Modal budget sticky updated.

@@ -2,22 +2,25 @@
 # requires-python = ">=3.11"
 # dependencies = ["pillow"]
 # ///
-"""Ties MediaPipe hand keypoints to SAM hand instances and writes stats.
+"""Ties hand keypoints to SAM hand instances and writes stats, per source.
 
-Reads  data/keypoints/<session>/cam0/mediapipe.jsonl   (tools/keypoints/mediapipe_hands.py)
+Sources: mediapipe (tools/keypoints/mediapipe_hands.py) and sam3dbody
+(tools/keypoints/sam3d_body.py); <src> below is the source name.
+
+Reads  data/keypoints/<session>/cam0/<src>.jsonl
        data/frames/<session>/cam0/frames_index.json
        data/labels/<session>/cam0/chunk_*/chunk.json   (SAM 3.1, image mode)
        data/recordings/<session>/segments.json
-Writes data/keypoints/<session>/cam0/keypoints_mediapipe.jsonl, one line per frame:
+Writes data/keypoints/<session>/cam0/keypoints_<src>.jsonl, one line per frame:
          {file, t, sam, hands: [{chirality, score, joints, box, sam_match, train_ok}],
           sam_unmatched: [sam_id, ...]}
-       data/keypoints/<session>/cam0/stats_mediapipe.json
-       data/keypoints/<session>/contact_sheet_mediapipe.jpg  (24 frames, skeletons drawn)
+       data/keypoints/<session>/cam0/stats_<src>.json
+       data/keypoints/<session>/contact_sheet_<src>.jpg  (24 frames, skeletons drawn)
 The file names carry the source on purpose: a packer must name the keypoint
 source it trains on, never pick up whatever lies in data/keypoints.
 
 Coordinates are normalised to the unmirrored frame, origin top-left; joints
-are [x, y, z] with MediaPipe's relative depth z. `box` is the xywh bound of
+are [x, y, z] (MediaPipe's relative depth z; 0 for sam3dbody). `box` is the xywh bound of
 the 21 joints. A keypoint hand matches a SAM hand when the IoU of its box
 (grown by BOX_PAD of its longer side per side, since joints sit inside the
 hand outline) and the SAM box is at least MATCH_IOU; pairs are assigned
@@ -32,12 +35,16 @@ skeletons on one hand). MediaPipe's score does not filter: false hands on
 shoulders, neck, forehead and chin score 0.95 to 0.97, but SAM finds no hand
 there.
 
+SAM 3D Body always predicts both hands, hidden ones too, so for sam3dbody
+only SAM-matched hands count as visible in the checks, recall numbers and
+`visible_hands_per_frame`; unmatched hands are drawn grey.
+
 Chirality check: recordings are unmirrored, so anatomical right appears on
 the image left. Expected chirality comes from the segment labels: one-hand
 segments (one of hand_L / hand_R is "absent", or B_R_* / B_L_* ramps) and
 two-hand A segments, where the hand with the smaller wrist x is the right one.
 
-Usage: uv run tools/keypoints/postprocess.py <session> [<session> ...]
+Usage: uv run tools/keypoints/postprocess.py [--source mediapipe|sam3dbody] <session>...
 """
 
 import itertools
@@ -51,7 +58,8 @@ from PIL import Image, ImageDraw
 
 ROOT = Path(__file__).resolve().parents[2]
 DATA = ROOT / "data"
-SOURCE = "mediapipe"
+SOURCE = "mediapipe"  # set from --source
+BOTH_HANDS_ALWAYS = {"sam3dbody"}
 BOX_PAD = 0.15
 MATCH_IOU = 0.3
 OVERLAP_IOU = 0.3
@@ -64,6 +72,14 @@ COLOR = {"right": (255, 140, 0), "left": (0, 200, 255), "unknown": (255, 0, 255)
 
 def r4(v):
     return round(v, 4)
+
+
+def visible(h):
+    return h["sam_match"] is not None if SOURCE in BOTH_HANDS_ALWAYS else True
+
+
+def vis(r):
+    return [h for h in r["hands"] if visible(h)]
 
 
 def joint_box(joints):
@@ -200,15 +216,17 @@ def summarize(rows):
     k_in_sam = [h for r in sam_rows for h in r["hands"]]
     n_sam = sum(r["n_sam"] for r in sam_rows)
     k_matched = sum(1 for h in k_in_sam if h["sam_match"])
-    counts = Counter(len(r["hands"]) for r in rows)
+    counts = Counter(len(vis(r)) for r in rows)
+    scores = [h["score"] for h in hands if h["score"] is not None]
     return {
         "frames": len(rows),
         "frames_by_hand_count": {str(k): counts.get(k, 0) for k in (0, 1, 2)},
-        "frames_with_hand": r4(sum(1 for r in rows if r["hands"]) / max(len(rows), 1)),
+        "frames_with_hand": r4(sum(1 for r in rows if vis(r)) / max(len(rows), 1)),
+        "visible_hands_per_frame": r4(sum(len(vis(r)) for r in rows) / max(len(rows), 1)),
         "hands_per_frame": r4(len(hands) / max(len(rows), 1)),
         "train_ok_hands": sum(1 for h in hands if h["train_ok"]),
         "train_ok_share": r4(sum(1 for h in hands if h["train_ok"]) / max(len(hands), 1)),
-        "mean_handedness_score": r4(sum(h["score"] for h in hands) / max(len(hands), 1)),
+        "mean_handedness_score": r4(sum(scores) / len(scores)) if scores else None,
         "sam_frames": len(sam_rows),
         "sam_hands": n_sam,
         "keypoint_hands_in_sam_frames": len(k_in_sam),
@@ -235,7 +253,7 @@ def chirality_check(rows):
         exp = expected_hands(r["seg_id"], r["labels"])
         if exp is None:
             continue
-        hands = r["hands"]
+        hands = vis(r)
         if len(exp) == 1:
             want = next(iter(exp))
             for h in hands:
@@ -281,7 +299,7 @@ def finger_check(rows):
     for r in rows:
         if r["block"] != "A" or not r["label_ok"]:
             continue
-        for h in r["hands"]:
+        for h in vis(r):
             bits = r["labels"].get("hand_R" if h["chirality"] == "right" else "hand_L")
             if not bits or bits == "absent":
                 continue
@@ -303,7 +321,7 @@ def recall_by_state(rows):
     for r in rows:
         if r["block"] != "A" or not r["label_ok"]:
             continue
-        found = {h["chirality"] for h in r["hands"]}
+        found = {h["chirality"] for h in vis(r)}
         for key, side in (("hand_R", "right"), ("hand_L", "left")):
             bits = r["labels"].get(key)
             if bits and bits != "absent":
@@ -318,7 +336,7 @@ def recall_check(rows):
         exp = expected_hands(r["seg_id"], r["labels"])
         if not exp:
             continue
-        res[f"{len(exp)}_expected"]["ok" if len(r["hands"]) >= len(exp) else "short"] += 1
+        res[f"{len(exp)}_expected"]["ok" if len(vis(r)) >= len(exp) else "short"] += 1
     return {k: {**c, "rate": r4(c["ok"] / (c["ok"] + c["short"]))} for k, c in sorted(res.items())}
 
 
@@ -358,11 +376,11 @@ def pick_frames(rows, rng):
     # fast H frames: largest wrist travel since the previous frame
     speed = []
     for prev, r in zip(rows, rows[1:]):
-        if r["block"] == "H" and r["hands"] and prev["hands"]:
+        if r["block"] == "H" and vis(r) and vis(prev):
             d = max(
                 abs(h["joints"]["wrist"][0] - p["joints"]["wrist"][0])
                 + abs(h["joints"]["wrist"][1] - p["joints"]["wrist"][1])
-                for h in r["hands"] for p in prev["hands"]
+                for h in vis(r) for p in vis(prev)
             )
             speed.append((d, r))
     speed.sort(key=lambda x: -x[0])
@@ -375,13 +393,13 @@ def pick_frames(rows, rng):
             break
     fails = [
         r for r in rows
-        if (exp := expected_hands(r["seg_id"], r["labels"])) and len(r["hands"]) < len(exp)
+        if (exp := expected_hands(r["seg_id"], r["labels"])) and len(vis(r)) < len(exp)
     ]
     rng.shuffle(fails)
     n_a = 10 if not h_fast else 8
     n_b = 4 if b else 0
     picks = by_seg(a, n_a) + h_fast + by_seg(b, n_b) + by_seg(c, 3) + fails[:2]
-    rest = [r for r in rows if r["hands"] and r not in picks]
+    rest = [r for r in rows if vis(r) and r not in picks]
     rng.shuffle(rest)
     return (picks + rest)[:24]
 
@@ -390,14 +408,15 @@ def draw_tile(session, r, tw=480, th=270):
     img = Image.open(DATA / "frames" / session / "cam0" / r["file"]).convert("RGB").resize((tw, th))
     d = ImageDraw.Draw(img)
     for h in r["hands"]:
-        col = COLOR.get(h["chirality"], COLOR["unknown"])
+        col = COLOR.get(h["chirality"], COLOR["unknown"]) if visible(h) else (150, 150, 150)
         j = h["joints"]
         for chain in CHAINS:
             d.line([(j[n][0] * tw, j[n][1] * th) for n in chain], fill=col, width=2)
         for x, y, _ in j.values():
             d.ellipse([x * tw - 2, y * th - 2, x * tw + 2, y * th + 2], fill=col)
         x, y, _, _ = h["box"]
-        tag = f"{h['chirality'][0].upper()} {h['score']:.2f}" + (" m" if h["sam_match"] else " -")
+        score = f" {h['score']:.2f}" if h["score"] is not None else ""
+        tag = f"{h['chirality'][0].upper()}{score}" + (" m" if h["sam_match"] else " -")
         d.text((x * tw, max(0, y * th - 11)), tag, fill=col)
     lab = r["labels"] or {}
     txt = f"{r['file'][6:12]} {r['seg_id'] or '-'} R:{lab.get('hand_R', '')} L:{lab.get('hand_L', '')}"
@@ -416,7 +435,10 @@ def contact_sheet(session, rows):
 
 
 if __name__ == "__main__":
-    for s in sys.argv[1:]:
+    argv = sys.argv[1:]
+    if argv[:1] == ["--source"]:
+        SOURCE, argv = argv[1], argv[2:]
+    for s in argv:
         st = process(s)
         print(s, json.dumps({k: st[k] for k in ("frames", "hands_per_frame", "match_rate_keypoints",
                                                  "match_rate_sam")}),

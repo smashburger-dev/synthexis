@@ -23,7 +23,7 @@ Hard dates: S3 and S4 recorded 10-30/10-31, training from 11-01 (new Modal credi
 - [x] Label S3 and S4 in image mode (S3 1.22 $, S4 0.78 $), contact sheets checked
 - [ ] Decide: ignore S2 eye class in the loss (glasses)
 - [x] Hand keypoints offline on S1-S4 as targets for `perc.hand`: MediaPipe Hand Landmarker (Apache-2.0), 0 $, about 6 min; Apple Vision dropped (Apple terms forbid training on its output) ([result](../probes/hand-keypoints/RESULT.md))
-- [ ] Decide: SAM 3D Body hand keypoints on Modal as stronger teacher (paid, needs a cap)
+- [ ] SAM 3D Body hand keypoints as stronger teacher (Noa approved 11-02): `tools/keypoints/sam3d_body.py` ready with pilot and spend guards; blocked until Noa gets access to the gated HF repo `facebook/sam-3d-body-dinov3` (manual approval, our token gets 403). Then: pilot, `run --max-usd 6`, postprocess `--source sam3dbody`, compare with MediaPipe
 - [x] Spark Open freestyle timelines and segment QA (`motion.labels`, Baseten, 5.63 $; [result](../probes/motion-labels/RESULT.md))
 
 ## Training (main session, from 11-01)
