@@ -82,7 +82,7 @@ FL Studio with synthexis (VST3) on channel 1, backend `vision`, plugin window cl
 | Signal 9 | `cam0.eye.L.open` | close the left eye | 0.94 |
 | Signal 10 | `cam0.head.yaw` | head left and right | 1.00 |
 
-- Signal 4 stayed flat because Noa missed the instruction in the terminal. A second check with only the left hand up in front of the chest moved Signal 4 over 0.004 to 0.978, while Signal 3 held still (range 0.000), so the side was right. With the left arm held far out to the side nothing arrived; the hand was probably outside the frame.
+- Signal 4 stayed flat because Noa missed the instruction in the terminal. A second check with only the left hand up in front of the chest moved Signal 4 over 0.004 to 0.978, while Signal 3 held still (range 0.000), so the side was right. The first phase of that check (arm held out to the side) gave nothing because Noa was not ready in time; it was not repeated.
 - Automation: 10 s of right-hand open and close recorded with Live on into pattern 60, then played back with Live off. Signal 3 followed the recording over 0.015 to 0.983 (verdict `recorded`). FL records the perception signal as automation.
 - Right-hand openness covered only 0.24 to 0.58 live, against 0 to 1 on S4. The live run used a slow open and close in 8 s; the calibration is from S4.
 
