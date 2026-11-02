@@ -354,3 +354,11 @@ Smaller: a preset described by what it does ("every finger should be a chord", 1
 - No row is used for training or for writing prompts.
 - Stage-4 and stage-5 prompts come from calibration findings only. A run trained on labels from such a prompt is not selected on calibration (section "Parser v7"). Before training, every generated sentence is compared with `expanded.jsonl` (word 5-grams, closest-pair ratio), and hits are dropped.
 - Needs first seen in eval groups are scored separately if stage 4 covers them.
+
+## Parser v11: selection rule (written 2026-11-02, before any v11 run exists)
+
+Plan and the gaps behind it: `docs/parser-v11-plan.md`. The four gaps come from the second slice of the v10 four-seed misses on this set, so the set is seen for v11: its numbers are reported and do not select.
+
+1. Labels: ds-v11c = the ds-v10 sources plus stage 8 (`cmd-s8`, and the stage-6 and stage-7 side drops accepted again under the widened side check, `cmd-s6r`, `cmd-s7r`), through `project_labels.py` and `conventions.py`, which now also folds `S:hand.fist` into `S:hand.openness` and `S:eye.closed` into `S:eye.open` with the route's INV flipped. Stage 6 to 8 rows twice in train_cat. The eight older dev sets are the same sentences as in ds-v10c; v10 is re-scored on the new labels.
+2. Selection score: mean route_edit over the nine dev sets of ds-v11c (dev, challenge, dev_s2 to dev_s8), greedy four-seed ensemble, decoded with `conv,pronoun`. v11 replaces v10 when its score is at least 0.005 higher than the v10 four-seed ensemble under the same decoding and it loses no more than 0.005 on the mean of the eight older sets (dev_s8 is written in the new style and favours v11).
+3. Real set: scored once at the end for the v11 seeds and the v11 four-seed ensemble (`predict.py --rules conv,pronoun`), `arms.py table`, and `arms.py paired` against `g2-ens-v10-4-conv` (ensemble against ensemble) and the v10 seeds (seeds against seeds), McNemar and group bootstrap as before. Gold questions 17 and 12 stay open for Noa and are not changed.
