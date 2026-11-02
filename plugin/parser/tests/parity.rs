@@ -1,17 +1,20 @@
-//! Parity with the Python parser on 200 synthetic dev sentences per set
-//! (the first 200 rows; never Noa's real sentences). Each fixture is the
-//! output of
+//! Parity with the Python parser on the first 200 rows of ds-v11c dev
+//! (synthetic; never Noa's real sentences). The fixture is the output of
 //!
-//!   uv run tools/mapping/predict.py --run <s0>,<s1> --f16 \
-//!       --file <texts> --jsonl <fixture>
+//!   uv run tools/mapping/predict.py --rules conv,pronoun \
+//!       --run p-v11-s0-q8,p-v11-s1-q8,p-v11-s2-q8,p-v11-s3-q8 \
+//!       --file <texts> --jsonl dev200-v11-q8-s0123.jsonl
 //!
-//!   dev200-v9-s0s1.jsonl        p-v9-s0,p-v9-s1 on ds-v9c/dev.jsonl (shipped)
-//!   dev_s6-200-v9-s0s1.jsonl    p-v9-s0,p-v9-s1 on ds-v9c/dev_s6.jsonl
-//!   dev200-v7a-s0s1.jsonl       p-v7a-s0,p-v7a-s1 on ds-v6p/dev.jsonl
+//! on branch claude/parser-v11-de5d19: the four v11 seeds with the Q8_0
+//! rounding of candle's QTensor::quantize simulated in torch, decoded with
+//! the conv,pronoun rules. The runtime loads the same runs with their
+//! parser.json defaults (Q8_0, conv,pronoun), so this checks the shipped
+//! path. Needs the export
 //!
-//! Needs the exported runs (uv run tools/mapping/export_runtime.py --run
-//! p-v9-s0,p-v9-s1 and the same for v7a) in $SYNTHEXIS_PARSER_DIR or
-//! data/mapping/runtime:
+//!   uv run tools/mapping/export_runtime.py --run p-v11-s0,p-v11-s1,p-v11-s2,p-v11-s3 \
+//!       --rules conv,pronoun --q8
+//!
+//! in $SYNTHEXIS_PARSER_DIR or data/mapping/runtime:
 //!
 //!   ./guarded-cargo.sh test -p synthexis-parser --release -- --include-ignored
 
@@ -21,6 +24,8 @@ use std::path::PathBuf;
 
 use synthexis_parser::{Options, Parser};
 
+const V11: [&str; 4] = ["p-v11-s0", "p-v11-s1", "p-v11-s2", "p-v11-s3"];
+
 fn runtime_dir() -> PathBuf {
     std::env::var_os("SYNTHEXIS_PARSER_DIR").map_or_else(
         || PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../data/mapping/runtime"),
@@ -28,12 +33,13 @@ fn runtime_dir() -> PathBuf {
     )
 }
 
-/// Every frame equal, confidence within 0.002 (the fixture rounds to 3 places).
-fn check(runs: &[&str], fixture: &str) {
-    let parser = Parser::load(&runtime_dir(), runs, &Options::default()).expect("load exported runs");
+#[test]
+#[ignore = "needs the exported parser runs (data/mapping/runtime)"]
+fn v11_q8_ensemble_matches_python() {
+    let parser = Parser::load(&runtime_dir(), &V11, &Options::default()).expect("load exported runs");
     let (mut n, mut same, mut worst) = (0, 0, 0.0f64);
     let mut diffs = Vec::new();
-    for line in fixture.lines() {
+    for line in include_str!("fixtures/dev200-v11-q8-s0123.jsonl").lines() {
         let row: serde_json::Value = serde_json::from_str(line).unwrap();
         let text = row["text"].as_str().unwrap();
         let want: Vec<String> = serde_json::from_value(row["frame"].clone()).unwrap();
@@ -47,34 +53,23 @@ fn check(runs: &[&str], fixture: &str) {
             diffs.push(format!("{text}\n  py: {}\n  rs: {}", want.join(" "), got.frame().join(" ")));
         }
     }
-    eprintln!("{runs:?}: {same}/{n} frames equal, max |conf diff| {worst:.4}");
+    eprintln!("{same}/{n} frames equal, max |conf diff| {worst:.4}");
     assert_eq!(n, 200);
     assert!(diffs.is_empty(), "frames differ:\n{}", diffs.join("\n"));
-    assert!(worst <= 0.002, "confidence differs by {worst}");
+    // torch decodes in padded batches, the runtime one sentence at a time;
+    // on all 805 dev rows the confidences differ by at most 0.003
+    assert!(worst <= 0.005, "confidence differs by {worst}");
 }
 
 #[test]
 #[ignore = "needs the exported parser runs (data/mapping/runtime)"]
-fn v9_ensemble_matches_python_on_dev() {
-    check(&["p-v9-s0", "p-v9-s1"], include_str!("fixtures/dev200-v9-s0s1.jsonl"));
-}
-
-#[test]
-#[ignore = "needs the exported parser runs (data/mapping/runtime)"]
-fn v9_ensemble_matches_python_on_stage6() {
-    check(&["p-v9-s0", "p-v9-s1"], include_str!("fixtures/dev_s6-200-v9-s0s1.jsonl"));
-}
-
-#[test]
-#[ignore = "needs the exported parser runs (data/mapping/runtime)"]
-fn v7a_ensemble_matches_python_on_dev() {
-    check(&["p-v7a-s0", "p-v7a-s1"], include_str!("fixtures/dev200-v7a-s0s1.jsonl"));
-}
-
-#[test]
-#[ignore = "needs the exported parser runs (data/mapping/runtime)"]
-fn single_run_fallback_parses() {
-    let parser = Parser::load(&runtime_dir(), &["p-v9-s0"], &Options::default()).unwrap();
+fn rules_and_weights_can_be_overridden() {
+    let opt = Options {
+        q8: Some(false),
+        rules: Some(Vec::new()),
+        ..Options::default()
+    };
+    let parser = Parser::load(&runtime_dir(), &V11[..1], &opt).unwrap();
     let p = parser.parse("my fist opens the filter on the bass").unwrap();
     assert_eq!(p.frame().first().map(String::as_str), Some("I:map"));
     assert!(p.logp <= 0.0);

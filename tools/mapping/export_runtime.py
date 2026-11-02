@@ -5,10 +5,15 @@
 """Export parser runs for the plugin runtime (plugin/parser, Rust).
 
   uv run tools/mapping/export_runtime.py --run p-v7a-s0,p-v7a-s1
+  uv run tools/mapping/export_runtime.py --run p-v11-s0,p-v11-s1,p-v11-s2,p-v11-s3 \
+      --rules conv,pronoun --q8
 
 Per run writes into data/mapping/runtime/<run>/:
   model.safetensors  the f16 state dict of model.f16.pt, same keys
-  parser.json        config, frame vocab and decode limits from meta.json
+  parser.json        config, frame vocab and decode limits from meta.json,
+                     plus the decode-time rules (rules.py names) the run was
+                     scored with (the runtime applies them after decoding)
+                     and whether the runtime quantises the encoder to Q8_0
 and copies the backbone's tokenizer.json and config.json once into
 data/mapping/runtime/ (shared by all runs of one backbone).
 """
@@ -31,6 +36,8 @@ DATA = Path(__file__).resolve().parents[2] / "data" / "mapping"
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--run", required=True)
+    ap.add_argument("--rules", default="", help="e.g. conv,pronoun")
+    ap.add_argument("--q8", action="store_true")
     a = ap.parse_args()
     out_root = DATA / "runtime"
     backbone = None
@@ -51,6 +58,7 @@ def main() -> None:
             "max_steps": meta.get("max_steps", fp.MAX_STEPS),
             "max_span": meta.get("max_span", fp.MAX_SPAN),
             "ptr_kinds": list(fp.PTR_KINDS), "special": fp.SPECIAL,
+            "rules": [r for r in a.rules.split(",") if r], "q8": a.q8,
         }, ensure_ascii=False, indent=1))
         n = sum(v.numel() for v in sd.values())
         print(f"{name}: {len(sd)} tensors, {n / 1e6:.2f}M params, "

@@ -24,7 +24,7 @@ Two kinds of items:
 | Field | `plugin/synthexis/src/sentence.rs`, placed in `editor.rs`; settings in `params.rs` |
 | Pinning | `plugin/parser/src/pin.rs`, called in `plugin/synthexis/src/assistant.rs` after decoding |
 
-The plugin reads the data from `$SYNTHEXIS_COMPLETION_DIR`, else `~/Library/Application Support/synthexis/completion` (copy `data/mapping/completion/` there; install.sh does not do it yet, same as for the parser runs). Without data the field still works as a plain sentence line.
+The plugin reads the data from `$SYNTHEXIS_COMPLETION_DIR`, else `~/Library/Application Support/synthexis/completion` (`plugin/install.sh` links `data/mapping/completion/` and the parser runs in `data/mapping/runtime/` there, from the main checkout). Without data the field still works as a plain sentence line.
 
 ## Engine
 
@@ -59,7 +59,7 @@ Checked with the shipped v9 ensemble on four synthetic sentences (`plugin/parser
 
 ## Open
 
-- The Rust runtime still loads v9 and has no `rules.py conv,pronoun`; with v11 runs it needs those rules ported (parser-runtime session). pin.rs folds only the chips' own sources.
+- Done 2026-11-02: the Rust runtime runs the v11 four-seed ensemble in Q8_0 with `conv,pronoun` (session parser-runtime, merged here). pin.rs runs on the frame after these rules, so chips and rules agree; live check on four synthetic sentences in `plugin/parser/tests/pin_live.rs`.
 - Gesture ghost text finds only 4.4 % of the gesture spans on the dev sets: the glossary phrases rarely start with the words the sentences use ("nach links drehen" against "Hand drehen"). Phrases indexed from the middle, or ghost text on fuzzy matches, would raise it; both need a measurement first.
 
 - Learning from picks: recent picks only add a fixed bonus that decays by position. A per-user count of (typed prefix, picked id), saved with the plugin state, would let "cut" rank "Filter 1 Freq" over "Cutoff Rand" after a few picks. Weights are hand-set on synthetic sentences; nothing is tuned on Noa's sentences.

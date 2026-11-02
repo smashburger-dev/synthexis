@@ -25,3 +25,17 @@ rm -rf "$HOME/Library/Audio/Plug-Ins/CLAP/synthexis.clap"
 cp -R target/bundled/synthexis.vst3 "$HOME/Library/Audio/Plug-Ins/VST3/"
 cp -R target/bundled/synthexis.clap "$HOME/Library/Audio/Plug-Ins/CLAP/"
 echo "installed synthexis.vst3 + synthexis.clap"
+
+# Mapping assistant data where the plugin looks when FL starts from the Dock:
+# links into data/mapping of the main checkout (git-ignored, so worktrees do
+# not have it). An existing real directory is left alone.
+DATA="$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")/data/mapping"
+APP="$HOME/Library/Application Support/synthexis"
+mkdir -p "$APP"
+for pair in "runtime:parser" "completion:completion"; do
+    src="$DATA/${pair%%:*}" dst="$APP/${pair##*:}"
+    if [ -d "$src" ] && { [ -L "$dst" ] || [ ! -e "$dst" ]; }; then
+        ln -sfn "$src" "$dst"
+        echo "linked $dst -> $src"
+    fi
+done

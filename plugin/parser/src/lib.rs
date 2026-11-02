@@ -4,20 +4,22 @@
 //! Same model and decode as tools/mapping/frame_parser.py: mmBERT small
 //! (ModernBERT) encoder, frame decoder with pointer head, grammar-masked
 //! greedy decoding over an ensemble of runs (per step the mean of the
-//! members' masked log-softmax, renormalised; `beam` with k = 1). Weights
-//! and vocab come from tools/mapping/export_runtime.py:
+//! members' masked log-softmax, renormalised; `beam` with k = 1), then the
+//! decode-time rules of tools/mapping/rules.py. Weights, vocab, rules and
+//! the Q8_0 setting come from tools/mapping/export_runtime.py:
 //!
 //!   <dir>/tokenizer.json, <dir>/config.json      backbone (shared)
 //!   <dir>/<run>/model.safetensors, parser.json   per run
 //!
-//! Loading takes about a second and 250 MB for two f16 runs; call it off
-//! the audio thread. `parse` is CPU-bound and blocking.
+//! Loading the four v11 runs in Q8_0 takes 0.2 to 0.6 s and about 350 MB;
+//! call it off the audio thread. `parse` is CPU-bound and blocking.
 
 mod decoder;
 mod encoder;
 mod grammar;
 mod nn;
 pub mod pin;
+mod rules;
 mod text;
 
 use std::path::Path;
@@ -43,6 +45,12 @@ struct RunMeta {
     max_src: usize,
     max_steps: usize,
     max_span: usize,
+    /// Decode-time rules the run was scored with (export_runtime.py --rules).
+    #[serde(default)]
+    rules: Vec<String>,
+    /// Encoder weights to be quantised to Q8_0 at load (export_runtime.py --q8).
+    #[serde(default)]
+    q8: bool,
 }
 
 #[derive(Deserialize)]
@@ -51,6 +59,8 @@ struct RunConfig {
     heads: usize,
     dec_layers: usize,
     hf: String,
+    #[serde(default)]
+    hf_layers: usize,
 }
 
 struct Run {
@@ -64,6 +74,14 @@ pub struct Options {
     pub f32_weights: bool,
     /// Worker threads for the matrix kernels; 1 keeps the parser on one core.
     pub threads: usize,
+    /// Quantise the encoder matrices and the embedding to ggml Q8_0 at load
+    /// (about 58 MB instead of 110 MB per run); the decoder stays f32.
+    /// None takes the runs' own setting from parser.json.
+    pub q8: Option<bool>,
+    /// Decode-time rules applied in order, names from rules::NAMES
+    /// (tools/mapping/rules.py); None takes the runs' own from parser.json
+    /// (["conv", "pronoun"] for parser v11, none before v10).
+    pub rules: Option<Vec<String>>,
 }
 
 impl Default for Options {
@@ -71,6 +89,8 @@ impl Default for Options {
         Self {
             f32_weights: false,
             threads: 1,
+            q8: None,
+            rules: None,
         }
     }
 }
@@ -114,6 +134,7 @@ pub struct Parser {
     max_src: usize,
     max_steps: usize,
     pool: rayon::ThreadPool,
+    rules: Vec<String>,
 }
 
 impl Parser {
@@ -137,9 +158,16 @@ impl Parser {
                 if f.frame_vocab != meta.frame_vocab || f.config.hf != meta.config.hf {
                     bail!("{name}: frame vocab or backbone differs from {}", runs[0]);
                 }
+                if f.rules != meta.rules || f.q8 != meta.q8 {
+                    bail!("{name}: decode rules or Q8_0 differ from {}", runs[0]);
+                }
             }
-            let mut w = nn::Weights::load(&rd.join("model.safetensors"), dtype)?;
-            let enc = Encoder::load(&bb, &mut w, "hf.")?;
+            let mut w = nn::Weights::load(
+                &rd.join("model.safetensors"),
+                dtype,
+                opt.q8.unwrap_or(meta.q8),
+            )?;
+            let enc = Encoder::load(&bb, &mut w, "hf.", meta.config.hf_layers)?;
             // the decoder runs up to 48 steps per sentence: keep its 5M
             // weights in f32 instead of widening them every step
             w.set_dtype(DType::F32);
@@ -151,6 +179,10 @@ impl Parser {
             first.get_or_insert(meta);
         }
         let meta = first.ok_or_else(|| anyhow!("no run"))?;
+        let rules = opt.rules.clone().unwrap_or_else(|| meta.rules.clone());
+        if let Some(r) = rules.iter().find(|r| !rules::NAMES.contains(&r.as_str())) {
+            bail!("unknown rule {r}, known: {}", rules::NAMES.join(", "));
+        }
         let pool = rayon::ThreadPoolBuilder::new()
             .num_threads(opt.threads.max(1))
             .thread_name(|i| format!("synthexis-parser-{i}"))
@@ -163,6 +195,7 @@ impl Parser {
             max_src: meta.max_src,
             max_steps: meta.max_steps,
             pool,
+            rules,
         })
     }
 
@@ -210,7 +243,7 @@ impl Parser {
             prev = best as u32;
         }
         Ok(Parse {
-            items: self.items(&seq, text, offs),
+            items: rules::apply(self.items(&seq, text, offs), text, &self.rules),
             logp,
             enc_ms: (t1 - t0).as_secs_f32() * 1e3,
             dec_ms: t1.elapsed().as_secs_f32() * 1e3,

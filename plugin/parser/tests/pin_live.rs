@@ -27,7 +27,7 @@ fn pinned_frames() -> Result<(), String> {
         eprintln!("SYNTHEXIS_PARSER_DIR not set, skipped");
         return Ok(());
     };
-    let parser = match Parser::load(&dir, &["p-v9-s0", "p-v9-s1"], &Options::default()) {
+    let parser = match Parser::load(&dir, &["p-v11-s0", "p-v11-s1", "p-v11-s2", "p-v11-s3"], &Options::default()) {
         Ok(p) => p,
         Err(e) => {
             eprintln!("parser not loaded: {e:#}");
