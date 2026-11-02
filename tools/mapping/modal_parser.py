@@ -1,4 +1,4 @@
-"""Parser training on a Modal GPU (train: L4 only, for cost; v7: mmBERT encoder).
+"""Parser training on a Modal GPU (train: L4, else A10G; v7: mmBERT encoder).
 
 One-time setup (data and backbone go to the volume once, never into the image):
     modal volume create synthexis-parser
@@ -23,20 +23,25 @@ so it builds once and is cached; each spawn is one GPU container that starts
 training at once and exits when done (no keep-warm, no idle polling inside
 the container); the volume is committed once at the end, also on failure.
 """
+import os
 import sys
 from pathlib import Path
 
 import modal
 
 HERE = Path(__file__).resolve().parent
-app = modal.App("synthexis-parser")
+# SYNTHEXIS_MODAL_APP gives a session its own deployment: sessions sharing
+# one app name replace each other's train_parser.py on deploy (11-02).
+APP = os.environ.get("SYNTHEXIS_MODAL_APP", "synthexis-parser")
+app = modal.App(APP)
 vol = modal.Volume.from_name("synthexis-parser", create_if_missing=True)
 image = (
     modal.Image.debian_slim(python_version="3.12")
     .pip_install("torch==2.7.0", "transformers==4.57.6", "tokenizers==0.22.2",
                  "sentencepiece==0.2.0", "protobuf==6.31.1", "numpy==2.2.6",
                  "huggingface_hub==0.36.2")
-    .env({"SYNTHEXIS_BACKBONES": "/vol/backbones", "PYTHONUNBUFFERED": "1"})
+    .env({"SYNTHEXIS_BACKBONES": "/vol/backbones", "PYTHONUNBUFFERED": "1",
+          "SYNTHEXIS_MODAL_APP": APP})
     .add_local_file(str(HERE / "frame_parser.py"),
                     "/app/tools/mapping/frame_parser.py")
     .add_local_file(str(HERE / "train_parser.py"),
@@ -46,7 +51,7 @@ image = (
 )
 
 
-@app.function(image=image, gpu="L4", timeout=4 * 3600,
+@app.function(image=image, gpu=["L4", "A10G"], timeout=4 * 3600,
               volumes={"/vol": vol})
 def train(name: str, args: str) -> dict:
     import json
@@ -101,13 +106,13 @@ def pull(repo: str, name: str, revision: str) -> str:
 
 
 def main() -> None:
-    fn = modal.Function.from_name("synthexis-parser", "train")
+    fn = modal.Function.from_name(APP, "train")
     if sys.argv[1] == "fetch":
-        f = modal.Function.from_name("synthexis-parser", "pull")
+        f = modal.Function.from_name(APP, "pull")
         print(f.remote(*sys.argv[2:5]))
     elif sys.argv[1] in ("spawn", "mlm"):
         if sys.argv[1] == "mlm":
-            fn = modal.Function.from_name("synthexis-parser", "mlm")
+            fn = modal.Function.from_name(APP, "mlm")
         it = iter(sys.argv[2:])
         for name, args in zip(it, it):
             print(name, fn.spawn(name, args).object_id)

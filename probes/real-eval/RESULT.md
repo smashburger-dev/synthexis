@@ -354,6 +354,28 @@ Goal: the reading of the four-seed v10 ensemble at lower RAM and latency. Refere
 4. Cost: f16 weight bytes (quantised: ggml block bytes), median and p95 ms per sentence over 200 dev sentences on one CPU thread in torch (`tools/mapping/lean.py cost`).
 5. Real set: scored once at the end for the chosen candidate, with `predict.py --rules conv,pronoun`, `arms.py table` and `paired` against `g2-ens-v10-4-conv`. The set is seen; its numbers are reported and do not select.
 
+## Parser v10 lean (2026-11-02)
+
+Candidates and dev scores in `probes/parser-errors/RESULT.md`, section 14. By the rule above the distilled student lean-kd-p16 in ggml Q8_0 replaces the four-seed ensemble: 0.7706 on the eight dev sets against 0.7735, 69 MB of weights against 482. Then the real set was scored once (files `preds-g2-*-convpro.jsonl`, all with `conv,pronoun`). The f16 student and the Q8_0 ensemble are reported next to the chosen candidate; neither was picked on this set.
+
+| run | weights MB | dev, eight sets | calibration | eval all | eval orig | eval route F1 | eval right or one part wrong |
+|---|---|---|---|---|---|---|---|
+| ensemble v10 s0 to s3, conv (reference of the rule) | 482 | 0.7735 | 30/51 | 56/102 | 13/23 | 0.630 | 84/102 |
+| ensemble v10 s0 to s3, conv, pronoun | 482 | 0.7735 | 35/51 | 56/102 | 13/23 | 0.643 | 85/102 |
+| lean-kd-p16, Q8_0 (chosen by the rule) | 69 | 0.7706 | 33/51 | 44/102 | 9/23 | 0.537 | 78/102 |
+| lean-kd-p16, f16 | 121 | 0.7710 | 33/51 | 45/102 | 9/23 | 0.548 | 77/102 |
+| ensemble v10 s0 to s3, Q8_0 | 277 | 0.7735 | 35/51 | 56/102 | 13/23 | 0.649 | 84/102 |
+
+| comparison | split | won / lost | p | exact match diff | group bootstrap |
+|---|---|---|---|---|---|
+| student Q8_0 against ensemble, conv | eval | 3 / 15 | 0.0075 | -11.8 points | [-23.4, -1.8] |
+| student Q8_0 against ensemble, conv | calibration | 6 / 3 | 0.51 | +5.9 points | [-7.4, +22.7] |
+| student Q8_0 against ensemble, conv, pronoun | calibration | 3 / 5 | 0.73 | -3.9 points | [-16.2, +11.4] |
+| student f16 against ensemble, conv, pronoun | eval | 4 / 15 | 0.019 | -10.8 points | [-22.9, -0.8] |
+| ensemble Q8_0 against ensemble f16, both conv, pronoun | both | 0 / 0 | 1.0 | 0 | [0, 0] |
+
+Reading: the rule's pick does not keep the four-seed reading of Noa's sentences. It loses 12 points exact on eval (p 0.0075) and lands where single seeds land (38 to 51 of 102). The ensemble's lead on real sentences never showed on the dev sets (two and four seeds score the same there), and distillation on synthetic text copies what the dev sets measure. The four-seed ensemble in Q8_0 changes no exact match on either split and needs 277 MB of weights, inside Noa's 500 to 800 MB budget. Choosing it over the rule's pick would be a choice made on this seen set, so it is Noa's call.
+
 ## Open
 
 - Noa reviews the derived rows: do they sound like him, mean the original plus the listed change, and name the right plugin and parameter? Plugin context is inferred for all 34 originals; 5 are unknown, and their rows note the candidates.

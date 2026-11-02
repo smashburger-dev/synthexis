@@ -279,3 +279,42 @@ Plan: `docs/parser-v10-plan.md`. The v9 misses on the changed real set were read
 (route_edit on ds-v10c, greedy, without conv; conv adds 0.0004 to 0.0008 to every mean and lowers no set.)
 
 v9 reads the new stage-7 sentences at 0.51, v10 at 0.64. On the older sets the first v10 pair holds level (+0.3 points), the second pair loses 1 point; dev_s3 and dev_s4 fall for every v10 run. On the real set the shipped ensemble gets 47 of 102 eval rows exact and 79 right or one part wrong, with calibration down from 30 to 25 of 51 (`probes/real-eval/RESULT.md`, section "Parser v10").
+
+## 14. Parser v10 lean: the four-seed ensemble at lower cost (2026-11-02, `tools/mapping/distill.py`, `lean.py`)
+
+Rule written before any candidate existed (commit bee9d0c): `probes/real-eval/RESULT.md`, "Parser v10 lean: selection rule". Reference: the four-seed v10 ensemble with `conv,pronoun`, 0.7735 on the eight dev sets of ds-v10c; a candidate needs at most 0.003 less and less weight memory, the smallest wins.
+
+Levers tried:
+
+- Weight averaging of the four seeds (`lean.py soup`): each seed starts its decoder from different random weights, so the mean of the weights is not a working model (0.003).
+- Distillation into one mmBERT-small student (`train_parser.py --teachers`): loss 0.5 x CE on the gold frame plus 0.5 x KL to the softmax of the members' mean log-softmax (what greedy decodes), on frame, pointer and BIO steps, teacher-forced on the gold frame. Extra text (`distill.py`): 31,369 synthetic sentences no dataset uses (validator drops of every command run with the slot markup removed, plus rows left out of training), none from a dev edit id, 1,237 near-copies of the real set dropped by `leak.py`; labelled with the ensemble's greedy frame and added to train_cat (167,764 rows in all). No DeepSeek call.
+- Depth: only the lowest 12 of the 22 encoder layers (`--hf-layers 12`).
+- Weight-only ggml quantisation, simulated in torch (`lean.py quant`): every encoder matrix and the embedding in Q8_0 or Q4_0 blocks of 32 (54.8M weights), decoder and norms f16 (5.5M). The final round trip matches candle's `from_float` from the f16 weights; the rows marked * used an earlier round trip (f32 source, rounded scale), which differs in the last digit.
+
+| candidate | dev | challenge | dev_s2 | dev_s3 | dev_s4 | dev_s5 | dev_s6 | dev_s7 | mean | mean conv,pronoun | weights MB | ms median / p95 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| reference: ensemble v10 s0 to s3 | 0.888 | 0.861 | 0.843 | 0.736 | 0.828 | 0.729 | 0.659 | 0.644 | 0.7729 | 0.7735 | 482 | 127.5 / 306.6 |
+| ensemble v10 s0 to s3, Q8_0 | 0.888 | 0.861 | 0.843 | 0.736 | 0.828 | 0.729 | 0.659 | 0.644 | 0.7729 | 0.7735 | 277 | candle |
+| p-v10-s1 (one seed) | 0.877 | 0.841 | 0.831 | 0.707 | 0.803 | 0.710 | 0.653 | 0.626 | 0.7553 | 0.7560 | 120.5 | 30.5 / 68.8 |
+| p-v10-s1, Q8_0 * | 0.877 | 0.841 | 0.832 | 0.709 | 0.803 | 0.705 | 0.655 | 0.624 | 0.7551 | 0.7558 | 69.2 | candle |
+| p-v10-s1, Q4_0 * | 0.841 | 0.819 | 0.815 | 0.688 | 0.787 | 0.695 | 0.623 | 0.617 | 0.7349 | 0.7356 | 41.8 | candle |
+| soup of the four seeds | 0.000 | 0.005 | 0.001 | 0.000 | 0.002 | 0.002 | 0.004 | 0.009 | 0.003 | 0.003 | 120.5 | |
+| lean-kd-c: student, train_cat, 10k steps | 0.887 | 0.841 | 0.830 | 0.721 | 0.824 | 0.724 | 0.625 | 0.637 | 0.7605 | 0.7612 | 120.5 | |
+| lean-kd-p: student, + pool, 10k steps | 0.868 | 0.847 | 0.844 | 0.733 | 0.831 | 0.722 | 0.653 | 0.653 | 0.7683 | 0.7689 | 120.5 | 31.3 / 67.8 |
+| lean-kd-p, Q8_0 * | 0.868 | 0.845 | 0.845 | 0.728 | 0.836 | 0.724 | 0.657 | 0.655 | 0.7693 | 0.7699 | 69.2 | candle |
+| lean-kd-p12: student, + pool, 12 layers | 0.865 | 0.821 | 0.824 | 0.716 | 0.815 | 0.717 | 0.608 | 0.613 | 0.7469 | 0.7473 | 82.1 | 24.2 / 57.8 |
+| lean-kd-pc: lean-kd-p + 5k steps at kd 0.7 | 0.884 | 0.845 | 0.830 | 0.721 | 0.819 | 0.715 | 0.642 | 0.648 | 0.7628 | 0.7631 | 120.5 | |
+| lean-kd-p16: student, + pool, 16k steps | 0.887 | 0.830 | 0.838 | 0.731 | 0.814 | 0.729 | 0.666 | 0.673 | 0.7700 | 0.7710 | 120.5 | 30.6 / 65.8 |
+| lean-kd-p16, Q8_0 (chosen by the rule) | 0.887 | 0.832 | 0.838 | 0.728 | 0.814 | 0.729 | 0.666 | 0.670 | 0.7696 | 0.7706 | 69.2 | candle |
+
+(route_edit per set after `conv,pronoun`; mean without and with the rules; weights in f16 or ggml block bytes; ms per sentence in torch on one CPU thread of the M1 Pro, 200 dev sentences, tokenize + encode + constrained greedy, `lean.py cost`. The torch simulation of Q8_0 runs f32 weights, so its latency says nothing; candle's quantised matmul has to be timed in the Rust runtime. lean-kd-p16 in f16 equals f32 on dev, `export_hf.json`.)
+
+Reading:
+
+- The pool of unused synthetic sentences is the largest single gain (+0.8 points, lean-kd-c to lean-kd-p); 16k instead of 10k steps adds 0.2 more, and the best checkpoint of lean-kd-p16 was its last, so the student had not finished learning. Continuing a student at kd 0.7 lowered it.
+- Twelve layers cost 2.2 points and save 7 ms median: the decoder loop takes a large share of the time.
+- Q8_0 moves no mean by more than 0.001; Q4_0 costs 2 points.
+- By the rule, lean-kd-p16 in Q8_0 replaces the reference: 0.7706, 0.0029 below it, at 69 MB of weights instead of 482. The margin is at the edge of the rule; in f16 the student scores 0.7710.
+- The real set (seen, report only, `probes/real-eval/RESULT.md` "Parser v10 lean") does not follow: the student gets 44 of 102 eval rows exact, the four-seed ensemble 56 (p 0.0075). The student reads Noa's sentences like one seed (38 to 51 of 102 for the four seeds). Distillation on synthetic text carried the ensemble's dev score, not its lead on real sentences, which the dev sets never showed. The four-seed ensemble in Q8_0 matches the f16 ensemble on dev and on the real set at 277 MB.
+
+Modal: five student runs on L4 or A10G (Modal does not log which), 21 to 71 minutes of training each, about 4 GPU hours in all, 3 to 4.5 $ in credits; two earlier spawns failed at start because another session redeployed the shared app (`SYNTHEXIS_MODAL_APP` now gives a session its own deployment).

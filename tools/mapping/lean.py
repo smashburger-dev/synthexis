@@ -14,7 +14,7 @@ cost: f16 weight bytes and median / p95 ms per sentence (tokenize, encode,
 constrained greedy; an ensemble decodes as frame_parser.beam at k 1) over
 the first 200 rows of dev, one CPU thread, as export_hf.py measures.
 soup: a run dir whose model.pt is the mean of the runs' weights.
-quant: a run dir whose model.pt holds the weights after a round trip
+quant: a run dir whose model.pt holds the f16 weights after a round trip
 through ggml Q8_0 or Q4_0 (blocks of 32 along the input dimension, f16
 scale), as candle stores them, for every 2-d encoder matrix and the
 embedding; the frame decoder stays f16. decode_eval.py scores these dirs
@@ -85,17 +85,18 @@ def soup(a) -> None:
 
 
 def ggml_round_trip(w: torch.Tensor, bits: int) -> torch.Tensor:
-    """Quantise and dequantise rows of w in blocks of 32 like ggml."""
+    """Quantise and dequantise rows of w in blocks of 32 as candle's
+    from_float does: the f32 scale quantises, its f16 copy dequantises."""
     b = w.float().reshape(-1, 32)
     if bits == 8:
-        d = (b.abs().amax(1, keepdim=True) / 127).half().float()
+        d = b.abs().amax(1, keepdim=True) / 127
         q = torch.where(d > 0, b / d, torch.zeros_like(b)).round()
-        return (q * d).reshape(w.shape)
+        return (q * d.half().float()).reshape(w.shape)
     idx = b.abs().argmax(1, keepdim=True)
-    d = (b.gather(1, idx) / -8).half().float()
+    d = b.gather(1, idx) / -8
     q = torch.where(d != 0, b / d, torch.zeros_like(b))
     q = (q + 8.5).floor().clamp(0, 15)
-    return ((q - 8) * d).reshape(w.shape)
+    return ((q - 8) * d.half().float()).reshape(w.shape)
 
 
 def quant(a) -> None:
@@ -103,7 +104,7 @@ def quant(a) -> None:
     out, qn, rest = {}, 0, 0
     for k, v in sd.items():
         if k.startswith("hf.") and v.dim() == 2 and v.shape[-1] % 32 == 0:
-            out[k] = ggml_round_trip(v, a.bits)
+            out[k] = ggml_round_trip(v.half(), a.bits)  # runtime holds f16
             qn += v.numel()
         else:
             out[k] = v.half().float() if v.is_floating_point() else v
