@@ -40,12 +40,12 @@ Why not SAM 3.1 in real time from the plugin: 30 fps x 3600 s = 108,000 frames p
 
 ## The student models
 
-Measured on the M1 Pro (probes B and C): the student candidates need 0.35 to 0.74 ms per inference on the Neural Engine. Apple Vision needs 18.4 ms for hand pose alone and 29.6 ms (p95 46.6 ms) for hand, face and body together. So the students run live and Apple Vision only runs offline as a teacher.
+Measured on the M1 Pro (probes B and C): the student candidates need 0.35 to 0.74 ms per inference on the Neural Engine. Apple Vision needs 18.4 ms for hand pose alone and 29.6 ms (p95 46.6 ms) for hand, face and body together. So the students run live. Apple Vision stays an eval baseline and optional fallback: Apple's terms forbid training on its output, so MediaPipe Hand Landmarker is the offline keypoint teacher.
 
 - synthexis-seg: semantic masks [background, person, face, eye, mouth, hand, object], at most 4M parameters, CoreML FP16 on the Neural Engine. Front-runner: MobileNetV4-Conv-Small + LR-ASPP head, 1.51M parameters, 0.48 ms at 256 px.
 - synthexis-hand: hand crop 128 px to 21 keypoints + 5 finger-state logits, at most 2.5M parameters. Front-runner: MobileNetV3-Small, 1.52M parameters, 0.35 ms.
 - Per frame: one seg pass + two hand crops is about 1.2 ms. Total parameters about 3M, under the 10M target with room to grow.
-- Labels: SAM 3.1 masks for segmentation; Apple Vision keypoints computed offline on our own recordings for the keypoint head; finger states from the recording script (each segment is one known state), so no labeler can invent them. Muse Spark Open only checks synthetic images.
+- Labels: SAM 3.1 masks for segmentation; hand keypoints computed offline on our own recordings for the keypoint head: MediaPipe Hand Landmarker (Apache-2.0) first, SAM 3D Body (Meta) for the hands MediaPipe misses, kept only where they match a SAM hand ([result](../probes/hand-keypoints/RESULT.md)); finger states from the recording script (each segment is one known state), so no labeler can invent them. Muse Spark Open only checks synthetic images.
 - Eval gate (held-out session recorded on another day, never trained on): mIoU vs teacher >= 0.85 for person, face, hand and >= 0.70 for eye, mouth; finger-state accuracy >= 0.95; mouth-open and hand-openness signal MAE <= 0.05; seg p95 <= 3 ms and hand p95 <= 1.5 ms on the M1 Pro.
 
 ## Demo storyboard (3:00)

@@ -97,9 +97,11 @@ sources:
 perception:
   # Probe C (M1 Pro, 1280x720): Vision hand 18.4 / 27.8 ms (median / p95), face landmarks 14.5 / 24.6,
   # body 15.4 / 20.4, hand+face+body in one call 29.6 / 46.6 ms. Too slow to run live next to the students.
-  perc.vision.hand: {what: "Apple Vision hand pose, 2 hands x 21 keypoints", role: "offline teacher for synthexis-hand keypoints; eval baseline; optional live fallback at reduced rate", status: planned}
+  perc.vision.hand: {what: "Apple Vision hand pose, 2 hands x 21 keypoints", role: "eval baseline; optional live fallback at reduced rate; never a training teacher (Apple DPLA 3.2, probes/licence-check)", status: planned}
+  perc.teacher.hand: {what: "Merged keypoint teacher for synthexis-hand: per SAM 3.1 hand the MediaPipe Hand Landmarker (Apache-2.0) keypoints, else SAM 3D Body's; chirality from SAM 3D Body where it saw the hand", role: "keypoint targets in data/keypoints/<s>/cam0/keypoints_teacher.jsonl (38,004 hands, S4 7,185 held out); only SAM-matched hands", status: done, see: probes/hand-keypoints/RESULT.md}
+  perc.teacher.hand_sam3d: {what: "SAM 3D Body (facebook/sam-3d-body-dinov3, SAM License) hand decoder on Modal A10G, prompted with the SAM person box, every second SAM-hand frame", role: "fills SAM hands MediaPipe misses (fists, occlusion, objects); chirality 99.7-100 % vs protocol; fingertips end short of MediaPipe's", status: done, cost: "5.36 $ (Modal billing 2026-11-02)", see: probes/hand-keypoints/RESULT.md}
   perc.vision.face: {what: "Apple Vision face landmarks + yaw/pitch/roll", role: "offline eval baseline for face features", status: planned}
-  perc.vision.body: {what: "Apple Vision body pose, 19 joints", role: "offline teacher for a later body head (v2)", status: planned}
+  perc.vision.body: {what: "Apple Vision body pose, 19 joints", role: "eval baseline for a later body head (v2); not a teacher (Apple terms)", status: planned}
   perc.seg:
     what: "synthexis-seg student: semantic masks [background, person, face, eye, mouth, hand, object], CoreML FP16 on the Neural Engine"
     role: "every frame: hand boxes for crops, face parts, body silhouette, arbitrary objects, canvas masks, cut-outs"
@@ -107,7 +109,7 @@ perception:
     candidates: "probe B: MobileNetV4-Conv-Small + LR-ASPP 1.51M params, 0.48 / 0.59 ms at 256 px and 0.66 / 1.62 ms at 320 px (median / p95, ANE); LRASPP-MobileNetV3-Large 3.22M, 0.74 / 1.67 ms at 256 px"
     status: planned
   perc.hand:
-    what: "synthexis-hand student: hand crop 128 px -> 21 keypoints (teacher: Apple Vision run offline on our recordings) + 5 finger-state logits (teacher: recording script)"
+    what: "synthexis-hand student: hand crop 128 px -> 21 keypoints (teacher: MediaPipe Hand Landmarker run offline on our recordings, hands matched to SAM, probes/hand-keypoints/RESULT.md; Apple Vision may not teach, Apple terms) + 5 finger-state logits (teacher: recording script)"
     role: "all live finger features: per-finger extension, spread, openness, discrete finger states"
     params_budget: "<= 2.5M"
     candidates: "probe B: MobileNetV3-Small 1.52M params 0.35 / 0.48 ms, MobileNetV4-Conv-Small 2.50M 0.38 / 0.55 ms (median / p95, ANE, 128 px)"
@@ -279,7 +281,7 @@ budget:
     finger_state_accuracy: 0.95
     signal_mae: {mouth_open: 0.05, hand_openness: 0.05}
   budget.money:
-    modal_usd: "credits: 25 until 2026-10-31 (expires), 30 from 2026-11-01; plus up to 12.50 paid overage that Noa allows (real money, use only when needed). Spent by 2026-10-27: about 18.2 (S1 labels 17.51, computed from container seconds, 2x over estimate because post-processing ran on the H100). Modal billing report 2026-10-29 (workspace billing API, gross): October total 24.996 (Oct 1-2: 4.15, Oct 19: 0.11, Oct 26: 0.48, Oct 27: 19.39, Oct 28: 0.88), so the October credit is used up and every run before 2026-11-01 comes out of the 12.50 overage. Noa 2026-10-29: label S2 today; caps pilot 0.75, S1 mug/pen redo 0.30, S2 6.50; students train only after S4 is labelled. Spent 2026-10-29 (method GPU seconds): pilot 0.17, S1 redo about 0.07, S2 2.76, S2 reverse check 0.26. Students train on Modal too (Noa 2026-10-27), as efficiently as possible. Every paid run: pilot chunk, runtime spend guard, per-run cap."
+    modal_usd: "credits: 25 until 2026-10-31 (expires), 30 from 2026-11-01; plus up to 12.50 paid overage that Noa allows (real money, use only when needed). Spent by 2026-10-27: about 18.2 (S1 labels 17.51, computed from container seconds, 2x over estimate because post-processing ran on the H100). Modal billing report 2026-10-29 (workspace billing API, gross): October total 24.996 (Oct 1-2: 4.15, Oct 19: 0.11, Oct 26: 0.48, Oct 27: 19.39, Oct 28: 0.88), so the October credit is used up and every run before 2026-11-01 comes out of the 12.50 overage. Noa 2026-10-29: label S2 today; caps pilot 0.75, S1 mug/pen redo 0.30, S2 6.50; students train only after S4 is labelled. Spent 2026-10-29 (method GPU seconds): pilot 0.17, S1 redo about 0.07, S2 2.76, S2 reverse check 0.26. Students train on Modal too (Noa 2026-10-27), as efficiently as possible. Every paid run: pilot chunk, runtime spend guard, per-run cap. November (30 credit from 2026-11-01), Modal billing report 2026-11-02 06:40 CET: synthexis-parser 9.48, synthexis-sam-label 2.29 (S3, S4), synthexis-sam3d-body 0.005 (two failed pilots: import bug, then HF 403), total 11.78. Update 2026-11-02 15:05 CET: parser 12.06, sam-label 2.29, sam3d-body 5.36 (hand keypoints, stride 2), total 19.71, so 10.29 left for student training."
     meta_api_usd: 150
     baseten_usd: "100 granted 2026-10-27; Muse Spark Open Model API ($1.25 per 1M input, $4.25 per 1M output tokens, litellm/openrouter listing 2026-10)"
     fireworks_usd: "25 if granted"
@@ -301,7 +303,7 @@ plugin:
 decisions:
   D1: {topic: process model, chosen: "perception in-process on its own threads, one engine per host process shared by all instances; host parameter edits are dispatched to the main thread (P2: FL records only those with the window closed)", alt: "separate helper app over shared memory (crash isolation)", status: proposed}
   D2: {topic: plugin format, chosen: "nih-plug VST3 + CLAP now, AUv2 via clap-wrapper later", status: proposed}
-  D3: {topic: keypoints, chosen: "students only at runtime: synthexis-seg + synthexis-hand (about 1.2 ms per frame on the ANE); Apple Vision runs offline as keypoint teacher and eval baseline", why: "probe C: Vision hand+face+body 29.6 ms median, 46.6 ms p95 per frame vs probe B students under 1 ms each", alt: "Vision live as fallback at 10-15 fps", status: proposed, changed: "2026-10-26 after probes B and C (was: Vision live in v1)"}
+  D3: {topic: keypoints, chosen: "students only at runtime: synthexis-seg + synthexis-hand (about 1.2 ms per frame on the ANE); MediaPipe Hand Landmarker runs offline as keypoint teacher (perc.teacher.hand), Apple Vision only as eval baseline because Apple's terms forbid training on its output", why: "probe C: Vision hand+face+body 29.6 ms median, 46.6 ms p95 per frame vs probe B students under 1 ms each", alt: "Vision live as fallback at 10-15 fps", status: proposed, changed: "2026-10-26 after probes B and C (was: Vision live in v1)"}
   D4: {topic: SAM 3.1 path, chosen: "open weights on Modal for bulk labels (SAM License allows derivatives and commercial use); Meta API for snapshots and a cross-check sample", why: "probe A real weights: H100 video mode about 75 ms/frame per concept = $0.082 per 1000 frames vs API $0.20", status: proposed}
   D5: {topic: gesture labels, chosen: "labels from the recording script; Muse Spark Open only checks synthetic data", status: proposed}
   D6: {topic: parameter bridge, chosen: "macros + MIDI out everywhere; FL Python script for discovery and direct control", status: proposed}
