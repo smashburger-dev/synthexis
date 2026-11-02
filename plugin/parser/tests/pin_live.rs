@@ -22,16 +22,16 @@ fn gesture(text: &str, chip: &str, source: &str) -> Pin {
 }
 
 #[test]
-fn pinned_frames() {
+fn pinned_frames() -> Result<(), String> {
     let Some(dir) = std::env::var_os("SYNTHEXIS_PARSER_DIR").map(PathBuf::from) else {
         eprintln!("SYNTHEXIS_PARSER_DIR not set, skipped");
-        return;
+        return Ok(());
     };
     let parser = match Parser::load(&dir, &["p-v9-s0", "p-v9-s1"], &Options::default()) {
         Ok(p) => p,
         Err(e) => {
             eprintln!("parser not loaded: {e:#}");
-            return;
+            return Ok(());
         }
     };
     let cases: Vec<(&str, Vec<Pin>)> = {
@@ -47,10 +47,7 @@ fn pinned_frames() {
         ]
     };
     for (text, pins) in &cases {
-        let p = match parser.parse(text) {
-            Ok(p) => p,
-            Err(e) => panic!("parse failed: {e:#}"),
-        };
+        let p = parser.parse(text).map_err(|e| format!("parse failed: {e:#}"))?;
         let f = pin(&p.items, pins);
         eprintln!("{text}\n  parser: {}\n  pinned: {}", p.frame().join(" "), f.frame().join(" "));
         let params: Vec<&str> = pins
@@ -61,7 +58,8 @@ fn pinned_frames() {
             })
             .collect();
         for id in params {
-            assert!(f.routes().any(|r| r.param.as_deref() == Some(id)), "{id} not pinned in {text}");
+            assert!(f.routes().any(|r| r.params().any(|p| p == id)), "{id} not pinned in {text}");
         }
     }
+    Ok(())
 }

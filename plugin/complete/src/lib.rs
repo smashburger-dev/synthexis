@@ -103,6 +103,8 @@ pub struct Suggestion {
     pub via: Option<String>,
     /// The typed text is a prefix of the label or of `via`.
     pub prefix: bool,
+    /// Offered from a weak gesture position: list only, no ghost text.
+    pub weak: bool,
 }
 
 impl Suggestion {
@@ -120,6 +122,7 @@ impl Suggestion {
     /// more characters with a good score. Fuzzy matches stay in the list.
     pub fn ghost_worthy(&self, text: &str) -> bool {
         self.prefix
+            && !self.weak
             && self.score >= GHOST_MIN_SCORE
             && text
                 .get(self.replace.clone())
@@ -265,7 +268,9 @@ impl Engine {
             let first = first.to_string();
             let replace = span.start..cursor;
             let wb = WORD_BONUS * (span.words - 1) as f32;
-            if context::gesture_position(&text[..span.start]) {
+            let pos = context::gesture_position(&text[..span.start]);
+            if pos != context::GesturePos::No {
+                let weak = pos == context::GesturePos::Weak;
                 self.gindex.with_word_prefix(&first, &mut sc.seen, &mut sc.ids);
                 for &i in &sc.ids {
                     let k = &self.gindex.keys[i as usize];
@@ -282,7 +287,7 @@ impl Engine {
                     };
                     let key = format!("gesture:{}/{:?}/{}", g.source, g.shape, g.pol);
                     let score = m + GESTURE_BONUS + wb + self.recency(&chip.id());
-                    keep(Suggestion { chip, score, replace: replace.clone(), via: None, prefix }, key);
+                    keep(Suggestion { chip, score, replace: replace.clone(), via: None, prefix, weak }, key);
                 }
             }
             let Some(p) = &self.plugin else { continue };
@@ -323,7 +328,7 @@ impl Engine {
                 };
                 let score = m + wb + self.class_adjust(p.class[i as usize], switchy) + self.recency(&chip.id());
                 let key = chip.id();
-                keep(Suggestion { chip, score, replace: replace.clone(), via, prefix }, key);
+                keep(Suggestion { chip, score, replace: replace.clone(), via, prefix, weak: false }, key);
             }
         }
         let mut out: Vec<Suggestion> = best.into_values().collect();
@@ -333,6 +338,7 @@ impl Engine {
                 .then_with(|| a.chip.label().len().cmp(&b.chip.label().len()))
                 .then_with(|| param_index(&a.chip).cmp(&param_index(&b.chip)))
                 .then_with(|| a.chip.label().cmp(b.chip.label()))
+                .then_with(|| a.chip.id().cmp(&b.chip.id()))
         });
         out.truncate(k);
         out

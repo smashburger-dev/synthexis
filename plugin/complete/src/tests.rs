@@ -100,6 +100,20 @@ fn gesture_german_after_wenn_ich_die() {
 }
 
 #[test]
+fn weak_position_lists_gesture_without_ghost() {
+    let e = engine();
+    let t = "i want my mou";
+    let s = top(&e, t);
+    assert_eq!(s[0].chip.id(), "gesture:mouth.open");
+    assert!(s[0].weak);
+    assert!(!s[0].ghost_worthy(t));
+    let t = "cutoff hoch wenn ich die linke Fau";
+    let s = top(&e, t);
+    assert_eq!(s[0].chip.label(), "Faust schließen");
+    assert!(s[0].ghost_worthy(t));
+}
+
+#[test]
 fn gesture_at_sentence_start() {
     let e = engine();
     assert_eq!(top(&e, "Fau")[0].chip.label(), "Faust schließen");

@@ -13,7 +13,7 @@ Noa's idea from 2026-11-01: while the user types a mapping sentence, the field c
 Two kinds of items:
 
 1. Parameters of the picked plugin, matched by their name and through the glossary phrases of their param-sense class: "cut" offers "Filter 1 Freq" through "Cutoff", "Filter auf" through "Filter aufmachen". A ctl.switch parameter becomes a toggle target, any other a param target.
-2. Gestures from the glossary phrases of the ontology sources and hand shapes ("spr" offers "spread amount", "Fau" offers "Faust"). Only where a gesture is named: sentence start, or after "when I", "if I", "wenn ich", "sobald ich", "with", "mit", "by", "follow" and similar, articles skipped ("wenn ich die Fau"). Query spans never start with an article or a trigger word, so "the res" at sentence start is the query "res" and offers parameters, not gestures.
+2. Gestures from the glossary phrases of the ontology sources and hand shapes ("spr" offers "spread amount", "Fau" offers "Faust"). Only where a gesture is named. Strong positions (list and ghost text): sentence start, or after "when I", "if I", "wenn ich", "sobald ich", "with", "mit", "by", "follow" and similar, articles and side words skipped ("wenn ich die linke Fau"). Weak positions (list only, never ghost text): after a possessive ("i want my mou") and after "and", "und", "then", "dann", "indem ich", "dass ich" ("pinch und dre"). Query spans never start with an article, a side word or a trigger word, so "the res" at sentence start is the query "res" and offers parameters, not gestures.
 
 ## Where the code is
 
@@ -38,20 +38,29 @@ The plugin reads the data from `$SYNTHEXIS_COMPLETION_DIR`, else `~/Library/Appl
 
 `synthexis_parser::pin(items, pins)` takes the decoded frame and the chips as byte ranges of the submitted sentence:
 
-- A parameter chip goes to the route whose PNAME span overlaps it, else to the route whose target has the chip's class, else to the only route with a param or toggle target when one chip is left. That route's target becomes `T:param:<class>` (`T:toggle:` for a switch, keeping the parser's effect family if it chose a toggle) and the route carries the parameter id, printed as `@<id>` after the target.
-- A gesture chip goes to the route that already has its source; the rest go in sentence order when there are as many free routes as gesture chips, else each to the free route nearest to it (by its spans and pinned parameter). The route's `S:` becomes the chip's source; a shape chip also sets `shape:`.
-- A chip no route takes gets a route of its own; `I:none` then becomes `I:map`.
+Chips pin tokens, not routes: since v11 one route can drive several targets (fan-out, "resonance and cutoff") and listen to several sources (fan-in, "smile and move my left hand").
+
+- A parameter chip takes the free target next to the PNAME span that overlaps it, else a free target of its class (any toggle for a switch), else the only free param or toggle target when one chip is left. That target becomes `T:param:<class>` (`T:toggle:` for a switch, keeping the parser's effect family if it chose a toggle) and carries the parameter id, printed as `@<id>` after it. A lone parameter name (v11's `T:param:macro` or `T:param:other` with `PNAME`) goes by the PNAME rule.
+- A gesture chip takes the free `S:` token that already names its movement; the rest go in sentence order when there are as many free `S:` tokens as chips, else each to the nearest route with a free `S:` token (a route without any `S:` has one slot). The token becomes the chip's source; a shape chip also sets the `shape:` of that token.
+- Sources are folded like v11's `conventions.py`: a hand.fist chip sets `S:hand.openness`, eye.closed sets `S:eye.open`. INV flips with the fold when the chip replaces another movement and stays as the parser set it when the token already names the same movement.
+- `side:` tokens stay as the parser wrote them; pin.rs does not carry sides over (v11 does that itself, and carrying in pin.rs scored worse).
+- A chip nothing takes gets a route of its own; `I:none` then becomes `I:map`.
+
+Measured on parser v11 (four seeds, Q8_0, `rules.py conv,pronoun`) over the nine synthetic dev sets of ds-v11c with a simulated user (`probes/completion-v11/RESULT.md`): route_edit 0.776 without chips, 0.683 with the first pin.rs, 0.802 now; above the unpinned frame on every dev set. The gesture list finds 60 % of the gold gesture spans while they are typed (22 % before), with false gesture ghosts on 7.1 % of the other words.
 
 Checked with the shipped v9 ensemble on four synthetic sentences (`plugin/parser/tests/pin_live.rs`, runs when `SYNTHEXIS_PARSER_DIR` is set): every parameter chip lands in a route, including where the parser chose the wrong class (`fx.eq.freq` for "Filter 1 Freq") or left the target out (only `PNAME =filter 1`).
 
 ## Tests
 
-- `plugin/complete`: 31 tests on synthetic vocabularies and sentences (never the real sets in `data/mapping/eval/`): fuzzy score, prefix index, query spans, gesture positions, switching words, ranking, recent picks, chip text edits, latency.
-- `plugin/parser/src/pin.rs`: 13 tests on hand-built frames.
+- `plugin/complete`: 32 tests on synthetic vocabularies and sentences (never the real sets in `data/mapping/eval/`): fuzzy score, prefix index, query spans, gesture positions, switching words, ranking, recent picks, chip text edits, latency.
+- `plugin/parser/src/pin.rs`: 18 tests on hand-built frames (fan-out, fan-in, fold, side kept).
 - `plugin/synthexis/src/sentence.rs`: 5 headless egui tests that send key events through the field: Tab accepts and keeps the focus, arrows and Enter pick from the list, Esc dismisses, space never accepts, Tab with nothing to accept inserts nothing, chips become pins.
 - Checked by hand in the standalone build: plugin picker, ghost text, the list, chips. Esc and the second Tab fix were checked only by the headless tests: the window sat on another Space for the second round.
 
 ## Open
+
+- The Rust runtime still loads v9 and has no `rules.py conv,pronoun`; with v11 runs it needs those rules ported (parser-runtime session). pin.rs folds only the chips' own sources.
+- Gesture ghost text finds only 4.4 % of the gesture spans on the dev sets: the glossary phrases rarely start with the words the sentences use ("nach links drehen" against "Hand drehen"). Phrases indexed from the middle, or ghost text on fuzzy matches, would raise it; both need a measurement first.
 
 - Learning from picks: recent picks only add a fixed bonus that decays by position. A per-user count of (typed prefix, picked id), saved with the plugin state, would let "cut" rank "Filter 1 Freq" over "Cutoff Rand" after a few picks. Weights are hand-set on synthetic sentences; nothing is tuned on Noa's sentences.
 - Plugin picker: a stand-in combo over the exported plugins until the FL target picker (session fl-target-picker) gives the live inventory. The export holds 10 demo plugins; `--plugin` adds more.

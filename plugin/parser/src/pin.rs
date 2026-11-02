@@ -2,10 +2,12 @@
 //! frame. The user picked these parts while typing, so they win over what
 //! the parser guessed:
 //!
-//! - a parameter chip goes to the route whose PNAME span covers it, else to
-//!   the route whose target has the chip's class, else to the only route
-//!   with a parameter or toggle target; that route's target becomes
-//!   T:param:<class> (T:toggle for a switch) and carries the parameter id;
+//! - a parameter chip goes to a target, not a whole route: one route may
+//!   drive several targets (fan-out, "resonance and cutoff"). It takes the
+//!   free target next to the PNAME span that covers it, else a free target
+//!   of its class, else the only free parameter or toggle target when it is
+//!   the last chip; that target becomes T:param:<class> (T:toggle for a
+//!   switch) and carries the parameter id;
 //! - a gesture chip goes to the route that already has its source; the
 //!   others go in sentence order to the free routes when their counts are
 //!   equal, else each to the free route nearest to it (by its spans and
@@ -37,9 +39,11 @@ pub struct Pin {
 pub struct Route {
     /// Items between <route> and </route>.
     pub items: Vec<Item>,
-    /// Pinned parameter id.
-    pub param: Option<String>,
+    /// Pinned parameter id per item: Some on a pinned target token.
+    pub pinned: Vec<Option<String>>,
     pub source_pinned: bool,
+    /// Pinned source per item: true on an S: token a gesture chip set.
+    src_pinned: Vec<bool>,
     /// Bytes from the first to the last span or pinned chip.
     anchor: Option<(usize, usize)>,
 }
@@ -69,7 +73,9 @@ fn overlaps(a: (usize, usize), b: (usize, usize)) -> bool {
 
 impl Route {
     fn new(items: Vec<Item>) -> Self {
-        let mut r = Self { items, ..Self::default() };
+        let pinned = vec![None; items.len()];
+        let src_pinned = vec![false; items.len()];
+        let mut r = Self { items, pinned, src_pinned, ..Self::default() };
         let spans: Vec<(usize, usize)> = r
             .items
             .iter()
@@ -92,30 +98,90 @@ impl Route {
             .map_or(usize::MAX, |a| a.0.saturating_sub(b.1).max(b.0.saturating_sub(a.1)))
     }
 
-    /// Byte ranges of the PNAME spans.
-    fn pnames(&self) -> impl Iterator<Item = (usize, usize)> + '_ {
-        self.items.windows(2).filter_map(|w| match (&w[0], &w[1]) {
-            (Item::Token(t), Item::Span { bytes, .. }) if t == "PNAME" => Some(*bytes),
-            _ => None,
+    /// Pinned parameter ids in item order.
+    pub fn params(&self) -> impl Iterator<Item = &str> {
+        self.pinned.iter().flatten().map(String::as_str)
+    }
+
+    fn insert(&mut self, i: usize, it: Item) {
+        self.items.insert(i, it);
+        self.pinned.insert(i, None);
+        self.src_pinned.insert(i, false);
+    }
+
+    fn remove(&mut self, i: usize) {
+        self.items.remove(i);
+        self.pinned.remove(i);
+        self.src_pinned.remove(i);
+    }
+
+    /// Source slots a gesture chip can take: the unpinned S: tokens (a
+    /// fan-in route has several); a route without any S: has one slot.
+    fn free_sources(&self) -> Vec<Option<usize>> {
+        let s: Vec<usize> = (0..self.items.len()).filter(|&i| tok(&self.items[i]).starts_with("S:")).collect();
+        if s.is_empty() {
+            return if self.source_pinned { Vec::new() } else { vec![None] };
+        }
+        s.into_iter().filter(|&i| !self.src_pinned[i]).map(Some).collect()
+    }
+
+    /// The unpinned S: token that already names the chip's movement.
+    fn own_source(&self, source: &str, shape: Option<&str>) -> Option<usize> {
+        let src = fold(source).0;
+        self.free_sources().into_iter().flatten().find(|&i| {
+            tok(&self.items[i]).strip_prefix("S:").is_some_and(|s| fold(s).0 == src)
+                && shape.is_none_or(|sh| self.shape_of(i).is_some_and(|j| tok(&self.items[j]) == format!("shape:{sh}")))
         })
     }
 
-    /// Index of the first T: token.
-    fn target(&self) -> Option<usize> {
-        self.items.iter().position(|it| tok(it).starts_with("T:"))
+    /// The shape: token that belongs to the S: token at `i`.
+    fn shape_of(&self, i: usize) -> Option<usize> {
+        (i + 1..self.items.len())
+            .take_while(|&j| !tok(&self.items[j]).starts_with("S:"))
+            .find(|&j| tok(&self.items[j]).starts_with("shape:"))
     }
 
-    /// The target is a plugin parameter or a toggle (what a chip can pin).
-    fn param_target(&self) -> Option<usize> {
-        self.items
-            .iter()
-            .position(|it| tok(it).starts_with("T:param:") || tok(it).starts_with("T:toggle:"))
+    fn is_param_target(t: &str) -> bool {
+        t.starts_with("T:param:") || t.starts_with("T:toggle:")
     }
 
-    fn target_class(&self) -> Option<&str> {
-        self.param_target().map(|i| {
+    /// Unpinned parameter and toggle targets.
+    fn free_targets(&self) -> Vec<usize> {
+        (0..self.items.len())
+            .filter(|&i| self.pinned[i].is_none() && Self::is_param_target(tok(&self.items[i])))
+            .collect()
+    }
+
+    /// The free target a chip under the PNAME span at `p` names: the free
+    /// parameter target nearest to it, else the first unpinned target of any
+    /// kind (a macro or MIDI guess), else none (a target gets inserted).
+    fn target_for_pname(&self, p: usize) -> Option<usize> {
+        self.free_targets()
+            .into_iter()
+            .min_by_key(|&i| i.abs_diff(p))
+            .or_else(|| {
+                (0..self.items.len())
+                    .find(|&i| self.pinned[i].is_none() && tok(&self.items[i]).starts_with("T:"))
+            })
+    }
+
+    /// Item indices of the PNAME tokens whose span overlaps `b`.
+    fn pname_at(&self, b: (usize, usize)) -> Option<usize> {
+        (0..self.items.len().saturating_sub(1)).find(|&i| {
+            tok(&self.items[i]) == "PNAME"
+                && matches!(&self.items[i + 1], Item::Span { bytes, .. } if overlaps(*bytes, b))
+        })
+    }
+
+    /// A free target of the chip's class (any toggle for a switch).
+    fn target_of_class(&self, class: &str, switch: bool) -> Option<usize> {
+        self.free_targets().into_iter().find(|&i| {
             let t = tok(&self.items[i]);
-            t.trim_start_matches("T:param:").trim_start_matches("T:toggle:")
+            if switch {
+                t.starts_with("T:toggle:")
+            } else {
+                t.strip_prefix("T:param:") == Some(class)
+            }
         })
     }
 
@@ -127,51 +193,78 @@ impl Route {
             .count()
     }
 
-    fn set_param(&mut self, id: &str, class: &str, switch: bool, at: (usize, usize)) {
-        let old = self.param_target().or_else(|| self.target());
+    /// Pins the target at `at` (None: a new target after the sources).
+    fn set_param(&mut self, target: Option<usize>, id: &str, class: &str, switch: bool, bytes: (usize, usize)) {
         let token = if switch {
             // keep the parser's effect family if it already chose a toggle
-            match old.map(|i| tok(&self.items[i])) {
+            match target.map(|i| tok(&self.items[i])) {
                 Some(t) if t.starts_with("T:toggle:") => t.to_string(),
                 _ => "T:toggle:".to_string(),
             }
         } else {
             format!("T:param:{class}")
         };
-        match old {
-            Some(i) => self.items[i] = Item::Token(token),
+        let i = match target {
+            Some(i) => {
+                self.items[i] = Item::Token(token);
+                i
+            }
             None => {
                 let i = self.after_source();
-                self.items.insert(i, Item::Token(token));
+                self.insert(i, Item::Token(token));
+                i
             }
-        }
-        self.param = Some(id.to_string());
-        self.widen(at);
+        };
+        self.pinned[i] = Some(id.to_string());
+        self.widen(bytes);
     }
 
-    fn set_source(&mut self, source: &str, shape: Option<&str>) {
-        let s = Item::Token(format!("S:{source}"));
-        match self.items.iter().position(|it| tok(it).starts_with("S:")) {
-            Some(i) => self.items[i] = s,
-            None => self.items.insert(0, s),
-        }
+    /// Sets the source slot (an S: token, or None: a new one) to the
+    /// chip's source, folded like conventions.py (closing the fist is the
+    /// hand's openness inverted). INV flips with the fold when the chip
+    /// replaces another movement; when the slot already names the same
+    /// movement only its own fold counts.
+    fn set_source(&mut self, slot: Option<usize>, source: &str, shape: Option<&str>) {
+        let (src, chip_flip) = fold(source);
+        let flip = match slot.map(|i| fold(&tok(&self.items[i])[2..])) {
+            Some((c, own_flip)) if c == src => own_flip,
+            _ => chip_flip,
+        };
+        let s = Item::Token(format!("S:{src}"));
+        let i = match slot {
+            Some(i) => {
+                self.items[i] = s;
+                i
+            }
+            None => {
+                self.insert(0, s);
+                0
+            }
+        };
+        self.src_pinned[i] = true;
         if let Some(sh) = shape {
             let t = Item::Token(format!("shape:{sh}"));
-            match self.items.iter().position(|it| tok(it).starts_with("shape:")) {
-                Some(i) => self.items[i] = t,
-                None => {
-                    let i = self.items.iter().position(|it| tok(it).starts_with("S:")).map_or(0, |i| i + 1);
-                    self.items.insert(i, t);
-                }
+            match self.shape_of(i) {
+                Some(j) => self.items[j] = t,
+                None => self.insert(i + 1, t),
+            }
+        }
+        if flip {
+            match self.items.iter().position(|it| tok(it) == "INV") {
+                Some(k) => self.remove(k),
+                None => self.insert(self.items.len(), Item::Token("INV".into())),
             }
         }
         self.source_pinned = true;
     }
+}
 
-    fn has_source(&self, source: &str, shape: Option<&str>) -> bool {
-        let s = format!("S:{source}");
-        self.items.iter().any(|it| tok(it) == s)
-            && shape.is_none_or(|sh| self.items.iter().any(|it| tok(it) == format!("shape:{sh}")))
+/// conventions.FOLD: (folded source, whether INV flips).
+fn fold(source: &str) -> (&str, bool) {
+    match source {
+        "hand.fist" => ("hand.openness", true),
+        "eye.closed" => ("eye.open", true),
+        s => (s, false),
     }
 }
 
@@ -215,7 +308,7 @@ impl Frame {
     }
 
     /// Frame strings as Parse::frame prints them; a pinned parameter shows
-    /// as "@<id>" right after its route's target.
+    /// as "@<id>" right after its target.
     pub fn frame(&self) -> Vec<String> {
         let mut out = Vec::new();
         let item = |it: &Item| match it {
@@ -227,13 +320,10 @@ impl Frame {
                 Part::Item(it) => out.push(item(it)),
                 Part::Route(r) => {
                     out.push("<route>".into());
-                    let at = r.param_target();
-                    for (i, it) in r.items.iter().enumerate() {
+                    for (it, id) in r.items.iter().zip(&r.pinned) {
                         out.push(item(it));
-                        if Some(i) == at {
-                            if let Some(id) = &r.param {
-                                out.push(format!("@{id}"));
-                            }
+                        if let Some(id) = id {
+                            out.push(format!("@{id}"));
                         }
                     }
                     out.push("</route>".into());
@@ -267,43 +357,44 @@ pub fn pin(items: &[Item], pins: &[Pin]) -> Frame {
     });
     let params: Vec<_> = params.collect();
     let mut placed = vec![false; params.len()];
-    // 1. pointer cover, 2. class
+    // 1. PNAME cover, 2. class
     for rule in 0..2 {
         for (k, &(bytes, id, class, switch)) in params.iter().enumerate() {
             if placed[k] {
                 continue;
             }
             let mut routes = f.routes_mut();
-            let hit = routes.iter_mut().find(|r| {
-                r.param.is_none()
-                    && match rule {
-                        0 => r.pnames().any(|b| overlaps(b, bytes)),
-                        _ => r.target_class() == Some(class.as_str()),
-                    }
+            let hit = routes.iter_mut().find_map(|r| {
+                let t = match rule {
+                    0 => r.pname_at(bytes).map(|p| r.target_for_pname(p)),
+                    _ => r.target_of_class(class, switch).map(Some),
+                }?;
+                Some((r, t))
             });
-            if let Some(r) = hit {
-                r.set_param(id, class, switch, bytes);
+            if let Some((r, t)) = hit {
+                r.set_param(t, id, class, switch, bytes);
                 placed[k] = true;
             }
         }
     }
-    // 3. the only free parameter route takes the only unplaced chip
+    // 3. the only free target takes the only unplaced chip
     if placed.iter().filter(|p| !**p).count() == 1 {
-        let mut free: Vec<&mut Route> = f
-            .routes_mut()
-            .into_iter()
-            .filter(|r| r.param.is_none() && r.param_target().is_some())
+        let mut routes = f.routes_mut();
+        let free: Vec<(usize, usize)> = routes
+            .iter()
+            .enumerate()
+            .flat_map(|(ri, r)| r.free_targets().into_iter().map(move |t| (ri, t)))
             .collect();
-        if let ([r], Some(k)) = (free.as_mut_slice(), placed.iter().position(|p| !p)) {
+        if let ([(ri, t)], Some(k)) = (free.as_slice(), placed.iter().position(|p| !p)) {
             let (bytes, id, class, switch) = params[k];
-            r.set_param(id, class, switch, bytes);
+            routes[*ri].set_param(Some(*t), id, class, switch, bytes);
             placed[k] = true;
         }
     }
     for (k, &(bytes, id, class, switch)) in params.iter().enumerate() {
         if !placed[k] {
             let mut r = Route::default();
-            r.set_param(id, class, switch, bytes);
+            r.set_param(None, id, class, switch, bytes);
             f.add_route(r);
         }
     }
@@ -314,32 +405,45 @@ pub fn pin(items: &[Item], pins: &[Pin]) -> Frame {
             PinWhat::Param { .. } => None,
         })
         .collect();
-    // 1. the route that already has the source
+    // 1. the S: token that already names the movement
     gestures.retain(|&(_, source, shape)| {
         let mut routes = f.routes_mut();
-        match routes.iter_mut().find(|r| !r.source_pinned && r.has_source(source, shape)) {
-            Some(r) => {
-                r.set_source(source, shape);
+        match routes.iter_mut().find_map(|r| r.own_source(source, shape).map(|i| (r, i))) {
+            Some((r, i)) => {
+                r.set_source(Some(i), source, shape);
                 false
             }
             None => true,
         }
     });
-    // 2. in order when the counts match, else nearest
-    let mut free: Vec<&mut Route> = f.routes_mut().into_iter().filter(|r| !r.source_pinned).collect();
+    // 2. in order when there are as many free source slots as chips, else
+    // each to the nearest route with a free slot
     let mut extra = Vec::new();
-    if free.len() == gestures.len() {
-        for (r, &(_, source, shape)) in free.iter_mut().zip(&gestures) {
-            r.set_source(source, shape);
+    let mut routes = f.routes_mut();
+    let slots: Vec<(usize, usize)> = routes
+        .iter()
+        .enumerate()
+        .flat_map(|(ri, r)| (0..r.free_sources().len()).map(move |k| (ri, k)))
+        .collect();
+    if slots.len() == gestures.len() {
+        // highest slot first inside a route, so earlier slots keep their index
+        let mut pairs: Vec<_> = slots.into_iter().zip(&gestures).collect();
+        pairs.sort_by(|a, b| a.0 .0.cmp(&b.0 .0).then(b.0 .1.cmp(&a.0 .1)));
+        for ((ri, k), &(_, source, shape)) in pairs {
+            let slot = routes[ri].free_sources()[k];
+            routes[ri].set_source(slot, source, shape);
         }
     } else {
         for &(bytes, source, shape) in &gestures {
-            let near = free
+            let near = routes
                 .iter_mut()
-                .filter(|r| !r.source_pinned)
+                .filter(|r| !r.free_sources().is_empty())
                 .min_by_key(|r| r.gap(bytes));
             match near {
-                Some(r) => r.set_source(source, shape),
+                Some(r) => {
+                    let slot = r.free_sources()[0];
+                    r.set_source(slot, source, shape);
+                }
                 None => extra.push((bytes, source, shape)),
             }
         }
@@ -347,7 +451,7 @@ pub fn pin(items: &[Item], pins: &[Pin]) -> Frame {
     // 3. a route of its own
     for (bytes, source, shape) in extra {
         let mut r = Route::default();
-        r.set_source(source, shape);
+        r.set_source(None, source, shape);
         r.widen(bytes);
         f.add_route(r);
     }
@@ -419,8 +523,8 @@ mod tests {
             param(t, "Reverb Mix", "p#9", "fx.reverb.mix", false),
         ];
         let f = pin(&items(&fr, t), &pins);
-        let ids: Vec<_> = f.routes().map(|r| r.param.clone()).collect();
-        assert_eq!(ids, [Some("p#1".to_string()), Some("p#9".to_string())]);
+        let ids: Vec<Vec<&str>> = f.routes().map(|r| r.params().collect()).collect();
+        assert_eq!(ids, [vec!["p#1"], vec!["p#9"]]);
     }
 
     #[test]
@@ -476,26 +580,59 @@ mod tests {
 
     #[test]
     fn gesture_chip_goes_to_nearest_route() {
-        let t = "the Filter 1 Freq follows my mouth and Reverb Mix follows a fist";
+        let t = "the Filter 1 Freq follows my mouth and Reverb Mix follows a pinch";
         let fr = [
             "I:map", "<route>", "S:hand.y", "T:param:filter.cutoff", "PNAME", "=filter 1 freq", "</route>",
             "<route>", "S:hand.y", "T:param:fx.reverb.mix", "PNAME", "=reverb mix", "</route>",
         ];
-        let pins = [gesture(t, "a fist", "hand.fist"), gesture(t, "my mouth", "mouth.open")];
+        let pins = [gesture(t, "a pinch", "hand.pinch"), gesture(t, "my mouth", "mouth.open")];
         let out = run(t, &fr, &pins);
         assert_eq!(out[2], "S:mouth.open");
-        assert_eq!(out[8], "S:hand.fist");
+        assert_eq!(out[8], "S:hand.pinch");
     }
 
     #[test]
     fn gesture_already_right_stays() {
-        let t = "fist on cutoff, mouth on reverb";
+        let t = "pinch on cutoff, mouth on reverb";
         let fr = [
-            "I:map", "<route>", "S:hand.fist", "T:param:filter.cutoff", "</route>",
+            "I:map", "<route>", "S:hand.pinch", "T:param:filter.cutoff", "</route>",
             "<route>", "S:mouth.open", "T:param:fx.reverb.mix", "</route>",
         ];
-        let out = run(t, &fr, &[gesture(t, "mouth", "mouth.open"), gesture(t, "fist", "hand.fist")]);
+        let out = run(t, &fr, &[gesture(t, "mouth", "mouth.open"), gesture(t, "pinch", "hand.pinch")]);
         assert_eq!(out, fr);
+    }
+
+    #[test]
+    fn fist_chip_folds_into_openness() {
+        let t = "when I close my fist the cutoff rises";
+        // parser read another movement: the fold flips INV
+        let fr = ["I:map", "<route>", "S:hand.pinch", "T:param:filter.cutoff", "</route>"];
+        let out = run(t, &fr, &[gesture(t, "close my fist", "hand.fist")]);
+        assert_eq!(out, ["I:map", "<route>", "S:hand.openness", "T:param:filter.cutoff", "INV", "</route>"]);
+        // parser already folded it: INV stays as the parser set it
+        let fr = ["I:map", "<route>", "S:hand.openness", "T:param:filter.cutoff", "INV", "</route>"];
+        assert_eq!(run(t, &fr, &[gesture(t, "close my fist", "hand.fist")]), fr);
+        // parser said fist without the fold: the route's own fold flips
+        let fr = ["I:map", "<route>", "S:hand.fist", "T:param:filter.cutoff", "</route>"];
+        let out = run(t, &fr, &[gesture(t, "close my fist", "hand.fist")]);
+        assert_eq!(out, ["I:map", "<route>", "S:hand.openness", "T:param:filter.cutoff", "INV", "</route>"]);
+    }
+
+    #[test]
+    fn gesture_chip_keeps_the_side() {
+        let t = "my left hand should drive the cutoff by pinching";
+        let fr = ["I:map", "<route>", "S:hand.openness", "side:left", "T:param:filter.cutoff", "</route>"];
+        let out = run(t, &fr, &[gesture(t, "pinching", "hand.pinch")]);
+        assert_eq!(out, ["I:map", "<route>", "S:hand.pinch", "side:left", "T:param:filter.cutoff", "</route>"]);
+    }
+
+    #[test]
+    fn fan_in_pins_each_source() {
+        let t = "when I smile and move my left hand sideways the osc shape moves";
+        let fr = ["I:map", "<route>", "S:face.smile", "S:hand.y", "side:left", "T:param:osc.shape", "</route>"];
+        let pins = [gesture(t, "smile", "face.smile"), gesture(t, "move my left hand sideways", "hand.x")];
+        let out = run(t, &fr, &pins);
+        assert_eq!(out, ["I:map", "<route>", "S:face.smile", "S:hand.x", "side:left", "T:param:osc.shape", "</route>"]);
     }
 
     #[test]
@@ -511,13 +648,28 @@ mod tests {
 
     #[test]
     fn gesture_and_param_without_routes_share_one() {
-        let t = "Faust schließen Filter 1 Freq";
+        let t = "Pinch machen Filter 1 Freq";
         let pins = [
-            gesture(t, "Faust schließen", "hand.fist"),
+            gesture(t, "Pinch machen", "hand.pinch"),
             param(t, "Filter 1 Freq", "p#205", "filter.cutoff", false),
         ];
         let out = run(t, &["I:none"], &pins);
-        assert_eq!(out, ["I:map", "<route>", "S:hand.fist", "T:param:filter.cutoff", "@p#205", "</route>"]);
+        assert_eq!(out, ["I:map", "<route>", "S:hand.pinch", "T:param:filter.cutoff", "@p#205", "</route>"]);
+    }
+
+    #[test]
+    fn fan_out_pins_each_target() {
+        let t = "moving the object sideways drives the resonance and the cutoff";
+        let fr = ["I:map", "<route>", "S:object.x", "T:param:filter.resonance", "T:param:filter.cutoff", "</route>"];
+        let pins = [
+            param(t, "resonance", "p#2", "filter.resonance", false),
+            param(t, "cutoff", "p#1", "filter.cutoff", false),
+        ];
+        let out = run(t, &fr, &pins);
+        assert_eq!(
+            out,
+            ["I:map", "<route>", "S:object.x", "T:param:filter.resonance", "@p#2", "T:param:filter.cutoff", "@p#1", "</route>"]
+        );
     }
 
     #[test]
