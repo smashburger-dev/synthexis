@@ -14,8 +14,10 @@ Sets (one tar shard family each, about 2,000 samples per shard):
   proxy  proxy teacher (D9): frame 768x432 + mask, no previous frame.
   hand   128 px crops around SAM hand boxes, cut from the 1280x720 frame;
          finger state (5 bits thumb..pinky) only where label_ok, the segment
-         is not excluded and the hand side matches. No keypoints: Apple
-         Vision output must not train our models (DPLA 3.2, Noa 2026-11-02).
+         is not excluded and the hand side matches; 21 MediaPipe Hand
+         Landmarker keypoints (Apache-2.0) where the vision-keypoints tool
+         matched a keypoint hand to that SAM instance with train_ok. Apple
+         Vision output must never be packed (DPLA 3.2, Noa 2026-11-02).
   face   128 px crop around the SAM face box; mask 0 other, 1 eye, 2 mouth.
 
 --sets limits a rerun to some sets: only their shards and manifest entries
@@ -37,7 +39,8 @@ Decisions where the spec is open (written down in probes/train-packer/RESULT.md)
   * crops: square, side = 1.25 x max(box w, h) (hands) or 1.3 x (faces),
     centred on the box, zero padding outside the frame. Hands need a box
     side >= 32 px, faces >= 48 px.
-  * hand side: two hands in a frame -> image-left is the person's right
+  * hand side: MediaPipe chirality when the crop has keypoints; otherwise
+    two hands in a frame -> image-left is the person's right
     hand (recordings are unmirrored); one hand -> left or right of the face
     centre (fallback person box centre, then frame centre), shifted by half
     the face width toward the side the script expects when it expects one.
@@ -90,6 +93,20 @@ EXCLUDED = {
     "2026-11-01-S4": {"A_R_00001", "C_wink_L", "H_grab_release"},
 }
 
+# Hand keypoint teacher: named explicitly, never globbed from data/keypoints.
+KEYPOINT_SOURCE = "mediapipe-hand-landmarker"
+KEYPOINT_FILE = "keypoints_mediapipe.jsonl"
+KEYPOINT_META = "mediapipe_meta.json"
+JOINTS = [
+    "wrist",
+    "thumb_cmc", "thumb_mp", "thumb_ip", "thumb_tip",
+    "index_mcp", "index_pip", "index_dip", "index_tip",
+    "middle_mcp", "middle_pip", "middle_dip", "middle_tip",
+    "ring_mcp", "ring_pip", "ring_dip", "ring_tip",
+    "little_mcp", "little_pip", "little_dip", "little_tip",
+]
+
+
 def mirror_motion(label):
     """User-view motion label -> recorded-frame label (x flipped)."""
     swap = {"left": "right", "right": "left", "cw": "ccw", "ccw": "cw"}
@@ -108,6 +125,21 @@ def dev_segments(session, segments):
         ranked = sorted(ids, key=lambda i: hashlib.sha1(f"{session}/{i}".encode()).hexdigest())
         dev.update(ranked[:n_dev])
     return dev
+
+
+def load_keypoints(session):
+    """SAM instance id '<chunk>/<file>#<n>' -> (joints 21x2 normalised, chirality), train_ok hands only."""
+    d = DATA / "keypoints" / session / "cam0"
+    if not (d / KEYPOINT_FILE).exists():
+        return {}, None
+    meta = json.loads((d / KEYPOINT_META).read_text())
+    assert meta["source"] == KEYPOINT_SOURCE, meta["source"]
+    out = {}
+    for line in (d / KEYPOINT_FILE).read_text().splitlines():
+        for hand in json.loads(line)["hands"]:
+            if hand["train_ok"] and hand["sam_match"]:
+                out[hand["sam_match"]["sam_id"]] = ([hand["joints"][n][:2] for n in JOINTS], hand["chirality"])
+    return out, f"{KEYPOINT_SOURCE} ({KEYPOINT_FILE}, {meta.get('licence')})"
 
 
 def load_session(session, limit=None):
@@ -163,7 +195,8 @@ def load_session(session, limit=None):
             "labels": seg_labels,
             "jpg": str(fdir / f["file"]),
             "png": str(png),
-            "instances": [{k: i[k] for k in ("concept", "class_id", "box_xywh", "score")} for i in insts],
+            "instances": [dict({k: i[k] for k in ("concept", "class_id", "box_xywh", "score")}, n=n)
+                          for n, i in enumerate(insts)],
             "prev": {"idx": prev["idx"], "jpg": str(fdir / prev["file"]),
                      "png": str(labels[prev["file"]][0])} if prev else None,
         })
@@ -191,7 +224,7 @@ def boxes_px(job, concept, w, h):
         # the S1 mug/pen redo) stores pixels.
         if max(i["box_xywh"]) <= 1.5:
             x, y, bw, bh = x * w, y * h, bw * w, bh * h
-        out.append({"box": [x, y, bw, bh], "score": i["score"]})
+        out.append({"box": [x, y, bw, bh], "score": i["score"], "n": i["n"]})
     return sorted(out, key=lambda b: -(b["score"] or 0))
 
 
@@ -274,12 +307,22 @@ def process(args):
         persons = boxes_px(job, "person", w, h)
         ref = faces[0]["box"] if faces else persons[0]["box"] if persons else [w / 2, 0, 0, 0]
         expected = [sd for sd in "RL" if finger_label(job, sd)]
-        for n, (hb, side) in enumerate(zip(hands, hand_sides(hands, ref, expected))):
+        for n, (hb, geo_side) in enumerate(zip(hands, hand_sides(hands, ref, expected))):
             sq = square(hb["box"], HAND_PAD)
+            kp = job["keypoints"].get(hb["n"])
+            # MediaPipe chirality is anatomical and agrees with the protocol on
+            # 99 % or more of hands (probes/hand-keypoints); geometry is the fallback.
+            side = kp[1][0].upper() if kp else geo_side
             fingers = finger_label(job, side)
-            m = dict(meta, side=side, sam_box=[round(v, 1) for v in hb["box"]],
-                     sam_score=hb["score"], crop_box=[round(v, 1) for v in sq],
-                     fingers=fingers)
+            m = dict(meta, side=side, side_source="kp_chirality" if kp else "geometry",
+                     sam_box=[round(v, 1) for v in hb["box"]], sam_score=hb["score"],
+                     crop_box=[round(v, 1) for v in sq], fingers=fingers, keypoints=None)
+            if kp:
+                x0, y0, side_px = sq
+                m["keypoints"] = [[round((px * w - x0) / side_px, 4), round((py * h - y0) / side_px, 4), 1.0]
+                                  for px, py in kp[0]]
+                stats["hand"]["with_keypoints"] += 1
+                stats["geometry_vs_kp_side"][f"{geo_side}_{side}"] += 1
             out["hand"].append((f"{key}_h{n}", {"jpg": encode(crop(frame, sq, Image.BILINEAR), "jpg"),
                                                 "json": json.dumps(m).encode()}))
             stats["hand"]["crops"] += 1
@@ -339,6 +382,10 @@ class ShardWriter:
 def pack_session(session, sets, out_root, pool, limit):
     t0 = time.time()
     jobs, info = load_session(session, limit)
+    keypoints, kp_source = load_keypoints(session) if "hand" in sets else ({}, None)
+    for j in jobs:
+        sam_ids = {i["n"]: f"{Path(j['png']).parent.name}/{j['file']}#{i['n']}" for i in j["instances"]}
+        j["keypoints"] = {n: keypoints[sid] for n, sid in sam_ids.items() if sid in keypoints}
     by_split = defaultdict(list)
     for j in jobs:
         by_split[j["split"]].append(j)
@@ -363,7 +410,7 @@ def pack_session(session, sets, out_root, pool, limit):
             writers[name].close()
             shards = writers[name].shards
             groups = {"seg": ["frames_with_class", "pixels", "seg"], "proxy": ["frames_with_class", "pixels"],
-                      "hand": ["hand", "finger_state"], "face": ["face", "face_label"]}[name]
+                      "hand": ["hand", "finger_state", "geometry_vs_kp_side"], "face": ["face", "face_label"]}[name]
             entry[name][split] = {
                 "samples": sum(s["samples"] for s in shards),
                 "frames": len(split_jobs),
@@ -371,6 +418,8 @@ def pack_session(session, sets, out_root, pool, limit):
                 "bytes": sum(s.get("bytes", 0) for s in shards),
                 **{g: dict(sorted(totals[g].items())) for g in groups if totals[g]},
             }
+    if "hand" in entry:
+        entry["hand"]["keypoint_source"] = kp_source
     seconds = round(time.time() - t0, 1)
     print(f"{session}: {len(jobs)} frames, {seconds} s, " +
           ", ".join(f"{n} {sum(v['samples'] for k, v in entry[n].items() if isinstance(v, dict))}" for n in sets),
@@ -392,7 +441,7 @@ def main():
     man_path = a.out / "manifest.json"
     manifest = json.loads(man_path.read_text()) if man_path.exists() else {"sets": {}, "sessions": {}}
     manifest.update({
-        "classes": CLASSES, "face_classes": FACE_CLASSES,
+        "classes": CLASSES, "face_classes": FACE_CLASSES, "joints": JOINTS,
         "finger_bits": "thumb,index,middle,ring,pinky; 1 = extended",
         "sizes": {"seg": SEG_SIZE, "proxy": PROXY_SIZE, "crop": CROP},
         "shard_samples": SHARD_SAMPLES, "seed": SEED, "dev_fraction": DEV_FRACTION,

@@ -152,7 +152,11 @@ def run_hand(samples, args, report):
     check(tuple(b["image"].shape[1:]) == (3, 128, 128), f"hand: image shape {tuple(b['image'].shape)}", report)
     fingers = torch.cat([x["fingers"] for x in batches]).unique().tolist()
     check(set(fingers) <= {0.0, 1.0}, f"hand: finger values {fingers} in {{0, 1}}", report)
-    check(rep["with_keypoints"] == 0, f"hand: {rep['with_keypoints']} samples carry keypoints (must be 0)", report)
+    check(rep["with_keypoints"] == len(samples), f"hand: {rep['with_keypoints']} samples carry keypoints", report)
+    kp = torch.cat([x["kp"][x["kp_conf"] > st.KP_MIN_CONF] for x in batches])
+    inside = float(((kp >= 0) & (kp <= 1)).all(-1).float().mean())
+    rep["kp_inside_crop"] = round(inside, 4)
+    check(inside >= 0.95, f"hand: {inside:.3f} of keypoints inside the crop", report)
 
     model = st.HandStudent(pretrained=True)
     rep["params"] = sum(p.numel() for p in model.parameters())
@@ -194,8 +198,8 @@ def main():
     shard = PACKED / "seg" / args.session / "train-00000.tar"
     run_seg(st.read_samples(shard, args.samples, keep=lambda s: s["meta"]["has_prev"]), args, report)
     shard = PACKED / "hand" / args.session / "train-00000.tar"
-    run_hand(st.read_samples(shard, args.samples, keep=lambda s: s["meta"]["fingers"] is not None),
-             args, report)
+    run_hand(st.read_samples(shard, args.samples, keep=lambda s: s["meta"]["fingers"] is not None
+                             and s["meta"].get("keypoints") is not None), args, report)
 
     ok = all(c["ok"] for c in report["checks"])
     report["passed"] = ok

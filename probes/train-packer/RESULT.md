@@ -2,13 +2,13 @@
 
 Roadmap items "Packer" and "Mac preflight" under `train.setup`, with D9 to D12 as chosen in `spec/synthexis.yaml` (all four still `status: proposed`). Everything ran locally on the M1 Pro, no paid compute.
 
-No Apple Vision output is in this pack. A first pack at 00:42 picked up Apple Vision hand keypoints for S1; Apple's DPLA 3.2 forbids training on Apple model output (licence-check session), so on Noa's order that pack and its preflight models were deleted, the keypoint path was removed from the code, and everything below comes from the repack.
+No Apple Vision output is in this pack. A first pack at 00:42 picked up Apple Vision hand keypoints for S1; Apple's DPLA 3.2 forbids training on Apple model output (licence-check session), so on Noa's order that pack and its preflight models were deleted, the Vision path was removed from the code, and everything below comes from the repack. Hand keypoints now come from MediaPipe Hand Landmarker (Apache-2.0, vision-keypoints session, `probes/hand-keypoints/RESULT.md` on branch `claude/vision-keypoints-ae6b72`); the hand set was repacked with them in 31 s.
 
 ## Commands
 
 ```
 uv run tools/train/pack.py                    # all four sessions, sets seg,proxy,hand,face
-uv run tools/train/pack.py --sets hand        # rewrite one set only
+uv run tools/train/pack.py --sets hand        # rewrite one set only, e.g. after new keypoints
 uv run tools/train/preflight.py               # 64 samples, 20 steps, CoreML export
 ```
 
@@ -17,7 +17,7 @@ Output (gitignored): `data/packed/<set>/<session>/<split>-NNNNN.tar`, `data/pack
 ## Result
 
 - Pack time: 392 s wall for 47,367 frames (S1 61 s, S2 116 s, S3 138 s, S4 77 s; 8 worker processes on a machine shared with other sessions; the first pack took 319 s).
-- Disk: 5.2 GB in 108 shard files plus the manifest (seg 2.0 GB, proxy 2.6 GB, hand 0.28 GB, face 0.35 GB). Well under the 50,000-file guideline for Modal Volumes.
+- Disk: 5.2 GB in 108 shard files plus the manifest (seg 2.0 GB, proxy 2.6 GB, hand 0.29 GB, face 0.35 GB). Well under the 50,000-file guideline for Modal Volumes.
 - Determinism: packing the S3 face set twice gives byte-identical tar files (md5), and the repack matches the first pack byte for byte. Tar members carry mtime 0.
 - Preflight: passed, all 19 checks. CoreML export of both students works.
 
@@ -27,7 +27,7 @@ Output (gitignored): `data/packed/<set>/<session>/<split>-NNNNN.tar`, `data/pack
 |-----|------:|----:|-------------:|-------:|---:|
 | seg 384x216 + prev frame | 31,578 | 7,123 | 8,666 | 28 | 1.98 |
 | proxy 768x432 | 31,578 | 7,123 | 8,666 | 28 | 2.53 |
-| hand crop 128 | 28,939 | 6,873 | 7,941 | 26 | 0.28 |
+| hand crop 128 | 28,939 | 6,873 | 7,941 | 26 | 0.29 |
 | face crop 128 | 29,534 | 6,609 | 8,411 | 26 | 0.35 |
 
 Per session and split (seg frames): S1 9,925 / 2,246, S2 11,052 / 2,389, S3 10,601 / 2,488 (train / dev), S4 8,666 heldout. Full shards hold 2,000 samples: about 86 MB for seg, 110 MB for proxy, 14 MB for hand and 16 MB for face. 99.9 % of seg samples carry a previous frame (the rest follow a dropped frame).
@@ -49,25 +49,27 @@ Finger states (hand crops with a label; bits thumb, index, middle, ring, pinky):
 
 | state | train | dev | heldout |
 |-------|------:|----:|--------:|
-| 00000 | 367 | 427 | 186 |
-| 00001 | 94 | 44 | 34 |
-| 01000 | 175 | 196 | 79 |
-| 01001 | 333 | 74 | 104 |
-| 01100 | 505 | 0 | 109 |
-| 01110 | 59 | 52 | 40 |
-| 01111 | 240 | 0 | 28 |
-| 10000 | 523 | 0 | 112 |
-| 10001 | 477 | 0 | 110 |
-| 11000 | 427 | 46 | 125 |
-| 11100 | 255 | 58 | 55 |
-| 11111 | 687 | 120 | 154 |
-| total | 4,142 | 1,017 | 1,136 |
+| 00000 | 480 | 426 | 225 |
+| 00001 | 147 | 72 | 45 |
+| 01000 | 202 | 294 | 127 |
+| 01001 | 423 | 73 | 135 |
+| 01100 | 612 | 0 | 143 |
+| 01110 | 140 | 54 | 70 |
+| 01111 | 345 | 0 | 78 |
+| 10000 | 579 | 0 | 120 |
+| 10001 | 566 | 0 | 127 |
+| 11000 | 504 | 68 | 132 |
+| 11100 | 333 | 76 | 90 |
+| 11111 | 798 | 120 | 179 |
+| total | 5,129 | 1,183 | 1,471 |
 
-About one hand crop in seven carries a finger state (6,295 of 43,753): only blocks A and B have one, B counts are out (`label_ok=false`), and the exclusion list drops 12 A segments.
+About one hand crop in six carries a finger state (7,783 of 43,753): only blocks A and B have one, B counts are out (`label_ok=false`), and the exclusion list drops 12 A segments.
 
 Face crops: 29,534 train, 6,609 dev, 8,411 heldout; eye pixels in 80 % of them, mouth pixels in 82 %. Block C labels (blink, wink_L, smile, ...) ride along in the sample JSON.
 
-Keypoints: none. The hand samples carry crop, side, SAM box and finger state only. The manifest and all 26 hand shards were searched for `keypoint` and `chirality`: 0 hits.
+Keypoints: 35,655 of 43,753 hand crops carry 21 MediaPipe keypoints (train 23,508, dev 5,281, heldout 6,866), in crop coordinates with conf 1.0. That is every `train_ok` hand of `keypoints_mediapipe.jsonl` (S1 7,989, S2 10,287, S3 10,513, S4 6,866), joined on the SAM instance id `<chunk>/<file>#<n>`, not on boxes. The manifest names the source (`keypoint_source`); the packer reads only that file name and never globs `data/keypoints`. The manifest and all 26 hand shards have 0 hits for `vision`.
+
+MediaPipe chirality decides the hand side where a crop has keypoints. The geometric side rule agreed with it on only 84 % of train crops (19,791 of 23,508; S3, filmed from the side, is worst). Switching to chirality raised the finger-labelled train crops from 4,142 to 5,129.
 
 ### Dev segments
 
@@ -82,10 +84,10 @@ Keypoints: none. The hand samples carry crop, side, SAM box and finger state onl
 
 | student | params | loss step 1 -> 20 | ms/step | CoreML FP16 vs PyTorch |
 |---------|-------:|-------------------|--------:|------------------------|
-| seg, MobileNetV4-Conv-Small + LR-ASPP, 384x216, prev-mask channel | 1,509,454 | 2.570 -> 0.214 (CE 2.554 -> 0.202) | 337 | argmax agreement 0.9997 |
-| hand, MobileNetV4-Conv-Small, 128 px -> 21x2 keypoints + 5 logits | 2,553,231 | 0.839 -> 0.031 (finger BCE only, keypoint loss masked) | 142 | max abs diff 0.0064 keypoints, 0.0196 logits |
+| seg, MobileNetV4-Conv-Small + LR-ASPP, 384x216, prev-mask channel | 1,509,454 | 2.570 -> 0.214 (CE 2.554 -> 0.202) | 268 | argmax agreement 0.9997 |
+| hand, MobileNetV4-Conv-Small, 128 px -> 21x2 keypoints + 5 logits | 2,553,231 | 1.391 -> 0.303 (finger BCE 0.851 -> 0.034, keypoint L1 0.540 -> 0.269) | 103 | max abs diff 0.0049 keypoints, 0.0314 logits |
 
-Seg ms/step includes the second, gradient-free forward pass on the previous frame for the temporal loss. Packages: 2.9 MB seg, 4.9 MB hand. torch 2.15.0, timm `mobilenetv4_conv_small.e2400_r224_in1k`, coremltools 9.0, target macOS 15. The 64 seg samples are the first 64 of `seg/S1/train-00000.tar` with a previous frame; the 64 hand samples are the first 64 with a finger state. ms/step ran next to other sessions' jobs; the first, quieter run measured 281 and 105.
+Seg ms/step includes the second, gradient-free forward pass on the previous frame for the temporal loss. Packages: 2.9 MB seg, 4.9 MB hand. torch 2.15.0, timm `mobilenetv4_conv_small.e2400_r224_in1k`, coremltools 9.0, target macOS 15. The 64 seg samples are the first 64 of `seg/S1/train-00000.tar` with a previous frame; the 64 hand samples are the first 64 with both a finger state and keypoints; all keypoints lie inside the crop. ms/step varies with other sessions' load on the machine (seg 268 to 337, hand 103 to 142 over three runs).
 
 ## Decisions where the spec is open
 
@@ -96,7 +98,7 @@ Seg ms/step includes the second, gradient-free forward pass on the previous fram
 - D10: crops are squares of 1.25x (hands) or 1.3x (face) the longer SAM box side, centred on the box, zero padded past the frame edge, resized to 128. Hands need a box side of 32 px or more, faces 48 px. At most two hands per frame (the SAM post-processing already keeps the top two). Face crop masks: 0 other, 1 eye, 2 mouth.
 - D11: each seg sample stores the previous extracted frame and its SAM mask (66 ms earlier at 15 fps). The prev-mask input is one channel holding class id / 6, as in the latency probe. The temporal loss is the L1 distance between class probabilities of frame t and t-1 on pixels where both SAM masks agree, weight 0.1 (placeholder for the pilot).
 - D12: MobileNetV4-Conv-Small with timm ImageNet weights for both students; the 4-channel seg stem comes from timm's channel adaptation of the pretrained first conv.
-- Hand side: with two hands, the image-left hand is the person's right (recordings are unmirrored). With one hand, it is left or right of the face centre (fallback person box, then frame centre), shifted by half the face width toward the side the script expects when it expects exactly one hand. A finger state is attached only when `label_ok` is true, the segment is not excluded and the assigned side carries a 5-bit label.
+- Hand side: MediaPipe chirality (anatomical) where the crop has keypoints (`side_source: kp_chirality`). Otherwise, with two hands, the image-left hand is the person's right (recordings are unmirrored); with one hand, it is left or right of the face centre (fallback person box, then frame centre), shifted by half the face width toward the side the script expects when it expects exactly one hand. A finger state is attached only when `label_ok` is true, the segment is not excluded and the assigned side carries a 5-bit label.
 - Exclusions: the conservative list from the Spark QA (both passes flag a mismatch, 26 segments over S1 to S4) drops the per-segment labels; frames and SAM masks stay.
 - Block H: `motion_user` keeps the scripted label (user's mirrored view), `motion_rec` flips x to the recorded frame (left and right swap, cw and ccw swap, `throw_any_L` stays because L names the hand).
 - Box units: S1 video-mode boxes are normalised to 0..1, image mode (S2 to S4 and the S1 mug/pen redo) uses pixels; the packer decides per instance.
@@ -105,7 +107,7 @@ Seg ms/step includes the second, gradient-free forward pass on the previous fram
 
 - Dev covers 8 of 12 finger states (01100, 01111, 10000 and 10001 are missing) because the split is stratified over blocks, not states. S4 has all 12. For calibrating finger thresholds on dev, block A would need stratification by finger state.
 - The hand student has 2.55M params, slightly above the `perc.hand` budget of 2.5M. MobileNetV3-Small (1.52M, probe B) stays an option.
-- The hand student's 21-keypoint output has no teacher. Apple Vision is ruled out; until a licence-clean keypoint source is chosen, the keypoint loss stays masked and only the finger logits train. `spec/synthexis.yaml` (`perc.hand`, `perc.vision.hand`) and the roadmap still name Vision as the teacher.
+- Keypoint teacher quality (from the vision-keypoints session): fists in S1 are found only 63 % of the time, and close-to-lens and edge hands are often missed, so 18 % of hand crops have no keypoints and drop out of the keypoint loss. If Noa gets access to SAM 3D Body (gated HF repo), its `keypoints_sam3dbody.jsonl` has the same schema; switching means changing the three `KEYPOINT_*` constants in `pack.py` and running `pack.py --sets hand`.
 - S2 eye class (glasses) is still undecided; samples carry their session so the trainer can mask the eye loss for S2.
 - D9 labels "every recorded frame at 30 fps"; the extracted frames are 15 fps, so the proxy labelling pass needs a 30 fps extraction from `cam0.mov`.
 - Face student (eye and mouth on the face crop) is packed but not part of this preflight.

@@ -4,9 +4,10 @@ seg:  MobileNetV4-Conv-Small (timm, ImageNet weights) with a 4th input
       channel for the previous frame's mask (D11), LR-ASPP head on the
       stride-8 and stride-32 features, 7 classes at 384x216.
 hand: MobileNetV4-Conv-Small classifier on a 128 px crop -> 21 keypoints
-      (x, y in crop coordinates, sigmoid) + 5 finger-state logits. The packed
-      data has no keypoint targets (Apple Vision output is ruled out), so the
-      keypoint loss stays masked to zero until a licence-clean teacher exists.
+      (x, y in crop coordinates, sigmoid) + 5 finger-state logits. Keypoint
+      targets come from MediaPipe Hand Landmarker (Apache-2.0); crops without
+      a matched keypoint hand have conf 0 and drop out of the keypoint loss.
+      Apple Vision output must never be a target (DPLA 3.2).
 
 Both models take RGB in 0..1 and normalise inside, so the CoreML export can
 use an ImageType with scale 1/255. The previous-mask channel carries the
