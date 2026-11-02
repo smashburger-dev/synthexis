@@ -393,3 +393,21 @@ What the four levers fixed, by group (four-seed ensembles, v10 against v11): han
 - 17 (arp range and rate) from 2 to 0 of 4: v11 reads them as synthexis' MIDI generator; the gold question for Noa is still open.
 
 The set was seen while the four gaps were found, so these numbers are weaker evidence than a fresh set would give.
+
+## Gold fix: side carry-over (2026-11-02, after the v11 scoring)
+
+Noa's ruling: a hand movement without a side word takes the side of the hand named before it in the same sentence, unless the sentence names another hand. Two originals left that movement without a side and are changed in `gold-routes.json` (old file `gold-routes.v11.json`): 20 ("Wenn sich meine linke Hand öffnet ... und wenn sich meine Finger spreizen", spread now `side:left`) and 34 ("opening and closing my right fist ... Raising my hand up and down", hand.y now `side:right`). Both are calibration groups; no eval row changes. Their derived rows follow through the side deltas. The carry-over is the one reading, with no alternative: the old gold contradicts the ruling. The 10 other originals with a side give it to every hand source (gates carry no side in the gold).
+
+| run | calibration before | calibration after | group 20 | group 34 |
+|---|---|---|---|---|
+| ensemble v10 s0 to s3, conv, pronoun | 35/51 | 32/51 | 4 -> 1 of 5 | 0 of 4 |
+| ensemble v10 s0+s1, conv, pronoun | 28/51 | 28/51 | | |
+| v10 s0 / s1 / s2 / s3, conv, pronoun | 29 / 29 / 30 / 34 | 26 / 31 / 29 / 31 | | |
+| v11 s0 / s1 / s2 / s3, conv, pronoun | 34 / 25 / 33 / 30 | 35 / 28 / 33 / 29 | | |
+| ensemble v11 s0+s1, conv, pronoun | 31/51 | 34/51 | | |
+| ensemble v11 s0 to s3, conv, pronoun | 32/51 | 35/51 | 1 -> 4 of 5 | 0 of 4 |
+| lean `g2-lean-ens4-q8`, conv, pronoun | 35/51 | 32/51 | 4 -> 1 of 5 | 0 of 4 |
+
+Paired on calibration after the fix: four v11 seeds against four v10 seeds 25 won, 17 lost (p 0.28, +3.9 points, bootstrap [-5.7, +13.0]); v11 four-seed against v10 four-seed, both conv, pronoun, 6 / 3 (p 0.51, +5.9 points). Eval numbers are unchanged.
+
+Group 34 stays at 0 for every ensemble for two reasons: v11 does not carry the side over to "my hand" (it does for "my fingers"), and it reads "opening and closing my right fist" as fist, so the fold gives openness with INV where the gold has none. Whether "opening and closing the fist" means the value rises as the hand opens is a label question; the gold says yes.
