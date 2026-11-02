@@ -9,7 +9,7 @@
       --name ens-b4 [--alpha 0.0] [--ds ds-v6p] [--device mps] [--rules 'conv;conv,pronoun']
 
 Reads only synthetic splits of --ds (default dev, challenge, dev_s2 to
-dev_s5; --splits adds dev_s6 for ds-v9c), never the real set. --beam 1 with one run is plain greedy. --rules also scores the
+dev_s5; --splits adds dev_s6 for ds-v9c, up to dev_s8 for ds-v11c), never the real set. --beam 1 with one run is plain greedy. --rules also scores the
 predictions after decode-time rules (rules.py; variants split by ';'), same
 decode, one pass. Writes
 data/mapping/train/decode/<name>.json (route_edit and exact per split).

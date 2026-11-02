@@ -7,6 +7,8 @@
   uv run tools/mapping/commands.py --run <name> --edits-run <name>
       --max-usd <cap> [--limit-jobs N] [--workers 12] [--dry-run]
       [--backend deepseek] [--prompt commands-s6.md]
+  uv run tools/mapping/commands.py --run cmd-s7r --edits-run edits-s7 \
+      --max-usd 0 --revalidate cmd-s7
 
 Reads data/mapping/commands/<edits-run>/edits.jsonl, renders jobs of
 edits.yaml:edits_per_job edits, validates the [[mark|slot]] output,
@@ -15,6 +17,9 @@ data/mapping/commands/<run>/.
 --backend deepseek writes with DeepSeek V4.1 Flash (thinking off, synthetic
 edits only) instead of Spark; raw replies are cached per job under
 <run>/raw/ so a rerun resumes, spend goes to data/mapping/deepseek/ledger.jsonl.
+--revalidate <run> writes no text: it validates the "missing side" drops of
+that run again under the current side check and writes the ones that pass
+now (sentences.jsonl, summary.json) into --run.
 """
 
 import argparse
@@ -123,7 +128,11 @@ def slot_line(sid: str, s: dict, onto: dict) -> str:
         return out
     if k == "target":
         t = s["target"]
-        if t == "param":
+        if t == "param" and s.get("name"):
+            out = (f"{sid} param said only by its name {s['name']}: the "
+                   f"name is the only word for this control, leave {sid} "
+                   f"unmarked")
+        elif t == "param":
             out = (f"{sid} param {s['value']} "
                    f"({tax_desc(onto, s['value'])})")
         elif t == "macro":
@@ -390,10 +399,65 @@ def _edit1(a: str, b: str) -> bool:
     return i == len(a)
 
 
+BODY_WORD = re.compile(
+    r"(hands?|händen?|hände|fist|faust|eyes?|augen?|arms?|fingers?|fingern"
+    r"|thumb|daumen|palm|wrist|handgelenk)\W*$", re.I)
+
+
+def _side_of(words: list, i: int) -> str | None:
+    """Side of words[i] when a body word follows within two words ("left
+    hand", "linken Hand", "both hands"); "nach rechts drehen" is a
+    direction, not a side."""
+    w = words[i].strip('.,;:!?()[]"\'').casefold()
+    if not any(BODY_WORD.match(x) for x in words[i + 1:i + 3]):
+        return None
+    for side, sw in SIDE_WORDS.items():
+        if w in sw:
+            return side
+    return None
+
+
+def clause_side(e: dict, spans: list, plain: str, sid: str,
+                side: str) -> bool:
+    """Side word elsewhere in the sentence ("Finger spreizen mit der linken
+    Hand", "my left hand should control X by spreading the fingers"): the
+    nearest side word in the same sentence that no marked source or gate of
+    another side separates from the mark names the wanted side."""
+    others = [sp for sp in spans if sp["slot"] != sid
+              and e["slots"][sp["slot"]]["kind"] in ("source", "gate")
+              and e["slots"][sp["slot"]].get("side") not in (None, side)]
+    for sp in spans:
+        if sp["slot"] != sid:
+            continue
+        a = max((m.end() for m in re.finditer(r"[.!?;]", plain[:sp["start"]])),
+                default=0)
+        m = re.search(r"[.!?;](\s|$)", plain[sp["end"]:])
+        b = sp["end"] + m.start() if m else len(plain)
+        best = None
+        toks = list(re.finditer(r"\S+", plain[a:b]))
+        words = [w.group() for w in toks]
+        for i, w in enumerate(toks):
+            ws, we = a + w.start(), a + w.end()
+            if sp["start"] <= ws < sp["end"]:
+                continue
+            found = _side_of(words, i)
+            if not found:
+                continue
+            lo, hi = (we, sp["start"]) if we <= sp["start"] \
+                else (sp["end"], ws)
+            if any(lo <= o["start"] < hi for o in others):
+                continue
+            d = hi - lo
+            if best is None or d < best[0]:
+                best = (d, found)
+        if best and best[1] == side:
+            return True
+    return False
+
+
 def side_check(e: dict, spans: list, plain: str) -> str | None:
-    """Source/gate slots with a side need a side word near the mark."""
-    if e["lang"] == "de":
-        pass
+    """Source/gate slots with a side need a side word near the mark, or in
+    the same sentence (clause_side)."""
     by_slot = {}
     for sp in spans:
         by_slot.setdefault(sp["slot"], []).append(sp)
@@ -423,7 +487,7 @@ def side_check(e: dict, spans: list, plain: str) -> str | None:
                     break
             if ok:
                 break
-        if not ok:
+        if not ok and not clause_side(e, spans, plain, sid, side):
             return f"missing side ({sid})"
     return None
 
@@ -435,6 +499,7 @@ def validate_variant(e: dict, v: int, raw: str):
     named = {t for r in e.get("routes", []) for t in r["tgt"]
              if any(e["slots"][m]["kind"] == "chord" for m in r["mods"])}
     optional = {s for s in slot_ids if re.fullmatch(r"(i|bp)\d+", s)} | named
+    optional |= {s for s in slot_ids if e["slots"][s].get("name")}
     required = slot_ids - optional
     marks = list(RE_MARK.finditer(raw))
     if e["intent"] == "none" and marks:
@@ -570,6 +635,33 @@ def run_deepseek(run: str, jobs: list, parse, workers: int,
     return out
 
 
+def revalidate(src_run: str, edits: list, out_dir: Path) -> None:
+    by_id = {e["id"]: e for e in edits}
+    src = ROOT / "data" / "mapping" / "commands" / src_run / "drops.jsonl"
+    n, kept, still = 0, [], Counter()
+    for line in src.read_text().splitlines():
+        d = json.loads(line)
+        if not d["reason"].startswith("missing side") or not d.get("raw"):
+            continue
+        n += 1
+        ok, reason, sent = validate_variant(by_id[d["edit_id"]], d["v"],
+                                            d["raw"])
+        if ok:
+            reason = negative_check(sent["edit"], sent["text"],
+                                    sent["spans"])
+        if reason:
+            still[reason] += 1
+        else:
+            kept.append(sent)
+    with (out_dir / "sentences.jsonl").open("w") as f:
+        for s in kept:
+            f.write(json.dumps(s, ensure_ascii=False) + "\n")
+    summary = {"from": src_run, "side_drops": n, "sentences": len(kept),
+               "still_dropped": dict(still.most_common())}
+    (out_dir / "summary.json").write_text(json.dumps(summary, indent=1))
+    print(json.dumps(summary))
+
+
 def main() -> None:
     global ONTO
     ap = argparse.ArgumentParser()
@@ -582,6 +674,7 @@ def main() -> None:
     ap.add_argument("--reasoning-effort", default="low")
     ap.add_argument("--backend", default="spark", choices=["spark", "deepseek"])
     ap.add_argument("--prompt", default="commands.md")
+    ap.add_argument("--revalidate", default="")
     args = ap.parse_args()
 
     ONTO = yaml.safe_load((HERE / "ontology.yaml").read_text())
@@ -604,6 +697,9 @@ def main() -> None:
     out_dir.mkdir(parents=True, exist_ok=True)
     load_negative(ROOT / "data" / "mapping" / "glossary" /
                   "gloss-v1")
+    if args.revalidate:
+        revalidate(args.revalidate, edits, out_dir)
+        return
     if args.dry_run:
         with (out_dir / "sample_jobs.txt").open("w") as f:
             f.write("SYSTEM PROMPT:\n" + sys_prompt + "\n\n")

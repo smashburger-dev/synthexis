@@ -279,3 +279,27 @@ Plan: `docs/parser-v10-plan.md`. The v9 misses on the changed real set were read
 (route_edit on ds-v10c, greedy, without conv; conv adds 0.0004 to 0.0008 to every mean and lowers no set.)
 
 v9 reads the new stage-7 sentences at 0.51, v10 at 0.64. On the older sets the first v10 pair holds level (+0.3 points), the second pair loses 1 point; dev_s3 and dev_s4 fall for every v10 run. On the real set the shipped ensemble gets 47 of 102 eval rows exact and 79 right or one part wrong, with calibration down from 30 to 25 of 51 (`probes/real-eval/RESULT.md`, section "Parser v10").
+
+## 14. Parser v11: four data gaps, stage 8 (2026-11-02, `tools/mapping/run_v11.sh`)
+
+Plan: `docs/parser-v11-plan.md`. A second read of the v10 four-seed misses on the real set found four gaps in how the data is made: the side check dropped every sentence with the hand as subject, closing the fist had two label encodings, a parameter name was never the only target, and fan-out targets got a direction hint only when the source was said in its low direction.
+
+- `commands.py clause_side`: a side word elsewhere in the same sentence counts when a body word follows it ("left hand", "linken Hand") and no marked source or gate of the other side lies between it and the source mark. Validated again under it, 214 of 1,251 stage-7 and 183 of 969 stage-6 side drops pass (`cmd-s7r`, `cmd-s6r`); the rest name no side or the wrong one. Most of the 558 stage-7 drops with "a side word in the sentence" carry the side of another source.
+- `conventions.py fold`: `S:hand.fist` becomes `S:hand.openness`, `S:eye.closed` becomes `S:eye.open`, the route's INV flips. 8,249 of 89,144 train_all rows and 22 to 136 rows per dev set change. `rules.py conv` applies the same fold to a prediction, so v10 is scored on the same labels.
+- Stage 8 (`edits-s8.yaml`, `prompts/commands-s8.md`, prefix `w`): 5,800 edits plus twins, frame `instrumental` in 35 % of variants ("the left hand runs X by tilting it", "X steuern, indem ich Y"), a side drawn for 75 % of hand sources, the name-only form on 22 % of routes (`T:param:macro` for "Macro N", `T:param:other` for numbered and lettered names, plus `PNAME`), no scope-form names, direction hints on every fan-out target. DeepSeek V4.1 Flash wrote 4,898 of 12,462 variants valid (39 %) for 0.77 $ with the 3-job pilot; 1,732 in the instrumental frame, 1,360 with a name-only target, 1,310 with the side word outside the source mark. `leak.py` dropped 113 (closest remaining ratio 0.58), 13 of `cmd-s6r` and 11 of `cmd-s7r`.
+- v10 recipe otherwise on ds-v11c (stage 6 to 8 rows twice in train_cat, 36,161 rows), four seeds on Modal L4s.
+
+| run | dev | challenge | dev_s2 | dev_s3 | dev_s4 | dev_s5 | dev_s6 | dev_s7 | dev_s8 | mean of eight older | mean of nine |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| ensemble v10 s0+s1 | 0.888 | 0.854 | 0.846 | 0.731 | 0.828 | 0.739 | 0.666 | 0.653 | 0.423 | 0.7755 | 0.7363 |
+| ensemble v10 s0 to s3 | 0.891 | 0.861 | 0.843 | 0.736 | 0.828 | 0.729 | 0.659 | 0.657 | 0.434 | 0.7755 | 0.7375 |
+| p-v11-s0 | 0.876 | 0.836 | 0.830 | 0.728 | 0.829 | 0.739 | 0.623 | 0.673 | 0.616 | 0.7666 | 0.7499 |
+| p-v11-s1 | 0.876 | 0.819 | 0.830 | 0.721 | 0.807 | 0.724 | 0.642 | 0.670 | 0.598 | 0.7612 | 0.7431 |
+| p-v11-s2 | 0.862 | 0.821 | 0.825 | 0.716 | 0.807 | 0.695 | 0.649 | 0.670 | 0.621 | 0.7557 | 0.7406 |
+| p-v11-s3 | 0.863 | 0.834 | 0.825 | 0.726 | 0.814 | 0.739 | 0.608 | 0.650 | 0.611 | 0.7575 | 0.7413 |
+| ensemble v11 s0+s1 | 0.884 | 0.872 | 0.836 | 0.740 | 0.830 | 0.734 | 0.666 | 0.688 | 0.643 | 0.7813 | 0.7660 |
+| ensemble v11 s0 to s3 | 0.882 | 0.858 | 0.845 | 0.750 | 0.841 | 0.749 | 0.681 | 0.706 | 0.659 | 0.7889 | 0.7745 |
+
+(route_edit on ds-v11c, greedy; ensembles with conv,pronoun, single seeds from training, without rules. Without conv the v10 ensembles drop to 0.714 on the eight older sets: their predictions keep `S:hand.fist`, which the fold now rewrites. pronoun changes no dev set.)
+
+v10 reads the new stage-8 sentences at 0.43, v11 at 0.66. On the eight older sets the v11 ensemble gains 1.3 points, most on dev_s3, dev_s5 and dev_s7. Export: f16 equals f32 on dev for all four runs (121 MB each, 30 to 32 ms median on one CPU thread); torch dynamic int8 loses 1.9 to 4.7 dev points. On the real set the v11 ensemble gets 66 of 102 eval rows exact and 89 right or one part wrong, calibration 32 of 51 (`probes/real-eval/RESULT.md`, section "Parser v11").

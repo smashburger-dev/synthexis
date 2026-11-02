@@ -1,0 +1,54 @@
+# Stage-8 overrides (parser v11; edits.py --override edits-s4.yaml,edits-s5.yaml,edits-s6.yaml,edits-s7.yaml,edits-s8.yaml).
+# Written 2026-11-02 from the second slice of the v10 four-seed misses (docs/parser-v11-plan.md):
+# the hand as subject was dropped by the side check in every stage, a parameter name was never
+# the only target of a route, and fan-out targets were told their direction only when the source
+# was said in its low direction. The instrumental frame ("control X by Y-ing") and the name-only
+# form come from that slice, so the real set is seen for v11.
+
+languages: {en: 60, de: 40}
+
+intents: {map: 96, modify: 2, none: 2}
+
+routes_per_edit: {1: 45, 2: 40, 3: 15}
+
+styles:
+  frame: {instrumental: 35, declarative: 10, conditional: 12, comparative: 8, imperative: 8, request: 8, wish: 7, fragment: 4, both_ways: 4, chained: 4}
+
+frames_by_intent:
+  map: [instrumental, declarative, conditional, comparative, imperative, request, wish, fragment, both_ways, chained]
+  modify: [imperative, declarative, request, wish]
+  default: [imperative, declarative, request, wish]
+
+sides: {none: 25, right: 34, left: 34, both: 5, either: 2}
+
+low_dir: 0.35
+both_dir: 0.10
+same_effect: 0.25
+fan_out: 0.20
+fan_out_dir: true              # every parameter target of a fan-out gets dir: rises / falls
+
+# a route's first parameter is said only by its name (T:param:macro for "Macro N", else
+# T:param:other, plus the PNAME pointer); no scope-form names: every stage-7 name is a control
+# word or holds one, and next to an unrelated target it teaches that the name is not the target
+name_only: 0.22
+scope: {none: 30, track: 30, plugin: 25, track_plugin: 15, param_name: 0}
+name_only_names: ["Macro 1", "Macro 2", "Macro 3", "Macro 4", "Macro 5", "Macro 6", "Macro 7", "Macro 8", "Osc A Level", "Osc B Level", "Osc C Level", "A Detune", "B Detune", "A WT Pos", "B WT Pos", "C WT Pos", "A Warp", "B Warp", "Filter 1 Freq", "Filter 2 Res", "Env 2 Amt", "LFO 1 Rate", "LFO 3 Rate", "Cutoff 2", "Band 2 Gain", "Band 3 Freq"]
+
+sources:
+  hand.y: 14
+  hand.x: 9
+  hand.roll: 12
+  hand.depth: 6
+  hand.openness: 12
+  hand.fist: 6
+  hand.spread: 12
+  hand.pitch: 5
+  hand.finger.thumb.tilt: 4
+  hand.finger.index.tilt: 3
+  hand.shape: 5
+  hand.finger.index: 3
+  hand.finger.thumb: 2
+  hand.pinch: 1
+  hands.distance: 2
+
+pinch_hold: 0.40
