@@ -341,6 +341,8 @@ Reading:
 - By the rule, lean-kd-p16 in Q8_0 replaces the reference: 0.7706, 0.0029 below it, at 69 MB of weights instead of 482. The margin is at the edge of the rule; in f16 the student scores 0.7710.
 - The real set (seen, report only, `probes/real-eval/RESULT.md` "Parser v10 lean") does not follow: the student gets 44 of 102 eval rows exact, the four-seed ensemble 56 (p 0.0075). The student reads Noa's sentences like one seed (38 to 51 of 102 for the four seeds). Distillation on synthetic text carried the ensemble's dev score, not its lead on real sentences, which the dev sets never showed. The four-seed ensemble in Q8_0 matches the f16 ensemble on dev and on the real set at 277 MB.
 
+Rust runtime (`plugin/parser` release, `synthexis-parse --threads 1`, M1 Pro), after Noa chose the v11 four-seed ensemble in Q8_0: the four v11 seeds in f16 take 101.2 ms median and 175.9 ms p95 on 200 sentences of ds-v11c dev (102 / 154 ms on the 153 real sentences), 444 MB RSS after load; one seed 24.7 / 43.2 ms and 165 MB. Q8_0 is not in the runtime yet.
+
 Modal: five student runs on L4 or A10G (Modal does not log which), 21 to 71 minutes of training each, about 4 GPU hours in all, 3 to 4.5 $ in credits; two earlier spawns failed at start because another session redeployed the shared app (`SYNTHEXIS_MODAL_APP` now gives a session its own deployment).
 
 Applied to v11 (session parser-v11, runs p-v11-s0 to s3, scored with the v11 `rules.py` at aeb198a on the nine dev sets of ds-v11c): `lean.py quant --runs p-v11-s0,p-v11-s1,p-v11-s2,p-v11-s3` writes `p-v11-s*-q8`; the Q8_0 ensemble scores 0.7761 with `conv,pronoun` against 0.7745 in f16, 4 x 69 MB.

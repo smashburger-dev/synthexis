@@ -41,6 +41,7 @@ Modal: five student runs, about 4 GPU hours on L4 or A10G, 3 to 4.5 $ in credits
 
 ## Open
 
-- Noa decides: the rule's pick (student, Q8_0, one run) or the Q8_0 four-seed ensemble (277 MB, four runs).
+- Decided by Noa (11-02, evening): the v11 four-seed ensemble in Q8_0 ships ("V11 Ensemble Q8 mit 277 Megabyte Gewichten ... sehr akzeptabel auch für die Demo"). Rust runtime (`plugin/parser`, release, one thread, M1 Pro), v11 four seeds still in f16: 101 ms median, 176 ms p95 on 200 sentences of ds-v11c dev, 102 / 154 ms on the 153 real sentences, 444 MB RSS after load and up to 551 MB while parsing; four threads are not faster (110 ms). One v11 seed: 25 / 43 ms, 165 MB. Q8_0 in candle is not timed yet.
+- Superseded by that decision: the rule's pick (student, Q8_0, one run) or the Q8_0 four-seed ensemble (277 MB, four runs).
 - Runtime (`plugin/parser`, session parser-runtime): Q8_0 by quantising the f16 encoder matrices and the embedding at load (candle `QTensor::quantize`, `GgmlDType::Q8_0`, `QMatMul`), then time it and check frames against `predict.py` on the `-q8` run dirs. As in ggml, candle's CPU kernel also quantises the activations, which the torch simulation does not, so expect a few frames to differ and compare the dev score, not only exact parity. Port `rules.py` (conv, pronoun) with `conventions.py` and `normalize.py`.
 - If a student stays of interest: it was still improving at 16k steps, and a set Noa dictates fresh would show whether its real-set gap is the student or the seen set.
