@@ -1,0 +1,18 @@
+# Stage-2 overrides for edits.yaml (edits.py --override edits-s2.yaml).
+# Authored 2026-10-30 from the parser v1 errors (probes/mapping-pipeline/RESULT.md,
+# "Parser v1"): challenge route_edit 0.63 at 1 route, 0.38 at 2, 0.00 at 3; modify
+# 0.38; German 0.57 vs English 0.66; layperson 0.53; invert wrong in 89 of 204 failures.
+# Shifts weight towards those cases without dropping any of the others.
+
+languages: {en: 60, de: 40}
+
+intents: {map: 55, modify: 15, unmap: 6, replace: 5, clear: 4, role: 3, preset: 3, scale: 2, undo: 2, query: 3, none: 2}
+
+routes_per_edit: {1: 40, 2: 38, 3: 22}
+
+styles:
+  register: {casual: 24, terse: 12, polite: 5, rambling: 6, jargon: 11, beginner: 13, layperson: 17, codeswitch: 12}
+
+modifiers:
+  invert: 0.25
+  range: 0.18

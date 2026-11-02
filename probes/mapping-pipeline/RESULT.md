@@ -93,3 +93,205 @@ uv run tools/mapping/roundtrip.py --run rt-s1 --sentences-run cmd-s1 --max-usd 3
 ## Spend
 
 Ledger total at the end of the session (2026-10-29): 34.57 $ over 2,560 requests (11.62M prompt tokens of which 6.97M cached, 6.52M output tokens of which 3.92M reasoning). Largest items: commands stage 1 11.14 $, AU priority labels 8.23 $, round-trip checks 6.2 $, VST3 labels 4.76 $, AU bulk labels 2.03 $, glossary 1.28 $.
+
+# RESULT: overnight training on the Mac (2026-10-30)
+
+Code in `tools/mapping/` (commit 9e64d3a); data and runs in the git-ignored `data/mapping/train/`. The queue `caffeinate -dimsu zsh tools/mapping/run_overnight.sh` ran from 00:19 to 04:45, eleven steps, all rc=0. Full table with every run: `data/mapping/train/REPORT.md` (`uv run tools/mapping/report.py`). Accuracy below is route_edit (intent, routes and route-free items equal as multisets) with Wilson 95 % intervals unless marked otherwise.
+
+## Data
+
+```
+uv run tools/mapping/challenge.py            # 300 edits, edits.py --seed 99, prompts/challenge.md
+uv run tools/mapping/dataset.py --out ds-v1 --seed 13
+uv run tools/mapping/tokenizer.py
+```
+
+- Challenge set: 300 new edits, 612 requested variants, 548 valid (89.5 %), 0.408 $. Not round-trip checked, never in training.
+- ds-v1: train_all 20,012 sentences (6,093 edits, 7,808 of them glossary span substitutions), train_filtered 12,993 (3,843 edits, 5,397 substitutions). The filter keeps a sentence only if its full round-trip (rt-s1-all) has no mismatch outside targets; it reproduces the 8,003 kept stage-1 sentences. Dev 805 sentences from 418 edits (10 % of edit ids, twins with their original, clean sentences only, no substitutions). Frame length max 35, mean 8.9 tokens.
+- Tokenizer tok-v1: SentencePiece unigram 8k, byte fallback, nmt_nfkc_cf, split digits; trained on 20,012 training sentences, 11,333 glossary phrases and 56,680 harvested plugin and parameter names. 18.6 pieces per training sentence on average, max 84 (encoder limit 96).
+
+## param-sense v1
+
+`uv run tools/mapping/train_paramsense.py --name ps-v1 --epochs 20` (0.80M parameters, CPU, 0.7 min). 787,756 labelled rows, capped at 60 per plugin and class: 78,846. Vendor split: train 38 vendors / 64,954 rows, val 6 / 3,020, test 19 / 10,872. Best epoch by val: 5.
+
+| test (unseen vendors) | top-1 | macro F1 | F1 unsafe | F1 ctl.switch | F1 ctl.select | F1 system | direction acc |
+|---|---|---|---|---|---|---|---|
+| runtime-only features | 0.728 | 0.511 | 0.357 | 0.654 | 0.550 | 0.958 | 0.993 |
+| with value strings | 0.741 | 0.512 | 0.305 | 0.761 | 0.577 | 0.948 | 0.992 |
+
+- Val (6 vendors) gives top-1 0.485 against 0.728 on test (19 vendors): the per-vendor spread is large, so one number per split says little. unsafe is the weakest class.
+- Known-plugin table: 63,625 rows from the priority runs (not rule-labelled), `runs/ps-v1/known_plugins.json`; weights f16 1.6 MB.
+
+## Parser v1
+
+`uv run tools/mapping/train_parser.py --name <run> --train train_all|train_filtered [--frac F] [--seed S] --steps 16000`. 9.30M parameters (encoder 6 x d256, pointer decoder 2 x d256, BIO head), batch 64, AdamW 5e-4 with warmup 600 and cosine to 5 %, weight EMA 0.999, grammar-constrained greedy decoding, best of raw and EMA weights by dev. 16,000 steps take 33 min on MPS (about 124 ms per step including six dev evaluations). A 64-sample overfit check reached 64/64 exact; no pointer span was lost in train, dev or challenge.
+
+| run | train | samples | dev | challenge | challenge exact |
+|---|---|---|---|---|---|
+| p-filt-100-s0 | filtered | 12,993 | 0.647 [0.614, 0.679] | 0.516 [0.475, 0.558] | 0.509 |
+| p-all-100-s0 | all | 20,012 | 0.697 [0.664, 0.728] | 0.628 [0.587, 0.667] | 0.617 |
+| p-all-100-s1 | all | 20,012 | 0.684 [0.652, 0.716] | 0.635 [0.594, 0.674] | 0.630 |
+| p-all-100-s2 | all | 20,012 | 0.694 [0.662, 0.725] | 0.620 [0.579, 0.660] | 0.606 |
+| p-all-50-s0 | all, 50 % of edits | 9,889 | 0.554 [0.519, 0.588] | 0.494 [0.453, 0.536] | 0.491 |
+| p-all-25-s0 | all, 25 % of edits | 4,915 | 0.399 [0.365, 0.433] | 0.338 [0.299, 0.378] | 0.338 |
+| p-all-100-s0-long | all, 32,000 steps | 20,012 | 0.709 [0.677, 0.740] | 0.639 [0.598, 0.678] | 0.630 |
+
+- Seeds 0/1/2 at 100 %: dev 0.692 (sd 0.007), challenge 0.628 (sd 0.007).
+- Filter ablation: the unfiltered set wins by 11 points on the challenge set (0.628 vs 0.516, intervals do not overlap) and 5 points on the clean dev set. The filtered set also lies below the learning curve of the unfiltered set: log-linear between the 50 % and 100 % points, 12,993 sentences would give about 0.55 on the challenge set (interpolated, not measured), the filtered run reached 0.516. The sentences the round-trip drops help the parser more than they hurt it.
+- Learning curve: each doubling of training edits adds 15.6 points (25 → 50 %) and 13.4 points (50 → 100 %) on the challenge set. No flattening yet.
+- Steps: twice the steps (32,000) adds 1.1 points on the challenge set, inside 1.5 seed sd; its best dev checkpoint was step 16,000. More steps do not help at this data size.
+- Per field (p-all-100-s0, dev / challenge): intent 0.983 / 0.942, sources 0.899 / 0.880, targets 0.821 / 0.829, invert 0.866 / 0.838, scope 0.929 / 0.898.
+- Errors by number of routes in the gold frame (p-all-100-s0, dev / challenge): 0 routes 0.94 / 0.84, 1 route 0.73 / 0.63, 2 routes 0.35 / 0.38, 3 or more 0.07 / 0.00 (29 / 23 sentences). Of the 204 failed challenge sentences, 94 have a wrong target, 89 a wrong invert, 66 wrong sources; 40 fail on targets alone. By intent on the challenge set: map 0.53 (295), modify 0.38 (56), clear 0.59 (22); the rest 0.84-1.00. German 0.57 (185) vs English 0.66 (363); layperson 0.53 is the weakest register.
+- Confidence (frame log-prob) ranks well: the most confident 50 % of challenge sentences are 0.898 correct, the most confident 30 % 0.963. Coverage at 95 % accuracy: 0.33 on the challenge set, 0.48 on dev. The threshold for the chip fallback still has to come from Noa's 50 calibration sentences.
+
+## Export and latency
+
+`uv run tools/mapping/export_parser.py --run p-all-100-s0` (M1 Pro, CPU, torch 2.15.0, batch 1, tokenize + encode + constrained greedy decode, 200 dev and challenge sentences after 10 warm-up runs).
+
+| threads | median ms | p95 ms |
+|---|---|---|
+| 1 | 9.03 | 21.51 |
+| 4 | 11.63 | 27.74 |
+
+- Four threads are slower than one at batch 1; the plugin should run the parser on one thread.
+- Weight blobs for Rust: `weights.f16.bin` 18.6 MB, `weights.int8.bin` 9.4 MB (per-row symmetric int8 for 2-D weights with f16 row scales, f16 for the rest); tensor tables with name, shape, dtype, offset and byte count in `export.json`. f32, f16 and int8 weights give the same dev and challenge accuracy to four decimals.
+- RSS of the Python process: 217.5 MB after importing torch, 296.9 MB after loading model and data, 349.0 MB peak during inference. A Rust runtime will need far less; not measured.
+- Label audit: the parser trained on train_all reproduces 99.97 % of the round-trip-kept and 100 % of the dropped training sentences, so the audit only shows memorisation. It needs a model that has not seen the audited half (cross-fitting); `audit_suspects.jsonl` is nearly empty.
+
+## Stage-2 decision
+
+Stage 2 on Baseten is worth it. Data is the bottleneck: +13 to +16 points per doubling of edits against +1 point for doubling the steps. Rules for stage 2:
+
+- Use every validated sentence (train_all); the round-trip filter costs 11 points and is no longer needed for training, which saves its 5 $ per 13k sentences.
+- Weight the edit sampler towards what fails: 2 and 3 routes per sentence, invert, modify, map with modifiers, German and layperson wording.
+- Size: about as many edits again as stage 1 (8,000). At the stage-1 rate of 0.00085 $ per valid sentence that is about 11 $ (estimate from stage 1, not measured); the ledger stands at 34.98 $.
+- Then the same 16,000 steps on the doubled set, plus one seed, to see whether the curve keeps its slope.
+
+# RESULT: stage 2 on Baseten and parser v2 on the Mac (2026-10-30)
+
+Code in `tools/mapping/` (commit 9579e9b). The queue `caffeinate -dimsu zsh tools/mapping/run_s2.sh` ran from 10:06 to 13:19, eight steps, all rc=0. dev.jsonl and challenge.jsonl are byte-identical to ds-v1, so dev and challenge numbers compare directly with parser v1.
+
+## Stage-2 commands
+
+```
+uv run tools/mapping/edits.py --run edits-s2 --n 8000 --seed 23 --glossary-run gloss-v1 --override edits-s2.yaml --id-prefix f
+uv run tools/mapping/keywords.py --run kw-s2 --edits-run edits-s2 --glossary-run gloss-v1 --seed 29
+uv run tools/mapping/commands.py --run cmd-s2 --edits-run edits-s2 --reasoning-effort medium --workers 12 --max-usd 17
+uv run tools/mapping/dataset.py --out ds-v2 --seed 13 --stage2 cmd-s2 --cat 0.25
+```
+
+- `edits-s2.yaml` shifts the sampler towards the v1 failures: routes per edit 1/2/3 = 40/38/22, invert 0.25, modify 15 %, German 40 %, layperson 17 % of registers. Edit ids start with `f`, so the dev split hashes apart from stage 1.
+- 8,374 edits, 16,748 requested variants, 12,767 valid = 76.2 % (447 requests, 12.74 $, 0.0010 $ per valid sentence). The lower valid rate than stage 1 (79.0 %) comes from the side check: 1,964 drops for a missing side word, more sides per sentence at 2-3 routes. No round-trip check.
+- ds-v2: train_all 39,433 sentences from 11,976 edits (stage 1 plus stage 2), dev 805 (stage 1, unchanged), dev_s2 1,380 (stage-2 edits in the dev hash, stage-2 distribution), challenge 548 (unchanged).
+- train_cat: train_all plus 25 % concatenations, 48,173 sentences. Two map sentences of the same language with 1-2 routes each, no references, from different edits, are joined with a connector ("and", ", plus", "und", ", außerdem" ...) into one sentence with 2-3 routes; the second sentence's slots get a `b_` prefix, its spans shift, and the side check runs again on the joined text. Costs nothing on Baseten. Sources longer than the 96-token encoder limit are now dropped instead of trained on truncated (9 of train_cat).
+- Ledger total 47.72 $ over 3,023 requests.
+
+## Parser v2
+
+Same model and settings as v1 (9.30M, tok-v1, 16,000 steps, batch 64, EMA), only the data changes.
+
+| run | train set | samples | best step | min | dev | challenge | dev_s2 | challenge cov@0.95 |
+|---|---|---|---|---|---|---|---|---|
+| p-all-100-s0 (v1) | ds-v1 train_all | 20,012 | 14,000 | 33.0 | 0.697 [0.664, 0.728] | 0.628 [0.587, 0.667] | | 0.33 |
+| p-v2-all-s0 | train_all | 39,433 | 12,000 | 39.2 | 0.768 [0.737, 0.796] | 0.703 [0.663, 0.739] | 0.681 [0.656, 0.705] | 0.38 |
+| p-v2-cat-s0 | train_cat | 48,164 | 14,000 | 43.0 | 0.768 [0.737, 0.796] | 0.712 [0.672, 0.748] | 0.708 [0.683, 0.731] | 0.46 |
+| p-v2-cat-s1 | train_cat, seed 1 | 48,164 | 8,000 | 43.3 | 0.785 [0.755, 0.812] | 0.712 [0.672, 0.748] | 0.699 [0.675, 0.723] | 0.52 |
+| p-v2-cat-s0-24k | train_cat, 24,000 steps | 48,164 | 14,000 | 65.1 | 0.783 [0.753, 0.810] | 0.703 [0.663, 0.739] | 0.714 [0.689, 0.737] | 0.48 |
+
+- Doubling the edits: challenge 0.628 → 0.703 (+7.5 points), dev 0.697 → 0.768 (+7.1). The intervals of v1 and v2 do not overlap on either set. The gain per doubling is half of the v1 learning curve (+13 to +16); part of that is the shifted distribution, which puts more weight on harder edits than the challenge set has.
+- Concatenation vs plain (same seed, same steps, paired McNemar on route_edit): challenge 26 vs 21 sentences fixed only by one side (p 0.56), dev 37 vs 37 (p 1.0), dev_s2 87 vs 50 (p 0.002). The gain is real on the stage-2 distribution, small and not significant on the stage-1 sets. Coverage at 95 % accuracy on the challenge set rises from 0.38 to 0.46 (seed 1: 0.52).
+- Seeds: both concat seeds reach 0.712 on the challenge set; dev 0.768 and 0.785.
+- 24,000 steps: challenge -0.9, dev +1.5, dev_s2 +0.6 points against 16,000. Same picture as v1: more steps do not pay at this data size.
+
+Route_edit by group (challenge / dev / dev_s2; counts in brackets for the challenge set):
+
+| group | v1 p-all-100-s0 | v2 plain p-v2-all-s0 | v2 concat p-v2-cat-s0 |
+|---|---|---|---|
+| 0 routes (146) | 0.84 / 0.94 / | 0.92 / 0.96 / 0.87 | 0.90 / 0.95 / 0.88 |
+| 1 route (305) | 0.63 / 0.73 / | 0.69 / 0.79 / 0.71 | 0.71 / 0.78 / 0.73 |
+| 2 routes (74) | 0.38 / 0.35 / | 0.49 / 0.52 / 0.50 | 0.51 / 0.52 / 0.54 |
+| 3+ routes (23) | 0.00 / 0.07 / | 0.22 / 0.21 / 0.25 | 0.22 / 0.41 / 0.38 |
+| map (295) | 0.53 / 0.61 / | 0.59 / 0.70 / 0.56 | 0.61 / 0.70 / 0.60 |
+| modify (56) | 0.38 / 0.68 / | 0.57 / 0.75 / 0.73 | 0.54 / 0.78 / 0.77 |
+| English (363) | 0.66 / 0.71 / | 0.72 / 0.80 / 0.70 | 0.73 / 0.78 / 0.73 |
+| German (185) | 0.57 / 0.66 / | 0.66 / 0.71 / 0.65 | 0.67 / 0.74 / 0.67 |
+| layperson (79) | 0.53 / 0.64 / | 0.72 / 0.69 / 0.63 | 0.73 / 0.69 / 0.67 |
+
+- Concatenation helps where it was aimed: 3+ routes on dev 0.21 → 0.41 (29 sentences) and on dev_s2 0.25 → 0.38 (110 sentences); on the challenge set 3+ routes stay at 0.22 (23 sentences, too few to tell).
+- Per field (p-v2-cat-s0, dev / challenge): intent 0.984 / 0.964, sources 0.933 / 0.932, targets 0.882 / 0.883, invert 0.909 / 0.909, scope 0.954 / 0.925. Invert on the challenge set went from 0.838 to 0.909. Failed challenge sentences fell from 204 to 158; by field: targets 94 → 64, invert 89 → 50, sources 66 → 37, scope 56 → 41, intent 32 → 20.
+- The weakest groups are still multi-route sentences (2 routes about 0.5, 3+ routes 0.2-0.4) and map with modifiers (0.61 on the challenge set).
+
+## Export of parser v2
+
+`report.py --pick` chose `p-v2-cat-s0` over the 24k run (challenge first, dev as tie-break); seed 1 has the same challenge score and higher dev, but the queue only compares s0 runs. `export_parser.py --run p-v2-cat-s0 --ds ds-v2 --no-audit`: CPU median 9.19 ms, p95 24.36 ms on one thread, 14.07 / 41.04 ms on four threads. Blobs unchanged in size (f16 18.6 MB, int8 9.4 MB). RSS 218 MB after torch import, 297 MB after load, 349 MB peak.
+
+## Next for the parser
+
+- Data still pays more than steps, but less than in v1. A stage 3 of the same size would cost about 13 $; the measured return halved, so the next step is cheaper levers first: concatenation at a higher rate (0.25 was the only rate tried), and targeted generation for map with modifiers and 3 routes only.
+- Noa's 50 calibration and 100 eval sentences decide whether synthetic dev numbers carry over; nothing above is measured on real speech.
+
+## Concatenation rate sweep (2026-10-30, evening)
+
+```
+uv run tools/mapping/dataset.py --out ds-v2-c50 --stage2 cmd-s2,kw-s2 --cat 0.5
+uv run tools/mapping/dataset.py --out ds-v2-c100 --stage2 cmd-s2,kw-s2 --cat 1.0
+caffeinate -dimsu zsh tools/mapping/run_cat.sh      # 15:03 to 18:09, all rc=0
+```
+
+- train_cat 56,853 sentences at 0.5 (17,420 joined) and 74,252 at 1.0 (34,819 joined). Every other set is byte-identical to ds-v2, and the 0.5 train_cat starts with the 0.25 one, so only the amount of joined sentences changes. Same model, 16,000 steps, seeds 0 and 1 per rate.
+
+| rate | challenge (s0, s1, mean) | dev | dev_s2 | challenge 3+ routes (2 seeds pooled) |
+|---|---|---|---|---|
+| 0 (p-v2-all-s0) | 0.703 | 0.768 | 0.681 | 0.22 |
+| 0.25 | 0.712, 0.712, 0.712 | 0.768, 0.785, 0.776 | 0.708, 0.699, 0.704 | 0.24 |
+| 0.5 | 0.719, 0.734, 0.726 | 0.773, 0.763, 0.768 | 0.714, 0.713, 0.713 | 0.28 |
+| 1.0 | 0.701, 0.717, 0.709 | 0.786, 0.773, 0.780 | 0.700, 0.707, 0.704 | 0.30 |
+
+- Paired McNemar against 0.25, seed-matched and pooled over both seeds: 0.5 fixes 48 challenge sentences that 0.25 misses and loses 32 (p 0.09), on dev_s2 127 vs 100 (p 0.08), on dev 49 vs 63 (p 0.22, the other way). 1.0 is a tie on all three sets (p 0.73 to 1.0).
+- Reading: any concatenation helps (0 → 0.25 on dev_s2, p 0.002, see above); the rate beyond 0.25 does not move the result outside seed noise. 3+ routes creep up with the rate on the challenge set (0.24 → 0.28 → 0.30, 46 sentence-runs each), too few to count.
+- No new export. `p-v2-c50-s1` has the highest challenge score (0.734), but picking the shipped run by its challenge score would tune on the test set; the shipped blob stays `p-v2-cat-s0`. Future runs use 0.5 (best mean on two of three sets, same cost).
+- The concat lever is used up. What is left for the parser: a targeted Baseten batch for map with modifiers and 3-route sentences (the weakest groups at 0.5-0.6 and 0.2-0.4), and Noa's real sentences to check that the synthetic gains carry over.
+
+## Stage 3: targeted batch for map with modifiers and multi-route (2026-10-30, night)
+
+Error analysis before the batch (p-v2-c50 s0+s1, map sentences of challenge, dev and dev_s2 pooled): map without modifiers 0.73; with quantize 0.48, gate 0.51, invert 0.52, amount 0.55, hold 0.55, range 0.59, smooth 0.60, curve 0.61; 1 route 0.74, 2 routes 0.53, 3 routes 0.35.
+
+```
+uv run tools/mapping/edits.py --run edits-s3 --n 3000 --seed 31 --glossary-run gloss-v1 --override edits-s3.yaml --id-prefix g
+uv run tools/mapping/keywords.py --run kw-s3 --edits-run edits-s3 --glossary-run gloss-v1 --seed 37
+uv run tools/mapping/commands.py --run cmd-s3 --edits-run edits-s3 --reasoning-effort medium --workers 12 --max-usd 7
+uv run tools/mapping/dataset.py --out ds-v3 --stage2 cmd-s2,kw-s2 --stage3 cmd-s3,kw-s3 --cat 0.5
+caffeinate -dimsu zsh tools/mapping/run_s3.sh       # 19:39 to 21:10, both rc=0
+```
+
+- `edits-s3.yaml`: intents map 80 / modify 12 / unmap 8, routes per edit 1/2/3 = 25/40/35, every modifier rate raised (invert 0.22, range and amount 0.2, curve and smooth 0.1, hold, quantize and gate 0.08, time 0.05).
+- 3,215 edits, 161 jobs. The dry-run estimate was 4.21 $; the batch hit the 7 $ cap after 142 jobs (6.91 $, 194 requests). 3,749 valid sentences of 6,430 requested = 58.3 %, against 76.2 % in stage 2: long multi-route sentences lose side words more often (830 drops for a missing side). 0.0018 $ per valid sentence, about twice stage 2. The 19 remaining jobs were not resumed. Ledger 54.64 $.
+- ds-v3: train_all 45,685 (13,707 edits), train_cat 65,225. dev, dev_s2 and challenge byte-identical to ds-v2; stage-3 dev edits go to dev_s3 (416 sentences). dev_s3 has the targeted distribution by construction and is not used as evidence.
+- Overfitting guard from this step on: `report.py --pick` chooses on dev (plus dev_s2 when both runs have it); the challenge set is reported, never used to choose. Earlier choices (filter vs all, plain vs concat) came out the same under the new rule.
+
+Comparison with p-v2-c50 (same concat rate, same steps, seeds 0 and 1, paired McNemar pooled over seeds):
+
+| set | v2 c50 (s0, s1, mean) | v3 c50 (s0, s1, mean) | fixed only by v2 / only by v3 | p |
+|---|---|---|---|---|
+| dev | 0.773, 0.763, 0.768 | 0.796, 0.778, 0.787 | 42 / 73 | 0.005 |
+| dev_s2 | 0.714, 0.713, 0.713 | 0.708, 0.725, 0.716 | 115 / 123 | 0.65 |
+| challenge (reported) | 0.719, 0.734, 0.726 | 0.748, 0.737, 0.743 | 37 / 55 | 0.08 |
+
+| group (v2 → v3, mean of two seeds) | challenge | dev | dev_s2 |
+|---|---|---|---|
+| simple: 1 route, no modifier | 0.79 → 0.79 | 0.84 → 0.83 | 0.76 → 0.77 |
+| map with modifiers | 0.56 → 0.61 | 0.61 → 0.64 | 0.58 → 0.58 |
+| 2 routes | 0.53 → 0.57 | 0.52 → 0.57 | 0.56 → 0.56 |
+| 3+ routes | 0.28 → 0.43 | 0.41 → 0.43 | 0.35 → 0.37 |
+| intents other than map | 0.84 → 0.83 | 0.90 → 0.90 | 0.83 → 0.82 |
+
+- The batch helps on dev (+1.9 points, significant) and on the reported challenge set (+1.6), mostly in the targeted groups; simple sentences and other intents do not get worse.
+- On dev_s2, the set closest to the batch distribution, there is no gain, and map with modifiers stays at 0.58 there. Seed noise on dev_s2 alone does not explain that (1,380 sentences, both seeds flat). A plausible reading is that dev_s2 errors in these groups are harder cases or label noise that more generated sentences do not fix; not measured.
+- dev_s3 (targeted distribution, not evidence): 0.584 and 0.570. The batch's own kind of sentence is still the weakest material.
+- Exported `p-v3-c50-s0` (chosen on dev and dev_s2 over seed 1 and over the 24k v2 run): dev 0.796, challenge 0.748, dev_s2 0.708. int8 gives the same dev score and loses one challenge sentence (0.746). CPU median 10.3 ms, p95 26.5 ms on one thread; blobs 18.6 MB f16, 9.4 MB int8.
+
+Where synthetic data stands after three stages:
+
+- v1 → v3 on the unchanged sets: dev 0.697 → 0.796, challenge 0.628 → 0.748 (shipped runs).
+- Return per dollar falls: stage 2 (12.74 $) +7.5 challenge points; stage 3 (6.91 $) +1.6 points, insignificant on two of three sets.
+- Every set (training, dev, challenge) comes from the same generator, prompts, ontology and glossary. The numbers measure how well the parser reads Spark Open sentences. Real speech can only be measured with Noa's sentences, and further synthetic batches would tune the parser to the generator.

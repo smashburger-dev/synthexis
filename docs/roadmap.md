@@ -44,7 +44,7 @@ Hard dates: S3 and S4 recorded 10-30/10-31, training from 11-01 (new Modal credi
 - [ ] `setParamValue` root cause (bridge only, not blocking)
 - [ ] UI in the glass language (last, after perception and routes are stable)
 
-## Mapping assistant (own session; state in `docs/session-2026-10-29-mapping.md`)
+## Mapping assistant (own session; state in `docs/session-2026-10-30-mapping-train.md`)
 
 - [x] Taxonomy final: 44 classes plus ontology of sources, targets, intents, modifiers (`tools/mapping/ontology.yaml`; spec merge proposed in `probes/mapping-pipeline/SPEC_PROPOSAL.md`)
 - [x] Parameter harvest AU (886 of 906 plugins, 122,664 params) and VST3 (405 of 549 bundles) with own tools (`tools/mapping/harvest/`)
@@ -52,14 +52,27 @@ Hard dates: S3 and S4 recorded 10-30/10-31, training from 11-01 (new Modal credi
 - [x] Spark Open labels: 302 priority plugins double-labelled and adjudicated, 583 more single pass; VST3 labels running
 - [x] Glossary EN/DE (11,333 phrases, 416 concepts)
 - [x] Synthetic commands generator v3 with validators and round-trip check; stage 1 (8,000 edits) generated
-- [ ] Noa: 50 calibration sentences and 100 eval sentences, typed as he would (`map.eval`), never trained
-- [ ] param-sense v1 trained, vendor-holdout eval; known-plugin table exported
-- [ ] Parser v1 (about 8M, span-pointer frame decoder) trained; challenge set; threshold calibrated on Noa's 50
+- [x] Real-sentence set: Noa's 34 sentences plus 116 derived (translations, slot swaps, his request forms), grouped split 51 calibration / 99 eval, never trained (`probes/real-eval/RESULT.md`)
+- [ ] Noa reviews the derived rows and the plugin context (`data/mapping/eval/review.md`); label the 34 originals, derived labels by delta
+- [ ] Spec merge by the main session, proposal "demo requests": XY pad, pinch clutch, values in plugin units, step, ramp toggle, arp style, any finger mask
+- [x] param-sense v1 trained (top-1 0.728, macro F1 0.511 on unseen vendors); known-plugin table exported (63,625 rows)
+- [x] Parser v1 (9.30M, span-pointer frame decoder) trained on the Mac; challenge set 548 sentences; route_edit 0.628 challenge, 0.697 dev; int8 blob 9.4 MB, 9 ms median on one CPU thread
+- [x] Filter ablation and learning curve: all sentences beat the round-trip filter by 11 points; +13-16 points per doubling of edits, so stage 2 goes ahead
+- [x] Stage 2 commands (8,374 edits weighted to multi-route, invert, modify, German, layperson; 12.74 $) and parser v2 with sentence concatenation: route_edit 0.712 challenge, 0.768 dev; exported `p-v2-cat-s0`
+- [x] Concat rate sweep (0.25 / 0.5 / 1.0, two seeds each): no rate wins outside seed noise; future runs use 0.5
+- [x] Targeted stage-3 batch (3,749 sentences, 6.91 $) and parser v3: dev 0.796, challenge 0.748; exported `p-v3-c50-s0`. Runs are now chosen on dev sets only
+- [ ] Real-sentence eval (calibration 51, eval 99 rows) before any further synthetic batch
+- [ ] Threshold for the chip fallback calibrated on the 51 calibration rows
 - [ ] Resolver and chip fallback in the plugin, "Built with Muse Spark Open" credit
+- [x] Open-vocabulary probe: target text against live parameter names beats the class-only binding on unseen names (held-out top-1 0.68 / 0.81 against 0.13 / 0.12); live writes audible in Portal, Timeless, Galaxy Tape Echo (`probes/open-vocab-mapping/RESULT.md`, spec proposal "open-vocabulary parameters")
+- [ ] FL bridge write test with third-party plugins while the song plays: ShaperBox (module switch + band mix), Thermal, Portal
+- [x] Parser error analysis (`probes/parser-errors/RESULT.md`): ß missing from the tokenizer vocabulary; 29 % of object labels, 75 % of momentary labels and 6-8 % of invert labels are not expressed by their sentence; text-supported scoring +4.8 points en, +4.9 de
+- [ ] Bundled retrain A/B/C (tok-v2, projected labels, word hash embedding; 2 seeds each, gates per slice) before stage 4
 
 ## Demo and submission
 
-- [ ] FigJam diagrams regenerated from the spec
+- [x] FigJam updated for non-experts (10-31): status notes on the 8 planning diagrams, build plan coloured by status, new area "What six days taught us" (`docs/figjam-update-2026-10-31.md`)
+- [ ] FigJam: update again after Noa's sentences, the retrain and the FL test
 - [ ] Demo project in FL, 3-minute video with presets and behind the scenes (11-03)
 - [ ] README with real request counts, repo public (11-03)
 - [ ] Submission (11-04)
