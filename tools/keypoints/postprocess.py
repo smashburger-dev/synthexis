@@ -37,7 +37,8 @@ there.
 
 SAM 3D Body always predicts both hands, hidden ones too, so for sam3dbody
 only SAM-matched hands count as visible in the checks, recall numbers and
-`visible_hands_per_frame`; unmatched hands are drawn grey.
+`visible_hands_per_frame`; unmatched hands are drawn grey. Its stats and
+contact sheet cover only the frames it processed (non-empty hand list).
 
 Chirality check: recordings are unmirrored, so anatomical right appears on
 the image left. Expected chirality comes from the segment labels: one-hand
@@ -201,9 +202,11 @@ def process(session):
             "sam": chunk is not None,
             "n_sam": len(shands),
             "hands": hands,
+            "processed": bool(r["hands"]) or SOURCE not in BOTH_HANDS_ALWAYS,
         })
     (out_dir / f"keypoints_{SOURCE}.jsonl").write_text("\n".join(lines) + "\n")
 
+    rows = [r for r in rows if r["processed"]]
     stats = make_stats(session, rows)
     (out_dir / f"stats_{SOURCE}.json").write_text(json.dumps(stats, indent=1))
     contact_sheet(session, rows)
