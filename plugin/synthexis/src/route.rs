@@ -35,6 +35,19 @@ impl Route {
     }
 }
 
+/// Perception defaults on Signal 3..10, until the mapping assistant
+/// writes routes: (signal id, macro index).
+pub const PERCEPTION_DEFAULTS: &[(&str, usize)] = &[
+    ("cam0.hand.R.openness", 2),
+    ("cam0.hand.L.openness", 3),
+    ("cam0.mouth.open", 4),
+    ("cam0.hand.R.y", 5),
+    ("cam0.hand.R.x", 6),
+    ("cam0.hand.R.pinch", 7),
+    ("cam0.eye.L.open", 8),
+    ("cam0.head.yaw", 9),
+];
+
 /// Default routing table. `test_signal` gates the triangle route.
 pub fn default_routes(test_signal_on: bool) -> Vec<Route> {
     let mut routes = vec![
@@ -43,6 +56,7 @@ pub fn default_routes(test_signal_on: bool) -> Vec<Route> {
         Route::new(SIG_TRIANGLE, 31, 1.0),
     ];
     routes[2].enabled = test_signal_on;
+    routes.extend(PERCEPTION_DEFAULTS.iter().map(|&(id, m)| Route::new(id, m, 1.0)));
     routes
 }
 
@@ -106,6 +120,14 @@ mod tests {
         }
         assert!((cur[0] - 0.8).abs() < 0.05, "sig1 {}", cur[0]);
         assert!((cur[1] - 0.0).abs() < 0.05);
+    }
+
+    #[test]
+    fn perception_defaults_are_engine_ids() {
+        let ids: Vec<&str> = crate::signal::perception_ids().collect();
+        for (id, _) in PERCEPTION_DEFAULTS {
+            assert!(ids.contains(id), "{id}");
+        }
     }
 
     #[test]

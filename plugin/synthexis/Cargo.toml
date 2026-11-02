@@ -23,6 +23,11 @@ objc2-foundation = { version = "0.3", features = [
     "NSArray",
     "NSError",
     "NSObject",
+    "NSURL",
+    "NSDictionary",
+    "NSValue",
+    "NSEnumerator",
+    "NSSet",
 ] }
 objc2-av-foundation = { version = "0.3", features = ["objc2-core-media"] }
 objc2-core-foundation = "=0.3.2"
@@ -34,6 +39,8 @@ parking_lot = "0.12"
 crossbeam-channel = "0.5"
 synthexis-parser = { path = "../parser" }
 synthexis-complete = { path = "../complete" }
+objc2-core-ml = "0.3"
+objc2-vision = "0.3"
 
 [build-dependencies]
 # none needed; build.rs uses std only

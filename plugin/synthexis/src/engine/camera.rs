@@ -253,6 +253,12 @@ fn handle_frame(shared: Arc<EngineShared>, sample_buffer: &CMSampleBuffer) {
             }
             let _ = CVPixelBufferUnlockBaseAddress(&image, CVPixelBufferLockFlags::ReadOnly);
         }
+        // The camera frame is unmirrored (only the preview is mirrored).
+        crate::engine::perception::submit(
+            crate::engine::coreml::Frame::new(image),
+            (pts_host_s.max(0.0) * 1e9) as u64,
+            cb,
+        );
     }
     let feat_done = Instant::now();
     push(&mut shared.cb_to_feat_ms.lock(),

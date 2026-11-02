@@ -38,6 +38,35 @@ $SYNTHEXIS_COMPLETION_DIR or ~/Library/Application Support/synthexis/completion
 spans on the parser's frame (`parser/src/pin.rs`). See
 docs/mapping-completion.md.
 
+## Perception
+
+`synthexis/src/engine/perception.rs` runs on its own thread, fed by the
+camera callback through a one-slot channel (a busy thread drops frames,
+never queues them). Backend `students`: seg student (384x216, previous
+mask fed back) -> hand and face boxes from the mask -> 128 px crops ->
+hand and face students -> `feat.*` signals; backend `vision`: Apple Vision
+hand pose and face landmarks into the same geometry (`engine/geom.rs`).
+Signal ids are `cam0.` + the ontology source id with the side after the
+first segment (`cam0.hand.R.openness`, `cam0.mouth.open`); a unit test
+checks them against `tools/mapping/ontology.yaml`.
+
+`install.sh` compiles the students into
+`~/Library/Application Support/synthexis/models` (trained ones from
+`data/models/`, else the preflight stand-ins) and writes `backend` there:
+`students` for trained models, `vision` for the stand-ins. Override with
+`SYNTHEXIS_PERCEPTION=students|vision|off`.
+
+Offline bench over a recording (no camera needed):
+
+```
+SYNTHEXIS_BENCH=../data/recordings/2026-11-01-S4/cam0.mov \
+  SYNTHEXIS_BENCH_OUT=/tmp/s4.jsonl target/release/synthexis
+python3 ../probes/plugin-perception/eval.py /tmp/s4.jsonl \
+  ../data/recordings/2026-11-01-S4/segments.json
+```
+
+Numbers: `probes/plugin-perception/RESULT.md`.
+
 ## Vendored nih-plug patch
 
 plugin/vendor/nih-plug is nih-plug @ de42101 with one additive hook:

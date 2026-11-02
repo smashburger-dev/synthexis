@@ -25,6 +25,11 @@ use params::SynthexisParams;
 use route::NUM_MACROS;
 use writer::Writer;
 
+/// Offline perception bench over a recording (engine/bench.rs).
+pub fn perception_bench(path: &str) -> i32 {
+    engine::bench::run(path)
+}
+
 pub struct Synthexis {
     params: Arc<SynthexisParams>,
     writer: Arc<Writer>,
