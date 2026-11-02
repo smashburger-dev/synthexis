@@ -136,8 +136,9 @@ def derive(routes: list, delta: list) -> list:
             rs = sub(lambda t: t.replace(f"shape:m{ma}", f"shape:m{mb}"))
         elif k in ("finger", "fingers"):
             m = dict(zip(a.split(","), b.split(",")))
-            rs = sub(lambda t: re.sub(r"^F:(\w+)", lambda x: "F:" + m.get(
-                x.group(1), x.group(1)), t))
+            rs = sub(lambda t: re.sub(      # F:thumb, S:hand.finger.thumb.tilt
+                r"^(F:|S:hand\.finger\.)(\w+)", lambda x: x.group(1) + m.get(
+                    x.group(2), x.group(2)), t))
         elif k == "source" and "," in a:     # pinch+roll,spread>hand.y,openness
             rs = [[t for t in r if t != "G:hand.pinch"] for r in rs]
             rs = sub(lambda t: t.replace("S:hand.roll", "S:hand.y")

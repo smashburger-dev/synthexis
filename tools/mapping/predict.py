@@ -28,6 +28,7 @@ import torch
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import frame_parser as fp  # noqa: E402
+import rules as R  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
 TRAIN = ROOT / "data" / "mapping" / "train"
@@ -41,6 +42,7 @@ def main() -> None:
     ap.add_argument("--beam", type=int, default=1)
     ap.add_argument("--alpha", type=float, default=0.0)
     ap.add_argument("--f16", action="store_true")
+    ap.add_argument("--rules", default="", help="rules.py names, e.g. conv")
     ap.add_argument("text", nargs="*")
     a = ap.parse_args()
     texts = list(a.text)
@@ -73,7 +75,7 @@ def main() -> None:
     rows = []
     with torch.no_grad():
         for s, (seq, lp) in zip(samples, decode(samples)):
-            frame = fp.items(seq, s, vocab)
+            frame = R.apply(fp.items(seq, s, vocab), s["text"], a.rules)
             rows.append({"text": s["text"], "conf": round(math.exp(lp), 3),
                          "frame": frame})
             print(f"{math.exp(lp):.3f}  {s['text']}\n       {' '.join(frame)}")

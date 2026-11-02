@@ -256,3 +256,26 @@ Plan and the checks behind it: `docs/parser-v9-plan.md`. Noa decided: a pinch ne
 v7a reads the new stage-6 sentences at 0.351; v9 at 0.62, and it gains 1.6 points on the older sets too. On the changed real set the v9 ensemble gets 42 of 102 exact (v7a ensemble 37) and route F1 0.537 (0.425); the route F1 gain holds over two seeds, the exact gain does not (`probes/real-eval/RESULT.md`, section "Parser v9").
 
 Export: p-v9-s0 and p-v9-s1 as f16 (2 x 121 MB), f16 equal to f32 on dev, 31 ms median per run on one CPU thread. The Rust runtime of `claude/parser-runtime-be3a3c` loads v7a; v9 needs `tools/mapping/export_runtime.py` re-run on the v9 runs there.
+
+## 13. Parser v10: direction phrasing, stage 7 (2026-11-02, `tools/mapping/run_v10.sh`)
+
+Plan: `docs/parser-v10-plan.md`. The v9 misses on the changed real set were read by part; INV was the largest slice (16 rows wrong only there). `edits.py` had drawn glossary phrases for sources only in their 1 direction and falling target phrases only on inverted routes, so "goes down" meant invert to the parser.
+
+- Stage 7 (`edits-s7.yaml`, `prompts/commands-s7.md`): 6,479 edits. A moving source is said toward its 0 end in 45 % of edits (glossary phrase for the 0 direction where one exists) and every parameter target of its routes is told `dir: falls` or `dir: rises`, so the INV label is the product of the two; 15 % name both directions in one phrase; 35 % of two-route edits put another control of the first route's effect on the second route; 20 % carry a parameter name. Written by DeepSeek V4.1 Flash, 4,638 of 12,958 variants valid (36 %), 0.87 $; 199 near-copies of the real set dropped by `leak.py` (closest remaining ratio 0.60). A falling-direction word appears in 622 of 653 sentences whose targets all fall, a rising word in 123 of 139 whose targets all rise.
+- `rules.py conv`: `conventions.py` applied to the prediction.
+- v9 recipe otherwise (ds-v10c, stage-6 and stage-7 rows twice in train_cat), four seeds on Modal L4s, 22 to 26 minutes each.
+
+| run | dev | challenge | dev_s2 | dev_s3 | dev_s4 | dev_s5 | dev_s6 | dev_s7 | mean of seven older | mean of eight |
+|---|---|---|---|---|---|---|---|---|---|---|
+| p-v9-s0 | 0.876 | 0.841 | 0.834 | 0.728 | 0.820 | 0.712 | 0.610 | 0.506 | 0.7745 | 0.7409 |
+| p-v9-s1 | 0.878 | 0.829 | 0.833 | 0.721 | 0.825 | 0.702 | 0.593 | 0.479 | 0.7687 | 0.7324 |
+| ensemble v9 s0+s1 | 0.886 | 0.849 | 0.840 | 0.757 | 0.840 | 0.732 | 0.621 | 0.510 | 0.7890 | 0.7542 |
+| p-v10-s0 | 0.876 | 0.829 | 0.836 | 0.702 | 0.809 | 0.705 | 0.603 | 0.606 | 0.7656 | 0.7456 |
+| p-v10-s1 | 0.877 | 0.838 | 0.830 | 0.707 | 0.802 | 0.710 | 0.653 | 0.626 | 0.7738 | 0.7553 |
+| ensemble v10 s0+s1 | 0.887 | 0.850 | 0.846 | 0.731 | 0.826 | 0.739 | 0.666 | 0.639 | 0.7921 | 0.7730 |
+| ensemble v10 s2+s3 | 0.876 | 0.849 | 0.832 | 0.728 | 0.823 | 0.712 | 0.636 | 0.613 | 0.7793 | 0.7585 |
+| ensemble v10 s0 to s3 | 0.888 | 0.858 | 0.842 | 0.736 | 0.828 | 0.729 | 0.659 | 0.644 | 0.7914 | 0.7729 |
+
+(route_edit on ds-v10c, greedy, without conv; conv adds 0.0004 to 0.0008 to every mean and lowers no set.)
+
+v9 reads the new stage-7 sentences at 0.51, v10 at 0.64. On the older sets the first v10 pair holds level (+0.3 points), the second pair loses 1 point; dev_s3 and dev_s4 fall for every v10 run. On the real set the shipped ensemble gets 47 of 102 eval rows exact and 79 right or one part wrong, with calibration down from 30 to 25 of 51 (`probes/real-eval/RESULT.md`, section "Parser v10").

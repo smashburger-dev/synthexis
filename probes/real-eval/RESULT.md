@@ -281,6 +281,69 @@ Runs in `probes/parser-errors/RESULT.md`, section 12. By the rule above v9 repla
 
 Reading: the v9 ensemble passes 40 % exact on this set (42 of 102, 41 %), and right or one part wrong stays at 74 % (75 of 102, v7a 77). The exact gain is not established (p 0.18 over two seeds); the route F1 gain of 10 points is, over two seeds. Of Noa's originals, 6 (each finger its own value on one parameter), 26 ("turn on" read as a switch) and 35 (one movement, two parameters in opposite directions) are now exactly right, 1 is now read as a command; 8 and 12 got worse, 36 (four parameters) is still wrong. The set was looked at to write the conventions, so these numbers are weaker evidence than v7's; a set Noa dictates fresh would settle it.
 
+## Parser v10: selection rule (written 2026-11-02, before any v10 run exists)
+
+Plan and the slices behind it: `docs/parser-v10-plan.md`. The failure slices of the v9 ensemble on this set were read to write stage 7, so the set is seen for v10: its numbers are reported and do not select.
+
+1. Labels: ds-v10c = ds-v9 plus stage 7, through `project_labels.py` and `conventions.py`; stage-6 and stage-7 rows twice in train_cat. The seven older dev sets are the same sentences as in ds-v9c.
+2. Selection score: mean route_edit over the eight synthetic dev sets of ds-v10c (dev, challenge, dev_s2 to dev_s7), greedy two-seed ensemble per arm. v10 replaces v9 when its score is at least 0.005 higher and it loses no more than 0.005 on the mean of the seven older sets (dev_s7 is written in the new style and favours v10).
+3. Decoding: the conv rule (`rules.py`) applies to the chosen ensemble when it lowers no dev set. Four seeds replace two when the four-seed ensemble scores at least 0.005 higher on the eight-set mean.
+4. Real set: scored once at the end for every arm (v9 ensemble with and without conv, v10 seeds, v10 ensembles), paired against v9: seeds against seeds, ensemble against ensemble, McNemar and group bootstrap as before.
+
+## Parser v10 (2026-11-02)
+
+Runs in `probes/parser-errors/RESULT.md`, section 13. By the rule above v10 replaces v9: on the eight dev sets of ds-v10c the ensemble of v10 s0+s1 scores 0.7730 against 0.7542, on the seven older sets 0.7921 against 0.7890. The conv rule lowers no dev set and applies. The four-seed ensemble scores 0.7729 on dev, no gain over two seeds, so it is not chosen. Then the real set was scored once (`arms.py`, files `preds-g2-*.jsonl`, `-conv` with the rule):
+
+| run | calibration | eval all | eval orig | eval route F1 | eval right or one part wrong |
+|---|---|---|---|---|---|
+| ensemble v9 s0+s1 (shipping until now) | 30/51 | 42/102 | 8/23 | 0.537 | 75/102 |
+| ensemble v9 s0+s1, conv | 30/51 | 45/102 | 9/23 | 0.556 | 76/102 |
+| v10 s0 | 27/51 | 49/102 | 13/23 | 0.580 | 82/102 |
+| v10 s1 | 27/51 | 46/102 | 10/23 | 0.532 | 79/102 |
+| v10 s2 | 26/51 | 37/102 | 7/23 | 0.476 | 71/102 |
+| v10 s3 | 30/51 | 46/102 | 10/23 | 0.595 | 73/102 |
+| ensemble v10 s0+s1 | 25/51 | 46/102 | 10/23 | 0.553 | 78/102 |
+| ensemble v10 s0+s1, conv (ships) | 25/51 | 47/102 | 11/23 | 0.559 | 79/102 |
+| ensemble v10 s2+s3, conv | 31/51 | 50/102 | 10/23 | 0.624 | 79/102 |
+| ensemble v10 s0 to s3, conv (not chosen) | 30/51 | 54/102 | 13/23 | 0.617 | 84/102 |
+
+| comparison | split | won / lost | p | exact match diff | group bootstrap |
+|---|---|---|---|---|---|
+| v10 s0, s1 against v9 s0, s1 | eval | 42 / 19 | 0.004 | +11.3 points | [+1.0, +23.3] |
+| v10 s0, s1 against v9 s0, s1 | calibration | 12 / 19 | 0.28 | -6.9 points | [-17.0, +4.4] |
+| four v10 seeds against both v9 seeds | calibration | 49 / 73 | 0.04 | -5.9 points | [-12.9, +3.4] |
+| v10 ensemble, conv, against v9 ensemble | eval | 18 / 13 | 0.47 | +4.9 points | [-14.1, +23.8] |
+| v9 ensemble, conv, against v9 ensemble | eval | 3 / 0 | 0.25 | +2.9 points | [0.0, +9.6] |
+| four-seed against two-seed v10 ensemble, both conv | eval | 9 / 2 | 0.07 | +6.9 points | [0.0, +15.9] |
+| four-seed against two-seed v10 ensemble, both conv | calibration | 5 / 0 | 0.06 | +9.8 points | [+2.3, +15.5] |
+
+Reading: the shipped ensemble gets 47 of 102 eval rows exact (46 %, v9 41 %) and 79 right or one part wrong (77 %, v9 74 %). Over two seeds the eval gain is established (+11 points, p 0.004); between the two ensembles it is not (p 0.47). Stage 7 fixed what it aimed at: sources said in their low direction with a falling target (29, 30, 13: 8 rows) and both directions named (08: 3 rows). It broke two things. Calibration falls by 6 to 7 points (closing the fist while a cutoff goes down now gets an INV, 23; the opposite misses, 24; drag across the screen with a pinch now adds a route, 21). And "B warp" lost its target in all five rows of group 07: stage 7 put "B Warp" into the parameter-name list, where the name is a scope word next to a target, so the parser learned it is not the target. The four-seed ensemble is the best reading of the real set on both splits (54 of 102, 84 right or one part wrong, calibration 30), but the dev sets show no gain and this set is seen, so it does not ship by the rule.
+
+## Gold fix and second slice (2026-11-02, after the v10 scoring)
+
+`score.py derive` swapped fingers only in `F:` tokens, so the derived rows 13-s2 and 29-s1 ("Zeigefinger kippen") kept the thumb tilt of their originals. Fixed; every number above this section was scored before the fix. Re-scored (pronoun = `normalize.py` pronoun rule after conv; it lowers no dev set, 0.7897 with and without, but it was looked at on this set, so it does not count as selected):
+
+| run | calibration | eval all | eval orig | eval route F1 | eval right or one part wrong |
+|---|---|---|---|---|---|
+| ensemble v9 s0+s1 | 30/51 | 43/102 | 8/23 | 0.543 | 75/102 |
+| ensemble v9 s0+s1, conv, pronoun | 35/51 | 46/102 | 9/23 | 0.579 | 78/102 |
+| v10 s0 / s1 / s2 / s3 | 27 / 27 / 26 / 30 | 51 / 47 / 38 / 48 | 13 / 10 / 7 / 10 | 0.592 / 0.538 / 0.482 / 0.608 | 82 / 79 / 71 / 73 |
+| ensemble v10 s0+s1, conv (ships) | 25/51 | 49/102 | 11/23 | 0.572 | 79/102 |
+| ensemble v10 s0+s1, conv, pronoun | 28/51 | 49/102 | 11/23 | 0.584 | 80/102 |
+| ensemble v10 s0 to s3, conv | 30/51 | 56/102 | 13/23 | 0.630 | 84/102 |
+| ensemble v10 s0 to s3, conv, pronoun | 35/51 | 56/102 | 13/23 | 0.643 | 85/102 |
+
+v10 s0, s1 against v9 s0, s1 on eval: 43 won, 19 lost, p 0.003, +11.8 points, bootstrap [+1.0, +24.6]. The pronoun rule wins 3 and 5 calibration rows (group 20, "and when I spread my fingers it should get longer") and changes no eval row.
+
+Misses of the four-seed ensemble (conv), read by part as for v10 (calibration 21, eval 46 after the fix), point to four gaps in how the training data is made:
+
+1. The hand as subject: "my right hand should control the reverb size by pinching and turning". 0 of 8 rows right (groups 27, 32). The command validator drops a sentence when a source's side word is not inside its mark or among the 7 words before it; in stage 7, 558 of 1,251 such drops had the side word in the sentence, after the movement ("Finger spreizen mit der linken Hand") or further before it. The form Noa uses is filtered out of every stage.
+2. A parameter name as the only target ("macro 2 sinkt", "B warp"). In all 858 training rows that name a macro by number, the name is a `PNAME` pointer next to a family target; never the target alone. The parser then leaves the route without a target (16-o, 16-s1, 07-t1) or drops the route.
+3. Two encodings for one movement: closing the fist is labelled `S:hand.fist` 693 times and `S:hand.openness` (low direction) 297 times. `score.py` folds them (fist = openness with INV flipped), training does not, so INV has to be learnt twice; the remaining fist-closing INV misses are 23 and 24 (4 calibration rows).
+4. A target that rises while another falls on one movement (16, 35: 4 eval rows miss only the INV). Stage 7 told targets their direction only when the source was said in its low direction.
+
+Smaller: a preset described by what it does ("every finger should be a chord", 19, 5 calibration rows; training names presets only by name); arpeggiator range and rate read as synthexis' MIDI generator where the gold has Serum's parameter (17), and pinch with both axes read as two routes where the gold has the XY pad (12): both are label questions for Noa.
+
 ## Open
 
 - Noa reviews the derived rows: do they sound like him, mean the original plus the listed change, and name the right plugin and parameter? Plugin context is inferred for all 34 originals; 5 are unknown, and their rows note the candidates.
