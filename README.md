@@ -8,7 +8,7 @@ Hands, face, headphones and everyday objects as a playable control layer for the
 
 synthexis is an audio plugin (VST3, CLAP, later AU; Apple Silicon) for FL Studio. It watches one or more cameras, reads head motion and heart rate from Powerbeats Pro 2, and turns what it sees into automation and MIDI: open your fist and the reverb on your pad blooms, raise thumb and index finger and the hi-hat switches to a trap roll, turn your head and the delay sweeps. It has no synth of its own. It plays the instruments and effects already in your project, and FL Studio records every move.
 
-> Built for the **Meta Global AI Developer Hackathon** (Oct 26 to Nov 4, 2026), Indie track, theme "Build for Your World". Everything in this repository was created during the event; the commit history starts on Oct 26.
+> Built for the **Meta Global AI Developer Hackathon** (Oct 26 to Nov 4, 2026), Indie track, theme "Build for Your World". Everything in this repository was created during the event; the commit history starts on Oct 26. One asset is older: the mapping parser's encoder (see [Carried over from earlier work](#carried-over-from-earlier-work)).
 
 ## Why Meta models
 
@@ -127,8 +127,12 @@ Planning board with all diagrams: [FigJam](https://www.figma.com/board/WJIE59w34
 
 Recordings of faces and hands stay on the machine and in a private Modal volume used for labeling. `data/` is git-ignored; no recording or dataset is ever committed.
 
+## Carried over from earlier work
+
+The one thing synthexis takes from before Oct 26 is a weight file, not code: the encoder of the mapping parser. It is mmBERT small (`jhu-clsp/mmBERT-small` at `abc32620`, MIT, Marone et al. 2025) with its 256,000-token vocabulary trimmed to the 32,769 tokens German and English need. Noa made that trim on 2026-09-28 in kleinhirn, his earlier project on small encoder classifiers in the browser, where the trimmed vocabulary still covered 94.5 % of the tokens in a German and English web sample and the embedding table shrank from 256,000 to 32,769 rows. Here it proved its worth again: as the parser's encoder it raised exact match on Noa's hand-written sentences from 22 % to 31 % over the from-scratch encoder (parser v7). The trim script stays in kleinhirn and was not copied; the parser, its decoder, training and runtime are new code in this repository.
+
 ## License
 
-Source code: [MIT](LICENSE). VST3 builds made with nih-plug's VST3 wrapper link GPLv3 bindings, so those binaries are distributed under GPLv3. SAM 3.1 is used under the SAM License; Muse Glimmer under Apache 2.0.
+Source code: [MIT](LICENSE). VST3 builds made with nih-plug's VST3 wrapper link GPLv3 bindings, so those binaries are distributed under GPLv3. SAM 3.1 is used under the SAM License; Muse Glimmer under Apache 2.0; the mmBERT encoder under MIT; the MobileNetV4 and RepViT backbones from timm under Apache 2.0. Required attributions: [docs/credits.md](docs/credits.md); licence review: [probes/licence-check](probes/licence-check/RESULT.md).
 
 Built with Muse Spark Open: the parameter labels and the mapping models are trained on Muse Spark Open outputs under the Muse Model License.
