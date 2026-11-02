@@ -1,6 +1,6 @@
 # Roadmap
 
-Status on 2026-10-29 evening. `spec/synthexis.yaml` stays the source of truth for features and decisions; this file tracks what is done and what is left, by workstream. Update it at the end of every session.
+Status on 2026-11-02 morning, after merging all session branches into `main` (`docs/merge-2026-11-02.md`). `spec/synthexis.yaml` stays the source of truth for features and decisions; this file tracks what is done and what is left, by workstream. Update it at the end of every session.
 
 Hard dates: S3 and S4 recorded 10-30/10-31, training from 11-01 (new Modal credit), feature freeze 11-02, demo video and public repo 11-03, submission 11-04 21:00 ET (11-05 03:00 CET).
 
@@ -68,7 +68,8 @@ Hard dates: S3 and S4 recorded 10-30/10-31, training from 11-01 (new Modal credi
 - [ ] Resolver and chip fallback in the plugin, "Built with Muse Spark Open" credit
 - [x] Open-vocabulary probe: target text against live parameter names beats the class-only binding on unseen names (held-out top-1 0.68 / 0.81 against 0.13 / 0.12); live writes audible in Portal, Timeless, Galaxy Tape Echo (`probes/open-vocab-mapping/RESULT.md`, spec proposal "open-vocabulary parameters")
 - [ ] FL bridge write test with third-party plugins while the song plays: ShaperBox (module switch + band mix), Thermal, Portal (session fl-target-picker)
-- [ ] Full state lists for stepped parameters (992 parameters in 100 plugins have more states than the 11 harvested samples) and how to switch Serum 2 arp patterns (session plugin-states)
+- [x] Full state lists for stepped parameters (session plugin-states, `probes/plugin-states/RESULT.md`): VST3 8,422 parameters in 403 plugins (107,112 states), AU 16,601 in 730 (159,483), plus dense scans of continuous parameters with stepped text. Formerly "992 parameters in 100 plugins have more states than the 11 harvested samples": the harvest already kept every step up to 64 steps; 334 VST3 and 799 AU parameters were truly incomplete, all but one per format complete now
+- [ ] Serum 2 arp patterns: no parameter switches them; slots switch through `channels.midiNoteOn` with trigger note 0-11 on Serum's channel (decided 11-01, session plugin-states); the FL test has to pass before the demo
 - [x] Parser error analysis (`probes/parser-errors/RESULT.md`): ß missing from the tokenizer vocabulary; 29 % of object labels, 75 % of momentary labels and 6-8 % of invert labels are not expressed by their sentence; text-supported scoring +4.8 points en, +4.9 de
 - [x] Bundled retrain A/B/C (tok-v2, projected labels, word hash embedding): no step beyond seed noise, B kept, word hash dropped (`probes/parser-errors/RESULT.md` section 7)
 - [x] Stage 4 commands (8,691 sentences, 6.71 $, 59 near-copies of the real set dropped) and parser v5: dev 0.837, challenge 0.781, dev_s4 0.736; +1.1 points against v3 on projected labels (p 0.018, no slice drops); exported `p-v5-s0`, int8 9.4 MB, 10 ms median (section 8)
