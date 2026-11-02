@@ -565,6 +565,11 @@ def eval_seg_sequential(model, files, args, cfg, limit=None):
     items.sort(key=lambda x: (x[0], x[1]))
     items = items[:limit] if limit else items
     cms = defaultdict(lambda: torch.zeros(k, k, dtype=torch.long))
+    # hand recall per frame: the plugin loses the side of a hand when seg
+    # misses it (probes/plugin-perception); counted where SAM shows a hand of
+    # >= 150 px, hit when the student covers >= 30 % of it; "centre" = hand
+    # centroid in the middle third of the frame, where the side rule fails
+    recall = Counter()
     last_idx, last_sess, last_pred = None, None, None
     for sess, idx, prev_idx, jpg, png in items:
         image = torch.from_numpy(_u8(jpg).copy()).permute(2, 0, 1).to(dev).float().unsqueeze(0) / 255
@@ -578,11 +583,22 @@ def eval_seg_sequential(model, files, args, cfg, limit=None):
         with autocast(dev):
             pred = model(image, prev_in).argmax(1)
         cms[sess] += confusion(pred, mask, k)
+        gt = mask[0] == 5
+        n_gt = int(gt.sum())
+        if n_gt >= 150:
+            hit = int((gt & (pred[0] == 5)).sum()) >= 0.3 * n_gt
+            cx = float(gt.nonzero()[:, 1].float().mean()) / gt.shape[1]
+            for key in ("all", "centre") if 1 / 3 <= cx <= 2 / 3 else ("all",):
+                recall[key + "_n"] += 1
+                recall[key + "_hit"] += hit
         last_idx, last_sess, last_pred = idx, sess, pred
     total = sum(cms.values())
     out = {"samples": len(items), "iou_own": iou(total, SEG_CLASSES),
            "iou_own_per_session": {SESSIONS[s][-2:]: iou(v, SEG_CLASSES) for s, v in cms.items()}}
     out["score"] = round(float(np.mean([out["iou_own"][c] or 0 for c in ("person", "face", "hand")])), 4)
+    out["hand_frame_recall"] = {key: round(recall[key + "_hit"] / recall[key + "_n"], 4) if recall[key + "_n"] else None
+                                for key in ("all", "centre")}
+    out["hand_frames"] = {key: recall[key + "_n"] for key in ("all", "centre")}
     return out
 
 
@@ -799,7 +815,8 @@ def main():
         # live-like: own previous prediction as the prev mask, frames in time order
         bm, _ = load_best(args, run)
         seq = evaluate("seg", bm, dev_files, args, eval_cfg, limit=args.eval_limit, sequential=True)
-        summary["val_sequential"] = {k: v for k, v in seq.items() if k in ("iou_own", "score", "samples")}
+        summary["val_sequential"] = {k: v for k, v in seq.items()
+                                     if k in ("iou_own", "score", "samples", "hand_frame_recall", "hand_frames")}
         print("sequential:", json.dumps(summary["val_sequential"]), flush=True)
     summary.update(elapsed_s=round(time.time() - t_start, 1), usd=round(usd(), 4) if args.usd_per_hour else 0)
     (run / "summary.json").write_text(json.dumps(summary, indent=1))
