@@ -10,8 +10,8 @@ Du arbeitest an **synthexis** (Meta-Hackathon, Indie-Track, Abgabe 4.11. 21:00 E
 
 **Voraussetzungen, vor allem anderen prüfen:**
 1. `main` enthält die Branches der Sessions vision-keypoints und train-packer mit ihrem letzten Stand (`docs/merge-2026-11-02.md` nennt sie). Fehlt einer, stopp und sag es Noa.
-2. Die Hand-Keypoints kommen von SAM 3D Body (Noa hat seit 2.11. Zugang zum Hugging-Face-Repo), MediaPipe Hand Landmarker ist der kostenlose Gegencheck. Apple Vision darf nirgends als Lernziel auftauchen: Apples Bedingungen (DPLA 3.2) verbieten das Training mit Ausgaben von Apple-Modellen. Prüfe das im Manifest von `data/packed/`.
-3. `data/packed/manifest.json` passt zu den Keypoints, die in `probes/hand-keypoints/RESULT.md` als final stehen. Sonst zuerst neu packen: `uv run tools/train/pack.py --sets hand`.
+2. Die Hand-Keypoints stehen in `data/keypoints/<session>/cam0/keypoints_teacher.jsonl`. Pro SAM-Hand kommen sie zuerst von MediaPipe Hand Landmarker. MediaPipe erreicht die Fingerspitzen und trifft die Fingerbits aus Block A in 87 bis 91 % der Fälle. Wo MediaPipe die Hand verliert (Fäuste, Verdeckung, Objekte), springt SAM 3D Body ein. Dessen Fingerspitzen sind zu kurz, das Feld `source` pro Hand sagt, woher ein Punkt stammt. Apple Vision darf nirgends als Lernziel auftauchen: Apples Bedingungen (DPLA 3.2) verbieten das Training mit Ausgaben von Apple-Modellen. Prüfe das im Manifest von `data/packed/`.
+3. `data/packed/manifest.json` nennt `keypoint_source` und die Quelle pro Hand, passend zu `probes/hand-keypoints/RESULT.md`. Sonst zuerst neu packen: `uv run tools/train/pack.py --sets hand`. Für Hände mit `source == "sam3dbody"` den Keypoint-Loss niedriger gewichten oder die Fingerspitzen maskieren.
 4. Der Mac-Preflight besteht auf `main`: `uv run tools/train/preflight.py` (64 Samples, 20 Schritte, CoreML-Export, kostenlos).
 
 **Datenstand, den du kennen musst:**
@@ -37,7 +37,7 @@ Dazu kommt die Frage zur S2-Augenklasse. Hol Noas Ja oder seine Änderung ein un
 5. CoreML FP16 exportieren und die ANE-Latenz auf dem Mac messen (Roadmap H3: Median und p95, End-to-End pro Frame gegen `budget.latency`).
 6. `probes/student-training/RESULT.md` schreiben, die Roadmap abhaken, einen Digest `docs/session-2026-11-0X-training.md` anlegen, nach Noas Freigabe committen. Push nur mit seinem Ja.
 
-**Budget:** Modal-Guthaben ab 1.11.: 30 $ (`budget.money` in der Spec). Im November liefen darauf schon SAM-Labels für S3 und S4 (2,00 $), Parser-Läufe und SAM 3D Body. Lies den Stand aus Modals Billing oder dem Ledger der Tools, bevor du rechnest, und setz jedem bezahlten Lauf ein `--max-usd` mit den drei Sperren. Echtes Geld über das Guthaben hinaus nur mit Noas Ja.
+**Budget:** Modal-Guthaben ab 1.11.: 30 $ (`budget.money` in der Spec). Nach SAM 3D Body (5,36 $) waren am 2.11. 19,71 $ verbraucht, für das Training bleiben also 10,29 $. Lies den aktuellen Stand aus Modals Billing, bevor du rechnest, und setz jedem bezahlten Lauf ein `--max-usd` mit den drei Sperren. Plane den Proxy-Teacher und beide Schüler so, dass sie zusammen unter 10 $ bleiben. Echtes Geld über das Guthaben hinaus nur mit Noas Ja.
 
 **Lizenzen:** Die Schüler werden mit einer Kopie der SAM License ausgeliefert. Für die timm-Gewichte (Apache-2.0) gehört der Hinweis in `docs/credits.md`. Zusätzlich muss "Built with Muse Spark Open" dort stehen, siehe `probes/licence-check/RESULT.md`.
 
