@@ -38,11 +38,9 @@ pick() { # name, stand-in file
     [ -z "$m" ] && [ -n "$2" ] && [ -d "$DATA/preflight/$2" ] && m="$DATA/preflight/$2"
     echo "$m"
 }
-TRAINED=0
 for spec in "seg:seg_mnv4s_384x216_pm.mlpackage" "hand:hand_mnv4s_128.mlpackage" "face:"; do
     name=${spec%%:*}
     src=$(pick "$name" "${spec#*:}")
-    [ "$name" = seg ] && case "$src" in "$DATA/models/"*) TRAINED=1 ;; esac
     if [ -z "$src" ]; then
         echo "perception: no $name model"
         continue
@@ -54,8 +52,9 @@ for spec in "seg:seg_mnv4s_384x216_pm.mlpackage" "hand:hand_mnv4s_128.mlpackage"
     rmdir "$tmp"
     echo "perception: $name <- $src"
 done
-# The preflight stand-ins are barely trained (probes/plugin-perception):
-# run Apple Vision at runtime until a trained seg student is installed.
-BACKEND=${SYNTHEXIS_PERCEPTION:-$([ "$TRAINED" = 1 ] && echo students || echo vision)}
+# Apple Vision by default: the trained students put a single centred hand
+# on the wrong side in 3 of 10 frames on S4 (probes/plugin-perception).
+# SYNTHEXIS_PERCEPTION=students opts in.
+BACKEND=${SYNTHEXIS_PERCEPTION:-vision}
 echo "$BACKEND" > "$MODELS/backend"
 echo "perception backend: $BACKEND"
