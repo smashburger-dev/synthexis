@@ -378,6 +378,8 @@ Reading: the rule's pick does not keep the four-seed reading of Noa's sentences.
 
 Q8_0 applied to the v11 four-seed ensemble (v11 rules and scorer at aeb198a, report only): eval 66/102 exact, route F1 0.727, 89/102 right or one part wrong, all equal to v11 in f16; calibration 34/51 against 35/51 (one row lost, p 1.0). Dev on ds-v11c 0.7761 against 0.7745.
 
+After the side carry-over gold fix of parser-v11 (commit 865ba33 on claude/parser-v11-de5d19, calibration groups 20 and 34; eval unchanged) the calibration column reads: ensemble v10 f16 and Q8_0 32/51 each, student f16 32/51, student Q8_0 33/51, ensemble v11 f16 35/51, v11 Q8_0 34/51. Q8_0 still changes no comparison.
+
 ## Open
 
 - Noa reviews the derived rows: do they sound like him, mean the original plus the listed change, and name the right plugin and parameter? Plugin context is inferred for all 34 originals; 5 are unknown, and their rows note the candidates.
