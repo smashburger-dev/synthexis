@@ -8,7 +8,7 @@ The plugin's engine now runs perception on its own thread and emits the `feat.*`
 
 Runtime use of Vision is allowed (`probes/licence-check`); nothing trains on it. The trained students come from `probes/train-students` (branch `claude/train-students-1137e2`: seg-a-s0, face-a-s1, and hand-final with the finger thresholds folded into the logits).
 
-On S4, the held-out session, `hybrid` emits hands after 2.9 / 4.2 ms (median / p95) and the face after 8.0 ms median, against 21 to 31 ms for `vision` offline and 40 to 58 ms median in FL. Hands land on the labelled side in 97.1% of block A frames (Vision 99.0%). The landmarks run on their own thread beside the hands; they take about 6 ms on any device Vision offers. `students` alone is faster, but its face student does not separate open from closed eyes.
+On S4, the held-out session, `hybrid` emits hands after 2.9 / 4.2 ms (median / p95) and the face after 8.0 ms median, against 21 to 31 ms for `vision` offline and 40 to 58 ms median in FL. Hands land on the labelled side in 98.6% of block A frames and on the wrong side in 0.3% (Vision 99.0% / 0.0%). The landmarks run on their own thread beside the hands; they take about 6 ms on any device Vision offers. `students` alone is faster, but its face student does not separate open from closed eyes.
 
 ## Commands
 
@@ -86,6 +86,14 @@ The fix uses the forearm. The arm leaves the hand towards its own body side, als
 | Vision | 0.888 / 0.000 | 0.959 / 0.000 | 0.993 / 0.000 | 0.990 / 0.000 |
 
 On S4 with `SideTracker`: finger accuracy 0.935 (Vision 0.962), finger count error 0.17 fingers (0.16), openness against extended fingers 0.977 (0.987). The remaining wrong frames on S1 to S3 sit in one segment each. S1 to S3 are training sessions of the students, so their finger numbers are optimistic; S4 is the fair one.
+
+Second vote, handedness (2026-11-03, later). train-students added a handedness logit to the hand student (hand-chir, > 0 = the person's right, Noa's choice). `side_vote` adds it to the lean, scaled to -1..1 at |logit| 2, so both cues weigh the same. Per frame on S1 to S3 one-hand frames the logit's sign alone is right in 98.6 to 99.1% (in-sample for the model), the lean in 87.4 to 95.4%. Weights from 0.5 to 4 and scales from 1 to 4 all gave 0.07 to 0.17% wrong side on S1 to S3; the equal vote sits in that flat region.
+
+| block A, labelled side / wrong side | S1 | S2 | S3 | S4 (scored once) |
+|---|---|---|---|---|
+| lean + handedness | 0.921 / 0.001 | 0.932 / 0.001 | 0.990 / 0.002 | **0.986 / 0.003** |
+
+On S4 with hand-chir: finger accuracy 0.925, finger count error 0.14 fingers, openness against extended fingers 0.975.
 
 ## Face: hybrid (2026-11-03)
 
@@ -188,5 +196,5 @@ Latency in FL, from `~/Library/Logs/synthexis.log`, 5 s windows over the run (al
 - Face p95 swings between 9 and 17 ms with machine load; hands stay under 5 ms.
 - Winks while a hand overlaps the face fall back to the outline; the rule checks the whole face box, not the eye band.
 - S2 (glasses): closed eyes read 0.23 / 0.87.
-- Side errors left: 1.8% on S4, concentrated in single segments.
+- Side errors left: 0.3% on S4.
 - Default routes (Signal 3 to 10, `route.rs`) stand in until the assistant writes routes. With Live on they all move, and FL records every moving macro as automation; Noa's rule is that recording one parameter records only that one.

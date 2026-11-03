@@ -865,9 +865,18 @@ pub fn wrist_lean(kp: &[[f32; 2]; 21], centre: [f32; 2]) -> f32 {
     ((kp[WRIST][0] - centre[0]) / palm).clamp(-1.0, 1.0)
 }
 
+/// Side vote of one hand blob for `SideTracker`, > 0 = the person's left:
+/// `wrist_lean` plus the hand student's handedness logit (> 0 = right),
+/// scaled to -1..1 at |logit| 2, as an equal second vote. On S1 to S3
+/// block A the logit's sign alone gets 99% of one-hand frames right
+/// (in-sample for the model), the lean 87 to 95%.
+pub fn side_vote(lean: f32, handed: Option<f32>) -> f32 {
+    lean + handed.map_or(0.0, |h| (-h / 2.0).clamp(-1.0, 1.0))
+}
+
 /// Side assignment for the seg student's hand blobs. Each blob belongs to
 /// an identity track (nearest live track within a quarter frame width);
-/// a track sums the `wrist_lean` of its frames, capped, starting from a
+/// a track sums the `side_vote` of its frames, capped, starting from a
 /// small prior from its position against the face (else frame) centre.
 /// Two hands split by image side; one hand takes its track's sign.
 /// Tracks expire after `EXPIRE_NS` unseen.
@@ -887,7 +896,7 @@ const SIDE_PRIOR: f32 = 0.3;
 const SIDE_CAP: f32 = 40.0;
 
 impl SideTracker {
-    /// `hands`: blob centre in frame px and its `wrist_lean` (0 without
+    /// `hands`: blob centre in frame px and its `side_vote` (0 without
     /// keypoints), at most two, largest first.
     pub fn assign(&mut self, hands: &[([f32; 2], f32)], face_cx: Option<f32>, fw: f32, t_ns: u64) -> Vec<Side> {
         self.tracks.retain(|t| t_ns.saturating_sub(t.t_ns) < EXPIRE_NS);
@@ -1140,6 +1149,14 @@ mod tests {
         );
         // After the track expires a new hand starts from its own evidence.
         assert_eq!(t.assign(&[([640.0, 330.0], 0.6)], face, 1280.0, 2_000_000_000), vec![Side::L]);
+    }
+
+    #[test]
+    fn side_vote_adds_handedness() {
+        assert_eq!(side_vote(0.3, None), 0.3);
+        // A confident right hand outvotes a small lean to the left.
+        assert!(side_vote(0.3, Some(4.0)) < 0.0);
+        assert!((side_vote(-0.2, Some(-1.0)) - 0.3).abs() < 1e-6);
     }
 
     #[test]

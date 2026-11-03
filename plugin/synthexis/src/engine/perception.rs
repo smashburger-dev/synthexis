@@ -325,6 +325,8 @@ struct HandHead {
     model: Model,
     keypoints: String,
     fingers: String,
+    /// hand-chir and later: handedness logit, > 0 = the person's right.
+    handedness: Option<String>,
 }
 
 struct FaceHead {
@@ -383,6 +385,10 @@ impl LandmarkWorker {
     }
 }
 
+/// Hand student output: keypoints (frame px), finger probabilities,
+/// handedness logit (> 0 = the person's right) when the model has it.
+type HandPoints = ([[f32; 2]; 21], [f32; 5], Option<f32>);
+
 /// The three CoreML students.
 pub struct Students {
     seg: Model,
@@ -412,7 +418,7 @@ impl Students {
         let seg = load(dir, "seg")?;
         let seg_out = seg.output_with(N_SEG * SEG_W * SEG_H)?;
         let hand = load(dir, "hand").and_then(|model| {
-            Some(HandHead { keypoints: model.output_with(42)?, fingers: model.output_with(5)?, model })
+            Some(HandHead { keypoints: model.output_with(42)?, fingers: model.output_with(5)?, handedness: model.output_with(1), model })
         });
         let face = load(dir, "face")
             .and_then(|model| Some(FaceHead { logits: model.output_with(3 * CROP * CROP)?, model }));
@@ -448,7 +454,7 @@ impl Students {
 
     /// Hand student on the 1.25x crop of `b`: 21 keypoints in frame pixels
     /// and the five finger probabilities.
-    fn hand_points(&mut self, src: &Bgra, b: &Blob) -> Option<([[f32; 2]; 21], [f32; 5])> {
+    fn hand_points(&mut self, src: &Bgra, b: &Blob) -> Option<HandPoints> {
         let (fw, fh) = (src.w as f32, src.h as f32);
         let (bx, by, bw, bh) = blob_box(b, fw, fh);
         let (x0, y0, s) = square(bx, by, bw, bh, HAND_PAD);
@@ -476,9 +482,10 @@ impl Students {
             }
             e
         })?;
+        let handed = head.handedness.as_ref().and_then(|name| out.with_f16(name, |d, _| f16_to_f32(d[0])));
         self.hand_ms[0] += t1.duration_since(t0).as_secs_f64() * 1e3;
         self.hand_ms[1] += t1.elapsed().as_secs_f64() * 1e3;
-        Some((kp, ext))
+        Some((kp, ext, handed))
     }
 
     /// JSON of all hand candidates (area >= 20) with keypoints and the
@@ -496,11 +503,12 @@ impl Students {
             let (bd, nb) = border_centroid(&self.mask, SEG_W, SEG_H, b, C_HAND, 1);
             let (bl, nl) = below_centroid(&self.mask, SEG_W, SEG_H, b, 1);
             let pts = self.hand_points(src, b);
-            let kp = pts.map(|(k, _)| k.iter().flat_map(|p| [p[0], p[1]]).map(|v| format!("{v:.1}")).collect::<Vec<_>>().join(","));
-            let fg = pts.map(|(_, e)| e.iter().map(|v| format!("{v:.2}")).collect::<Vec<_>>().join(","));
+            let kp = pts.map(|(k, _, _)| k.iter().flat_map(|p| [p[0], p[1]]).map(|v| format!("{v:.1}")).collect::<Vec<_>>().join(","));
+            let fg = pts.map(|(_, e, _)| e.iter().map(|v| format!("{v:.2}")).collect::<Vec<_>>().join(","));
             parts.push(format!(
-                "{{\"a\":{},\"c\":[{:.1},{:.1}],\"bb\":[{},{},{},{}],\"bd\":[{:.1},{:.1},{nb}],\"bl\":[{:.1},{nl}],\"kp\":[{}],\"fg\":[{}]}}",
-                b.area, c[0], c[1], b.x0, b.y0, b.x1, b.y1, bd[0], bd[1], bl, kp.unwrap_or_default(), fg.unwrap_or_default()
+                "{{\"a\":{},\"c\":[{:.1},{:.1}],\"bb\":[{},{},{},{}],\"bd\":[{:.1},{:.1},{nb}],\"bl\":[{:.1},{nl}],\"kp\":[{}],\"fg\":[{}],\"ch\":{:.3}}}",
+                b.area, c[0], c[1], b.x0, b.y0, b.x1, b.y1, bd[0], bd[1], bl, kp.unwrap_or_default(), fg.unwrap_or_default(),
+                pts.and_then(|p| p.2).unwrap_or(0.0)
             ));
         }
         let face = face.map(|f| {
@@ -510,10 +518,10 @@ impl Students {
         format!("{{\"cands\":[{}]{}}}", parts.join(","), face.unwrap_or_default())
     }
 
-    fn hand(&mut self, src: &Bgra, b: &Blob, pts: ([[f32; 2]; 21], [f32; 5]), side: Side, t_ns: u64) -> (HandFeatures, f32) {
+    fn hand(&mut self, src: &Bgra, b: &Blob, pts: HandPoints, side: Side, t_ns: u64) -> (HandFeatures, f32) {
         let (fw, fh) = (src.w as f32, src.h as f32);
         let conf = lin(b.area as f32, MIN_HAND_AREA as f32, 4.0 * MIN_HAND_AREA as f32);
-        let (kp, ext) = pts;
+        let (kp, ext, _) = pts;
         let mut f = hand_features(&kp, side, fw, fh, Some(ext));
         f.speed = self.tracker.update(side, f.palm, fh, t_ns);
         (f, conf)
@@ -639,7 +647,7 @@ impl Backend for Students {
                 .map(|(b, pt)| {
                     let c = b.centre();
                     let c = [c[0] * kx, c[1] * ky];
-                    (c, pt.as_ref().map_or(0.0, |(kp, _)| wrist_lean(kp, c)))
+                    (c, pt.as_ref().map_or(0.0, |(kp, _, handed)| side_vote(wrist_lean(kp, c), *handed)))
                 })
                 .collect();
             let face_cx = face.as_ref().map(|f| f.centre()[0] * kx);
