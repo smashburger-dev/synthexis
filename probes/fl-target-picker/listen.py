@@ -3,7 +3,7 @@
 A, B, A, B through the REC-event path, 3 s per state, while a person listens
 and watches the plugin window. Prints a timeline; restores every value.
 
-  python3 probes/fl-target-picker/listen.py --pattern 80
+  python3 probes/fl-target-picker/listen.py --pattern 80 [--params "Portal/MACRO 1;ShaperBox/Crush Mid Mix"]
 """
 
 import argparse
@@ -26,7 +26,11 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--pattern", type=int, required=True)
     ap.add_argument("--secs", type=float, default=3.0)
+    ap.add_argument("--params", help='"Plugin/Param;Plugin/Param", switched 0/1')
     args = ap.parse_args()
+    order = ORDER
+    if args.params:
+        order = [(*x.split("/", 1), 0.0, 1.0) for x in args.params.split(";")]
     plugs = fl.plugins_in_project()
     names = {}
     fl.must(call("pattern", n=args.pattern))
@@ -35,7 +39,7 @@ def main():
     t0 = time.time()
     log = []
     try:
-        for sub, name, a, b in ORDER:
+        for sub, name, a, b in order:
             p = next(q for q in plugs if q["kind"] == "fx" and sub.lower() in q["plugin"].lower())
             key = (p["index"], p["slot"])
             if key not in names:

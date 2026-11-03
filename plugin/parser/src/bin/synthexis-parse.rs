@@ -1,7 +1,8 @@
 //! Parse sentences with the runtime parser and time it.
 //!
-//!   synthexis-parse --dir data/mapping/runtime --runs p-v9-s0,p-v9-s1 \
-//!       --file texts.txt [--jsonl out.jsonl] [--f32] [--threads 1] ["sentence" ...]
+//!   synthexis-parse --dir data/mapping/runtime --runs p-v11-s0,p-v11-s1,p-v11-s2,p-v11-s3 \
+//!       --file texts.txt [--jsonl out.jsonl] [--f16 | --q8 | --f32] [--rules conv,pronoun]
+//!       [--threads 1] ["sentence" ...]
 //!
 //! Prints load time, resident memory after load, and per-sentence latency
 //! (median, p95). --jsonl writes {text, conf, logp, frame, ms} per line,
@@ -25,7 +26,7 @@ fn rss_mb() -> Option<f64> {
 
 fn main() -> Result<()> {
     let mut dir = PathBuf::from("data/mapping/runtime");
-    let mut runs = String::from("p-v9-s0,p-v9-s1");
+    let mut runs = String::from("p-v11-s0,p-v11-s1,p-v11-s2,p-v11-s3");
     let mut texts: Vec<String> = Vec::new();
     let mut jsonl: Option<PathBuf> = None;
     let mut opt = Options::default();
@@ -42,6 +43,10 @@ fn main() -> Result<()> {
             "--jsonl" => jsonl = Some(PathBuf::from(val()?)),
             "--threads" => opt.threads = val()?.parse()?,
             "--f32" => opt.f32_weights = true,
+            "--q8" => opt.q8 = Some(true),
+            "--f16" => opt.q8 = Some(false),
+            // "" switches the runs' own rules off
+            "--rules" => opt.rules = Some(val()?.split(',').filter(|r| !r.is_empty()).map(String::from).collect()),
             _ => texts.push(a),
         }
     }
@@ -53,7 +58,11 @@ fn main() -> Result<()> {
     let rss1 = rss_mb().unwrap_or(0.0);
     eprintln!(
         "loaded {runs} ({}, {} thread) in {load_ms:.0} ms, rss {rss1:.0} MB (+{:.0})",
-        if opt.f32_weights { "f32" } else { "f16" },
+        match opt.q8 {
+            Some(true) => "q8_0",
+            Some(false) => "f16",
+            None => "weights as parser.json says",
+        },
         opt.threads,
         rss1 - rss0
     );

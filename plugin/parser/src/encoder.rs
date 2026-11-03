@@ -6,11 +6,11 @@
 use std::path::Path;
 
 use anyhow::Result;
-use candle_core::{DType, Device, Tensor};
+use candle_core::{Device, Tensor};
 use candle_nn::LayerNorm;
 use serde::Deserialize;
 
-use crate::nn::{attend, heads, norm, Lin, Weights};
+use crate::nn::{attend, heads, norm, Emb, Lin, Weights};
 
 #[derive(Deserialize)]
 pub struct Config {
@@ -42,7 +42,7 @@ struct Layer {
 }
 
 pub struct Encoder {
-    emb: Tensor,
+    emb: Emb,
     emb_norm: LayerNorm,
     layers: Vec<Layer>,
     final_norm: LayerNorm,
@@ -54,11 +54,13 @@ pub struct Encoder {
 }
 
 impl Encoder {
-    /// Takes the `{prefix}*` tensors out of `w`.
-    pub fn load(cfg: &Config, w: &mut Weights, prefix: &str) -> Result<Self> {
+    /// Takes the `{prefix}*` tensors out of `w`; `layers` > 0 keeps only
+    /// the first layers (frame_parser's hf_layers).
+    pub fn load(cfg: &Config, w: &mut Weights, prefix: &str, layers: usize) -> Result<Self> {
         let eps = cfg.norm_eps;
-        let mut layers = Vec::with_capacity(cfg.num_hidden_layers);
-        for i in 0..cfg.num_hidden_layers {
+        let n = if layers > 0 { layers.min(cfg.num_hidden_layers) } else { cfg.num_hidden_layers };
+        let mut layers = Vec::with_capacity(n);
+        for i in 0..n {
             let p = format!("{prefix}layers.{i}.");
             let an = format!("{p}attn_norm");
             layers.push(Layer {
@@ -76,7 +78,7 @@ impl Encoder {
             });
         }
         Ok(Self {
-            emb: w.mat(&format!("{prefix}embeddings.tok_embeddings.weight"))?,
+            emb: w.emb(&format!("{prefix}embeddings.tok_embeddings.weight"))?,
             emb_norm: w.ln(&format!("{prefix}embeddings.norm"), false, eps)?,
             layers,
             final_norm: w.ln(&format!("{prefix}final_norm"), false, eps)?,
@@ -91,11 +93,7 @@ impl Encoder {
     /// ids incl. BOS/EOS -> last hidden state (S, d), f32.
     pub fn forward(&self, ids: &[u32]) -> Result<Tensor> {
         let s = ids.len();
-        let idx = Tensor::new(ids, &Device::Cpu)?;
-        let mut x = norm(
-            &self.emb_norm,
-            &self.emb.index_select(&idx, 0)?.to_dtype(DType::F32)?,
-        )?;
+        let mut x = norm(&self.emb_norm, &self.emb.rows(ids)?)?;
         let d = x.dim(1)? / self.heads;
         let global_rope = rope_table(s, d, self.global_theta)?;
         let local_rope = if self.local_theta == self.global_theta {

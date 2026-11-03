@@ -4,6 +4,8 @@
 //!   SYNTHEXIS_PARSER_DIR=../data/mapping/runtime cargo test --release \
 //!     -p synthexis-parser --test pin_live -- --nocapture
 
+#![allow(clippy::panic)]
+
 use std::path::PathBuf;
 
 use synthexis_parser::{pin, Options, Parser, Pin, PinWhat};
@@ -27,7 +29,7 @@ fn pinned_frames() {
         eprintln!("SYNTHEXIS_PARSER_DIR not set, skipped");
         return;
     };
-    let parser = match Parser::load(&dir, &["p-v9-s0", "p-v9-s1"], &Options::default()) {
+    let parser = match Parser::load(&dir, &["p-v11-s0", "p-v11-s1", "p-v11-s2", "p-v11-s3"], &Options::default()) {
         Ok(p) => p,
         Err(e) => {
             eprintln!("parser not loaded: {e:#}");
