@@ -5,7 +5,7 @@
 """Export what the plugin needs to give every picked plugin parameter
 classes (plugin/synthexis/src/sense.rs):
 
-  uv run tools/mapping/export_paramsense.py [--run ps-v1] [--out DIR ...]
+  uv run tools/mapping/export_paramsense.py [--run ps-v2] [--out DIR ...]
 
 Writes into each --out (default data/mapping/completion and
 plugin/assistant/completion):
@@ -30,16 +30,12 @@ import argparse
 import json
 import re
 import shutil
-import sys
 from collections import Counter
 from pathlib import Path
 
 import numpy as np
 import torch
 import torch.nn.functional as F
-
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-from train_paramsense import BUCKETS, DIM, bucket, name_feats, words  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
 DATA = ROOT / "data" / "mapping"
@@ -57,6 +53,33 @@ def placeholder(name: str) -> bool:
     return bool(re.match(r"midi cc($|[ #0-9])", n) or re.match(r"cc[ #0-9]", n)
                 or re.search(r" chan \d+$", n) or re.fullmatch(r"reserved ?\d*", n)
                 or "(reserved)" in n or n in ("unused", "internal"))
+
+
+# Features as train_paramsense.py builds them, with the bucket count of the
+# exported run (ps-v1 2^14, ps-v2 2^16) instead of a constant.
+RE_WORD = re.compile(r"[^\W_]+")
+BUCKETS = [1 << 14]
+
+
+def fnv1a(s: str) -> int:
+    h = 0x811C9DC5
+    for b in s.encode():
+        h = ((h ^ b) * 0x01000193) & 0xFFFFFFFF
+    return h
+
+
+def bucket(field: str, gram: str) -> int:
+    return fnv1a(field + "|" + gram) % BUCKETS[0]
+
+
+def words(s: str) -> list:
+    return RE_WORD.findall(s.casefold())
+
+
+def name_feats(name: str) -> list:
+    s = "<" + name.casefold() + ">"
+    grams = {s[i:i + n] for n in (3, 4, 5) for i in range(len(s) - n + 1)}
+    return sorted({bucket("n", g) for g in grams} | {bucket("n", "w:" + w) for w in words(name)})
 
 
 def ctx_feats(plugin: str, names: list) -> list:
@@ -106,14 +129,15 @@ def predict(t: dict, classes: list, plugin: str, names: list) -> list:
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--run", default="ps-v1")
+    ap.add_argument("--run", default="ps-v2")
     ap.add_argument("--data", default=str(DATA))
     ap.add_argument("--out", action="append", help="completion dir; repeatable")
     a = ap.parse_args()
     data = Path(a.data)
     run = data / "train" / "runs" / a.run
     meta, t = load_run(run)
-    assert meta["buckets"] == BUCKETS and meta["dim"] == DIM, "hashing differs from train_paramsense.py"
+    BUCKETS[0] = meta["buckets"]
+    assert t["emb.weight"].shape[0] == meta["buckets"], "meta.json buckets differ from emb.weight"
 
     known = known_table(data)
     lines = []

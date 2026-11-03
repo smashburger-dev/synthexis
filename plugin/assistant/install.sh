@@ -6,10 +6,14 @@
 #
 # Dev checkout: data/mapping/runtime and data/mapping/completion exist, so
 # both dirs become symlinks to them (no copy, exports show up at once).
+# data/ is this checkout's own, else the main checkout's (found through git's
+# common dir), so a worktree without data/ links to the same live exports.
 # Fresh clone: completion is copied from plugin/assistant/completion; the
 # parser (446 MB) is downloaded from the GitHub release pinned in
 # parser.release, checked against its sha256 and swapped in atomically.
 # Re-running is cheap: an installed parser with the pinned sha is kept.
+# Dev links that still point to an existing dir are never replaced by
+# copies; SYNTHEXIS_ASSISTANT=release does that on purpose.
 #
 # Env: SYNTHEXIS_ASSISTANT=release forces the fresh-clone path,
 #      SYNTHEXIS_APP_DIR overrides the target dir (tests),
@@ -18,8 +22,16 @@ set -euo pipefail
 here="$(cd "$(dirname "$0")" && pwd)"
 # shellcheck source=parser.release
 . "$here/parser.release"
-# -P: a worktree's data/ is often a symlink; link to the real dir instead
-DATA="${SYNTHEXIS_DATA:-$(cd -P "$here/../../data" 2>/dev/null && pwd || echo /nonexistent)}"
+
+find_data() {
+    local common
+    # -P: a worktree's data/ is often a symlink; link to the real dir instead
+    if cd -P "$here/../../data" 2>/dev/null; then pwd; return; fi
+    common=$(git -C "$here" rev-parse --path-format=absolute --git-common-dir 2>/dev/null) || return 0
+    if cd -P "$(dirname "$common")/data" 2>/dev/null; then pwd; fi
+}
+DATA="${SYNTHEXIS_DATA:-$(find_data)}"
+DATA="${DATA:-/nonexistent}"
 APP="${SYNTHEXIS_APP_DIR:-$HOME/Library/Application Support/synthexis}"
 MODE="${SYNTHEXIS_ASSISTANT:-auto}"
 mkdir -p "$APP"
@@ -105,6 +117,10 @@ if [ "$MODE" != release ] && [ -d "$DATA/mapping/runtime" ] &&
     link "$DATA/mapping/runtime" "$APP/parser"
     link "$DATA/mapping/completion" "$APP/completion"
     echo "assistant: parser, completion -> $DATA/mapping (dev)"
+elif [ "$MODE" != release ] && [ -L "$APP/parser" ] && [ -d "$APP/parser" ] &&
+     [ -L "$APP/completion" ] && [ -d "$APP/completion" ]; then
+    echo "assistant: no data/ here, keeping the dev links to $(dirname "$(readlink "$APP/parser")")" \
+         "(SYNTHEXIS_ASSISTANT=release replaces them with the release)"
 else
     install_completion
     install_parser

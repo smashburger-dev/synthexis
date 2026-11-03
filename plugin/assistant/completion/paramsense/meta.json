@@ -45,8 +45,8 @@
   "unsafe",
   "voice.glide"
  ],
- "buckets": 16384,
- "dim": 48,
+ "buckets": 65536,
+ "dim": 240,
  "hash": "fnv1a32(utf8(field + '|' + gram)) % buckets",
  "fields": {
   "n": "char 3-5 grams of '<' + casefold(name) + '>' and 'w:' + word",
@@ -55,46 +55,46 @@
  },
  "words": "regex [^\\W_]+ over casefold",
  "bag": "mean",
- "layers": "concat(n,c,v) -> hid(144->96) gelu -> cls(44), dir(2: -1,+1)",
+ "layers": "concat(n,c,v) -> hid(720->480) gelu -> cls(44), dir(2: -1,+1)",
  "tensors": [
   {
    "name": "emb.weight",
    "shape": [
-    16384,
-    48
+    65536,
+    240
    ],
    "dtype": "f16",
    "offset": 0,
-   "nbytes": 1572864
+   "nbytes": 31457280
   },
   {
    "name": "hid.weight",
    "shape": [
-    96,
-    144
+    480,
+    720
    ],
    "dtype": "f16",
-   "offset": 1572864,
-   "nbytes": 27648
+   "offset": 31457280,
+   "nbytes": 691200
   },
   {
    "name": "hid.bias",
    "shape": [
-    96
+    480
    ],
    "dtype": "f16",
-   "offset": 1600512,
-   "nbytes": 192
+   "offset": 32148480,
+   "nbytes": 960
   },
   {
    "name": "cls.weight",
    "shape": [
     44,
-    96
+    480
    ],
    "dtype": "f16",
-   "offset": 1600704,
-   "nbytes": 8448
+   "offset": 32149440,
+   "nbytes": 42240
   },
   {
    "name": "cls.bias",
@@ -102,18 +102,18 @@
     44
    ],
    "dtype": "f16",
-   "offset": 1609152,
+   "offset": 32191680,
    "nbytes": 88
   },
   {
    "name": "dir.weight",
    "shape": [
     2,
-    96
+    480
    ],
    "dtype": "f16",
-   "offset": 1609240,
-   "nbytes": 384
+   "offset": 32191768,
+   "nbytes": 1920
   },
   {
    "name": "dir.bias",
@@ -121,7 +121,7 @@
     2
    ],
    "dtype": "f16",
-   "offset": 1609624,
+   "offset": 32193688,
    "nbytes": 4
   }
  ]
