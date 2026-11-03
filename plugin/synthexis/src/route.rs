@@ -1,41 +1,93 @@
-//! Signal -> macro routing. Many-to-many; each macro sums its routes'
-//! conditioned values * depth and clamps to 0..1.
+//! Signal -> target routing. Many-to-many; each target (one of the 32
+//! Signal macros, or a parameter of a plugin in the FL project) sums its
+//! routes' conditioned values * depth and clamps to 0..1.
+
+use std::collections::HashMap;
 
 use crate::cond::Chain;
+use crate::fl;
 use crate::signal::{Sample, SIG_BRIGHTNESS, SIG_MOTION, SIG_TRIANGLE};
 
 pub const NUM_MACROS: usize = 32;
 
+/// Where a route writes.
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+pub enum Target {
+    /// Signal-macro index 0..31 (Signal N = index N-1), linked in FL by
+    /// the user.
+    Macro(usize),
+    /// A parameter of a plugin in the project, written through the FL
+    /// script (bridge.fl_script, REC events).
+    Param { plugin: fl::Key, index: u32 },
+}
+
 #[derive(Debug)]
 pub struct Route {
-    pub signal: &'static str,
-    /// Signal-macro index 0..31 (Signal N = index N-1).
-    pub macro_index: usize,
-    /// -1..1; negative depths drive the macro down.
+    /// Set by the writer for assigned routes; 0 for the test routes.
+    pub id: u64,
+    pub signal: String,
+    pub target: Target,
+    /// -1..1; negative depths drive the target down.
     pub depth: f32,
+    /// Output range: the conditioned 0..1 maps onto lo..hi ("nur bis 80
+    /// Prozent" is hi 0.8).
+    pub lo: f32,
+    pub hi: f32,
+    /// Signal that must read above GATE_OPEN for the route to follow its
+    /// source ("only while I pinch"); while closed the target holds.
+    pub gate: Option<String>,
     pub cond: Chain,
     /// Whether this route is currently active.
     pub enabled: bool,
     /// Built-in test route: active only while the test_signal param is on.
     pub test: bool,
+    /// Made by the assistant and not accepted yet (ui.assistant: pending
+    /// rows run at once so the move can be checked by ear).
+    pub pending: bool,
     /// Last conditioned output; a macro's value is the clamped sum of all
     /// enabled routes' last_v*depth (many-to-many fan-in).
     pub last_v: f32,
 }
 
 impl Route {
-    pub fn new(signal: &'static str, macro_index: usize, depth: f32) -> Self {
+    pub fn new(signal: &str, macro_index: usize, depth: f32) -> Self {
+        Self::to(signal, Target::Macro(macro_index), depth)
+    }
+
+    pub fn to(signal: &str, target: Target, depth: f32) -> Self {
         Self {
-            signal,
-            macro_index,
+            id: 0,
+            signal: signal.to_string(),
+            target,
             depth,
+            lo: 0.0,
+            hi: 1.0,
+            gate: None,
             cond: Chain::default(),
             enabled: true,
             test: false,
+            pending: false,
             last_v: 0.0,
         }
     }
+
+    fn out(&self) -> f32 {
+        (self.lo + (self.hi - self.lo) * self.last_v) * self.depth
+    }
 }
+
+/// Current target values: the macros, and the plugin parameters routes
+/// have written.
+#[derive(Debug, Default)]
+pub struct Values {
+    pub macros: [f32; NUM_MACROS],
+    pub params: HashMap<Target, f32>,
+    /// Last present value of every signal, for the gates.
+    pub last: HashMap<String, f32>,
+}
+
+/// A gate signal above this lets its route move.
+pub const GATE_OPEN: f32 = 0.5;
 
 /// Perception test routes on Signal 3..10 (probes/plugin-perception
 /// fl_live.py): (signal id, macro index).
@@ -68,38 +120,52 @@ pub fn default_routes(test_signal_on: bool) -> Vec<Route> {
     routes
 }
 
-/// Apply one incoming sample to the route table; returns the changed macro
-/// values (indices + new values after summing/clamping).
+/// Apply one incoming sample to the route table; returns the changed
+/// targets with their new values (after summing/clamping).
 pub fn apply_sample(
     routes: &mut [Route],
-    current: &mut [f32; NUM_MACROS],
+    current: &mut Values,
     signal: &str,
     sample: &Sample,
     t_s: f64,
-) -> Vec<(usize, f32)> {
-    let mut touched = [false; NUM_MACROS];
+) -> Vec<(Target, f32)> {
+    if sample.present {
+        match current.last.get_mut(signal) {
+            Some(v) => *v = sample.value,
+            None => {
+                current.last.insert(signal.to_string(), sample.value);
+            }
+        }
+    }
+    let mut touched: Vec<Target> = Vec::new();
     for r in routes.iter_mut() {
         if !r.enabled || r.signal != signal {
             continue;
         }
-        r.last_v = r.cond.step(sample, t_s);
-        touched[r.macro_index] = true;
-    }
-    // Recompute touched macros as the clamped sum of all enabled routes.
-    let mut changed = Vec::new();
-    for (i, t) in touched.iter().enumerate() {
-        if !t {
+        if r.gate.as_ref().is_some_and(|g| current.last.get(g).is_none_or(|v| *v <= GATE_OPEN)) {
             continue;
         }
+        r.last_v = r.cond.step(sample, t_s);
+        if !touched.contains(&r.target) {
+            touched.push(r.target.clone());
+        }
+    }
+    // Recompute touched targets as the clamped sum of all enabled routes.
+    let mut changed = Vec::new();
+    for t in touched {
         let new: f32 = routes
             .iter()
-            .filter(|r| r.enabled && r.macro_index == i)
-            .map(|r| r.last_v * r.depth)
+            .filter(|r| r.enabled && r.target == t)
+            .map(Route::out)
             .sum::<f32>()
             .clamp(0.0, 1.0);
-        if (new - current[i]).abs() > f32::EPSILON {
-            current[i] = new;
-            changed.push((i, new));
+        let old = match &t {
+            Target::Macro(i) => &mut current.macros[*i],
+            Target::Param { .. } => current.params.entry(t.clone()).or_insert(f32::NAN),
+        };
+        if old.is_nan() || (new - *old).abs() > f32::EPSILON {
+            *old = new;
+            changed.push((t, new));
         }
     }
     changed
@@ -121,26 +187,26 @@ mod tests {
     #[test]
     fn no_default_route_moves_a_macro_while_test_signal_is_off() {
         let mut routes = default_routes(false);
-        let mut cur = [0.0f32; NUM_MACROS];
+        let mut cur = Values::default();
         let ids = [SIG_BRIGHTNESS, SIG_MOTION, SIG_TRIANGLE].into_iter().chain(PERCEPTION_DEFAULTS.iter().map(|d| d.0));
         for id in ids {
             for i in 0..60 {
                 assert!(apply_sample(&mut routes, &mut cur, id, &s(0.8), i as f64 / 30.0).is_empty(), "{id}");
             }
         }
-        assert!(cur.iter().all(|&v| v == 0.0));
+        assert!(cur.macros.iter().all(|&v| v == 0.0));
     }
 
     #[test]
     fn brightness_routes_to_signal_1() {
         let mut routes = default_routes(true);
-        let mut cur = [0.0f32; NUM_MACROS];
+        let mut cur = Values::default();
         // Feed constant brightness until the one-euro settles.
         for i in 0..90 {
             apply_sample(&mut routes, &mut cur, SIG_BRIGHTNESS, &s(0.8), i as f64 / 30.0);
         }
-        assert!((cur[0] - 0.8).abs() < 0.05, "sig1 {}", cur[0]);
-        assert!((cur[1] - 0.0).abs() < 0.05);
+        assert!((cur.macros[0] - 0.8).abs() < 0.05, "sig1 {}", cur.macros[0]);
+        assert!((cur.macros[1] - 0.0).abs() < 0.05);
     }
 
     #[test]
@@ -154,17 +220,17 @@ mod tests {
     #[test]
     fn triangle_disabled_when_test_signal_off() {
         let mut routes = default_routes(false);
-        let mut cur = [0.0f32; NUM_MACROS];
+        let mut cur = Values::default();
         for i in 0..60 {
             apply_sample(&mut routes, &mut cur, SIG_TRIANGLE, &s(1.0), i as f64 / 30.0);
         }
-        assert_eq!(cur[31], 0.0);
+        assert_eq!(cur.macros[31], 0.0);
         let mut routes = default_routes(true);
-        let mut cur = [0.0f32; NUM_MACROS];
+        let mut cur = Values::default();
         for i in 0..90 {
             apply_sample(&mut routes, &mut cur, SIG_TRIANGLE, &s(1.0), i as f64 / 30.0);
         }
-        assert!(cur[31] > 0.9);
+        assert!(cur.macros[31] > 0.9);
     }
 
     #[test]
@@ -173,20 +239,42 @@ mod tests {
             Route::new("x", 0, 0.7),
             Route::new("x", 0, 0.7),
         ];
-        let mut cur = [0.0f32; NUM_MACROS];
+        let mut cur = Values::default();
         for i in 0..120 {
             apply_sample(&mut routes, &mut cur, "x", &s(1.0), i as f64 / 30.0);
         }
-        assert_eq!(cur[0], 1.0);
+        assert_eq!(cur.macros[0], 1.0);
+    }
+
+    #[test]
+    fn param_route_maps_onto_its_range_and_waits_for_its_gate() {
+        let key = fl::Key { at: fl::At::Fx { track: 0, slot: 0 }, plugin: "Topos".into() };
+        let target = Target::Param { plugin: key, index: 12 };
+        let mut r = Route::to("x", target.clone(), 1.0);
+        r.hi = 0.8;
+        r.gate = Some("g".into());
+        let mut routes = vec![r];
+        let mut cur = Values::default();
+        // gate closed: nothing moves
+        for i in 0..30 {
+            assert!(apply_sample(&mut routes, &mut cur, "x", &s(1.0), i as f64 / 30.0).is_empty());
+        }
+        apply_sample(&mut routes, &mut cur, "g", &s(1.0), 1.0);
+        let mut last = Vec::new();
+        for i in 30..120 {
+            last = apply_sample(&mut routes, &mut cur, "x", &s(1.0), i as f64 / 30.0);
+        }
+        let v = cur.params[&target];
+        assert!((v - 0.8).abs() < 0.02, "{v} {last:?}");
     }
 
     #[test]
     fn negative_depth_drives_down() {
         let mut routes = vec![Route::new("x", 0, -1.0)];
-        let mut cur = [0.5f32; NUM_MACROS];
+        let mut cur = Values { macros: [0.5; NUM_MACROS], ..Values::default() };
         for i in 0..120 {
             apply_sample(&mut routes, &mut cur, "x", &s(1.0), i as f64 / 30.0);
         }
-        assert_eq!(cur[0], 0.0);
+        assert_eq!(cur.macros[0], 0.0);
     }
 }

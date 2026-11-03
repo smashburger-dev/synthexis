@@ -262,15 +262,6 @@ impl Classes {
         (Classes { known, sense }, notes)
     }
 
-    /// True when some of `names` have no label and param-sense would run.
-    pub fn needs_sense(&self, plugin: &str, names: &[(u32, String)], exported: &HashMap<String, String>) -> bool {
-        let known = self.known.get(&casefold(plugin.trim()));
-        self.sense.is_some()
-            && names
-                .iter()
-                .any(|(_, n)| !exported.contains_key(n) && !known.is_some_and(|k| k.contains_key(&casefold(n.trim()))))
-    }
-
     /// Classes for `names` of `plugin`: `exported` (name -> class) first,
     /// then the labels of a mapped plugin of that name, then param-sense;
     /// "" where neither exists.

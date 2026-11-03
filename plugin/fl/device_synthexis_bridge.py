@@ -1,6 +1,6 @@
 # name=synthexis bridge
 #
-# synthexis FL bridge, protocol 3: the device script the synthexis plugin
+# synthexis FL bridge, protocol 4: the device script the synthexis plugin
 # talks to. The plugin owns the virtual MIDI ports "synthexis bridge"
 # (plugin -> FL) and "synthexis bridge return" (FL -> plugin); see
 # plugin/synthexis/src/fl.rs. Measurements behind every rule here:
@@ -18,6 +18,12 @@
 #   plist  parameter names of one plugin ("index", "slot", -1 for a
 #          generator), paged; FL's MIDI CC entries (index >= 4096) left out
 #   focus  the focused plugin, same shape as the focus event
+#   rec    set parameter "i" of a plugin to "v" (0..1): "fx": [track, slot]
+#          through FL's REC event (recorded as automation while FL records),
+#          "ch": channel through plugins.setParamValue (recorded too; both
+#          measured in probes/fl-target-picker and probes/fl-script-bridge).
+#          Sent without an id by the route writer, up to 30 times a second
+#          per parameter, so it gets no reply.
 #
 # Events carry "ev" and no "id":
 #   hello  sent by OnInit, so the plugin reloads after FL re-inits the device
@@ -34,12 +40,13 @@ import time
 
 import channels
 import device
+import general
 import midi
 import mixer
 import plugins
 import ui
 
-PROTO = 3
+PROTO = 4
 SLOTS = 10
 FL_CC_FIRST = 4096  # FL appends 144 MIDI CC pseudo-parameters from here
 PAGE_MAX = 16000
@@ -167,6 +174,15 @@ def _handle(cmd):
                 _safe(plugins.getPluginName, index, slot) or ""}
     if op == "focus":
         return _focus()
+    if op == "rec":
+        i, v = int(cmd["i"]), max(0.0, min(1.0, float(cmd["v"])))
+        if "fx" in cmd:
+            t, s = int(cmd["fx"][0]), int(cmd["fx"][1])
+            eid = mixer.getTrackPluginId(t, s) + midi.REC_Plug_Plugin_First + i
+            general.processRECEvent(eid, int(v * (1 << 30)), midi.REC_MIDIController)
+        else:
+            plugins.setParamValue(v, i, int(cmd["ch"]))
+        return {"ok": True}
     return {"error": "unknown cmd " + str(op)}
 
 
@@ -183,6 +199,8 @@ def OnSysEx(msg):
         res = _handle(cmd)
     except Exception as e:
         res = {"error": str(e)}
+    if rid is None and cmd.get("cmd") == "rec":
+        return
     res["id"] = rid
     _send(res)
 

@@ -8,7 +8,9 @@
 //! F0 7D <ASCII JSON> F7. One worker thread owns the ports, sends requests
 //! and pages through replies; the script pushes focus and inventory events
 //! on its own. The GUI reads a snapshot (`View`) and asks for parameter
-//! names with `want`; nothing here runs on the audio thread.
+//! names with `want`; the route writer sends parameter values with `write`
+//! (fire and forget, the worker keeps only the latest value per parameter);
+//! nothing here runs on the audio thread.
 //!
 //! Test hook: SYNTHEXIS_FL_PORTS="name" opens "name" / "name return"
 //! without the fixed IDs, next to a running probe daemon
@@ -33,7 +35,7 @@ const SOURCE: &str = "synthexis bridge";
 const DEST: &str = "synthexis bridge return";
 const SOURCE_UID: i32 = 0x5359_4E01;
 const DEST_UID: i32 = 0x5359_4E02;
-const PROTO: u64 = 3;
+const PROTO: u64 = 4;
 const PAGE: u64 = 16_000;
 const REPLY_TIMEOUT: Duration = Duration::from_secs(2);
 const RETRY: Duration = Duration::from_secs(2);
@@ -181,6 +183,7 @@ pub struct Bridge {
     want: Sender<Key>,
     /// Gets every parameter list as it arrives (on_names).
     names: Mutex<Vec<Sender<Names>>>,
+    writes: Sender<(Key, u32, f32)>,
 }
 
 static BRIDGE: OnceLock<Bridge> = OnceLock::new();
@@ -189,13 +192,14 @@ static BRIDGE: OnceLock<Bridge> = OnceLock::new();
 pub fn bridge() -> &'static Bridge {
     BRIDGE.get_or_init(|| {
         let (want, rx) = unbounded();
+        let (writes, wrx) = unbounded();
         if let Err(e) = std::thread::Builder::new()
             .name("synthexis-fl".into())
-            .spawn(move || run(rx))
+            .spawn(move || run(rx, wrx))
         {
             log(&format!("fl: worker not started: {e}"));
         }
-        Bridge { view: Mutex::new(View::default()), want, names: Mutex::new(Vec::new()) }
+        Bridge { view: Mutex::new(View::default()), want, names: Mutex::new(Vec::new()), writes }
     })
 }
 
@@ -207,6 +211,12 @@ impl Bridge {
     /// Loads the parameter names of `key` into `View::params`.
     pub fn want(&self, key: &Key) {
         let _ = self.want.send(key.clone());
+    }
+
+    /// Sets parameter `index` of `key` to `v` (0..1) through the FL script;
+    /// FL records it as automation while it records.
+    pub fn write(&self, key: &Key, index: u32, v: f32) {
+        let _ = self.writes.send((key.clone(), index, v));
     }
 
     /// Sends `tx` every parameter list FL sends from now on, and the
@@ -236,8 +246,9 @@ impl Bridge {
     #[cfg(test)]
     pub fn detached() -> &'static Bridge {
         let (want, rx) = unbounded();
-        std::mem::forget(rx);
-        Box::leak(Box::new(Bridge { view: Mutex::new(View::default()), want, names: Mutex::new(Vec::new()) }))
+        let (writes, wrx) = unbounded();
+        std::mem::forget((rx, wrx));
+        Box::leak(Box::new(Bridge { view: Mutex::new(View::default()), want, names: Mutex::new(Vec::new()), writes }))
     }
 
     pub(crate) fn update(&self, f: impl FnOnce(&mut View)) {
@@ -325,7 +336,7 @@ fn open_ports(frames: Sender<Vec<u8>>) -> Result<Ports, String> {
     Ok(Ports { _client: client, source, _dest: dest })
 }
 
-fn run(want: Receiver<Key>) {
+fn run(want: Receiver<Key>, writes: Receiver<(Key, u32, f32)>) {
     let b = bridge();
     let (tx, frames) = unbounded();
     let ports = match open_ports(tx) {
@@ -353,6 +364,10 @@ fn run(want: Receiver<Key>) {
             },
             recv(want) -> k => match k {
                 Ok(k) => w.load_params(k),
+                Err(_) => return,
+            },
+            recv(writes) -> m => match m {
+                Ok(first) => w.write(first, &writes),
                 Err(_) => return,
             },
             default(wait.saturating_sub(last.elapsed())) => w.sync = true,
@@ -450,7 +465,7 @@ impl Worker {
         match self.call(json!({"cmd": "ping"})) {
             Ok(r) if r.get("proto").and_then(Value::as_u64) == Some(PROTO) => {
                 if self.b.view().link != Link::Up {
-                    log("fl: script answered, protocol 3");
+                    log("fl: script answered, protocol 4");
                     self.b.update(|v| v.link = Link::Up);
                 }
                 if r.get("h").and_then(Value::as_i64) != self.hash {
@@ -519,6 +534,33 @@ impl Worker {
                 Some(n) => start = n,
                 None => return Ok(Some((hash.unwrap_or(0), out))),
             }
+        }
+    }
+
+    /// Sends the latest value of every parameter queued so far (the camera
+    /// runs at 30 Hz, a slow MIDI round must not pile up stale values). No
+    /// reply: the script answers "rec" frames without an id with nothing.
+    fn write(&mut self, first: (Key, u32, f32), more: &Receiver<(Key, u32, f32)>) {
+        if self.b.view().link != Link::Up {
+            return;
+        }
+        let mut latest: Vec<(Key, u32, f32)> = vec![first];
+        for (k, i, v) in more.try_iter() {
+            match latest.iter_mut().find(|(lk, li, _)| *lk == k && *li == i) {
+                Some(slot) => slot.2 = v,
+                None => latest.push((k, i, v)),
+            }
+        }
+        for (k, i, v) in latest {
+            let at = match k.at {
+                At::Fx { track, slot } => json!({"fx": [track, slot]}),
+                At::Gen { ch } => json!({"ch": ch}),
+            };
+            let mut msg = json!({"cmd": "rec", "i": i, "v": (v * 10_000.0).round() / 10_000.0});
+            if let (Some(m), Some(a)) = (msg.as_object_mut(), at.as_object()) {
+                m.extend(a.clone());
+            }
+            self.send(&msg);
         }
     }
 

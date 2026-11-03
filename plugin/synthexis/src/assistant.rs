@@ -20,7 +20,7 @@ use std::time::Instant;
 
 use crossbeam_channel::{bounded, unbounded, Receiver, Sender};
 use synthexis_complete::Param;
-use synthexis_parser::resolve::{resolve, Candidate};
+use synthexis_parser::resolve::{self, resolve, Candidate};
 use synthexis_parser::{pin, Options, Parser, Pin};
 
 use crate::log::log;
@@ -38,11 +38,20 @@ pub struct Scope {
     pub aliases: HashMap<String, String>,
 }
 
+/// The assistant's answer to one sentence.
+pub struct Reply {
+    /// The frame's intent token without "I:" (map, unmap, clear, undo, ...).
+    pub intent: String,
+    pub routes: Vec<resolve::Route>,
+    /// One line per route, or why there is none.
+    pub lines: Vec<String>,
+}
+
 struct Job {
     text: String,
     pins: Vec<Pin>,
     scope: Option<Scope>,
-    reply: Sender<Vec<String>>,
+    reply: Sender<Reply>,
 }
 
 static WORKER: OnceLock<Sender<Job>> = OnceLock::new();
@@ -66,9 +75,9 @@ fn worker() -> &'static Sender<Job> {
     })
 }
 
-/// Queues a typed sentence with its chips. The receiver gets one line per
-/// route once parsed; it disconnects when the parser is unavailable.
-pub fn submit(text: &str, pins: Vec<Pin>, scope: Option<Scope>) -> Receiver<Vec<String>> {
+/// Queues a typed sentence with its chips. The receiver gets the reply
+/// once parsed; it disconnects when the parser is unavailable.
+pub fn submit(text: &str, pins: Vec<Pin>, scope: Option<Scope>) -> Receiver<Reply> {
     let (reply, rx) = bounded(1);
     if worker().send(Job { text: text.to_string(), pins, scope, reply }).is_err() {
         log("assistant: parser unavailable, sentence dropped");
@@ -108,14 +117,14 @@ fn run(rx: &Receiver<Job>) {
     }
 }
 
-/// Parses, pins, resolves; logs the frame and returns one line per route.
-fn parse(parser: &Parser, text: &str, pins: &[Pin], scope: Option<&Scope>) -> Vec<String> {
+/// Parses, pins, resolves; logs the frame and returns the reply.
+fn parse(parser: &Parser, text: &str, pins: &[Pin], scope: Option<&Scope>) -> Reply {
     let t0 = Instant::now();
     let p = match parser.parse(text) {
         Ok(p) => p,
         Err(e) => {
             log(&format!("assistant: parse failed for \"{text}\": {e:#}"));
-            return vec![format!("parse failed: {e}")];
+            return Reply { intent: "none".into(), routes: Vec::new(), lines: vec![format!("parse failed: {e}")] };
         }
     };
     let parsed_ms = t0.elapsed().as_secs_f64() * 1e3;
@@ -127,9 +136,9 @@ fn parse(parser: &Parser, text: &str, pins: &[Pin], scope: Option<&Scope>) -> Ve
     let (key, plugin, aliases) = scope.map_or(("", "no plugin", &none), |s| (s.key.as_str(), s.plugin.as_str(), &s.aliases));
     let routes = resolve(&frame, text, &p.spans, key, &cands, aliases);
     let mut lines: Vec<String> = routes.iter().map(|r| r.describe(plugin)).collect();
+    let intent = frame.frame().into_iter().find_map(|t| t.strip_prefix("I:").map(str::to_string)).unwrap_or_default();
     if lines.is_empty() {
-        let intent = frame.frame().into_iter().find(|t| t.starts_with("I:")).unwrap_or_default();
-        lines.push(format!("no route ({})", intent.trim_start_matches("I:")));
+        lines.push(format!("no route ({intent})"));
     }
     let pinned = if pins.is_empty() { String::new() } else { format!(" | pinned {} -> {}", pins.len(), frame.frame().join(" ")) };
     log(&format!(
@@ -139,5 +148,5 @@ fn parse(parser: &Parser, text: &str, pins: &[Pin], scope: Option<&Scope>) -> Ve
         cands.len(),
         lines.join("; ")
     ));
-    lines
+    Reply { intent, routes, lines }
 }

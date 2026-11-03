@@ -84,11 +84,12 @@ fn role_combo(
 pub fn make_editor(
     params: Arc<SynthexisParams>,
     shared: Arc<EngineShared>,
+    writer: Arc<crate::writer::Writer>,
 ) -> Option<Box<dyn Editor>> {
     let state = params.editor_state.clone();
     let inner = create_egui_editor(
         state,
-        UiState { params, shared, texture: None, sentence: Sentence::new(Some(crate::fl::bridge())) },
+        UiState { params, shared, texture: None, sentence: Sentence::new(Some(crate::fl::bridge()), Some(writer)) },
         // Runs on every open: the egui Context is new each time but UiState
         // persists, so drop the stale texture handle.
         |_, s| {

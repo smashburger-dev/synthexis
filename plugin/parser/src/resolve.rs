@@ -82,6 +82,9 @@ pub struct Route {
     /// all of them); left means the left hand only.
     pub side: Option<String>,
     pub inv: bool,
+    /// Gates ("only while I pinch"): each G: source with its side and
+    /// shape tokens, e.g. ["G:hand.pinch", "side:left"].
+    pub gates: Vec<Vec<String>>,
     /// The route's modifiers as the frame has them (lo:, hi:, amt:, mode:,
     /// curve:, smooth:, hold:, quantize:, delta:, BIP), in frame order.
     pub mods: Vec<String>,
@@ -89,6 +92,25 @@ pub struct Route {
 }
 
 const MODS: [&str; 10] = ["lo:", "hi:", "amt:", "mode:", "curve:", "smooth:", "hold:", "quantize:", "delta:", "BIP"];
+
+/// G: tokens with the side:/shape: tokens right after them.
+fn gates(items: &[Item]) -> Vec<Vec<String>> {
+    let mut out: Vec<Vec<String>> = Vec::new();
+    let mut open = false;
+    for t in items.iter().map(tok) {
+        if t.starts_with("G:") {
+            out.push(vec![t.to_string()]);
+            open = true;
+        } else if open && (t.starts_with("side:") || t.starts_with("shape:")) {
+            if let Some(g) = out.last_mut() {
+                g.push(t.to_string());
+            }
+        } else {
+            open = false;
+        }
+    }
+    out
+}
 
 fn percent(v: &str) -> String {
     v.parse::<f32>().map_or_else(|_| v.to_string(), |x| format!("{:.0}", x * 100.0))
@@ -433,6 +455,7 @@ pub fn resolve(
                 source: find("S:").unwrap_or_default(),
                 side: find("side:").or_else(|| shared.clone()),
                 inv: route.items.iter().any(|it| tok(it) == "INV"),
+                gates: gates(&route.items),
                 mods: route
                     .items
                     .iter()
@@ -484,7 +507,16 @@ impl Route {
     /// "range 5-35 %", "amount 25 %", "steps", "snappy", "centred".
     pub fn mod_labels(&self) -> Vec<String> {
         let get = |p: &str| self.mods.iter().find_map(|m| m.strip_prefix(p));
-        let mut out = Vec::new();
+        let mut out: Vec<String> = self
+            .gates
+            .iter()
+            .map(|g| {
+                let src = g[0].trim_start_matches("G:").replace(['.', '_'], " ");
+                let side = g.iter().find_map(|t| t.strip_prefix("side:")).map(|s| format!("{s} ")).unwrap_or_default();
+                let shape = g.iter().find_map(|t| t.strip_prefix("shape:")).map(|s| format!(" {s}")).unwrap_or_default();
+                format!("while {side}{src}{shape}")
+            })
+            .collect();
         if get("lo:").is_some() || get("hi:").is_some() {
             out.push(format!("range {}-{} %", percent(get("lo:").unwrap_or("0")), percent(get("hi:").unwrap_or("1"))));
         }

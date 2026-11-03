@@ -58,10 +58,16 @@ def out(data):
 
 def install_fakes():
     m = types.ModuleType
-    device, midi, mixer, plugins, channels, ui = (m(n) for n in
-                                                  ("device", "midi", "mixer", "plugins", "channels", "ui"))
+    device, midi, mixer, plugins, channels, ui, general = (m(n) for n in
+                                                           ("device", "midi", "mixer", "plugins", "channels", "ui",
+                                                            "general"))
     device.midiOutSysex = out
     midi.HW_Dirty_FocusedWindow = 32
+    midi.REC_Plug_Plugin_First = 1879080960
+    midi.REC_MIDIController = 4
+    mixer.getTrackPluginId = lambda t, s: (t << 22) + (s << 16)
+    general.processRECEvent = lambda eid, v, flags: log("fake: rec", eid, v) or v
+    plugins.setParamValue = lambda v, p, index, slot=-1, *_: log("fake: set", index, slot, p, v)
     mixer.trackCount = lambda: len(TRACKS)
     mixer.getTrackName = lambda t: TRACKS[t]
     mixer.getActiveEffectIndex = lambda: FOCUS["fx"]
@@ -84,7 +90,7 @@ def install_fakes():
     plugins.getParamName = lambda p, index, slot=-1, *_: params_of(plugin_at(index, slot)).get(p, "")
     ui.getFocusedPluginName = lambda: FOCUS["name"]
     ui.getFocusedFormID = lambda: FOCUS["form"]
-    for mod in (device, midi, mixer, plugins, channels, ui):
+    for mod in (device, midi, mixer, plugins, channels, ui, general):
         sys.modules[mod.__name__] = mod
 
 
