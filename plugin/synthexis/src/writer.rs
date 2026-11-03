@@ -200,6 +200,7 @@ impl Writer {
 impl SignalSubscriber for Writer {
     fn on_sample(&self, signal_id: &str, sample: &Sample) {
         let mut writes = Vec::new();
+        let live = self.params.live.value();
         {
             let mut routes = self.routes.lock();
             let test_on = self.params.test_signal.value();
@@ -210,6 +211,13 @@ impl SignalSubscriber for Writer {
             current.macros = *self.written.lock();
             let t_s = sample.t_capture_ns as f64 / 1e9;
             let changed = apply_sample(&mut routes, &mut current, signal_id, sample, t_s);
+            if !live {
+                // not sent, so not written: the first sample with Live on
+                // sends it (macros catch up through `written` instead)
+                for (t, _) in changed.iter().filter(|(t, _)| matches!(t, Target::Param { .. })) {
+                    current.params.insert(t.clone(), f32::NAN);
+                }
+            }
             drop(current);
             if changed.is_empty() {
                 self.periodic_log();
@@ -229,7 +237,7 @@ impl SignalSubscriber for Writer {
                 }
             }
         }
-        if !self.params.live.value() {
+        if !live {
             self.periodic_log();
             return;
         }

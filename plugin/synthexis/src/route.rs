@@ -33,9 +33,10 @@ pub struct Route {
     /// Prozent" is hi 0.8).
     pub lo: f32,
     pub hi: f32,
-    /// Signal that must read above GATE_OPEN for the route to follow its
-    /// source ("only while I pinch"); while closed the target holds.
-    pub gate: Option<String>,
+    /// Signals that must all read above GATE_OPEN for the route to follow
+    /// its source ("only while I pinch"); while one is closed the target
+    /// holds. A gate signal that is absent or unsure counts as closed.
+    pub gates: Vec<String>,
     pub cond: Chain,
     /// Whether this route is currently active.
     pub enabled: bool,
@@ -62,7 +63,7 @@ impl Route {
             depth,
             lo: 0.0,
             hi: 1.0,
-            gate: None,
+            gates: Vec::new(),
             cond: Chain::default(),
             enabled: true,
             test: false,
@@ -82,12 +83,16 @@ impl Route {
 pub struct Values {
     pub macros: [f32; NUM_MACROS],
     pub params: HashMap<Target, f32>,
-    /// Last present value of every signal, for the gates.
+    /// Last value of every signal for the gates; 0 while the signal is
+    /// absent or below GATE_MIN_CONF.
     pub last: HashMap<String, f32>,
 }
 
 /// A gate signal above this lets its route move.
 pub const GATE_OPEN: f32 = 0.5;
+/// Below this confidence a gate signal counts as absent (cond.rs
+/// Occlusion's c_min).
+pub const GATE_MIN_CONF: f32 = 0.2;
 
 /// Perception test routes on Signal 3..10 (probes/plugin-perception
 /// fl_live.py): (signal id, macro index).
@@ -129,12 +134,11 @@ pub fn apply_sample(
     sample: &Sample,
     t_s: f64,
 ) -> Vec<(Target, f32)> {
-    if sample.present {
-        match current.last.get_mut(signal) {
-            Some(v) => *v = sample.value,
-            None => {
-                current.last.insert(signal.to_string(), sample.value);
-            }
+    let seen = if sample.present && sample.confidence >= GATE_MIN_CONF { sample.value } else { 0.0 };
+    match current.last.get_mut(signal) {
+        Some(v) => *v = seen,
+        None => {
+            current.last.insert(signal.to_string(), seen);
         }
     }
     let mut touched: Vec<Target> = Vec::new();
@@ -142,7 +146,7 @@ pub fn apply_sample(
         if !r.enabled || r.signal != signal {
             continue;
         }
-        if r.gate.as_ref().is_some_and(|g| current.last.get(g).is_none_or(|v| *v <= GATE_OPEN)) {
+        if r.gates.iter().any(|g| current.last.get(g).is_none_or(|v| *v <= GATE_OPEN)) {
             continue;
         }
         r.last_v = r.cond.step(sample, t_s);
@@ -252,7 +256,7 @@ mod tests {
         let target = Target::Param { plugin: key, index: 12 };
         let mut r = Route::to("x", target.clone(), 1.0);
         r.hi = 0.8;
-        r.gate = Some("g".into());
+        r.gates = vec!["g".into()];
         let mut routes = vec![r];
         let mut cur = Values::default();
         // gate closed: nothing moves
@@ -266,6 +270,13 @@ mod tests {
         }
         let v = cur.params[&target];
         assert!((v - 0.8).abs() < 0.02, "{v} {last:?}");
+        // the gate hand leaves the frame: the gate closes, the target holds
+        let gone = Sample { present: false, ..s(1.0) };
+        apply_sample(&mut routes, &mut cur, "g", &gone, 4.0);
+        for i in 120..150 {
+            assert!(apply_sample(&mut routes, &mut cur, "x", &s(0.0), i as f64 / 30.0).is_empty());
+        }
+        assert!((cur.params[&target] - v).abs() < 1e-6);
     }
 
     #[test]

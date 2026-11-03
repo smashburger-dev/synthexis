@@ -21,7 +21,8 @@ use std::time::Instant;
 use crossbeam_channel::{bounded, unbounded, Receiver, Sender};
 use synthexis_complete::Param;
 use synthexis_parser::resolve::{self, resolve, Candidate};
-use synthexis_parser::{pin_spans, Options, Parser, Pin};
+use synthexis_parser::pin::Part;
+use synthexis_parser::{pin_spans, Item, Options, Parser, Pin};
 
 use crate::log::log;
 
@@ -42,6 +43,9 @@ pub struct Scope {
 pub struct Reply {
     /// The frame's intent token without "I:" (map, unmap, clear, undo, ...).
     pub intent: String,
+    /// Frame tokens outside the routes ("scope:all", a source a "clear"
+    /// names), without the intent.
+    pub rest: Vec<String>,
     pub routes: Vec<resolve::Route>,
     /// One line per route, or why there is none.
     pub lines: Vec<String>,
@@ -124,7 +128,7 @@ fn parse(parser: &Parser, text: &str, pins: &[Pin], scope: Option<&Scope>) -> Re
         Ok(p) => p,
         Err(e) => {
             log(&format!("assistant: parse failed for \"{text}\": {e:#}"));
-            return Reply { intent: "none".into(), routes: Vec::new(), lines: vec![format!("parse failed: {e}")] };
+            return Reply { intent: "none".into(), rest: Vec::new(), routes: Vec::new(), lines: vec![format!("parse failed: {e}")] };
         }
     };
     let parsed_ms = t0.elapsed().as_secs_f64() * 1e3;
@@ -148,5 +152,14 @@ fn parse(parser: &Parser, text: &str, pins: &[Pin], scope: Option<&Scope>) -> Re
         cands.len(),
         lines.join("; ")
     ));
-    Reply { intent, routes, lines }
+    let rest = frame
+        .parts
+        .iter()
+        .filter_map(|p| match p {
+            Part::Item(Item::Token(t)) if !t.starts_with("I:") => Some(t.clone()),
+            Part::Item(Item::Span { text, .. }) => Some(format!("={text}")),
+            _ => None,
+        })
+        .collect();
+    Reply { intent, rest, routes, lines }
 }

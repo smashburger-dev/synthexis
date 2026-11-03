@@ -4,7 +4,7 @@
 //! The plugin owns two CoreMIDI virtual ports with the names and unique IDs
 //! of probes/fl-target-picker/flbridged.swift, so FL binds them to the
 //! "synthexis bridge" device script (plugin/fl/device_synthexis_bridge.py,
-//! protocol 3) the way it bound the probe daemon. Frames both ways are
+//! protocol 4) the way it bound the probe daemon. Frames both ways are
 //! F0 7D <ASCII JSON> F7. One worker thread owns the ports, sends requests
 //! and pages through replies; the script pushes focus and inventory events
 //! on its own. The GUI reads a snapshot (`View`) and asks for parameter
@@ -348,7 +348,7 @@ fn run(want: Receiver<Key>, writes: Receiver<(Key, u32, f32)>) {
         }
     };
     log("fl: MIDI ports open");
-    let mut w = Worker { b, ports, frames, next_id: 1, hash: None, sync: true, cache: HashMap::new() };
+    let mut w = Worker { b, ports, frames, next_id: 1, hash: None, sync: true, cache: HashMap::new(), unsent: Vec::new() };
     let mut last = Instant::now();
     loop {
         if w.sync {
@@ -387,6 +387,8 @@ struct Worker {
     hash: Option<i64>,
     sync: bool,
     cache: HashMap<Key, Vec<(u32, String)>>,
+    /// Latest value per parameter not sent yet (the link was down).
+    unsent: Vec<(Key, u32, f32)>,
 }
 
 impl Worker {
@@ -467,6 +469,7 @@ impl Worker {
                 if self.b.view().link != Link::Up {
                     log("fl: script answered, protocol 4");
                     self.b.update(|v| v.link = Link::Up);
+                    self.flush();
                 }
                 if r.get("h").and_then(Value::as_i64) != self.hash {
                     self.load_inventory();
@@ -538,27 +541,30 @@ impl Worker {
     }
 
     /// Sends the latest value of every parameter queued so far (the camera
-    /// runs at 30 Hz, a slow MIDI round must not pile up stale values). No
-    /// reply: the script answers "rec" frames without an id with nothing.
+    /// runs at 30 Hz, a slow MIDI round must not pile up stale values); while
+    /// the link is down they wait and go out once it is up. No reply: the
+    /// script answers "rec" frames without an id with nothing. Each frame
+    /// names the plugin, and the script writes only when that plugin still
+    /// sits in the slot (a route never drives a plugin that replaced it).
     fn write(&mut self, first: (Key, u32, f32), more: &Receiver<(Key, u32, f32)>) {
+        for (k, i, v) in std::iter::once(first).chain(more.try_iter()) {
+            match self.unsent.iter_mut().find(|(uk, ui, _)| *uk == k && *ui == i) {
+                Some(slot) => slot.2 = v,
+                None => self.unsent.push((k, i, v)),
+            }
+        }
+        self.flush();
+    }
+
+    fn flush(&mut self) {
         if self.b.view().link != Link::Up {
             return;
         }
-        let mut latest: Vec<(Key, u32, f32)> = vec![first];
-        for (k, i, v) in more.try_iter() {
-            match latest.iter_mut().find(|(lk, li, _)| *lk == k && *li == i) {
-                Some(slot) => slot.2 = v,
-                None => latest.push((k, i, v)),
-            }
-        }
-        for (k, i, v) in latest {
-            let at = match k.at {
-                At::Fx { track, slot } => json!({"fx": [track, slot]}),
-                At::Gen { ch } => json!({"ch": ch}),
-            };
-            let mut msg = json!({"cmd": "rec", "i": i, "v": (v * 10_000.0).round() / 10_000.0});
-            if let (Some(m), Some(a)) = (msg.as_object_mut(), at.as_object()) {
-                m.extend(a.clone());
+        for (k, i, v) in std::mem::take(&mut self.unsent) {
+            let mut msg = json!({"cmd": "rec", "p": k.plugin, "i": i, "v": (v * 10_000.0).round() / 10_000.0});
+            match k.at {
+                At::Fx { track, slot } => msg["fx"] = json!([track, slot]),
+                At::Gen { ch } => msg["ch"] = json!(ch),
             }
             self.send(&msg);
         }

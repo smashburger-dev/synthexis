@@ -164,7 +164,7 @@ impl Route {
             .find(|&j| tok(&self.items[j]).starts_with("shape:"))
     }
 
-    fn is_param_target(t: &str) -> bool {
+    pub(crate) fn is_param_target(t: &str) -> bool {
         t.starts_with("T:param:") || t.starts_with("T:toggle:")
     }
 
@@ -426,23 +426,39 @@ pub fn pin_spans(items: &[Item], text: &str, spans: &[Tagged], pins: &[Pin]) -> 
     });
     let params: Vec<_> = params.collect();
     let mut placed = vec![false; params.len()];
-    // 1. the target the chip's words name
+    // 1. the target the chip's words name: among the slots of the group
+    // its bytes overlap, a free one of its class, else the first free one;
+    // a chip that covers the whole group names one parameter, so the
+    // parser's other parameter targets of that group go (unless another
+    // chip covers part of it)
     if !spans.is_empty() {
         let al = align::align(&f, text, spans);
         let mut fold: Vec<(usize, usize)> = Vec::new();
+        let chips: Vec<(usize, usize)> = pins.iter().map(|p| p.bytes).collect();
         for (k, &(bytes, id, class, switch)) in params.iter().enumerate() {
+            let Some(g) = al.group_at(bytes) else { continue };
             let mut routes = f.routes_mut();
-            let hit = al.slot_at(bytes, |r, i| routes[r].pinned[i].is_none());
-            let Some((r, i)) = hit else { continue };
+            let free: Vec<(usize, usize)> =
+                al.slots_of(g).filter(|(r, s)| routes[*r].pinned[s.item].is_none()).map(|(r, s)| (r, s.item)).collect();
+            let of_class = |&&(r, i): &&(usize, usize)| {
+                let t = tok(&routes[r].items[i]);
+                if switch { t.starts_with("T:toggle:") } else { t.strip_prefix("T:param:") == Some(class) }
+            };
+            let Some(&(r, i)) = free.iter().find(of_class).or(free.first()) else { continue };
             routes[r].set_param(Some(i), id, class, switch, bytes);
             placed[k] = true;
-            let g = al.routes[r].slots.iter().find(|s| s.item == i).and_then(|s| s.group);
-            fold.extend(al.routes[r].slots.iter().filter(|s| s.shares && s.group == g && s.item != i).map(|s| (r, s.item)));
+            let (gb, ge) = al.groups[g];
+            let alone = chips.iter().filter(|c| c.0 < ge && gb < c.1).count() == 1;
+            if bytes.0 <= gb && ge <= bytes.1 && alone {
+                fold.extend(al.slots_of(g).filter(|(fr, s)| (*fr, s.item) != (r, i)).map(|(fr, s)| (fr, s.item)));
+            }
         }
         fold.sort_unstable_by(|a, b| b.cmp(a));
+        fold.dedup();
         let mut routes = f.routes_mut();
         for (r, i) in fold {
-            if routes[r].pinned[i].is_none() && !routes[r].tgt_pinned[i] {
+            let param = Route::is_param_target(tok(&routes[r].items[i]));
+            if param && routes[r].pinned[i].is_none() && !routes[r].tgt_pinned[i] {
                 routes[r].remove(i);
             }
         }
@@ -690,6 +706,34 @@ mod tests {
         let pins = [param(t, "pan mid env attack", "p#7", "other", false)];
         let out = pin_spans(&items(&fr, t), t, &spans, &pins).frame();
         assert_eq!(out, ["I:map", "<route>", "S:mouth.open", "T:param:other", "@p#7", "</route>"]);
+    }
+
+    /// Two chips in one joined group fold nothing and each takes its own
+    /// class's slot; a target chip in the group keeps its token.
+    #[test]
+    fn partial_chips_and_target_chips_never_fold() {
+        let t = "when I pinch Cutoff Resonance Drive go up";
+        let fr = ["I:map", "<route>", "S:hand.pinch", "T:param:filter.cutoff", "T:param:filter.resonance", "T:param:fx.drive", "</route>"];
+        let spans = [
+            Tagged { tag: "TGT", bytes: at(t, "Cutoff") },
+            Tagged { tag: "TGT", bytes: at(t, "Resonance") },
+            Tagged { tag: "TGT", bytes: at(t, "Drive") },
+        ];
+        let pins = [param(t, "Resonance", "p#2", "filter.resonance", false), param(t, "Cutoff", "p#1", "filter.cutoff", false)];
+        let out = pin_spans(&items(&fr, t), t, &spans, &pins).frame();
+        assert_eq!(
+            out,
+            [
+                "I:map", "<route>", "S:hand.pinch", "T:param:filter.cutoff", "@p#1", "T:param:filter.resonance", "@p#2",
+                "T:param:fx.drive", "</route>"
+            ]
+        );
+        let t = "when I pinch Cutoff Kick Pattern";
+        let fr = ["I:map", "<route>", "S:hand.pinch", "T:param:filter.cutoff", "T:midi.pattern:kick pattern", "</route>"];
+        let spans = [Tagged { tag: "TGT", bytes: at(t, "Cutoff") }, Tagged { tag: "TGT", bytes: at(t, "Kick Pattern") }];
+        let pins = [param(t, "Cutoff", "p#1", "filter.cutoff", false), target(t, "Kick Pattern", "midi.pattern")];
+        let out = pin_spans(&items(&fr, t), t, &spans, &pins).frame();
+        assert!(out.contains(&"T:midi.pattern:kick pattern".to_string()), "{out:?}");
     }
 
     #[test]

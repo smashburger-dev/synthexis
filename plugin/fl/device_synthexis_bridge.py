@@ -18,12 +18,13 @@
 #   plist  parameter names of one plugin ("index", "slot", -1 for a
 #          generator), paged; FL's MIDI CC entries (index >= 4096) left out
 #   focus  the focused plugin, same shape as the focus event
-#   rec    set parameter "i" of a plugin to "v" (0..1): "fx": [track, slot]
+#   rec    set parameter "i" of plugin "p" to "v" (0..1): "fx": [track, slot]
 #          through FL's REC event (recorded as automation while FL records),
 #          "ch": channel through plugins.setParamValue (recorded too; both
 #          measured in probes/fl-target-picker and probes/fl-script-bridge).
-#          Sent without an id by the route writer, up to 30 times a second
-#          per parameter, so it gets no reply.
+#          Nothing is written when another plugin sits there now. Sent
+#          without an id by the route writer, up to 30 times a second per
+#          parameter, so it gets no reply.
 #
 # Events carry "ev" and no "id":
 #   hello  sent by OnInit, so the plugin reloads after FL re-inits the device
@@ -178,10 +179,15 @@ def _handle(cmd):
         i, v = int(cmd["i"]), max(0.0, min(1.0, float(cmd["v"])))
         if "fx" in cmd:
             t, s = int(cmd["fx"][0]), int(cmd["fx"][1])
+            if _safe(plugins.getPluginName, t, s) != cmd.get("p"):
+                return {"error": "another plugin in that slot"}
             eid = mixer.getTrackPluginId(t, s) + midi.REC_Plug_Plugin_First + i
             general.processRECEvent(eid, int(v * (1 << 30)), midi.REC_MIDIController)
         else:
-            plugins.setParamValue(v, i, int(cmd["ch"]))
+            ch = int(cmd["ch"])
+            if _safe(plugins.getPluginName, ch, -1) != cmd.get("p"):
+                return {"error": "another plugin on that channel"}
+            plugins.setParamValue(v, i, ch)
         return {"ok": True}
     return {"error": "unknown cmd " + str(op)}
 

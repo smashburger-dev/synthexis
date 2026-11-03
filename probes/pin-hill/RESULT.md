@@ -89,3 +89,12 @@ What this says:
 - pin.rs found the target of a parameter chip mostly through the class. With a real plugin the chip's class is param-sense's class of that parameter, which often differs from the parser's; then 23 points of chip_edit were lost. By the chip's words (the BIO head's name groups, the same alignment the resolver uses) the loss is gone: 0.834 with and without a matching class.
 - One alignment now serves both: `align.rs` is the only place that decides which words name which target; pin.rs lost its PNAME rule (`pname_at`, `target_for_pname`), the resolver lost its private copy. The plugin calls `pin_spans` with the parse's spans.
 - Limits: the oracle chips sit on gold TGT spans; the mismatched class is the worst case (no class matches), real chips sit between the two conditions.
+
+After a review of the branch (five reviewers, two skeptics per finding, 22 defects confirmed), the fold was narrowed: a chip folds its group only when it covers the whole group and no other chip touches it, only parameter targets fold, and inside a group the chip takes the slot of its own class first. Same harness, same rows:
+
+| variant | chip class = gold | chip class matches nothing |
+|---|---|---|
+| V3 (as committed in 29022e1) | 0.83475 | 0.83408 |
+| V3 with the narrowed fold (shipped) | 0.83819 | 0.83585 |
+
+The narrowed fold removes V2's losses (challenge 0.8796 -> 0.8869, dev_s7 0.7862 -> 0.7906) and is above V0 and V1 in both conditions.

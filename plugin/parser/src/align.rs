@@ -43,14 +43,14 @@ pub struct Alignment {
 }
 
 impl Alignment {
-    /// (route, item) of the first free slot whose group overlaps `bytes`;
-    /// `free` says whether a slot may take a chip.
-    pub fn slot_at(&self, bytes: (usize, usize), free: impl Fn(usize, usize) -> bool) -> Option<(usize, usize)> {
-        let g = self.groups.iter().position(|g| g.0 < bytes.1 && bytes.0 < g.1)?;
-        self.routes
-            .iter()
-            .enumerate()
-            .find_map(|(r, ra)| ra.slots.iter().find(|s| s.group == Some(g) && free(r, s.item)).map(|s| (r, s.item)))
+    /// The group whose bytes overlap `bytes`.
+    pub fn group_at(&self, bytes: (usize, usize)) -> Option<usize> {
+        self.groups.iter().position(|g| g.0 < bytes.1 && bytes.0 < g.1)
+    }
+
+    /// (route, slot) of every slot group `g` names, in frame order.
+    pub fn slots_of(&self, g: usize) -> impl Iterator<Item = (usize, &Slot)> {
+        self.routes.iter().enumerate().flat_map(move |(r, ra)| ra.slots.iter().filter(move |s| s.group == Some(g)).map(move |s| (r, s)))
     }
 }
 
