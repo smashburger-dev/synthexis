@@ -96,6 +96,16 @@ impl Writer {
             .collect()
     }
 
+    /// True when a route of `line` runs.
+    pub fn has_line(&self, line: u64) -> bool {
+        line != 0 && self.routes.lock().iter().any(|r| r.line == line)
+    }
+
+    /// (id, signal, target) of the routes of `line`.
+    pub fn line_routes(&self, line: u64) -> Vec<(u64, String, Target)> {
+        self.routes.lock().iter().filter(|r| line != 0 && r.line == line).map(|r| (r.id, r.signal.clone(), r.target.clone())).collect()
+    }
+
     /// Keeps pending routes for good.
     pub fn accept(&self, ids: &[u64]) {
         for r in self.routes.lock().iter_mut().filter(|r| ids.contains(&r.id)) {

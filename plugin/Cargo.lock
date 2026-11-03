@@ -3395,6 +3395,7 @@ dependencies = [
  "objc2-foundation 0.3.2",
  "objc2-vision",
  "parking_lot",
+ "serde",
  "serde_json",
  "synthexis-complete",
  "synthexis-parser",

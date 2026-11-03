@@ -78,6 +78,7 @@ use crate::fl::{self, Link};
 use crate::i18n::{self, fill, Text};
 use crate::log::log;
 use crate::route::Target;
+use crate::saved;
 use crate::sense;
 use crate::writer::Writer;
 
@@ -140,6 +141,10 @@ pub struct Sentence {
     kept: Vec<Mapped>,
     /// None without a plugin instance (tests).
     writer: Option<Arc<Writer>>,
+    /// Where the kept lines are saved with the project (params `routes`),
+    /// and what was saved last.
+    store: Option<Arc<RwLock<String>>>,
+    saved_json: String,
     bridge: Option<&'static fl::Bridge>,
     seen: u64,
     link: Link,
@@ -480,8 +485,9 @@ fn hint(s: &Suggestion, t: &Text) -> String {
 }
 
 impl Sentence {
-    /// `bridge`: None runs without FL (tests); `writer`: None maps nothing.
-    pub fn new(bridge: Option<&'static fl::Bridge>, writer: Option<Arc<Writer>>) -> Self {
+    /// `bridge`: None runs without FL (tests); `writer`: None maps nothing;
+    /// `store`: the saved kept lines (saved.rs), shown again.
+    pub fn new(bridge: Option<&'static fl::Bridge>, writer: Option<Arc<Writer>>, store: Option<Arc<RwLock<String>>>) -> Self {
         let (tx, rx) = bounded(1);
         let (stx, srx) = crossbeam_channel::unbounded();
         let spawned = std::thread::Builder::new()
@@ -498,7 +504,7 @@ impl Sentence {
             Ok(_) => Status::Loading,
             Err(e) => Status::LoaderFailed(e.to_string()),
         };
-        Self {
+        let mut s = Self {
             doc: ChipText::default(),
             engine: None,
             exported: Vec::new(),
@@ -517,6 +523,8 @@ impl Sentence {
             pending: Vec::new(),
             kept: Vec::new(),
             writer,
+            store,
+            saved_json: String::new(),
             bridge,
             seen: u64::MAX,
             link: Link::Waiting,
@@ -539,6 +547,57 @@ impl Sentence {
             dismissed: false,
             cursor: 0,
             id: None,
+        };
+        s.restore_saved();
+        s
+    }
+
+    /// The saved kept lines with the engine routes initialize() started for
+    /// them (saved::run).
+    fn restore_saved(&mut self) {
+        let (Some(store), Some(w)) = (&self.store, &self.writer) else { return };
+        let json = store.read().clone();
+        for sv in saved::load(&json) {
+            let key = sv.key.as_deref().and_then(fl::Key::parse);
+            let (ids, keys): (Vec<u64>, Vec<(String, Target)>) =
+                w.line_routes(sv.line).into_iter().map(|(id, sig, t)| (id, (sig, t))).unzip();
+            self.next_line = self.next_line.max(sv.line + 1);
+            self.next_batch = self.next_batch.max(sv.batch + 1);
+            self.kept.push(Mapped {
+                route: sv.route,
+                key,
+                note: sv.note,
+                ids,
+                keys,
+                batch: sv.batch,
+                line: sv.line,
+                full: sv.full,
+                replaced: Vec::new(),
+            });
+        }
+        self.saved_json = json;
+    }
+
+    /// Saves the kept lines when they changed.
+    fn save(&mut self) {
+        let Some(store) = &self.store else { return };
+        let lines: Vec<saved::Saved> = self
+            .kept
+            .iter()
+            .map(|m| saved::Saved {
+                key: m.key.as_ref().map(fl::Key::id),
+                route: m.route.clone(),
+                line: m.line,
+                batch: m.batch,
+                full: m.full,
+                note: m.note.clone(),
+                keys: m.keys.iter().map(|(sig, t)| (sig.clone(), saved::target_id(t))).collect(),
+            })
+            .collect();
+        let json = if lines.is_empty() { String::new() } else { saved::store(&lines) };
+        if json != self.saved_json {
+            store.write().clone_from(&json);
+            self.saved_json = json;
         }
     }
 
@@ -1364,6 +1423,7 @@ impl Sentence {
             ui.memory_mut(|m| m.request_focus(id));
         }
         self.routes_ui(ui);
+        self.save();
 
         // ghost text after the cursor at the end of the line
         let show_ghost = enabled
@@ -1606,7 +1666,7 @@ mod tests {
         }
 
         fn with(lang: Lang) -> Self {
-            let mut s = Sentence::new(None, None);
+            let mut s = Sentence::new(None, None, None);
             s.loader = None;
             s.engine = Some(engine());
             s.labels = Labels::Fixed(Arc::new(sense::Classes::default()));
@@ -1969,6 +2029,51 @@ mod tests {
         assert_eq!(writer.assigned().len(), 3);
         h.s.apply(reply("unmap", vec![route("hand.x", None, &[])]), Some(&key));
         assert_eq!(writer.assigned().len(), 1);
+    }
+
+    /// Kept lines are saved with the project and come back running after
+    /// a reload; a partly removed line keeps only the rest; a second
+    /// initialize() starts nothing twice.
+    #[test]
+    fn kept_routes_survive_a_reload() {
+        use synthexis_parser::resolve::{Bound, Route as R, Target as T, Via};
+        let store = Arc::new(RwLock::new(String::new()));
+        let writer = Writer::new(Arc::new(crate::params::SynthexisParams::default()));
+        let mut h = Harness::new();
+        h.s.writer = Some(writer.clone());
+        h.s.store = Some(store.clone());
+        let key = fl::Key { at: fl::At::Fx { track: 0, slot: 0 }, plugin: "Topos".into() };
+        let route = |source: &str, side: &str| R {
+            source: source.into(),
+            side: Some(side.into()),
+            inv: true,
+            gates: Vec::new(),
+            mods: vec!["hi:0.8".into()],
+            targets: vec![T {
+                token: "T:param:fx.drive".into(),
+                text: "drive".into(),
+                bound: Some(Bound { index: 3, name: "Amp Drive".into(), via: Via::Chip, plugin: None }),
+            }],
+        };
+        let reply = |intent: &str, routes| assistant::Reply { intent: intent.into(), rest: Vec::new(), routes, lines: vec!["x".into()] };
+        h.s.apply(reply("map", vec![route("hand.openness", "left"), route("hand.x", "both")]), Some(&key));
+        h.s.keep();
+        h.s.apply(reply("unmap", vec![route("hand.x", "right")]), Some(&key));
+        h.frame(vec![]);
+        assert!(!store.read().is_empty());
+        // reload: a new plugin instance, initialize() twice, then the window
+        let again = Writer::new(Arc::new(crate::params::SynthexisParams::default()));
+        let lines = saved::load(&store.read());
+        saved::run(&lines, &again);
+        saved::run(&lines, &again);
+        assert_eq!(again.assigned().len(), 2, "openness + the left hand of x");
+        assert!(again.assigned().iter().all(|a| !a.1 && a.2), "kept and inverted");
+        let back = Sentence::new(None, Some(again.clone()), Some(store.clone()));
+        let shown: Vec<String> = back.kept.iter().map(Mapped::line).collect();
+        assert_eq!(shown.len(), 2);
+        assert!(shown[1].contains("partly removed"), "{shown:?}");
+        assert_eq!(back.kept.iter().map(|m| m.ids.len()).sum::<usize>(), 2);
+        assert!(back.next_line > back.kept.iter().map(|m| m.line).max().unwrap_or(0));
     }
 
     #[test]

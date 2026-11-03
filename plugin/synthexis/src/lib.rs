@@ -16,6 +16,7 @@ mod i18n;
 mod log;
 mod params;
 mod route;
+mod saved;
 mod sense;
 mod sentence;
 mod settings;
@@ -209,6 +210,7 @@ impl Plugin for Synthexis {
         // loads when the sentence field is used (assistant.rs).
         engine::perception::start();
         fl::bridge();
+        saved::run(&saved::load(&self.params.routes.read()), &self.writer);
         true
     }
 
