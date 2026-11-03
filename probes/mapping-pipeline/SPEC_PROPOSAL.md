@@ -22,6 +22,10 @@ For the main session to merge into `spec/synthexis.yaml`. Numbers cite `probes/m
 
 "Training data: tools/mapping/edits.py samples structured edits from tools/mapping/edits.yaml; Spark Open verbalises each edit in two styles (en 60 %, de 40 %) and marks the words of every slot ([[text|slot]]), so spans and canonical values are known by construction (tools/mapping/commands.py). A glossary of EN/DE phrases per concept (tools/mapping/glossary.py) feeds rare wordings into the edits and allows span-substitution augmentation."
 
+## map.parser.model (amend, 2026-11-01)
+
+"The parser's encoder is a pretrained multilingual model (mmBERT small trimmed to German and English, 60M parameters), fine-tuned with the frame decoder; it ships as f16 (121 MB) and runs at 30 ms median per sentence on one CPU thread. RAM budget for the plugin: 500 to 800 MB including the image segmenter (Noa, 2026-11-01), so f16 weights are preferred over int8 (dynamic int8 costs 2.2 points route_edit)." Measured in probes/parser-errors/RESULT.md, section 10; real-sentence eval 31 % exact against 22 % for the from-scratch parser (probes/real-eval/RESULT.md, "Parser v7"). The plugin needs a ModernBERT runtime (open).
+
 ## map.glossary (new)
 
 "EN/DE phrases per concept (sources, shapes, params, intents, modifier values, tracks, presets, objects, sides, roles, scales) with form (noun/verb) and polarity, written by Spark Open at build time. Uses: rare wordings for synthetic commands, span substitution, the chip fallback (map.fallback) and ambiguity hints (phrases that belong to several concepts)."
@@ -128,3 +132,9 @@ Source: Noa's message (the XY pad of a plugin, Portal: MACRO 1 and MACRO 2 are t
 "Any finger combination is a finger state (5-bit mask), not only the 12 named shapes; index and ring finger together is 01010." Seen in: eval.
 
 Already expressible, no change: one source driving several targets in different directions (routes sharing a source, each with its own invert), and a chord or a note roll per finger (midi.chord, midi.pattern with note and grid).
+
+# Spec proposal, parser runtime (2026-11-01)
+
+## map.parser.runtime (new)
+
+"The plugin runs the parser in Rust (crate plugin/parser): candle with Apple Accelerate, weights f16 in RAM and widened to f32 per matrix product, the HF tokenizer.json through the tokenizers crate, grammar-masked greedy decoding over the shipped ensemble (since 2026-11-02 the v11 four seeds with encoder weights quantised to Q8_0 at load and dequantised per matrix product, then the decode-time rules conv,pronoun; before that v9 and v7a pairs in f16). One worker thread per process loads it in the background when the plugin is initialised (never on the audio thread) and parses typed sentences. Measured on 200 synthetic dev sentences, M1 Pro, one core: frames equal to Python 805 of 805 on ds-v11c dev (Q8_0 rounding simulated in torch), 75 ms median and 135 ms p95 on 200 of them with other work on the Mac, 343 MB RSS and 400 MB peak footprint for the four runs." Measured in docs/parser-runtime-plan.md; ONNX Runtime was slower on the encoder (22.6 against 15.7 ms median, p95 66 against 26.5) and drifts in f16. Replaces "The plugin needs a ModernBERT runtime (open)" in map.parser.model.

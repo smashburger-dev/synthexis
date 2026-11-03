@@ -32,6 +32,8 @@ block2 = "0.6"
 dispatch2 = "0.3"
 parking_lot = "0.12"
 crossbeam-channel = "0.5"
+synthexis-parser = { path = "../parser" }
+synthexis-complete = { path = "../complete" }
 
 [build-dependencies]
 # none needed; build.rs uses std only

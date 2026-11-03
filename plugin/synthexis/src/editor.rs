@@ -1,6 +1,8 @@
 //! Minimal functional egui editor (glass styling is a later phase):
 //! camera preview, 32 macro bars, Live/Test toggles, hand-role combos,
-//! latency line. Texture reset on every open (probe v0.2.1 fix).
+//! latency line, the mapping assistant's sentence field with completion
+//! (sentence.rs) and a settings section. Texture reset on every open
+//! (probe v0.2.1 fix).
 
 use std::any::Any;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -12,6 +14,7 @@ use nih_plug_egui::{create_egui_editor, widgets};
 
 use crate::engine::camera::EngineShared;
 use crate::params::{HandRole, SynthexisParams};
+use crate::sentence::Sentence;
 
 pub static EDITOR_OPEN: AtomicBool = AtomicBool::new(false);
 
@@ -19,6 +22,7 @@ struct UiState {
     params: Arc<SynthexisParams>,
     shared: Arc<EngineShared>,
     texture: Option<TextureHandle>,
+    sentence: Sentence,
 }
 
 struct EditorHandle {
@@ -84,7 +88,7 @@ pub fn make_editor(
     let state = params.editor_state.clone();
     let inner = create_egui_editor(
         state,
-        UiState { params, shared, texture: None },
+        UiState { params, shared, texture: None, sentence: Sentence::new() },
         // Runs on every open: the egui Context is new each time but UiState
         // persists, so drop the stale texture handle.
         |_, s| {
@@ -130,6 +134,17 @@ pub fn make_editor(
                     s.shared.frame_count.load(Ordering::Relaxed),
                     s.shared.diag.lock(),
                 ));
+
+                ui.separator();
+                ui.label("Mapping assistant");
+                let completion = s.params.completion.load(Ordering::Relaxed);
+                s.sentence.ui(ui, completion, &s.params.completion_plugin);
+                ui.collapsing("Settings", |ui| {
+                    let mut on = completion;
+                    if ui.checkbox(&mut on, "Completion in the sentence field").changed() {
+                        s.params.completion.store(on, Ordering::Relaxed);
+                    }
+                });
 
                 ui.separator();
                 for i in 0..8 {

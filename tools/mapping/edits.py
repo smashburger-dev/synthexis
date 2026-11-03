@@ -5,10 +5,10 @@
 """Deterministic sampler of structured edits (no LLM).
 
   uv run tools/mapping/edits.py --run <name> --n <edits> --seed <s>
-      [--glossary-run <name>] [--override edits-s2.yaml] [--id-prefix f]
+      [--glossary-run <name>] [--override edits-s4.yaml,edits-s5.yaml] [--id-prefix f]
 
-Implements edits.yaml exactly (blocks in --override replace or update the
-ones of the same name); writes
+Implements edits.yaml exactly (blocks in each --override file, in order,
+replace or update the ones of the same name); writes
 data/mapping/commands/<run>/edits.jsonl and prints the realised
 distribution for comparison with edits.yaml.
 """
@@ -25,10 +25,20 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
 HERE = Path(__file__).resolve().parent
+# sources with a direction: 0 end and 1 end (stage-7 direction phrasing)
+MOVING = {
+    "hand.openness", "hand.fist", "hand.spread", "hand.x", "hand.y",
+    "hand.depth", "hand.roll", "hand.pitch", "hands.distance",
+    "hand.finger.thumb.tilt", "hand.finger.index.tilt",
+    "hand.finger.middle.tilt", "hand.finger.ring.tilt",
+    "hand.finger.pinky.tilt", "head.roll", "head.pitch", "head.yaw",
+    "mouth.open",
+}
 EVENT_SOURCES = {
     "motion.throw", "motion.swipe", "motion.hold",
     "motion.grab", "motion.release", "motion.clap",
 }
+MOVE_SOURCES = {"hand.x", "hand.y", "hand.depth", "hand.roll", "hand.pitch"}
 HAND_PRESETS = {"filter_hand", "chord_hand", "pattern_hand"}
 FINGERS = ["thumb", "index", "middle", "ring", "pinky"]
 FINGER_SHAPE = {"thumb": "thumbs_up", "index": "point", "pinky": "pinky_up"}
@@ -83,8 +93,19 @@ class Ctx:
             object_ = self.wc(self.cfg["objects"])
         if sid_value == "hand.shape":
             shape = self.rng.choice(self.shape_ids)
+            if self.cfg.get("shape_mask") and \
+                    self.rng.random() < self.cfg["shape_mask"]:
+                shape = self.mask_shape()
         return {"kind": "source", "value": sid_value, "side": side,
                 "object": object_, "shape": shape, "say": None}
+
+    def mask_shape(self) -> str:
+        """Any finger combination that is not a named shape: 'm01010'."""
+        named = {s["mask"] for s in self.onto["shapes"]}
+        while True:
+            m = format(self.rng.randrange(1, 32), "05b")
+            if m not in named:
+                return "m" + m
 
     def draw_track(self) -> str:
         lst = (self.cfg["tracks"]["roles"] if self.rng.random() < 0.7
@@ -155,6 +176,10 @@ class Ctx:
             tid = self.add("t", {
                 "kind": "target", "target": "midi.prop",
                 "value": self.wc(self.cfg["midi_props"]), "say": None})
+            if self.slots[tid]["value"] == "arp.style":
+                mods.append(self.add("v", {
+                    "kind": "value",
+                    "value": self.rng.choice(self.cfg["arp_styles"])}))
         elif kind == "midi.cc":
             tid = self.add("t", {
                 "kind": "target", "target": "midi.cc",
@@ -235,7 +260,7 @@ class Ctx:
         kmap = {"source": "source", "target": "target",
                 "track": "track"}
         cands = [sid for sid, sl in self.slots.items()
-                 if sl["kind"] == kmap[want]]
+                 if sl["kind"] == kmap[want] and not sl.get("name")]
         if not cands:
             return
         of = self.rng.choice(cands)
@@ -255,9 +280,17 @@ class Ctx:
     # --- intent bodies -------------------------------------------------
 
     def gen_map(self) -> list:
+        if self.cfg.get("fan_out") and \
+                self.rng.random() < self.cfg["fan_out"]:
+            return self.gen_fan_out()
+        if self.cfg.get("finger_values") and \
+                self.rng.random() < self.cfg["finger_values"]:
+            return self.gen_finger_values()
         if self.cfg.get("finger_set") and \
                 self.rng.random() < self.cfg["finger_set"]:
             return self.gen_finger_set()
+        if self.cfg.get("xy") and self.rng.random() < self.cfg["xy"]:
+            return self.gen_xy()
         routes = []
         used_sources: set = set()
         first_k = None
@@ -269,10 +302,13 @@ class Ctx:
                 srcs.append(sid)
             used_params: set = set()
             values = [self.slots[x]["value"] for x in srcs]
-            gated = self.tilt_gate(srcs, mods)
+            gated = self.tilt_gate(srcs, mods) or self.pinch_hold(srcs, mods)
             for _ in range(self.wc(self.cfg["targets_per_route"])):
                 kind = self.draw_target_kind(srcs)
                 tgts.append(self.add_target(kind, used_params, mods))
+            self.name_only(tgts, scope)
+            if self.cfg.get("trigger_params"):
+                self.trigger_param(values, tgts, mods)
             time_boost = (
                 any(v in EVENT_SOURCES for v in values)
                 or any(self.slots[t]["target"] in
@@ -320,6 +356,58 @@ class Ctx:
                           "scope": [k], "mods": []}
         return routes
 
+    def trigger_param(self, values: list, tgts: list, mods: list) -> None:
+        """A finger state or a single finger fires a parameter: jump to a
+        value (or from one value to another), step to the next setting, or
+        start a slow ramp that the next trigger reverses."""
+        if not any(v == "hand.shape" or v.startswith("hand.finger.")
+                   and not v.endswith("tilt") for v in values):
+            return
+        for t in tgts:
+            sl = self.slots[t]
+            if sl.get("target") != "param":
+                continue
+            how = self.wc(self.cfg["trigger_params"])
+            if how in ("step", "ramp"):
+                sl["mode"] = how
+            elif how in ("value", "from_to"):
+                for _ in range(1 if how == "value" else 2):
+                    mods.append(self.add("v", {
+                        "kind": "value",
+                        "value": self.rng.choice(self.cfg["param_values"])}))
+
+    def gen_xy(self) -> list:
+        """One hand moving around drives a two-axis pad (Portal's macros,
+        FabFilter XY controllers); sometimes only while pinching."""
+        side = self.wc(self.cfg["sides"])
+        side = None if side == "none" else side
+        srcs = [self.add("s", {"kind": "source", "value": v, "side": side,
+                               "object": None, "shape": None, "say": None})
+                for v in ("hand.x", "hand.y")]
+        t = self.add("t", {"kind": "target", "target": "xy", "value": None,
+                           "say": None})
+        scope, mods = [], []
+        if self.rng.random() < 0.5:
+            scope.append(self.add("p", {"kind": "plugin",
+                                        "value": self.draw_plugin()}))
+        if self.rng.random() < 0.4:
+            mods.append(self.add("g", {"kind": "gate", "value": "hand.pinch",
+                                       "shape": None, "side": side}))
+        return [{"src": srcs, "tgt": [t], "scope": scope, "mods": mods}]
+
+    def pinch_hold(self, srcs: list, mods: list) -> bool:
+        """A hand movement that only counts while pinching ("pinch and
+        drag", "pinch and turn"): the pinch is the hold, not a source."""
+        if not self.cfg.get("pinch_hold"):
+            return False
+        moving = [x for x in srcs if self.slots[x]["value"] in MOVE_SOURCES]
+        if not moving or self.rng.random() >= self.cfg["pinch_hold"]:
+            return False
+        mods.append(self.add("g", {"kind": "gate", "value": "hand.pinch",
+                                   "shape": None,
+                                   "side": self.slots[moving[0]]["side"]}))
+        return True
+
     def tilt_gate(self, srcs: list, mods: list) -> bool:
         """Finger tilt only while that finger alone is shown (thumbs up)."""
         if not self.cfg.get("tilt_gate"):
@@ -362,6 +450,81 @@ class Ctx:
                 self.add_chord(mods)
             routes.append({"src": [s], "tgt": [t],
                            "scope": [k] if k else [], "mods": mods})
+        return routes
+
+    def gen_fan_out(self) -> list:
+        """One movement drives 2 to 4 parameters, each its own route, some
+        inverted ('tilt left: A up, B down, C up'); one plugin for all,
+        sometimes held by a pinch."""
+        cfg, rng = self.cfg, self.rng
+        s = self.add("s", self.source_slot(self.wc(cfg["fan_out_sources"])))
+        scope = []
+        if rng.random() < 0.7:
+            scope.append(self.add("p", {"kind": "plugin",
+                                        "value": self.draw_plugin()}))
+        gate = []
+        if self.slots[s]["value"] in MOVE_SOURCES and \
+                rng.random() < cfg.get("pinch_hold", 0):
+            gate.append(self.add("g", {"kind": "gate", "value": "hand.pinch",
+                                       "shape": None,
+                                       "side": self.slots[s]["side"]}))
+        used: set = set()
+        n = self.wc(cfg["fan_out_sizes"])
+        inv = [rng.random() < 0.5 for _ in range(n)]
+        if all(inv) or not any(inv):         # opposing directions are the point
+            inv[rng.randrange(n)] = not inv[0]
+        routes = []
+        for k in range(n):
+            mods = list(gate)
+            t = self.add_target("param", used, mods)
+            if inv[k]:
+                mods.append(self.add("i", {"kind": "invert", "value": True}))
+            sc = list(scope)
+            self.name_only([t], sc)
+            routes.append({"src": [s], "tgt": [t], "scope": sc,
+                           "mods": mods})
+        return routes
+
+    def name_only(self, tgts: list, scope: list) -> None:
+        """Stage 8: the route's first parameter target is said only by its
+        name as the plugin prints it ("Macro 5 goes down", "LFO 3 Rate
+        up"): T:param:macro or T:param:other plus the PNAME pointer."""
+        p = self.cfg.get("name_only", 0)
+        params = [t for t in tgts if self.slots[t].get("target") == "param"]
+        if not p or not params or self.rng.random() >= p:
+            return
+        name = self.rng.choice(self.cfg["name_only_names"])
+        n = self.add("n", {"kind": "param_name", "value": name})
+        t = self.slots[params[0]]
+        t["value"] = "macro" if name.startswith("Macro") else "other"
+        t["name"], t["say"] = n, None
+        scope.append(n)
+
+    def gen_finger_values(self) -> list:
+        """Each finger sets one parameter to its own value; the parameter is
+        named once and later clauses leave it out ('thumb is position one,
+        index four, middle eight')."""
+        cfg, rng = self.cfg, self.rng
+        if rng.random() < 0.5:
+            self.add("h", {"kind": "side",
+                           "value": rng.choice(["left", "right"])})
+        fingers = sorted(rng.sample(FINGERS, self.wc(cfg["finger_set_sizes"])),
+                         key=FINGERS.index)
+        mods0: list = []
+        t = self.add_target("param", set(), mods0)
+        scope = []
+        if rng.random() < 0.5:
+            scope.append(self.add("p", {"kind": "plugin",
+                                        "value": self.draw_plugin()}))
+        vals = rng.sample(cfg["param_values"], len(fingers))
+        routes = []
+        for f, v in zip(fingers, vals):
+            s = self.add("s", {"kind": "source", "value": f"hand.finger.{f}",
+                               "side": None, "object": None, "shape": None,
+                               "say": None})
+            mods = [self.add("v", {"kind": "value", "value": v})]
+            routes.append({"src": [s], "tgt": [t], "scope": scope,
+                           "mods": mods})
         return routes
 
     def _ref(self) -> tuple[list, list]:
@@ -486,6 +649,67 @@ class Ctx:
             return {"scope": scope}
         return {}
 
+    # --- direction (stage 7) ---------------------------------------------
+
+    def same_effect(self, routes: list) -> None:
+        """Second route's first parameter becomes another control of the
+        first route's effect ('the reverb gets bigger when I open my hand
+        and longer when I spread my fingers')."""
+        if len(routes) < 2 or self.rng.random() >= self.cfg.get(
+                "same_effect", 0):
+            return
+        t0 = [t for t in routes[0].get("tgt", [])
+              if self.slots[t].get("target") == "param"
+              and not self.slots[t].get("name")]
+        t1 = [t for t in routes[1].get("tgt", [])
+              if self.slots[t].get("target") == "param"
+              and not self.slots[t].get("name")]
+        if not t0 or not t1:
+            return
+        fam = self.slots[t0[0]]["value"].rsplit(".", 1)[0]
+        sibs = [p for p in self.cfg["params"]
+                if p.rsplit(".", 1)[0] == fam
+                and p != self.slots[t0[0]]["value"]]
+        if sibs:
+            self.slots[t1[0]]["value"] = self.rng.choice(sibs)
+
+    def apply_direction(self, lang: str, routes: list) -> None:
+        """A moving source is said toward its 0 end ('lowering my hand',
+        'closing my fist') or with both directions in one phrase ('opening
+        and closing'); the parameter targets of its routes are told which
+        way they move, so the invert label stays the product of the two:
+        lowering the hand while the cutoff falls is not inverted."""
+        p_low = self.cfg.get("low_dir", 0)
+        p_both = self.cfg.get("both_dir", 0)
+        fan_dir = self.cfg.get("fan_out_dir", False)
+        for sid, s in self.slots.items():
+            if s["kind"] != "source" or s["value"] not in MOVING:
+                continue
+            rs = [r for r in routes if sid in r.get("src", [])]
+            if not rs or any(self.slots[m]["kind"] == "bipolar"
+                             for r in rs for m in r["mods"]):
+                continue
+            params = [(r, t) for r in rs for t in r["tgt"]
+                      if self.slots[t].get("target") == "param"]
+            if not params:
+                continue
+            # stage 8: every target of a fan-out is told its direction
+            fan = fan_dir and len(rs) > 1
+            x = self.rng.random()
+            low = x < p_low
+            if low:
+                s["dir"] = "low"
+                s["say"] = self.say_phrase(lang, f"source:{s['value']}", -1)
+            elif x < p_low + p_both and not fan:
+                s["dir"] = "both"
+                s["say"] = None
+            if low or fan:
+                for r, t in params:
+                    inv = any(self.slots[m]["kind"] == "invert"
+                              for m in r["mods"])
+                    self.slots[t]["dir"] = "rises" if inv == low else "falls"
+                    self.slots[t]["say"] = None
+
     # --- say ------------------------------------------------------------
 
     def say_phrase(self, lang: str, concept: str, pol: int):
@@ -532,6 +756,8 @@ class Ctx:
             concept = pol = None
             if kind == "source":
                 concept, pol = f"source:{s['value']}", 1
+            elif kind == "target" and s.get("name"):
+                continue                # said only by its name
             elif kind == "target" and s.get("target") == "param":
                 pol = 1
                 if tgt_route.get(sid) in inv_routes \
@@ -627,6 +853,9 @@ def build_edit(n: int, ctx: Ctx, lang: str, prefix: str = "e") -> dict:
         for _ in range(ctx.cfg["variants_per_edit"])]
     ctx.maybe_correction()
     ctx.apply_say(lang, routes)
+    if intent == "map":
+        ctx.same_effect(routes)
+        ctx.apply_direction(lang, routes)
     return {
         "id": f"{prefix}{n:06d}", "lang": lang, "variants": variants,
         "intent": intent, "slots": ctx.slots, "routes": routes,
@@ -644,8 +873,9 @@ def main() -> None:
     args = ap.parse_args()
 
     cfg = yaml.safe_load((HERE / "edits.yaml").read_text())
-    if args.override:
-        cfg = merge(cfg, yaml.safe_load((HERE / args.override).read_text()))
+    for name in (args.override or "").split(","):
+        if name:
+            cfg = merge(cfg, yaml.safe_load((HERE / name).read_text()))
     onto = yaml.safe_load((HERE / "ontology.yaml").read_text())
     rng = random.Random(args.seed)
     glossary = load_glossary(args.glossary_run)
@@ -680,7 +910,7 @@ def main() -> None:
                     sid = rng.choice(cands)
                     sl = twin["slots"][sid]
                     sl["value"] = rng.choice(nb[sl["value"]])
-                    if glossary and \
+                    if glossary and not sl.get("dir") and \
                             rng.random() < cfg["say_probability"]:
                         c = (f"source:{sl['value']}"
                              if sl["kind"] == "source"

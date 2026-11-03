@@ -1,0 +1,52 @@
+# Stage-7 overrides (parser v10; edits.py --override edits-s4.yaml,edits-s5.yaml,edits-s6.yaml,edits-s7.yaml).
+# Written 2026-11-02 from training-data counts (docs/parser-v10-plan.md): source glossary phrases
+# were drawn only in the 1 direction ("raising my hand"), and target phrases in the falling
+# direction only on inverted routes, so "goes down" taught invert. Stage 7 says moving sources
+# toward their 0 end and tells each parameter target which way it moves (low_dir), names both
+# directions of a movement in one phrase (both_dir), lets a second route name only how another
+# control of the same effect changes (same_effect), and raises named-parameter scopes.
+# The movement-word list in prompts/commands-s7.md was written after reading the failure slices
+# of the real set (Noa asked for them), so that set is seen for v10.
+
+languages: {en: 60, de: 40}
+
+intents: {map: 96, modify: 2, none: 2}
+
+routes_per_edit: {1: 40, 2: 45, 3: 15}
+
+low_dir: 0.45                  # source said toward its 0 end, param targets told rises / falls
+both_dir: 0.15                 # one phrase names both directions ("opening and closing")
+same_effect: 0.35              # second route: another control of the first route's effect
+
+fan_out: 0.15
+fan_out_sizes: {2: 50, 3: 30, 4: 20}
+finger_values: 0.04
+finger_set: 0.0
+pinch_hold: 0.35
+shape_mask: 0.8
+
+sources:
+  hand.y: 14
+  hand.x: 10
+  hand.roll: 12
+  hand.depth: 6
+  hand.openness: 12
+  hand.fist: 4
+  hand.spread: 10
+  hand.pitch: 5
+  hand.finger.thumb.tilt: 5
+  hand.finger.index.tilt: 3
+  hand.finger.middle.tilt: 1
+  hands.distance: 3
+  hand.shape: 6
+  hand.finger.index: 3
+  hand.finger.thumb: 2
+  hand.pinch: 1
+
+targets: {param: 84, toggle: 8, midi.prop: 3, midi.chord: 2, midi.pattern: 2, macro: 1}
+
+scope: {none: 22, track: 30, plugin: 18, track_plugin: 10, param_name: 20}
+
+# literal parameter names said verbatim (scope param_name): numbered and lettered names as
+# synth and effect plugins print them
+param_names: ["WT Pos", "Macro 1", "Macro 2", "Macro 3", "Macro 4", "Osc A Level", "Osc B Level", "Osc C Level", "A Detune", "B Detune", "A WT Pos", "B WT Pos", "C WT Pos", "A Warp", "B Warp", "Filter 1 Freq", "Filter 2 Res", "Env 2 Amt", "LFO 1 Rate", "LFO 3 Rate", "FX Mix", "Dry/Wet", "Feedback", "Decay", "Size", "Drive", "Depth", "Rate", "Gain", "Unison Detune", "Unison Blend", "Sub Level", "Noise Level", "Cutoff 2", "Res", "Band 2 Gain", "Band 3 Freq", "Pre Delay", "Width", "Tone"]

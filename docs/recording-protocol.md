@@ -54,6 +54,6 @@ The short protocol (S4) keeps blocks A (4 s per state), C, E with three objects,
 
 1. Frames are extracted at 15 fps and uploaded to the Modal volume.
 2. SAM 3.1 (open weights, Modal H100) segments the concepts person, face, eye, mouth, hand and the object names from block E. Estimated cost for S1 to S3: about $15 (probe A, real weights: $0.082 per 1000 frames per concept; 32,700 frames x 5 concepts plus objects on block E only). Eye and mouth masks are kept only inside the face mask, because probe A showed mouth detections on lips drawn on a wallpaper.
-3. Apple Vision computes hand keypoints offline as targets for the keypoint head.
+3. MediaPipe Hand Landmarker and SAM 3D Body compute hand keypoints offline as targets for the keypoint head (`tools/keypoints/`); Apple Vision may not teach (Apple terms).
 4. Segment labels from `segments.json` become finger-state and face-action targets.
 5. Training and the eval gate run as described in [`plan.md`](plan.md).

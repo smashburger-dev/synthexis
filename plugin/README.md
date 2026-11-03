@@ -12,6 +12,8 @@ closed). Audio is stereo silence; perception never runs on the audio thread.
 
 ```
 ./guarded-cargo.sh test -p synthexis      # unit tests (cond, route)
+./guarded-cargo.sh test -p synthexis-parser --release -- --include-ignored
+                                          # parser parity (needs data/mapping/runtime)
 ./guarded-cargo.sh clippy -p synthexis --release
 ./guarded-cargo.sh xtask bundle synthexis --release
 ./install.sh                              # build+sign+install (see FL note)
@@ -22,6 +24,20 @@ SYNTHEXIS_TEST="test_signal=on" \
 install.sh refuses only when OsxFL is running AND the synthexis bundle is
 already installed (a loaded dylib can't be replaced safely; first install
 is fine — FL hasn't loaded it). Log: ~/Library/Logs/synthexis.log.
+
+Mapping assistant parser (`parser/`, crate synthexis-parser): loads from
+$SYNTHEXIS_PARSER_DIR or ~/Library/Application Support/synthexis/parser
+(export: `uv run tools/mapping/export_runtime.py --run
+p-v11-s0,p-v11-s1,p-v11-s2,p-v11-s3 --rules conv,pronoun --q8`;
+$SYNTHEXIS_PARSER_RUNS picks other runs);
+`SYNTHEXIS_PARSE="sentence"` logs that sentence's frame once loaded. See
+docs/parser-runtime-plan.md.
+
+Sentence field completion (`complete/`, crate synthexis-complete): data from
+$SYNTHEXIS_COMPLETION_DIR or ~/Library/Application Support/synthexis/completion
+(export: `uv run tools/mapping/export_completion.py`). Chips become pinned
+spans on the parser's frame (`parser/src/pin.rs`). See
+docs/mapping-completion.md.
 
 ## Vendored nih-plug patch
 

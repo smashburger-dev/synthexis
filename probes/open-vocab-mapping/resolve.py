@@ -135,7 +135,8 @@ class Parser:
         self.sp = spm.SentencePieceProcessor(
             model_file=str(ROOT / meta["tokenizer"]))
         self.m = fp.Parser(c["vocab"], c["fv"], c["d"], c["heads"], c["ff"],
-                           c["enc_layers"], c["dec_layers"], 0.0)
+                           c["enc_layers"], c["dec_layers"], 0.0,
+                           c.get("whash", 0))
         self.m.load_state_dict(torch.load(d / "model.pt", map_location="cpu"))
         self.m.eval()
         self.g = fp.Grammar(self.vocab)

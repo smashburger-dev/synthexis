@@ -1,0 +1,38 @@
+# Stage-5 overrides (edits.py --override edits-s5.yaml), applied on top of edits-s4.yaml
+# by run_s5.sh. Written 2026-11-01 from the calibration findings in
+# probes/real-eval/RESULT.md ("Parser runs"): real requests are long, describe both
+# directions of one movement, chain several routes in one sentence, and use pinch as a
+# hold while the hand moves. The batch changes how sentences are built, not what they
+# map. Never written from the wording of Noa's eval or calibration sentences.
+
+languages: {en: 60, de: 40}
+
+intents: {map: 85, modify: 6, unmap: 3, role: 2, preset: 2, none: 2}
+
+routes_per_edit: {1: 35, 2: 45, 3: 20}
+
+styles:
+  register: {terse: 0, casual: 30, rambling: 22, beginner: 16, layperson: 12, codeswitch: 10, jargon: 6, polite: 4}
+  noise: {clean: 55, lowercase: 25, typos: 12, dictated: 8}
+  frame: {both_ways: 30, chained: 30, conditional: 12, wish: 12, request: 6, imperative: 5, declarative: 5}
+
+frames_by_intent:
+  map: [both_ways, chained, conditional, wish, request, imperative, declarative]
+  modify: [imperative, declarative, request, wish]
+  default: [imperative, declarative, request, wish]
+
+sources:
+  hand.x: 9
+  hand.y: 11
+  hand.roll: 9
+  hand.depth: 4
+  hand.openness: 10
+  hand.fist: 8
+  hand.spread: 6
+
+pinch_hold: 0.3                # share of routes with a moving hand source held by a pinch
+
+# continuous parameter routes are the point of this batch; finger sets and chords were covered by stage 4
+targets: {param: 76, midi.prop: 8, toggle: 5, midi.chord: 3, midi.note: 3, midi.pattern: 3, macro: 2}
+finger_set: 0.04
+xy: 0.03

@@ -3,8 +3,13 @@
 Shared by train_parser.py and export_parser.py. Shape per DESIGN.md
 "Training interfaces": SentencePiece ids -> encoder 6 x d256 -> 2-layer
 decoder over closed frame tokens plus pointer steps into the encoder
-positions, auxiliary BIO head on the encoder.
+positions, auxiliary BIO head on the encoder. With a backbone (v7) the
+encoder is a pretrained Hugging Face model (mmBERT small, German and
+English) read from data/mapping/backbones/<name> or $SYNTHEXIS_BACKBONES,
+tokenized by its own tokenizer.json (HFTok).
 """
+
+import os
 
 import json
 import math
@@ -23,8 +28,29 @@ TAGS = ["SRC", "TGT", "TRACK", "PLUGIN", "PNAME", "NUM", "AMT", "MOD",
 BIO = ["O"] + [f"{p}-{t}" for t in TAGS for p in "BI"]
 SPECIAL = ["<pad>", "<bos>", "<eos>", "<ptr>"]
 PAD, BOS, EOS, PTR = 0, 1, 2, 3
-PTR_KINDS = ("TRACK", "PLUGIN", "PNAME", "NOTE", "TIME", "CHORD")
+PTR_KINDS = ("TRACK", "PLUGIN", "PNAME", "NOTE", "TIME", "CHORD", "VALUE")
 MAX_SRC, MAX_STEPS, MAX_SPAN = 96, 48, 24
+WH_BUCKETS, WH_DIM, WH_K = 1 << 14, 64, 24     # optional word hash embedding
+HF_MAX_SRC = 128
+
+
+def backbone_dir(name: str) -> Path:
+    root = os.environ.get("SYNTHEXIS_BACKBONES") or \
+        Path(__file__).resolve().parents[2] / "data" / "mapping" / "backbones"
+    return Path(root) / name
+
+
+class HFTok:
+    """Backbone tokenizer with the SentencePiece calls this module uses.
+    Its template adds <bos> (position 0, never a span) and <eos>."""
+
+    def __init__(self, name: str):
+        from tokenizers import Tokenizer
+        self.tok = Tokenizer.from_file(str(backbone_dir(name) /
+                                           "tokenizer.json"))
+
+    def get_piece_size(self) -> int:
+        return self.tok.get_vocab_size()
 
 
 # ---------------------------------------------------------------- data
@@ -40,6 +66,10 @@ def frame_vocab(paths: list) -> list:
 
 def tokenize(sp, text: str):
     """-> (ids with BOS, [(byte_begin, byte_end)] per position)."""
+    if isinstance(sp, HFTok):
+        enc = sp.tok.encode(text)
+        cb = char_to_byte(text)
+        return enc.ids, [(cb[b], cb[e]) for b, e in enc.offsets]
     pieces = sp.encode(text, return_type="proto").pieces[:MAX_SRC - 1]
     ids = [sp.bos_id()] + [p.id for p in pieces]
     offs = [(0, 0)] + [(p.begin, p.end) for p in pieces]
@@ -64,6 +94,53 @@ def span_text(text: str, offs: list, i: int, j: int) -> str:
     return b[offs[i][0]:offs[j][1]].decode("utf-8", "ignore")
 
 
+def fnv1a(s: str) -> int:
+    h = 0x811C9DC5
+    for b in s.encode():
+        h = ((h ^ b) * 0x01000193) & 0xFFFFFFFF
+    return h
+
+
+def word_hashes(text: str, offs: list) -> list:
+    """Per position: hashed char 3-5-grams of the whole word the piece lies
+    in (ids 1..WH_BUCKETS, at most WH_K), so 'schlie' + bytes + 'e' and a
+    typo still share most features with the clean word. BOS and pieces
+    without a letter or digit get none."""
+    b = text.encode()
+
+    def wordy(c: int) -> bool:          # ASCII letter/digit or any UTF-8 byte
+        return c >= 0x80 or chr(c).isalnum()
+
+    out = []
+    for i, (s, e) in enumerate(offs):
+        if i == 0 or not any(wordy(c) for c in b[s:e]):
+            out.append([])
+            continue
+        while s > 0 and wordy(b[s - 1]):
+            s -= 1
+        while e < len(b) and wordy(b[e]):
+            e += 1
+        w = "<" + b[s:e].decode("utf-8", "ignore").casefold() + ">"
+        ids = []
+        for n in (3, 4, 5):
+            for k in range(len(w) - n + 1):
+                h = fnv1a(w[k:k + n]) % WH_BUCKETS + 1
+                if h not in ids:
+                    ids.append(h)
+        out.append(ids[:WH_K])
+    return out
+
+
+def wh_tensor(samples: list, S: int) -> torch.Tensor:
+    wh = torch.zeros(len(samples), S, WH_K, dtype=torch.long)
+    for i, s in enumerate(samples):
+        hs = s.get("wh") or word_hashes(s["text"], s["offs"])
+        for p, ids in enumerate(hs[:S]):
+            if ids:
+                wh[i, p, :len(ids)] = torch.tensor(ids)
+    return wh
+
+
 def encode(sp, rec: dict, tok_id: dict):
     """-> sample dict or None when a pointer span is not coverable."""
     text = rec["text"]
@@ -82,14 +159,15 @@ def encode(sp, rec: dict, tok_id: dict):
         tgt += [("P", pos[0]), ("P", pos[-1])]
     if len(tgt) + 1 > MAX_STEPS:
         return None
-    bio = [0] * len(ids)
-    for cs, ce, tag in rec["bio"]:
+    bio = [0] * len(ids) if rec["bio"] is not None else [-100] * len(ids)
+    for cs, ce, tag in rec["bio"] or []:      # null: teacher row, no BIO
         pos = covering(offs, cb[cs], cb[ce])
         for k, p in enumerate(pos):
             bio[p] = BIO.index(("B-" if k == 0 else "I-") + tag)
     bio[0] = -100
     return {"id": rec["id"], "edit_id": rec["edit_id"], "text": text,
-            "ids": ids, "offs": offs, "tgt": tgt, "bio": bio}
+            "ids": ids, "offs": offs, "tgt": tgt, "bio": bio,
+            "wh": word_hashes(text, offs)}
 
 
 def load(sp, path, tok_id: dict) -> tuple:
@@ -123,28 +201,43 @@ def collate(batch: list, fv: int, device):
         seq = [combined(t, fv) for t in s["tgt"]]
         yin[i, :len(seq) + 1] = torch.tensor([BOS] + seq)
         yout[i, :len(seq) + 1] = torch.tensor(seq + [EOS])
-    return x.to(device), bio.to(device), yin.to(device), yout.to(device)
+    return (x.to(device), bio.to(device), yin.to(device), yout.to(device),
+            wh_tensor(batch, S).to(device))
 
 
 # ---------------------------------------------------------------- model
 
 class Parser(nn.Module):
     def __init__(self, vocab: int, fv: int, d=256, heads=4, ff=1024,
-                 enc_layers=6, dec_layers=2, drop=0.1):
+                 enc_layers=6, dec_layers=2, drop=0.1, whash=0, hf="",
+                 pretrained=True, hf_layers=0):
         super().__init__()
-        self.fv, self.d = fv, d
+        self.fv, self.d, self.whash, self.hf_name = fv, d, whash, hf
         self.cfg = dict(vocab=vocab, fv=fv, d=d, heads=heads, ff=ff,
                         enc_layers=enc_layers, dec_layers=dec_layers,
-                        drop=drop)
-        self.src = nn.Embedding(vocab, d)
-        self.spos = nn.Embedding(MAX_SRC, d)
+                        drop=drop, whash=whash, hf=hf, hf_layers=hf_layers)
+        if whash:
+            self.wh = nn.Embedding(WH_BUCKETS + 1, WH_DIM, padding_idx=0)
+            self.wh_proj = nn.Linear(WH_DIM, d)
+        if hf:
+            from transformers import AutoConfig, AutoModel
+            path = backbone_dir(hf)
+            self.hf = AutoModel.from_pretrained(path) if pretrained else \
+                AutoModel.from_config(AutoConfig.from_pretrained(path))
+            assert self.hf.config.hidden_size == d, "d must be the backbone width"
+            if hf_layers:               # keep the lowest hf_layers layers
+                self.hf.layers = self.hf.layers[:hf_layers]
+                self.hf.config.num_hidden_layers = hf_layers
+        else:
+            self.src = nn.Embedding(vocab, d)
+            self.spos = nn.Embedding(MAX_SRC, d)
+            self.enc = nn.TransformerEncoder(
+                nn.TransformerEncoderLayer(d, heads, ff, drop,
+                                           batch_first=True, norm_first=True),
+                enc_layers, enable_nested_tensor=False)
         self.tgt = nn.Embedding(fv, d)
         self.tpos = nn.Embedding(MAX_STEPS + 2, d)
         self.ptr_in = nn.Linear(d, d)
-        self.enc = nn.TransformerEncoder(
-            nn.TransformerEncoderLayer(d, heads, ff, drop, batch_first=True,
-                                       norm_first=True),
-            enc_layers, enable_nested_tensor=False)
         self.dec = nn.TransformerDecoder(
             nn.TransformerDecoderLayer(d, heads, ff, drop, batch_first=True,
                                        norm_first=True), dec_layers)
@@ -154,10 +247,17 @@ class Parser(nn.Module):
         self.bio = nn.Linear(d, len(BIO))
         self.drop = nn.Dropout(drop)
 
-    def encode(self, x):
+    def encode(self, x, wh=None):
         pad = x == PAD
+        if self.hf_name:
+            h = self.hf(input_ids=x, attention_mask=(~pad).long())
+            return self.enc_norm(self.drop(h.last_hidden_state)), pad
         pos = torch.arange(x.shape[1], device=x.device)
-        h = self.drop(self.src(x) + self.spos(pos))
+        h = self.src(x) + self.spos(pos)
+        if self.whash and wh is not None:   # mean of the word's n-gram vectors
+            n = (wh > 0).sum(-1, keepdim=True).clamp(min=1)
+            h = h + self.wh_proj(self.wh(wh).sum(2) / n)
+        h = self.drop(h)
         return self.enc_norm(self.enc(h, src_key_padding_mask=pad)), pad
 
     def decode(self, mem, pad, y):
@@ -178,13 +278,13 @@ class Parser(nn.Module):
         ptr = ptr.masked_fill(no.unsqueeze(1), -1e9)
         return torch.cat([self.out(h), ptr], -1)
 
-    def forward(self, x, yin):
-        mem, pad = self.encode(x)
+    def forward(self, x, yin, wh=None):
+        mem, pad = self.encode(x, wh)
         return self.decode(mem, pad, yin), self.bio(mem)
 
 
-def loss_fn(model, x, bio, yin, yout, bio_w=0.5):
-    logits, bl = model(x, yin)
+def loss_fn(model, x, bio, yin, yout, bio_w=0.5, wh=None):
+    logits, bl = model(x, yin, wh)
     l1 = F.cross_entropy(logits.reshape(-1, logits.shape[-1]),
                          yout.reshape(-1), ignore_index=-100)
     l2 = F.cross_entropy(bl.reshape(-1, len(BIO)), bio.reshape(-1),
@@ -272,7 +372,8 @@ def greedy(model, grammar: Grammar, samples: list, device, bs=128):
         for i, s in enumerate(part):
             x[i, :len(s["ids"])] = torch.tensor(s["ids"])
         x = x.to(device)
-        mem, pad = model.encode(x)
+        wh = wh_tensor(part, S).to(device) if model.whash else None
+        mem, pad = model.encode(x, wh)
         y = torch.full((B, 1), BOS, dtype=torch.long, device=device)
         seqs = [[] for _ in range(B)]
         done = [False] * B
@@ -304,6 +405,102 @@ def greedy(model, grammar: Grammar, samples: list, device, bs=128):
                 break
             y = torch.cat([y, nxt.unsqueeze(1)], 1)
         res += list(zip(seqs, logp))
+    return res
+
+
+@torch.no_grad()
+def beam(models: list, grammar: Grammar, samples: list, device, k=4,
+         alpha=0.0, bs=32):
+    """Grammar-constrained beam search over an ensemble of runs that share
+    tokenizer and frame vocab. Each step takes the mean of the members'
+    masked log-softmax, renormalised (product of experts). Finished beams
+    are ranked by log-prob / len ** alpha. -> same format as greedy."""
+    for m in models:
+        m.eval()
+    fv, res = models[0].fv, []
+    for c in range(0, len(samples), bs):
+        part = samples[c:c + bs]
+        B = len(part)
+        S = max(len(s["ids"]) for s in part)
+        x = torch.zeros(B, S, dtype=torch.long)
+        for i, s in enumerate(part):
+            x[i, :len(s["ids"])] = torch.tensor(s["ids"])
+        x = x.to(device)
+        wh = wh_tensor(part, S).to(device)
+        mems = []
+        for m in models:
+            mem, pad = m.encode(x, wh if m.whash else None)
+            mems.append((mem.repeat_interleave(k, 0),
+                         pad.repeat_interleave(k, 0)))
+        ns = [len(s["ids"]) for s in part for _ in range(k)]
+        seqs = [[] for _ in range(B * k)]
+        score = torch.full((B, k), float("-inf"), device=device)
+        score[:, 0] = 0.0
+        done = [False] * (B * k)
+        finished = [[] for _ in range(B)]
+        y = torch.full((B * k, 1), BOS, dtype=torch.long, device=device)
+        for _ in range(MAX_STEPS):
+            mask = np.zeros((B * k, fv + S), dtype=bool)
+            for j in range(B * k):
+                if done[j]:
+                    mask[j, PAD] = True
+                else:
+                    a = grammar.allowed(seqs[j], ns[j])
+                    mask[j, :len(a)] = a
+            mk = torch.from_numpy(mask).to(device)
+            lp = 0
+            for m, (mem, pad) in zip(models, mems):
+                lg = m.decode(mem, pad, y)[:, -1].float()
+                lp = lp + F.log_softmax(lg.masked_fill(~mk, float("-inf")), -1)
+            lp = F.log_softmax(lp / len(models), -1)
+            dn = torch.tensor(done, device=device)
+            lp = torch.where(dn.unsqueeze(1) & mk, torch.zeros_like(lp), lp)
+            tot = (score.reshape(-1, 1) + lp).reshape(B, -1)
+            top, idx = tot.topk(k, -1)
+            src = (idx // lp.shape[1]).cpu().tolist()
+            tok = (idx % lp.shape[1]).cpu().tolist()
+            top_l = top.cpu().tolist()
+            new_seqs, new_done, rows, nxt = [], [], [], []
+            for b in range(B):
+                for r in range(k):
+                    j = b * k + src[b][r]
+                    t, sc = tok[b][r], top_l[b][r]
+                    rows.append(j)
+                    nxt.append(t)
+                    if done[j] or sc == float("-inf"):
+                        new_seqs.append(seqs[j])
+                        new_done.append(True)
+                    elif t == EOS:
+                        new_seqs.append(seqs[j])
+                        new_done.append(True)
+                        finished[b].append(
+                            (sc / max(1, len(seqs[j]) + 1) ** alpha,
+                             seqs[j], sc))
+                    else:
+                        new_seqs.append(seqs[j] + [t])
+                        new_done.append(False)
+            for b in range(B):          # log-probs only fall: stop early
+                alive = [top_l[b][r] for r in range(k)
+                         if not new_done[b * k + r]]
+                if finished[b] and (not alive or len(finished[b]) >= k or (
+                        alpha == 0 and max(f[2] for f in finished[b])
+                        >= max(alive))):
+                    for r in range(k):
+                        new_done[b * k + r] = True
+            seqs, done = new_seqs, new_done
+            score = top.masked_fill(
+                torch.tensor(done, device=device).reshape(B, k),
+                float("-inf"))
+            if all(done):
+                break
+            y = torch.cat([y[rows], torch.tensor(nxt, device=device)
+                           .unsqueeze(1)], 1)
+        for b in range(B):
+            if finished[b]:
+                _, seq, sc = max(finished[b], key=lambda f: f[0])
+            else:                       # cannot happen: MAX_STEPS forces EOS
+                seq, sc = seqs[b * k], float("-inf")
+            res.append((seq, sc))
     return res
 
 
@@ -405,10 +602,12 @@ def wilson(k: int, n: int, z=1.96) -> list:
     return [round(c - h, 4), round(c + h, 4)]
 
 
-def evaluate(model, grammar, samples, vocab, device) -> tuple:
-    """-> (metrics dict, per-sentence rows)."""
+def evaluate(model, grammar, samples, vocab, device, decode=None) -> tuple:
+    """-> (metrics dict, per-sentence rows). decode(samples) replaces greedy
+    on model (beam, ensemble)."""
     fv = len(vocab)
-    preds = greedy(model, grammar, samples, device)
+    preds = decode(samples) if decode else \
+        greedy(model, grammar, samples, device)
     rows = []
     for s, (seq, lp) in zip(samples, preds):
         pt = items(seq, s, vocab)
@@ -435,3 +634,24 @@ def evaluate(model, grammar, samples, vocab, device) -> tuple:
             best_cov = i / n
     met["coverage_at_0.95"] = round(best_cov, 4)
     return met, rows
+
+
+def load_run(run: Path, device="cpu"):
+    """Trained run dir -> (model, tokenizer, frame vocab); sets MAX_SRC."""
+    global MAX_SRC
+    meta = json.loads((run / "meta.json").read_text())
+    cfg = meta["config"]
+    MAX_SRC = meta.get("max_src", MAX_SRC)
+    if cfg.get("hf"):
+        sp = HFTok(cfg["hf"])
+    else:
+        import sentencepiece as spm
+        sp = spm.SentencePieceProcessor(
+            model_file=str(Path(__file__).resolve().parents[2]
+                           / meta["tokenizer"]))
+    model = Parser(cfg["vocab"], cfg["fv"], cfg["d"], cfg["heads"], cfg["ff"],
+                   cfg["enc_layers"], cfg["dec_layers"], 0.0,
+                   cfg.get("whash", 0), cfg.get("hf", ""), pretrained=False,
+                   hf_layers=cfg.get("hf_layers", 0))
+    model.load_state_dict(torch.load(run / "model.pt", map_location=device))
+    return model.to(device), sp, meta["frame_vocab"]

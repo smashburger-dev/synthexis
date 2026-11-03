@@ -117,3 +117,232 @@ Gates against `p-v3-c50-s0/s1`:
 - Scored on the original labels and on the text-supported labels of `analyze.py`.
 - A step is kept only if it improves dev overall and no slice, English included, drops with p < 0.05.
 - Challenge: reported only. Noa's 50 calibration sentences: thresholds. Noa's 100 eval sentences: one final comparison between v3 and the winner.
+
+## 7. Result of the bundled retrain (2026-10-31, `tools/mapping/run_v4.sh`)
+
+Two seeds each, pooled paired gates on dev + dev_s2 + dev_s3 (5,202 paired sentences, `tools/mapping/gates.py`):
+
+| step | labels | route_edit | won / lost | p | slices dropping (p < 0.05) |
+|---|---|---|---|---|---|
+| A (tok-v2) vs v3 | original | 0.716 -> 0.712 | 221 / 239 | 0.43 | none |
+| B (A + projected labels) vs A | projected | 0.761 -> 0.766 | 242 / 217 | 0.26 | none |
+| B vs A | original | 0.712 -> 0.666 | 178 / 422 | < 0.001 | many, by construction: B no longer guesses what the text does not say |
+| C (B + word hash) vs B | projected | 0.766 -> 0.768 | 244 / 235 | 0.71 | none |
+
+- Sentences with ß (58 in all dev sets and the challenge set): v3 23 and 17 right, A 21 and 25, B 24 and 26 (seeds 0 and 1).
+- Seed-to-seed spread of v3 itself: 0.716 -> 0.716 (130 / 128).
+
+Reading: no step moves the dev sets beyond seed noise, and none degrades a slice except by the label definition. The tokenizer fix helps the ß sentences a little. The projected labels match the runtime-binding principle at no cost. The word hash adds 1.07M parameters and a hashing step in the Rust runtime for no measured gain, so it is dropped.
+
+Final recipe: B on ds-v5p (ds-v3 + stage 4 with ontology v1.1 and v1.2, near-copies of the real-sentence set removed), `tools/mapping/run_v5.sh`.
+
+## 8. Result of the final run v5 (2026-10-31, `tools/mapping/run_v5.sh`)
+
+Recipe B on ds-v5p: ds-v3 plus stage 4 (ontology v1.1 and v1.2, 8,691 sentences minus 59 near-copies of the real-sentence set), projected labels, tok-v2. Two seeds, 16,000 steps, 42 min each.
+
+| run | dev | challenge | dev_s2 | dev_s3 | dev_s4 (new types) |
+|---|---|---|---|---|---|
+| p-v5-s0 | 0.837 | 0.781 | 0.777 | 0.659 | 0.736 |
+| p-v5-s1 | 0.827 | 0.790 | 0.788 | 0.625 | 0.738 |
+
+Gates against v3, pooled over both seeds (dev + dev_s2 + dev_s3, 5,202 pairs):
+
+| labels | route_edit | won / lost | p | slices dropping (p < 0.05) |
+|---|---|---|---|---|
+| projected | 0.766 -> 0.777 | 307 / 250 | 0.018 | none; de 0.715 -> 0.739 (p 0.003) |
+| original | 0.716 -> 0.671 | 226 / 457 | < 0.001 | many, by construction as in section 7 |
+
+On the 150 real sentences (`probes/real-eval/RESULT.md`, section "Parser runs") v5 is level with v3. The gain stays on synthetic text.
+
+Export of p-v5-s0 (`--ds ds-v5p --no-audit`): int8 blob 9.4 MB, int8 costs 0.1 points dev route_edit; 10 ms median, 25 ms p95 on one CPU thread.
+
+## 9. Result of the style run v6 (2026-11-01, `tools/mapping/run_v6.sh`)
+
+Recipe B on ds-v6p: ds-v5 plus stage 5 (4,476 sentences in the style of the calibration findings: both directions of one movement, chained targets, pinch held while the hand moves, casual and rambling registers; 125 near-copies of the real set dropped; 6.77 $). Two seeds, 16,000 steps, 50 min each. This is the last data run of this line.
+
+| run | dev | challenge | dev_s2 | dev_s3 | dev_s4 | dev_s5 (new style) |
+|---|---|---|---|---|---|---|
+| p-v6-s0 | 0.829 | 0.772 | 0.783 | 0.632 | 0.758 | 0.659 |
+| p-v6-s1 | 0.826 | 0.792 | 0.796 | 0.651 | 0.758 | 0.651 |
+
+Gates against v5, pooled over both seeds (dev + dev_s2 + dev_s3, 5,202 pairs):
+
+| labels | route_edit | won / lost | p | slices dropping (p < 0.05) |
+|---|---|---|---|---|
+| projected | 0.777 -> 0.779 | 242 / 229 | 0.58 | none |
+| original | 0.671 -> 0.678 | 193 / 160 | 0.088 | none |
+
+Against v3 on projected labels: 0.766 -> 0.779, 308 / 238, p 0.003, no slice drops.
+
+On the 150 real sentences v6 beats v5 and v3 (`probes/real-eval/RESULT.md`, section "Parser run v6"). The synthetic dev sets stay level, so the gain comes from the new sentence style and not from more of the old one.
+
+Export of p-v6-s0 (`--ds ds-v6p --no-audit`): int8 blob 9.4 MB, int8 costs 0.1 points dev route_edit; 10 ms median, 25 ms p95 on one CPU thread. p-v6-s0 replaces p-v5-s0. Seed 0 is taken by the same rule as v5; the eval split did not pick the seed.
+
+## 10. Parser v7: pretrained encoder (2026-11-01, `tools/mapping/modal_parser.py`)
+
+The from-scratch encoder (6 x d256, 9.3M parameters, tok-v2) is replaced by mmBERT small trimmed to German and English (ModernBERT, 22 layers, width 384, 32k vocabulary, from `kleinhirn-k24/models/k24/backbones/`). The frame decoder, grammar and labels stay. Decoder 2 layers, 6 heads, ff 1536; encoder at lr 5e-5, the rest at 5e-4; 10,000 steps, bf16, on a Modal L4 (20 min per run, about 125 ms per step against 600 ms on the Mac).
+
+Arms: `v7a` mmBERT small on ds-v6p; `v7` the same on ds-v7p (ds-v6p plus 4,838 teacher rows x2, `tools/mapping/teacher_pool.py`); `v7b` mmBERT base (full vocabulary, 328M parameters) on ds-v7p.
+
+| run | dev | challenge | dev_s2 | dev_s3 | dev_s4 | dev_s5 |
+|---|---|---|---|---|---|---|
+| p-v6-s0 | 0.829 | 0.772 | 0.783 | 0.632 | 0.758 | 0.658 |
+| p-v7a-s0 | 0.872 | 0.829 | 0.832 | 0.716 | 0.801 | 0.698 |
+| p-v7a-s1 | 0.872 | 0.841 | 0.835 | 0.733 | 0.798 | 0.693 |
+| p-v7-s0 | 0.881 | 0.830 | 0.818 | 0.714 | 0.807 | 0.685 |
+| p-v7-s1 | 0.877 | 0.823 | 0.816 | 0.680 | 0.801 | 0.695 |
+| p-v7b-s0 | 0.868 | 0.832 | 0.830 | 0.700 | 0.772 | 0.700 |
+
+(route_edit; dev_s4 loses 5 of 828 sentences to the new tokenizer.)
+
+Teacher data: the command batches of stages 2 to 5 dropped 13,950 sentences, mostly for an unmarked slot. 11,846 remain after dev edits, leftover slot ids, duplicates and 175 near-copies of the real set. Each has three readings (the edit, DeepSeek V4.1 Flash without thinking, Spark where those two disagree; 2,925 Spark rows within budget); a sentence is kept when two agree: 3,704 edit+DeepSeek, 320 edit+Spark, 814 DeepSeek+Spark. Cost 0.68 $ DeepSeek, 4.86 $ Spark.
+
+On the real sentences (`probes/real-eval/RESULT.md`, section "Parser v7") the encoder lifts eval exact match from 22 % to 31 % (both seeds, p 0.004); the teacher rows do not. mmBERT base is not better than small.
+
+Export of p-v7a-s0 (`tools/mapping/export_hf.py`): f16 state dict 121 MB, f16 costs nothing on dev (0.872); dynamic int8 costs 2.2 points (v7 with teacher rows: 5.6), so f16 ships. CPU, one thread, f32: 30 ms median, 68 ms p95 per sentence. The plugin runtime does not load backbone models yet (Rust side open). p-v7a-s0 replaces p-v6-s0.
+
+## 11. Parser v8: ensemble, beam, domain MLM, clean teacher rows, mDeBERTa (2026-11-01)
+
+Selection rule in `probes/real-eval/RESULT.md` ("Parser v8: selection rule"), written before scoring: mean route_edit over the six dev sets of ds-v6p, two seeds per arm, +0.005 over v7a (0.7933) to replace it. All training arms use the v7a recipe (decoder 2 x 6 heads, ff 1536, encoder lr 5e-5, 10,000 steps, bf16, Modal L4) and differ in one thing:
+
+- `v8m`: mmBERT small after masked-language modelling on 77,044 in-domain sentences (ds-v6p train_all and the teacher pool, sentences of the dev splits left out, no real sentence), 2 epochs, lr 1e-4, 30 % masked, 4 minutes on an L4; held-out MLM loss 5.31 -> 1.20 (`tools/mapping/mlm_backbone.py`).
+- `v8t`: ds-v6p plus 6,224 teacher rows x2 (`tools/mapping/teacher_v8.py`). Neutral DeepSeek prompt built from the ontology and the frame grammar, examples drawn per intent and target kind; two passes with the examples in two orders. Kept when both passes agree: 3,441 with the edit agreeing too (edit frame), 2,783 without (teacher frame); 2,438 disagree, 3,182 unusable (mostly parameter ids outside the ontology such as `T:param:pan`). Check on 100 dev_s5 sentences: 59 and 57 right per pass, 52 of the 81 agreed. Cost 1.18 $.
+- `v8d`: mDeBERTa-v3-base (`microsoft/mdeberta-v3-base` at a0484667, 278M parameters, width 768, full 250k vocabulary), 295 ms per step, 55 minutes per run.
+
+Decoding (`tools/mapping/decode_eval.py`, `frame_parser.beam`): mean of the members' masked log-softmax per step, renormalised; beam with early stop.
+
+| run | dev | challenge | dev_s2 | dev_s3 | dev_s4 | dev_s5 | mean |
+|---|---|---|---|---|---|---|---|
+| p-v7a-s0 | 0.872 | 0.829 | 0.832 | 0.716 | 0.801 | 0.698 | 0.7912 |
+| p-v7a-s1 | 0.872 | 0.841 | 0.835 | 0.733 | 0.798 | 0.693 | 0.7954 |
+| p-v7a-s2 | 0.875 | 0.843 | 0.841 | 0.692 | 0.814 | 0.700 | 0.7941 |
+| p-v7a-s3 | 0.878 | 0.825 | 0.819 | 0.712 | 0.801 | 0.695 | 0.7882 |
+| p-v8m-s0 | 0.879 | 0.825 | 0.833 | 0.731 | 0.798 | 0.705 | 0.7952 |
+| p-v8m-s1 | 0.873 | 0.830 | 0.826 | 0.704 | 0.801 | 0.683 | 0.7863 |
+| p-v8t-s0 | 0.873 | 0.845 | 0.834 | 0.700 | 0.772 | 0.685 | 0.7848 |
+| p-v8t-s1 | 0.870 | 0.834 | 0.831 | 0.697 | 0.792 | 0.688 | 0.7853 |
+| p-v8d-s0 | 0.877 | 0.845 | 0.851 | 0.731 | 0.819 | 0.700 | 0.8037 |
+| p-v8d-s1 | 0.871 | 0.834 | 0.841 | 0.719 | 0.796 | 0.693 | 0.7921 |
+| ensemble v8d s0+s1, greedy | 0.884 | 0.852 | 0.851 | 0.736 | 0.825 | 0.702 | 0.8085 |
+| ensemble v7a s0+s1, greedy | 0.882 | 0.852 | 0.844 | 0.721 | 0.814 | 0.700 | 0.8022 |
+| ensemble v7a s2+s3, greedy | 0.879 | 0.858 | 0.842 | 0.712 | 0.820 | 0.700 | 0.8018 |
+| ensemble s0+s1, beam 4 | 0.878 | 0.849 | 0.841 | 0.719 | 0.813 | 0.698 | 0.7994 |
+| ensemble s0+s1, beam 8 | 0.879 | 0.850 | 0.844 | 0.721 | 0.813 | 0.698 | 0.8010 |
+| ensemble s0+s1, beam 4, length norm 1 | 0.878 | 0.849 | 0.841 | 0.719 | 0.813 | 0.698 | 0.7994 |
+| v7a s0, beam 4 | 0.868 | 0.823 | 0.831 | 0.716 | 0.796 | 0.695 | 0.7883 |
+
+(route_edit on the dev sets of ds-v6p; mean over the six.)
+
+The ensemble is the only lever that clears the rule on dev, twice. Beam never beats greedy: it finds frames with a higher log-probability that are wrong more often. On the real sentences none of it reaches the 40 % and 75 % goal; the ensemble s0+s1 gets 37 % and 74 %, the second pair 29 % and 68 %; the training arms lose against v7a (`probes/real-eval/RESULT.md`, section "Parser v8").
+
+Export of the chosen ensemble: p-v7a-s0 and p-v7a-s1 as f16 state dicts (2 x 121 MB, `export_hf.py` per run); with f16-rounded weights the ensemble keeps 0.8022 on dev. CPU, one thread: 62 ms median, 138 ms p95 per sentence (two encoders, grammar-constrained greedy over the mean). The plugin still has no runtime for the backbone.
+
+## 12. Parser v9: Noa's conventions and stage 6 (2026-11-01, `tools/mapping/run_v9.sh`)
+
+Plan and the checks behind it: `docs/parser-v9-plan.md`. Noa decided: a pinch next to a hand movement is a hold, parameters that move in different directions are separate routes, fingers shown together are one finger state, switching words mean a switch; an effect word ("opens up") gets no fixed parameter class.
+
+- Stage 6 (`edits-s6.yaml`, prompt `prompts/commands-s6.md`): 6,430 edits with two new forms in `edits.py` (one movement fanning out to 2 to 4 parameters with opposite directions; each finger setting one parameter to its own value, the parameter named once), pinch holds at 0.5, finger masks at 0.7 of shape sources, switches at 22 % of targets with a list of switching words (bypass, disable, engage, kick in, einschalten, zuschalten ...; FL Studio's own slot switch is "disable"). Written by DeepSeek V4.1 Flash (`commands.py --backend deepseek`), 4785 of 12860 variants pass the mark validation (37%; Spark passed 48 % on stage 5 and 60 % on stage 4), 0.87 $. 179 near-copies of the real set dropped by `leak.py`.
+- `conventions.py` relabels all splits (pinch next to a movement: 43 training rows of the old data; fingers shown together: 2), so v7a is re-scored on the same labels. Stage-6 rows go twice into train_cat. v7a recipe otherwise, two seeds on a Modal L4.
+
+| run | dev | challenge | dev_s2 | dev_s3 | dev_s4 | dev_s5 | dev_s6 | mean of six older | mean of seven |
+|---|---|---|---|---|---|---|---|---|---|
+| ensemble v7a s0+s1 | 0.882 | 0.849 | 0.843 | 0.721 | 0.814 | 0.700 | 0.351 | 0.8014 | 0.7371 |
+| p-v9-s0 | 0.876 | 0.841 | 0.834 | 0.728 | 0.820 | 0.712 | 0.610 | 0.8020 | 0.7745 |
+| p-v9-s1 | 0.878 | 0.829 | 0.833 | 0.721 | 0.825 | 0.702 | 0.593 | 0.7980 | 0.7687 |
+| ensemble v9 s0+s1 | 0.886 | 0.849 | 0.840 | 0.757 | 0.840 | 0.732 | 0.621 | 0.8171 | 0.7890 |
+
+(route_edit on ds-v9c; greedy.)
+
+v7a reads the new stage-6 sentences at 0.351; v9 at 0.62, and it gains 1.6 points on the older sets too. On the changed real set the v9 ensemble gets 42 of 102 exact (v7a ensemble 37) and route F1 0.537 (0.425); the route F1 gain holds over two seeds, the exact gain does not (`probes/real-eval/RESULT.md`, section "Parser v9").
+
+Export: p-v9-s0 and p-v9-s1 as f16 (2 x 121 MB), f16 equal to f32 on dev, 31 ms median per run on one CPU thread. The Rust runtime of `claude/parser-runtime-be3a3c` loads v7a; v9 needs `tools/mapping/export_runtime.py` re-run on the v9 runs there.
+
+## 13. Parser v10: direction phrasing, stage 7 (2026-11-02, `tools/mapping/run_v10.sh`)
+
+Plan: `docs/parser-v10-plan.md`. The v9 misses on the changed real set were read by part; INV was the largest slice (16 rows wrong only there). `edits.py` had drawn glossary phrases for sources only in their 1 direction and falling target phrases only on inverted routes, so "goes down" meant invert to the parser.
+
+- Stage 7 (`edits-s7.yaml`, `prompts/commands-s7.md`): 6,479 edits. A moving source is said toward its 0 end in 45 % of edits (glossary phrase for the 0 direction where one exists) and every parameter target of its routes is told `dir: falls` or `dir: rises`, so the INV label is the product of the two; 15 % name both directions in one phrase; 35 % of two-route edits put another control of the first route's effect on the second route; 20 % carry a parameter name. Written by DeepSeek V4.1 Flash, 4,638 of 12,958 variants valid (36 %), 0.87 $; 199 near-copies of the real set dropped by `leak.py` (closest remaining ratio 0.60). A falling-direction word appears in 622 of 653 sentences whose targets all fall, a rising word in 123 of 139 whose targets all rise.
+- `rules.py conv`: `conventions.py` applied to the prediction.
+- v9 recipe otherwise (ds-v10c, stage-6 and stage-7 rows twice in train_cat), four seeds on Modal L4s, 22 to 26 minutes each.
+
+| run | dev | challenge | dev_s2 | dev_s3 | dev_s4 | dev_s5 | dev_s6 | dev_s7 | mean of seven older | mean of eight |
+|---|---|---|---|---|---|---|---|---|---|---|
+| p-v9-s0 | 0.876 | 0.841 | 0.834 | 0.728 | 0.820 | 0.712 | 0.610 | 0.506 | 0.7745 | 0.7409 |
+| p-v9-s1 | 0.878 | 0.829 | 0.833 | 0.721 | 0.825 | 0.702 | 0.593 | 0.479 | 0.7687 | 0.7324 |
+| ensemble v9 s0+s1 | 0.886 | 0.849 | 0.840 | 0.757 | 0.840 | 0.732 | 0.621 | 0.510 | 0.7890 | 0.7542 |
+| p-v10-s0 | 0.876 | 0.829 | 0.836 | 0.702 | 0.809 | 0.705 | 0.603 | 0.606 | 0.7656 | 0.7456 |
+| p-v10-s1 | 0.877 | 0.838 | 0.830 | 0.707 | 0.802 | 0.710 | 0.653 | 0.626 | 0.7738 | 0.7553 |
+| ensemble v10 s0+s1 | 0.887 | 0.850 | 0.846 | 0.731 | 0.826 | 0.739 | 0.666 | 0.639 | 0.7921 | 0.7730 |
+| ensemble v10 s2+s3 | 0.876 | 0.849 | 0.832 | 0.728 | 0.823 | 0.712 | 0.636 | 0.613 | 0.7793 | 0.7585 |
+| ensemble v10 s0 to s3 | 0.888 | 0.858 | 0.842 | 0.736 | 0.828 | 0.729 | 0.659 | 0.644 | 0.7914 | 0.7729 |
+
+(route_edit on ds-v10c, greedy, without conv; conv adds 0.0004 to 0.0008 to every mean and lowers no set.)
+
+v9 reads the new stage-7 sentences at 0.51, v10 at 0.64. On the older sets the first v10 pair holds level (+0.3 points), the second pair loses 1 point; dev_s3 and dev_s4 fall for every v10 run. On the real set the shipped ensemble gets 47 of 102 eval rows exact and 79 right or one part wrong, with calibration down from 30 to 25 of 51 (`probes/real-eval/RESULT.md`, section "Parser v10").
+
+## 14. Parser v11: four data gaps, stage 8 (2026-11-02, `tools/mapping/run_v11.sh`)
+
+Plan: `docs/parser-v11-plan.md`. A second read of the v10 four-seed misses on the real set found four gaps in how the data is made: the side check dropped every sentence with the hand as subject, closing the fist had two label encodings, a parameter name was never the only target, and fan-out targets got a direction hint only when the source was said in its low direction.
+
+- `commands.py clause_side`: a side word elsewhere in the same sentence counts when a body word follows it ("left hand", "linken Hand") and no marked source or gate of the other side lies between it and the source mark. Validated again under it, 214 of 1,251 stage-7 and 183 of 969 stage-6 side drops pass (`cmd-s7r`, `cmd-s6r`); the rest name no side or the wrong one. Most of the 558 stage-7 drops with "a side word in the sentence" carry the side of another source.
+- `conventions.py fold`: `S:hand.fist` becomes `S:hand.openness`, `S:eye.closed` becomes `S:eye.open`, the route's INV flips. 8,249 of 89,144 train_all rows and 22 to 136 rows per dev set change. `rules.py conv` applies the same fold to a prediction, so v10 is scored on the same labels.
+- Stage 8 (`edits-s8.yaml`, `prompts/commands-s8.md`, prefix `w`): 5,800 edits plus twins, frame `instrumental` in 35 % of variants ("the left hand runs X by tilting it", "X steuern, indem ich Y"), a side drawn for 75 % of hand sources, the name-only form on 22 % of routes (`T:param:macro` for "Macro N", `T:param:other` for numbered and lettered names, plus `PNAME`), no scope-form names, direction hints on every fan-out target. DeepSeek V4.1 Flash wrote 4,898 of 12,462 variants valid (39 %) for 0.77 $ with the 3-job pilot; 1,732 in the instrumental frame, 1,360 with a name-only target, 1,310 with the side word outside the source mark. `leak.py` dropped 113 (closest remaining ratio 0.58), 13 of `cmd-s6r` and 11 of `cmd-s7r`.
+- v10 recipe otherwise on ds-v11c (stage 6 to 8 rows twice in train_cat, 36,161 rows), four seeds on Modal L4s.
+
+| run | dev | challenge | dev_s2 | dev_s3 | dev_s4 | dev_s5 | dev_s6 | dev_s7 | dev_s8 | mean of eight older | mean of nine |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| ensemble v10 s0+s1 | 0.888 | 0.854 | 0.846 | 0.731 | 0.828 | 0.739 | 0.666 | 0.653 | 0.423 | 0.7755 | 0.7363 |
+| ensemble v10 s0 to s3 | 0.891 | 0.861 | 0.843 | 0.736 | 0.828 | 0.729 | 0.659 | 0.657 | 0.434 | 0.7755 | 0.7375 |
+| p-v11-s0 | 0.876 | 0.836 | 0.830 | 0.728 | 0.829 | 0.739 | 0.623 | 0.673 | 0.616 | 0.7666 | 0.7499 |
+| p-v11-s1 | 0.876 | 0.819 | 0.830 | 0.721 | 0.807 | 0.724 | 0.642 | 0.670 | 0.598 | 0.7612 | 0.7431 |
+| p-v11-s2 | 0.862 | 0.821 | 0.825 | 0.716 | 0.807 | 0.695 | 0.649 | 0.670 | 0.621 | 0.7557 | 0.7406 |
+| p-v11-s3 | 0.863 | 0.834 | 0.825 | 0.726 | 0.814 | 0.739 | 0.608 | 0.650 | 0.611 | 0.7575 | 0.7413 |
+| ensemble v11 s0+s1 | 0.884 | 0.872 | 0.836 | 0.740 | 0.830 | 0.734 | 0.666 | 0.688 | 0.643 | 0.7813 | 0.7660 |
+| ensemble v11 s0 to s3 | 0.882 | 0.858 | 0.845 | 0.750 | 0.841 | 0.749 | 0.681 | 0.706 | 0.659 | 0.7889 | 0.7745 |
+
+(route_edit on ds-v11c, greedy; ensembles with conv,pronoun, single seeds from training, without rules. Without conv the v10 ensembles drop to 0.714 on the eight older sets: their predictions keep `S:hand.fist`, which the fold now rewrites. pronoun changes no dev set.)
+
+v10 reads the new stage-8 sentences at 0.43, v11 at 0.66. On the eight older sets the v11 ensemble gains 1.3 points, most on dev_s3, dev_s5 and dev_s7. Export: f16 equals f32 on dev for all four runs (121 MB each, 30 to 32 ms median on one CPU thread); torch dynamic int8 loses 1.9 to 4.7 dev points. On the real set the v11 ensemble gets 66 of 102 eval rows exact and 89 right or one part wrong, calibration 32 of 51 (`probes/real-eval/RESULT.md`, section "Parser v11").
+
+## 15. Parser v10 lean: the four-seed ensemble at lower cost (2026-11-02, `tools/mapping/distill.py`, `lean.py`)
+
+Rule written before any candidate existed (commit bee9d0c): `probes/real-eval/RESULT.md`, "Parser v10 lean: selection rule". Reference: the four-seed v10 ensemble with `conv,pronoun`, 0.7735 on the eight dev sets of ds-v10c; a candidate needs at most 0.003 less and less weight memory, the smallest wins.
+
+Levers tried:
+
+- Weight averaging of the four seeds (`lean.py soup`): each seed starts its decoder from different random weights, so the mean of the weights is not a working model (0.003).
+- Distillation into one mmBERT-small student (`train_parser.py --teachers`): loss 0.5 x CE on the gold frame plus 0.5 x KL to the softmax of the members' mean log-softmax (what greedy decodes), on frame, pointer and BIO steps, teacher-forced on the gold frame. Extra text (`distill.py`): 31,369 synthetic sentences no dataset uses (validator drops of every command run with the slot markup removed, plus rows left out of training), none from a dev edit id, 1,237 near-copies of the real set dropped by `leak.py`; labelled with the ensemble's greedy frame and added to train_cat (167,764 rows in all). No DeepSeek call.
+- Depth: only the lowest 12 of the 22 encoder layers (`--hf-layers 12`).
+- Weight-only ggml quantisation, simulated in torch (`lean.py quant`): every encoder matrix and the embedding in Q8_0 or Q4_0 blocks of 32 (54.8M weights), decoder and norms f16 (5.5M). The final round trip matches candle's `from_float` from the f16 weights; the rows marked * used an earlier round trip (f32 source, rounded scale), which differs in the last digit.
+
+| candidate | dev | challenge | dev_s2 | dev_s3 | dev_s4 | dev_s5 | dev_s6 | dev_s7 | mean | mean conv,pronoun | weights MB | ms median / p95 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| reference: ensemble v10 s0 to s3 | 0.888 | 0.861 | 0.843 | 0.736 | 0.828 | 0.729 | 0.659 | 0.644 | 0.7729 | 0.7735 | 482 | 127.5 / 306.6 |
+| ensemble v10 s0 to s3, Q8_0 | 0.888 | 0.861 | 0.843 | 0.736 | 0.828 | 0.729 | 0.659 | 0.644 | 0.7729 | 0.7735 | 277 | candle |
+| p-v10-s1 (one seed) | 0.877 | 0.841 | 0.831 | 0.707 | 0.803 | 0.710 | 0.653 | 0.626 | 0.7553 | 0.7560 | 120.5 | 30.5 / 68.8 |
+| p-v10-s1, Q8_0 * | 0.877 | 0.841 | 0.832 | 0.709 | 0.803 | 0.705 | 0.655 | 0.624 | 0.7551 | 0.7558 | 69.2 | candle |
+| p-v10-s1, Q4_0 * | 0.841 | 0.819 | 0.815 | 0.688 | 0.787 | 0.695 | 0.623 | 0.617 | 0.7349 | 0.7356 | 41.8 | candle |
+| soup of the four seeds | 0.000 | 0.005 | 0.001 | 0.000 | 0.002 | 0.002 | 0.004 | 0.009 | 0.003 | 0.003 | 120.5 | |
+| lean-kd-c: student, train_cat, 10k steps | 0.887 | 0.841 | 0.830 | 0.721 | 0.824 | 0.724 | 0.625 | 0.637 | 0.7605 | 0.7612 | 120.5 | |
+| lean-kd-p: student, + pool, 10k steps | 0.868 | 0.847 | 0.844 | 0.733 | 0.831 | 0.722 | 0.653 | 0.653 | 0.7683 | 0.7689 | 120.5 | 31.3 / 67.8 |
+| lean-kd-p, Q8_0 * | 0.868 | 0.845 | 0.845 | 0.728 | 0.836 | 0.724 | 0.657 | 0.655 | 0.7693 | 0.7699 | 69.2 | candle |
+| lean-kd-p12: student, + pool, 12 layers | 0.865 | 0.821 | 0.824 | 0.716 | 0.815 | 0.717 | 0.608 | 0.613 | 0.7469 | 0.7473 | 82.1 | 24.2 / 57.8 |
+| lean-kd-pc: lean-kd-p + 5k steps at kd 0.7 | 0.884 | 0.845 | 0.830 | 0.721 | 0.819 | 0.715 | 0.642 | 0.648 | 0.7628 | 0.7631 | 120.5 | |
+| lean-kd-p16: student, + pool, 16k steps | 0.887 | 0.830 | 0.838 | 0.731 | 0.814 | 0.729 | 0.666 | 0.673 | 0.7700 | 0.7710 | 120.5 | 30.6 / 65.8 |
+| lean-kd-p16, Q8_0 (chosen by the rule) | 0.887 | 0.832 | 0.838 | 0.728 | 0.814 | 0.729 | 0.666 | 0.670 | 0.7696 | 0.7706 | 69.2 | candle |
+
+(route_edit per set after `conv,pronoun`; mean without and with the rules; weights in f16 or ggml block bytes; ms per sentence in torch on one CPU thread of the M1 Pro, 200 dev sentences, tokenize + encode + constrained greedy, `lean.py cost`. The torch simulation of Q8_0 runs f32 weights, so its latency says nothing; candle's quantised matmul has to be timed in the Rust runtime. lean-kd-p16 in f16 equals f32 on dev, `export_hf.json`.)
+
+Reading:
+
+- The pool of unused synthetic sentences is the largest single gain (+0.8 points, lean-kd-c to lean-kd-p); 16k instead of 10k steps adds 0.2 more, and the best checkpoint of lean-kd-p16 was its last, so the student had not finished learning. Continuing a student at kd 0.7 lowered it.
+- Twelve layers cost 2.2 points and save 7 ms median: the decoder loop takes a large share of the time.
+- Q8_0 moves no mean by more than 0.001; Q4_0 costs 2 points.
+- By the rule, lean-kd-p16 in Q8_0 replaces the reference: 0.7706, 0.0029 below it, at 69 MB of weights instead of 482. The margin is at the edge of the rule; in f16 the student scores 0.7710.
+- The real set (seen, report only, `probes/real-eval/RESULT.md` "Parser v10 lean") does not follow: the student gets 44 of 102 eval rows exact, the four-seed ensemble 56 (p 0.0075). The student reads Noa's sentences like one seed (38 to 51 of 102 for the four seeds). Distillation on synthetic text carried the ensemble's dev score, not its lead on real sentences, which the dev sets never showed. The four-seed ensemble in Q8_0 matches the f16 ensemble on dev and on the real set at 277 MB.
+
+Rust runtime (`plugin/parser` release, `synthexis-parse --threads 1`, M1 Pro), after Noa chose the v11 four-seed ensemble in Q8_0: the four v11 seeds in f16 take 101.2 ms median and 175.9 ms p95 on 200 sentences of ds-v11c dev (102 / 154 ms on the 153 real sentences), 444 MB RSS after load; one seed 24.7 / 43.2 ms and 165 MB. Q8_0 is not in the runtime yet.
+
+Modal: five student runs on L4 or A10G (Modal does not log which), 21 to 71 minutes of training each, about 4 GPU hours in all, 3 to 4.5 $ in credits; two earlier spawns failed at start because another session redeployed the shared app (`SYNTHEXIS_MODAL_APP` now gives a session its own deployment).
+
+Applied to v11 (session parser-v11, runs p-v11-s0 to s3, scored with the v11 `rules.py` at aeb198a on the nine dev sets of ds-v11c): `lean.py quant --runs p-v11-s0,p-v11-s1,p-v11-s2,p-v11-s3` writes `p-v11-s*-q8`; the Q8_0 ensemble scores 0.7761 with `conv,pronoun` against 0.7745 in f16, 4 x 69 MB.
