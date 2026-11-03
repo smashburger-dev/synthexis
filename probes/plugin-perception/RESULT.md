@@ -333,12 +333,32 @@ S4, scored once, block A: finger accuracy 0.929 (814c0ec: 0.935), openness again
 
 Live in FL afterwards (`runs/1793705120-fl_live.json`): right-hand openness 0.02 to 0.97 with 144 distinct values (before 0.00 to 0.87, 120), left hand 0.00 to 0.90, pinch 0.00 to 1.00 (before up to 0.84), automation replay 0.00 to 0.94 `recorded`; mouth, eye and yaw kept their full range.
 
+### Openness top and two hands on x (2026-11-03, evening)
+
+Noa, FL test of the sentence routes: a fully open hand reads about 0.85 while a fist reaches 0.1, so a route on openness never reaches its top; and with both hands routed on x, each hand only uses its own half of the frame.
+
+Openness. The finger mean of an open hand sits at 0.88 (p25) to 0.92 (median) on block A of S1 to S3; the thumb and the decile map keep it off 1.0. `HandFeatures::openness` now stretches the part above a knee at 0.6 so that 0.88 reads 1.0 (`OPEN_KNEE`, `OPEN_TOP`, geom.rs); below the knee nothing changes, and neither do the finger values or the finger count. Rule written before the run: knee fixed at 0.6, top at the p25 of open-hand frames of S1 to S3; pass if the open median is at least 0.97 and p25 at least 0.95, fist percentiles unchanged, the ramps' share between 0.2 and 0.8 drops by at most 0.05 and their 20% to 80% time by at most 15%. Hybrid backend as live, block A frames with one labelled hand.
+
+| openness | before p10 / p25 / p50 / p75 / p90 | after |
+|---|---|---|
+| open hand, S1 to S3 (896 frames) | 0.81 / 0.88 / 0.92 / 0.94 / 0.96 | 0.91 / 1.00 / 1.00 / 1.00 / 1.00 |
+| fist, S1 to S3 (800 frames) | 0.01 / 0.04 / 0.08 / 0.16 / 0.23 | unchanged |
+| open hand, S4, scored once (180 frames) | 0.88 / 0.91 / 0.93 / 0.94 / 0.95 | 1.00 / 1.00 / 1.00 / 1.00 / 1.00 |
+| fist, S4 (180 frames) | 0.03 / 0.07 / 0.16 / 0.22 / 0.34 | unchanged |
+| B_*_open ramps, share between 0.2 and 0.8 | 0.41 | 0.37 |
+| B_*_open ramps, 20% to 80% (median) | 584 ms | 617 ms |
+
+Above the knee the slope is 1.43, so a held open hand's wander grows by that factor until it hits the 1.0 clamp.
+
+Two hands on x. In block A the left hand's x has its median at 0.33 to 0.49 per session and the right hand's at 0.69 to 0.74 (x from the person's view), so each hand works on its own side. The split follows the person instead of the frame (Noa): the face centre, sent as the internal signal `cam0.body.x` (not an ontology source, so no sentence can route it), smoothed with a 1 s time constant in `route::Values`, 0.5 until a face is seen. Its median is 0.52 to 0.53 on S1, S2 and S4 and 0.41 on S3, where the person stood off the middle. Hand frames on their own side of the split: face centre 0.886 / 0.806 / 0.737 / 0.795 on S1 to S4, frame middle 0.839 / 0.788 / 0.717 / 0.778. While both `cam0.hand.L.x` and `cam0.hand.R.x` have an enabled route, the left hand's input range is centre - 0.5 .. centre and the right hand's centre .. centre + 0.5, cut at the frame edges (`fit_hand_x`, route.rs); with one hand routed it keeps the whole frame. y has no such rule.
+
 ## Signal contract
 
 - Ids: `cam0.` + ontology source id, side after the first segment for sided sources: `cam0.hand.R.openness`, `cam0.hand.L.finger.index.tilt`, `cam0.eye.L.open`, `cam0.mouth.open`, `cam0.face.smile`, `cam0.head.yaw`, `cam0.hands.distance`, `cam0.object.x`. `S:hand.openness side:right` maps to `cam0.hand.R.openness`. The spec's example `cam0.face.mouth.open` (sig.contract) differs from the ontology's `mouth.open`; the code follows the ontology.
 - 51 ids: 20 per hand (openness, fist, five finger extensions, spread, x, y, depth, pinch, speed, roll, five finger tilts, finger_count), hands.distance, 9 face (mouth.open, face.smile, eye.L/R.open, eye.L/R.closed, head.yaw/pitch/roll), 5 object (x, y, size, angle, speed; one slot, the largest object, students only).
 - Every frame emits every id. A source not seen this frame repeats its last value with `present = false` and confidence 0, so `cond.occlusion` holds and glides. Confidence: mask area for student hands and faces, mean joint confidence for Vision hands, landmark confidence for Vision faces.
 - Side: two hands split by image side (image-left is the person's right; camera frames are unmirrored, only the preview in the plugin window is mirrored). One hand: `students` and `hybrid` take the sign of its `SideTracker` track (wrist lean, section above); `vision` keeps the side of a live track within a quarter frame width (tracks expire after 0.5 s), else the face centre decides, else the frame centre.
+- Internal: `cam0.body.x`, the face centre on x, splits two hands' x routes (route.rs); not routable.
 - Not emitted yet: `hand.pitch` (no 2D estimate), `hand.shape` (needs the shapes table), `arm.*`, `body.*`, `orb.*`, `motion.*`. `hand.roll` measures rotation around the forearm from the knuckle line; its direction is unchecked.
 
 ## Open
