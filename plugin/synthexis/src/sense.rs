@@ -4,10 +4,12 @@
 //! n-grams of the name and words of the plugin, one hidden layer). Both come
 //! from tools/mapping/export_paramsense.py into the completion dir.
 //!
-//! param-sense runs runtime-only (no value strings), on the GUI thread when
-//! FL sends a plugin's names: a few ms for 2,600 names. Sizes come from
-//! meta.json, so a retrained run with more buckets or a wider layer loads
-//! unchanged. Parity with the Python model: tests/fixtures/paramsense_parity.json.
+//! param-sense runs runtime-only (no value strings; probes/paramsense-v2
+//! found FL's one current value string worse than none). The shipped run is
+//! ps-v2, five members folded into one block-diagonal net; its sizes come
+//! from meta.json and the zero blocks are skipped, about 80 ms for 2,600
+//! names, so sentence.rs runs it on its own thread. Parity with the Python
+//! model: tests/fixtures/paramsense_parity.json.
 
 use std::collections::HashMap;
 use std::path::Path;
@@ -73,6 +75,10 @@ pub struct Sense {
     hid_b: Vec<f32>,
     cls_w: Vec<f32>,
     cls_b: Vec<f32>,
+    /// Per hidden unit, the columns of the name bag with non-zero weights.
+    /// A folded ensemble (ps-v2: 5 members side by side) is block-diagonal,
+    /// so each unit reads only its own member's 48 columns.
+    name_span: Vec<(usize, usize)>,
 }
 
 impl Sense {
@@ -105,7 +111,16 @@ impl Sense {
         if hs[1] != 3 * dim || cs != [classes.len(), hidden] || hid_b.len() != hidden || cls_b.len() != classes.len() {
             return Err("param-sense: tensor shapes do not fit together".into());
         }
-        Ok(Sense { classes, buckets: buckets as u32, dim, hidden, emb, hid_w, hid_b, cls_w, cls_b })
+        let name_span = (0..hidden)
+            .map(|j| {
+                let w = &hid_w[j * 3 * dim..j * 3 * dim + dim];
+                match (w.iter().position(|x| *x != 0.0), w.iter().rposition(|x| *x != 0.0)) {
+                    (Some(lo), Some(hi)) => (lo, hi + 1),
+                    _ => (0, 0),
+                }
+            })
+            .collect();
+        Ok(Sense { classes, buckets: buckets as u32, dim, hidden, emb, hid_w, hid_b, cls_w, cls_b, name_span })
     }
 
     fn bucket(&self, field: &str, gram: &str) -> usize {
@@ -191,8 +206,10 @@ impl Sense {
             .map(|n| {
                 self.mean(&self.name_feats(n), &mut z);
                 for (j, hj) in h.iter_mut().enumerate() {
-                    let w = &self.hid_w[j * 3 * d..j * 3 * d + d];
-                    let x = base[j] + w.iter().zip(&z).map(|(a, b)| a * b).sum::<f32>();
+                    // adding the skipped zero products would not change the sum
+                    let (lo, hi) = self.name_span[j];
+                    let w = &self.hid_w[j * 3 * d + lo..j * 3 * d + hi];
+                    let x = base[j] + w.iter().zip(&z[lo..hi]).map(|(a, b)| a * b).sum::<f32>();
                     *hj = 0.5 * x * (1.0 + erf(x / std::f32::consts::SQRT_2));
                 }
                 let best = (0..self.classes.len())
@@ -243,6 +260,15 @@ impl Classes {
         }
         let sense = Sense::load(&dir.join("paramsense")).map_err(|e| notes.push(e)).ok();
         (Classes { known, sense }, notes)
+    }
+
+    /// True when some of `names` have no label and param-sense would run.
+    pub fn needs_sense(&self, plugin: &str, names: &[(u32, String)], exported: &HashMap<String, String>) -> bool {
+        let known = self.known.get(&casefold(plugin.trim()));
+        self.sense.is_some()
+            && names
+                .iter()
+                .any(|(_, n)| !exported.contains_key(n) && !known.is_some_and(|k| k.contains_key(&casefold(n.trim()))))
     }
 
     /// Classes for `names` of `plugin`: `exported` (name -> class) first,

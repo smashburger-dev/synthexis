@@ -35,8 +35,9 @@
 
 use std::collections::{BTreeMap, HashMap};
 use std::path::PathBuf;
+use std::sync::Arc;
 
-use crossbeam_channel::{bounded, Receiver};
+use crossbeam_channel::{bounded, Receiver, TryRecvError};
 use nih_plug_egui::egui::{
     self, emath::easing, text::CCursor, text::CCursorRange, text::LayoutJob, text::TextFormat,
     Align2, Color32, EventFilter, FontId, Id, Key, Modifiers, Order, PopupCloseBehavior, Rect, RichText, Sense,
@@ -71,8 +72,11 @@ pub struct Sentence {
     exported: Vec<PluginInfo>,
     classes: HashMap<String, HashMap<String, String>>,
     /// Labels of the mapped plugins and param-sense, and their result per target.
-    labels: sense::Classes,
+    labels: Arc<sense::Classes>,
     classified: HashMap<fl::Key, Vec<Param>>,
+    /// param-sense runs off the GUI thread (ps-v2: about 80 ms for 2,600
+    /// names); the target it works for and where its result arrives.
+    classifying: Option<(fl::Key, Receiver<Vec<Param>>)>,
     loader: Option<Receiver<Loaded>>,
     status: String,
     bridge: Option<&'static fl::Bridge>,
@@ -140,6 +144,26 @@ fn pick_row(ui: &mut Ui, selected: bool, name: &str, place: &str, hover: &str) -
         .text(rect.left_center() + egui::vec2(8.0, 0.0), Align2::LEFT_CENTER, name, font, fg);
     let resp = if hover.is_empty() { resp } else { resp.on_hover_text(hover) };
     resp.clicked()
+}
+
+/// FL's parameter names of `key` with their classes (sense::Classes::of).
+fn classify(
+    labels: &sense::Classes,
+    key: &fl::Key,
+    names: Vec<(u32, String)>,
+    exported: &HashMap<String, String>,
+) -> Vec<Param> {
+    let t0 = std::time::Instant::now();
+    let list: Vec<String> = names.iter().map(|(_, n)| n.clone()).collect();
+    let (classes, src) = labels.of(&key.plugin, &list, exported);
+    log(&format!(
+        "picker: classes for {}: {} labelled, {} by param-sense, {:.1} ms",
+        key.label(),
+        src.labelled,
+        src.sensed,
+        t0.elapsed().as_secs_f64() * 1e3
+    ));
+    names.into_iter().zip(classes).map(|((index, name), class)| Param { index, name, class }).collect()
 }
 
 fn set_cursor(ctx: &egui::Context, id: Id, text: &str, byte: usize) {
@@ -240,8 +264,9 @@ impl Sentence {
             engine: None,
             exported: Vec::new(),
             classes: HashMap::new(),
-            labels: sense::Classes::default(),
+            labels: Arc::new(sense::Classes::default()),
             classified: HashMap::new(),
+            classifying: None,
             loader: Some(rx),
             status,
             bridge,
@@ -273,7 +298,7 @@ impl Sentence {
         let Some(rx) = &self.loader else { return };
         let Ok((res, labels, notes)) = rx.try_recv() else { return };
         self.loader = None;
-        self.labels = labels;
+        self.labels = Arc::new(labels);
         for n in notes {
             log(&format!("completion: classes: {n}"));
         }
@@ -349,23 +374,40 @@ impl Sentence {
         }
         match res {
             Ok(names) => {
+                if let Some((k, rx)) = &self.classifying {
+                    match rx.try_recv() {
+                        Ok(params) => {
+                            self.classified.insert(k.clone(), params);
+                            self.classifying = None;
+                        }
+                        Err(TryRecvError::Disconnected) => self.classifying = None,
+                        Err(TryRecvError::Empty) => {}
+                    }
+                }
                 if !self.classified.contains_key(&want) {
+                    if self.classifying.as_ref().is_some_and(|(k, _)| *k == want) {
+                        self.pick_note = "reading parameter classes".into();
+                        return;
+                    }
                     let exported = self.classes_of(&want.plugin).clone();
-                    let t0 = std::time::Instant::now();
-                    let list: Vec<String> = names.iter().map(|(_, n)| n.clone()).collect();
-                    let (classes, src) = self.labels.of(&want.plugin, &list, &exported);
-                    log(&format!(
-                        "picker: classes for {}: {} labelled, {} by param-sense, {:.1} ms",
-                        want.label(),
-                        src.labelled,
-                        src.sensed,
-                        t0.elapsed().as_secs_f64() * 1e3
-                    ));
-                    let params = names
-                        .into_iter()
-                        .zip(classes)
-                        .map(|((index, name), class)| Param { index, name, class })
-                        .collect();
+                    if self.labels.needs_sense(&want.plugin, &names, &exported) {
+                        let (tx, rx) = bounded(1);
+                        let (labels, key) = (self.labels.clone(), want.clone());
+                        let job = std::thread::Builder::new()
+                            .name("synthexis-paramsense".into())
+                            .spawn(move || {
+                                let _ = tx.send(classify(&labels, &key, names, &exported));
+                            });
+                        match job {
+                            Ok(_) => {
+                                self.classifying = Some((want, rx));
+                                self.pick_note = "reading parameter classes".into();
+                            }
+                            Err(e) => self.pick_note = format!("param-sense not started: {e}"),
+                        }
+                        return;
+                    }
+                    let params = classify(&self.labels, &want, names, &exported);
                     self.classified.insert(want.clone(), params);
                 }
                 let params = self.classified.get(&want).cloned().unwrap_or_default();
@@ -1138,6 +1180,40 @@ mod tests {
         h.frame(vec![key(Key::Tab)]);
         assert_eq!(h.s.doc.text, "zzz");
         assert!(h.focused());
+    }
+
+    /// An unmapped plugin: param-sense runs on its own thread, the field
+    /// shows a note meanwhile, and the classes then reach the engine.
+    #[test]
+    fn unmapped_plugin_is_classified_off_the_gui_thread() {
+        let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
+        let b = fl::Bridge::detached();
+        let mut h = Harness::new();
+        h.s.bridge = Some(b);
+        h.s.labels = Arc::new(sense::Classes::load(&root.join("../assistant/completion")).0);
+        let key = fl::Key { at: fl::At::Fx { track: 2, slot: 0 }, plugin: "Totally Unknown Synth".into() };
+        let names: Vec<(u32, String)> =
+            ["VCF Cutoff", "VCF Resonance", "Amp Attack", "Delay Mix"].iter().enumerate().map(|(i, n)| (i as u32, n.to_string())).collect();
+        b.update(|v| {
+            v.link = fl::Link::Up;
+            v.loaded = true;
+            v.targets = vec![fl::Target { key: key.clone(), track: 2, track_name: String::new() }];
+            v.focus = Some(key.clone());
+            v.params = Some((key.clone(), Ok(names)));
+        });
+        h.frame(vec![]);
+        assert_eq!(h.s.pick_note, "reading parameter classes");
+        for _ in 0..200 {
+            if h.s.applied.is_some() {
+                break;
+            }
+            std::thread::sleep(std::time::Duration::from_millis(5));
+            h.frame(vec![]);
+        }
+        assert_eq!(h.s.applied, Some(key.clone()));
+        let classes: Vec<String> = h.s.classified[&key].iter().map(|p| p.class.clone()).collect();
+        assert_eq!(classes[0], "filter.cutoff");
+        assert!(classes.iter().all(|c| !c.is_empty()), "{classes:?}");
     }
 
     #[test]
