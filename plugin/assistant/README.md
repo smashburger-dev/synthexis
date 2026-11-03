@@ -5,7 +5,7 @@ What the plugin's sentence field needs besides code: the parser ensemble and the
 | part | where it lives | size |
 |---|---|---|
 | completion data (`vocab.json`, one parameter file per profiled plugin) | tracked here in `completion/`, written by `tools/mapping/export_completion.py` | 1.2 MB |
-| parameter classes: `known.tsv` (labels of the 887 mapped plugins) and `paramsense/` (param-sense ps-v1 for all other plugins) | tracked here in `completion/`, written by `tools/mapping/export_paramsense.py` | 2.5 MB + 1.6 MB |
+| parameter classes: `known.tsv` (labels of the 887 mapped plugins) and `paramsense/` (param-sense ps-v2 for all other plugins) | tracked here in `completion/`, written by `tools/mapping/export_paramsense.py` | 2.5 MB + 32 MB |
 | parser runs `p-v11-s0` to `p-v11-s3`, `config.json`, `tokenizer.json` | GitHub release pinned in `parser.release` | 446 MB gzip, 482 MB unpacked |
 
 The parser weights stay out of git: GitHub refuses files over 100 MB, and every new parser would stay in the history for good. f16 weights barely compress (gzip saves 7 %, xz 10 %).

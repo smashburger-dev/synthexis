@@ -17,7 +17,7 @@ Sources read: `spec/synthexis.yaml` (map.parser, map.resolver, map.fallback, map
 | Confidence | frame log-prob, threshold below which the plugin shows chips instead of a diff | log-prob exists; threshold not calibrated on human sentences | log-prob returned; threshold stays open |
 | BIO head output | target text for the resolver = first to last TGT piece | Python only | open (head weights are exported, not run) |
 | Resolver | frame + live parameter list -> concrete plugin parameters: alias > name match on the named plugin > param-sense class > chips | Python probe (`probes/open-vocab-mapping/resolve.py`); spec amend proposed | open |
-| param-sense | parameter name -> taxonomy class, hashed n-grams, < 1M params | trained in Python; Rust port `plugin/synthexis/src/sense.rs` (2,426 of 2,426 classes equal to Python, 16 ms for 2,600 names), labels of the 887 mapped plugins in `known.tsv` first | done for the picker; resolver open |
+| param-sense | parameter name -> taxonomy class, hashed n-grams, < 1M params | trained in Python; Rust port `plugin/synthexis/src/sense.rs` (ps-v2, 2,426 of 2,426 classes equal to Python, about 80 ms for 2,600 names off the GUI thread), labels of the 887 mapped plugins in `known.tsv` first | done for the picker; resolver open |
 | Live inventory | plugin and parameter names of the project from the FL bridge | plugin picker (`sentence.rs`, `fl.rs`) lists the project's plugins; FL sends the picked plugin's parameter names | done for the picked plugin |
 | Route diff UI | show proposed routes in the route matrix, accept, edit, undo | missing | open |
 | Chips fallback | sentence with recognised terms as chips, click lists options | missing (glossary exists) | open |
