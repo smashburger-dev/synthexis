@@ -35,6 +35,8 @@ pub struct Decoder {
     out: Lin,
     q: Lin,
     k: Lin,
+    /// Auxiliary BIO head over the encoder memory (frame_parser.BIO tags).
+    bio: Lin,
     heads: usize,
     d: usize,
     fv: usize,
@@ -83,6 +85,7 @@ impl Decoder {
             out: w.lin("out", true)?,
             q: w.lin("q", true)?,
             k: w.lin("k", true)?,
+            bio: w.lin("bio", true)?,
             heads,
             d,
             fv,
@@ -112,6 +115,11 @@ impl Decoder {
             selfkv: vec![None; self.layers.len()],
             s,
         })
+    }
+
+    /// BIO logits per source piece, (S, 39) row-major.
+    pub fn bio(&self, st: &State) -> Result<Vec<Vec<f32>>> {
+        Ok(self.bio.forward(&st.mem)?.to_dtype(DType::F32)?.to_vec2::<f32>()?)
     }
 
     /// Feed combined id `y` at step `t` (BOS at t = 0); returns raw logits

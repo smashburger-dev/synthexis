@@ -15,8 +15,8 @@ Sources read: `spec/synthexis.yaml` (map.parser, map.resolver, map.fallback, map
 | Weight export | f16 state dicts to a format Rust reads | `model.f16.pt` (pickle) | built: `tools/mapping/export_runtime.py` writes safetensors + `parser.json` |
 | Load once | background load at plugin init, never on the audio thread | missing | built: `plugin/synthexis/src/assistant.rs`, one worker per process, started in `initialize()` |
 | Confidence | frame log-prob, threshold below which the plugin shows chips instead of a diff | log-prob exists; threshold not calibrated on human sentences | log-prob returned; threshold stays open |
-| BIO head output | target text for the resolver = first to last TGT piece | Python only | open (head weights are exported, not run) |
-| Resolver | frame + live parameter list -> concrete plugin parameters: alias > name match on the named plugin > param-sense class > chips | Python probe (`probes/open-vocab-mapping/resolve.py`); spec amend proposed | open |
+| BIO head output | target text for the resolver = first to last TGT piece | Python only | built 2026-11-03: `Parse::spans` (ensemble mean of the members' log-softmax, frame_parser's grouping); on 300 ds-v11c dev rows TGT spans exact P 0.967 / R 0.964, PNAME 18/18 |
+| Resolver | frame + live parameter list -> concrete plugin parameters: alias > name match on the named plugin > param-sense class > chips | Python probe (`probes/open-vocab-mapping/resolve.py`); spec amend proposed | built 2026-11-03: `plugin/parser/src/resolve.rs`, chip pin > alias > name > class among the picked plugin's parameters; held-out template top-1 0.811 (Python probe 0.676), real eval split gold recall 0.593 frozen, 0.681 after fixes (`probes/resolver/RESULT.md`) |
 | param-sense | parameter name -> taxonomy class, hashed n-grams, < 1M params | trained in Python; Rust port `plugin/synthexis/src/sense.rs` (ps-v2, 2,426 of 2,426 classes equal to Python, about 80 ms for 2,600 names off the GUI thread), labels of the 887 mapped plugins in `known.tsv` first | done for the picker; resolver open |
 | Live inventory | plugin and parameter names of the project from the FL bridge | plugin picker (`sentence.rs`, `fl.rs`) lists the project's plugins; FL sends the picked plugin's parameter names | done for the picked plugin |
 | Route diff UI | show proposed routes in the route matrix, accept, edit, undo | missing | open |
@@ -113,15 +113,15 @@ cd plugin && ./guarded-cargo.sh test -p synthexis-parser --release -- --include-
 plugin/target/release/synthexis-parse --dir data/mapping/runtime "mouth opens the bass filter"
 ```
 
-Plugin: `SYNTHEXIS_PARSER_DIR` (default `~/Library/Application Support/synthexis/parser`), `SYNTHEXIS_PARSER_RUNS` (default `p-v11-s0,p-v11-s1,p-v11-s2,p-v11-s3`; weights and rules come from each run's `parser.json`), `SYNTHEXIS_PARSE="sentence"` for a headless check. The sentence field (`sentence.rs`) calls `assistant::submit(text, pins)`.
+Plugin: `SYNTHEXIS_PARSER_DIR` (default `~/Library/Application Support/synthexis/parser`), `SYNTHEXIS_PARSER_RUNS` (default `p-v11-s0,p-v11-s1,p-v11-s2,p-v11-s3`; weights and rules come from each run's `parser.json`), `SYNTHEXIS_PARSE="sentence"` for a headless check. The sentence field (`sentence.rs`) calls `assistant::submit(text, pins, scope)` with the picked plugin, its classified parameters and its aliases; the reply is one line per resolved route.
 
 ## Still open for the mapping assistant
 
 State on 2026-11-03, in the order the demo needs them:
 
 1. Done by other sessions: model files (`plugin/assistant/install.sh` links `data/mapping/runtime` in a dev checkout, else downloads the pinned release into `~/Library/Application Support/synthexis/parser`), the sentence field (`plugin/synthexis/src/sentence.rs`, completion chips go to the parser as pinned spans) and param-sense in Rust for the picked plugin (`plugin/synthexis/src/sense.rs`).
-2. Parse result shown next to the sentence field; the frame still goes only to the log.
-3. Resolver in Rust: frame + the picked plugin's parameter names -> parameter ids, in the order of the proposed map.resolver amend (alias, name match on the named plugin, param-sense class, chips). Needs the BIO head output for the target text (weights are exported, the head is not run yet).
+2. Done 2026-11-03: the resolved routes show below the sentence field after Enter, one line per route ("left hand openness -> Topos / Drive").
+3. Done 2026-11-03: resolver in Rust with the BIO head (`resolve.rs`, `probes/resolver/RESULT.md`). Aliases are learnt from parameter chips picked through a class phrase (`plugin/synthexis/src/alias.rs`); no UI to list or delete them yet.
 4. Frame -> `route.rs`: build routes with modifiers (invert, range, curve, gates, ramp) from resolved frames.
 5. Route diff UI: accept, edit, undo.
 6. Chips fallback (map.fallback) and the confidence threshold that triggers it, calibrated on Noa's calibration sentences, not on synthetic ones.

@@ -1,8 +1,10 @@
-//! Mapping assistant entry, minimal: one process-wide worker thread loads
-//! the frame parser in the background and parses submitted sentences; the
-//! chips of the sentence field are enforced on the frame as pinned spans
-//! (synthexis_parser::pin) and the frames go to the log. No resolver or
-//! route changes yet (docs/parser-runtime-plan.md).
+//! Mapping assistant entry: one process-wide worker thread loads the frame
+//! parser in the background and parses submitted sentences; the chips of
+//! the sentence field are enforced on the frame as pinned spans
+//! (synthexis_parser::pin), the resolver binds the targets to the picked
+//! plugin's parameters (synthexis_parser::resolve), and one line per route
+//! ("left hand openness -> Topos / Drive") goes back to the field and to
+//! the log. No route changes yet (docs/parser-runtime-plan.md).
 //!
 //! Model dir: $SYNTHEXIS_PARSER_DIR, else
 //! ~/Library/Application Support/synthexis/parser, laid out as
@@ -11,24 +13,47 @@
 //! rules as its parser.json says (Noa's pick, 2026-11-02). Headless check:
 //! SYNTHEXIS_PARSE="sentence" parses that sentence once loaded.
 
+use std::collections::HashMap;
 use std::path::PathBuf;
-use std::sync::OnceLock;
+use std::sync::{Arc, OnceLock};
 use std::time::Instant;
 
-use crossbeam_channel::{unbounded, Receiver, Sender};
+use crossbeam_channel::{bounded, unbounded, Receiver, Sender};
+use synthexis_complete::Param;
+use synthexis_parser::resolve::{resolve, Candidate};
 use synthexis_parser::{pin, Options, Parser, Pin};
 
 use crate::log::log;
 
 const DEFAULT_RUNS: &str = "p-v11-s0,p-v11-s1,p-v11-s2,p-v11-s3";
 
-type Job = (String, Vec<Pin>);
+/// What the resolver binds against: the picked plugin.
+pub struct Scope {
+    /// fl::Key id, as chip pins carry it.
+    pub key: String,
+    /// Plugin name for the result line.
+    pub plugin: String,
+    pub params: Arc<Vec<Param>>,
+    /// alias key -> parameter name (alias.rs).
+    pub aliases: HashMap<String, String>,
+}
+
+struct Job {
+    text: String,
+    pins: Vec<Pin>,
+    scope: Option<Scope>,
+    reply: Sender<Vec<String>>,
+}
 
 static WORKER: OnceLock<Sender<Job>> = OnceLock::new();
 
 /// Starts the worker once per process; loading begins immediately on it.
 /// Never call from the audio thread (the first call spawns a thread).
-pub fn start() -> &'static Sender<Job> {
+pub fn start() {
+    worker();
+}
+
+fn worker() -> &'static Sender<Job> {
     WORKER.get_or_init(|| {
         let (tx, rx) = unbounded();
         if let Err(e) = std::thread::Builder::new()
@@ -41,11 +66,14 @@ pub fn start() -> &'static Sender<Job> {
     })
 }
 
-/// Queues a typed sentence with its chips; the frame shows up in the log.
-pub fn submit(text: &str, pins: Vec<Pin>) {
-    if start().send((text.to_string(), pins)).is_err() {
+/// Queues a typed sentence with its chips. The receiver gets one line per
+/// route once parsed; it disconnects when the parser is unavailable.
+pub fn submit(text: &str, pins: Vec<Pin>, scope: Option<Scope>) -> Receiver<Vec<String>> {
+    let (reply, rx) = bounded(1);
+    if worker().send(Job { text: text.to_string(), pins, scope, reply }).is_err() {
         log("assistant: parser unavailable, sentence dropped");
     }
+    rx
 }
 
 fn model_dir() -> PathBuf {
@@ -73,30 +101,43 @@ fn run(rx: &Receiver<Job>) {
         t0.elapsed().as_secs_f64() * 1e3
     ));
     if let Ok(text) = std::env::var("SYNTHEXIS_PARSE") {
-        parse(&parser, &text, &[]);
+        parse(&parser, &text, &[], None);
     }
-    for (text, pins) in rx {
-        parse(&parser, &text, &pins);
+    for job in rx {
+        let _ = job.reply.send(parse(&parser, &job.text, &job.pins, job.scope.as_ref()));
     }
 }
 
-fn parse(parser: &Parser, text: &str, pins: &[Pin]) {
+/// Parses, pins, resolves; logs the frame and returns one line per route.
+fn parse(parser: &Parser, text: &str, pins: &[Pin], scope: Option<&Scope>) -> Vec<String> {
     let t0 = Instant::now();
-    match parser.parse(text) {
-        Ok(p) if pins.is_empty() => log(&format!(
-            "assistant: {:.3} {:.0} ms \"{text}\" -> {}",
-            f64::from(p.logp).exp(),
-            t0.elapsed().as_secs_f64() * 1e3,
-            p.frame().join(" ")
-        )),
-        Ok(p) => log(&format!(
-            "assistant: {:.3} {:.0} ms \"{text}\" -> {} | pinned {} -> {}",
-            f64::from(p.logp).exp(),
-            t0.elapsed().as_secs_f64() * 1e3,
-            p.frame().join(" "),
-            pins.len(),
-            pin(&p.items, pins).frame().join(" ")
-        )),
-        Err(e) => log(&format!("assistant: parse failed for \"{text}\": {e:#}")),
+    let p = match parser.parse(text) {
+        Ok(p) => p,
+        Err(e) => {
+            log(&format!("assistant: parse failed for \"{text}\": {e:#}"));
+            return vec![format!("parse failed: {e}")];
+        }
+    };
+    let parsed_ms = t0.elapsed().as_secs_f64() * 1e3;
+    let frame = pin(&p.items, pins);
+    let cands: Vec<Candidate> = scope
+        .map(|s| s.params.iter().map(|p| Candidate { index: p.index, name: &p.name, class: &p.class }).collect())
+        .unwrap_or_default();
+    let none = HashMap::new();
+    let (key, plugin, aliases) = scope.map_or(("", "no plugin", &none), |s| (s.key.as_str(), s.plugin.as_str(), &s.aliases));
+    let routes = resolve(&frame, text, &p.spans, key, &cands, aliases);
+    let mut lines: Vec<String> = routes.iter().map(|r| r.describe(plugin)).collect();
+    if lines.is_empty() {
+        let intent = frame.frame().into_iter().find(|t| t.starts_with("I:")).unwrap_or_default();
+        lines.push(format!("no route ({})", intent.trim_start_matches("I:")));
     }
+    let pinned = if pins.is_empty() { String::new() } else { format!(" | pinned {} -> {}", pins.len(), frame.frame().join(" ")) };
+    log(&format!(
+        "assistant: {:.3} {parsed_ms:.0} ms \"{text}\" -> {}{pinned} | resolved on {plugin} ({} params): {}",
+        f64::from(p.logp).exp(),
+        p.frame().join(" "),
+        cands.len(),
+        lines.join("; ")
+    ));
+    lines
 }

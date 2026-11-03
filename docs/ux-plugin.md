@@ -364,7 +364,7 @@ Freeze is in two days, the UI comes last in the plugin roadmap, and the hand sig
 | Target picker | must: manual list, Whole project | Follow FL focus, pin | `bridge.fl_script` | `ui.target_picker` new | probe fl-target-picker |
 | Hands cards: role, presets | should: role switch, Filter hand, Chord hand | Pattern hand, Pong, Orb, object cards | `gest.hand_role`, `gest.presets` | `ui.hands` new, `gest.hand_role` amended | |
 | Profiles | must: tabs with numbers by click, rename, full settings per profile, saved in plugin state | export/import of one profile | `route.matrix`, `gest.hand_role` | `ui.profiles`, `plugin.state` new | |
-| Assistant line: diff rows, accept, discard | should, optional shortcut | voice | `map.agent`, `map.parser`, `map.resolver` | `ui.assistant` new | resolver in the plugin (roadmap, open) |
+| Assistant line: diff rows, accept, discard | should, optional shortcut | voice | `map.agent`, `map.parser`, `map.resolver` | `ui.assistant` new | resolver built 11-03 (`resolve.rs`); diff rows open |
 | Chips with top 3 | should | aliases stored | `map.fallback` | proposal `map.aliases` | threshold on the 51 calibration rows |
 | History | should | keyboard shortcuts | `map.agent` (undo) | `ui.history` new | |
 | Objects: list, pick mode, name, chip | should | re-identification by look | `feat.object`, `perc.track` | `ui.objects` new, `perc.object_reid` new (research) | seg student with object class |

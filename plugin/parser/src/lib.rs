@@ -19,6 +19,7 @@ mod encoder;
 mod grammar;
 mod nn;
 pub mod pin;
+pub mod resolve;
 mod rules;
 mod text;
 
@@ -37,6 +38,13 @@ pub use pin::{pin, Frame, Pin, PinWhat};
 
 const BOS: u32 = 1;
 const EOS: u32 = 2;
+
+/// Span tags of the auxiliary BIO head (frame_parser.TAGS); the head's 39
+/// outputs are O, then B- and I- of each tag in this order.
+pub const BIO_TAGS: [&str; 19] = [
+    "SRC", "TGT", "TRACK", "PLUGIN", "PNAME", "NUM", "AMT", "MOD", "NOTE", "GATE", "TIME", "REF", "REJ", "ROLE",
+    "PRESET", "KEY", "SCALE", "UNDO", "DELTA",
+];
 
 #[derive(Deserialize)]
 struct RunMeta {
@@ -103,9 +111,19 @@ pub enum Item {
     Span { text: String, bytes: (usize, usize) },
 }
 
+/// A span the BIO head tagged: one of BIO_TAGS and its byte range.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Tagged {
+    pub tag: &'static str,
+    pub bytes: (usize, usize),
+}
+
 #[derive(Clone, Debug)]
 pub struct Parse {
     pub items: Vec<Item>,
+    /// BIO head spans in sentence order (ensemble mean of the members'
+    /// log-softmax, argmax per piece; frame_parser's bio_spans grouping).
+    pub spans: Vec<Tagged>,
     /// Frame log-probability under the ensemble; exp() is the confidence.
     pub logp: f32,
     /// Wall time of the encoders and of the decode loop, ms.
@@ -215,6 +233,7 @@ impl Parser {
         for r in &self.runs {
             states.push(r.dec.start(&r.enc.forward(ids)?)?);
         }
+        let spans = self.bio(&states, offs)?;
         let t1 = Instant::now();
         let mut seq: Vec<u32> = Vec::new();
         let mut logp = 0.0f32;
@@ -244,10 +263,48 @@ impl Parser {
         }
         Ok(Parse {
             items: rules::apply(self.items(&seq, text, offs), text, &self.rules),
+            spans,
             logp,
             enc_ms: (t1 - t0).as_secs_f32() * 1e3,
             dec_ms: t1.elapsed().as_secs_f32() * 1e3,
         })
+    }
+
+    /// BIO spans: a B- piece or a change of tag opens a span, an I- piece
+    /// of the same tag extends it; O, BOS and pieces without text close it.
+    fn bio(&self, states: &[decoder::State], offs: &[(usize, usize)]) -> Result<Vec<Tagged>> {
+        let mut acc: Vec<Vec<f32>> = Vec::new();
+        for (r, st) in self.runs.iter().zip(states) {
+            for (i, row) in r.dec.bio(st)?.iter().enumerate() {
+                let all = vec![true; row.len()];
+                let lp = masked_log_softmax(row, &all);
+                match acc.get_mut(i) {
+                    Some(a) => a.iter_mut().zip(&lp).for_each(|(a, l)| *a += l),
+                    None => acc.push(lp),
+                }
+            }
+        }
+        let mut out: Vec<Tagged> = Vec::new();
+        let mut open = false;
+        for (i, row) in acc.iter().enumerate() {
+            let all = vec![true; row.len()];
+            let tag = argmax(row, &all).unwrap_or(0);
+            let (a, b) = offs.get(i).copied().unwrap_or((0, 0));
+            if i == 0 || tag == 0 || a >= b {
+                open = false;
+                continue;
+            }
+            let name = BIO_TAGS[(tag - 1) / 2];
+            let begin = (tag - 1).is_multiple_of(2);
+            match out.last_mut() {
+                Some(t) if open && !begin && t.tag == name => t.bytes.1 = b,
+                _ => {
+                    out.push(Tagged { tag: name, bytes: (a, b) });
+                    open = true;
+                }
+            }
+        }
+        Ok(out)
     }
 
     fn items(&self, seq: &[u32], text: &str, offs: &[(usize, usize)]) -> Vec<Item> {

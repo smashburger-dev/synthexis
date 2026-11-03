@@ -173,9 +173,14 @@ pub struct View {
     pub gen: u64,
 }
 
+/// A plugin's parameter names as FL sent them, for whoever classifies.
+pub type Names = (Key, Vec<(u32, String)>);
+
 pub struct Bridge {
     view: Mutex<View>,
     want: Sender<Key>,
+    /// Gets every parameter list as it arrives (on_names).
+    names: Mutex<Vec<Sender<Names>>>,
 }
 
 static BRIDGE: OnceLock<Bridge> = OnceLock::new();
@@ -190,7 +195,7 @@ pub fn bridge() -> &'static Bridge {
         {
             log(&format!("fl: worker not started: {e}"));
         }
-        Bridge { view: Mutex::new(View::default()), want }
+        Bridge { view: Mutex::new(View::default()), want, names: Mutex::new(Vec::new()) }
     })
 }
 
@@ -204,12 +209,35 @@ impl Bridge {
         let _ = self.want.send(key.clone());
     }
 
+    /// Sends `tx` every parameter list FL sends from now on, and the
+    /// current one at once, so classification starts when the names arrive
+    /// instead of on the next frame of the synthexis window.
+    pub fn on_names(&self, tx: Sender<Names>) {
+        // under the view lock: a list arriving meanwhile is sent once more
+        // at worst, never missed
+        let v = self.view.lock();
+        if let Some((k, Ok(names))) = &v.params {
+            let _ = tx.send((k.clone(), names.clone()));
+        }
+        self.names.lock().push(tx);
+    }
+
+    /// Stores FL's answer for `key` and hands a list to the on_names
+    /// subscribers (dropping the gone ones).
+    pub(crate) fn set_params(&self, key: Key, res: Params) {
+        let names = res.as_ref().ok().cloned();
+        self.update(|v| v.params = Some((key.clone(), res)));
+        if let Some(n) = names {
+            self.names.lock().retain(|tx| tx.send((key.clone(), n.clone())).is_ok());
+        }
+    }
+
     /// A bridge without ports or worker; tests feed its view by hand.
     #[cfg(test)]
     pub fn detached() -> &'static Bridge {
         let (want, rx) = unbounded();
         std::mem::forget(rx);
-        Box::leak(Box::new(Bridge { view: Mutex::new(View::default()), want }))
+        Box::leak(Box::new(Bridge { view: Mutex::new(View::default()), want, names: Mutex::new(Vec::new()) }))
     }
 
     pub(crate) fn update(&self, f: impl FnOnce(&mut View)) {
@@ -505,7 +533,7 @@ impl Worker {
         if let Ok(p) = &res {
             self.cache.insert(key.clone(), p.clone());
         }
-        self.b.update(|v| v.params = Some((key, res)));
+        self.b.set_params(key, res);
     }
 
     fn plist(&mut self, key: &Key) -> Result<Vec<(u32, String)>, String> {

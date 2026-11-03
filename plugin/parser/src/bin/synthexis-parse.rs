@@ -5,8 +5,9 @@
 //!       [--threads 1] ["sentence" ...]
 //!
 //! Prints load time, resident memory after load, and per-sentence latency
-//! (median, p95). --jsonl writes {text, conf, logp, frame, ms} per line,
-//! the format of tools/mapping/predict.py --jsonl plus logp and ms.
+//! (median, p95). --jsonl writes {text, conf, logp, frame, ms, spans} per
+//! line, the format of tools/mapping/predict.py --jsonl plus logp, ms and
+//! the BIO head's spans as [start byte, end byte, tag].
 
 use std::io::Write;
 use std::path::PathBuf;
@@ -80,10 +81,14 @@ fn main() -> Result<()> {
         let conf = (f64::from(p.logp).exp() * 1000.0).round() / 1000.0;
         match out.as_mut() {
             Some(f) => {
-                let row = serde_json::json!({"text": t, "conf": conf, "logp": p.logp, "frame": frame, "ms": dt, "enc_ms": p.enc_ms, "dec_ms": p.dec_ms});
+                let spans: Vec<_> = p.spans.iter().map(|s| serde_json::json!([s.bytes.0, s.bytes.1, s.tag])).collect();
+                let row = serde_json::json!({"text": t, "conf": conf, "logp": p.logp, "frame": frame, "ms": dt, "enc_ms": p.enc_ms, "dec_ms": p.dec_ms, "spans": spans});
                 writeln!(f, "{row}")?;
             }
-            None => println!("{conf:.3}  {t}\n       {}", frame.join(" ")),
+            None => {
+                let spans: Vec<String> = p.spans.iter().map(|s| format!("{}={}", s.tag, &t[s.bytes.0..s.bytes.1])).collect();
+                println!("{conf:.3}  {t}\n       {}\n       {}", frame.join(" "), spans.join(" | "));
+            }
         }
     }
     if !ms.is_empty() {
