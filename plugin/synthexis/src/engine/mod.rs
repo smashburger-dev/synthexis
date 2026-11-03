@@ -2,7 +2,13 @@
 //! by all plugin instances (Weak subscriber handles). Never on the audio
 //! thread.
 
+pub mod bench;
 pub mod camera;
+pub mod coreml;
+pub mod geom;
+pub mod perception;
+pub mod vimage;
+pub mod vision;
 
 use std::sync::atomic::AtomicBool;
 use std::sync::{Arc, OnceLock, Weak};

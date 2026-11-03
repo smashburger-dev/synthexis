@@ -14,9 +14,10 @@ pub struct Route {
     /// -1..1; negative depths drive the macro down.
     pub depth: f32,
     pub cond: Chain,
-    /// Whether this route is currently active (test.triangle only while the
-    /// test_signal param is on).
+    /// Whether this route is currently active.
     pub enabled: bool,
+    /// Built-in test route: active only while the test_signal param is on.
+    pub test: bool,
     /// Last conditioned output; a macro's value is the clamped sum of all
     /// enabled routes' last_v*depth (many-to-many fan-in).
     pub last_v: f32,
@@ -30,19 +31,40 @@ impl Route {
             depth,
             cond: Chain::default(),
             enabled: true,
+            test: false,
             last_v: 0.0,
         }
     }
 }
 
-/// Default routing table. `test_signal` gates the triangle route.
+/// Perception test routes on Signal 3..10 (probes/plugin-perception
+/// fl_live.py): (signal id, macro index).
+pub const PERCEPTION_DEFAULTS: &[(&str, usize)] = &[
+    ("cam0.hand.R.openness", 2),
+    ("cam0.hand.L.openness", 3),
+    ("cam0.mouth.open", 4),
+    ("cam0.hand.R.y", 5),
+    ("cam0.hand.R.x", 6),
+    ("cam0.hand.R.pinch", 7),
+    ("cam0.eye.L.open", 8),
+    ("cam0.head.yaw", 9),
+];
+
+/// Default routing table: only built-in test routes, all gated by the
+/// test_signal param. With it off no macro moves, so with Live on FL
+/// records only what a profile, a click or the assistant assigns (Noa's
+/// rule; docs/ux-plugin.md compiles those into this table).
 pub fn default_routes(test_signal_on: bool) -> Vec<Route> {
     let mut routes = vec![
         Route::new(SIG_BRIGHTNESS, 0, 1.0),
         Route::new(SIG_MOTION, 1, 1.0),
         Route::new(SIG_TRIANGLE, 31, 1.0),
     ];
-    routes[2].enabled = test_signal_on;
+    routes.extend(PERCEPTION_DEFAULTS.iter().map(|&(id, m)| Route::new(id, m, 1.0)));
+    for r in &mut routes {
+        r.test = true;
+        r.enabled = test_signal_on;
+    }
     routes
 }
 
@@ -97,8 +119,21 @@ mod tests {
     }
 
     #[test]
-    fn brightness_routes_to_signal_1() {
+    fn no_default_route_moves_a_macro_while_test_signal_is_off() {
         let mut routes = default_routes(false);
+        let mut cur = [0.0f32; NUM_MACROS];
+        let ids = [SIG_BRIGHTNESS, SIG_MOTION, SIG_TRIANGLE].into_iter().chain(PERCEPTION_DEFAULTS.iter().map(|d| d.0));
+        for id in ids {
+            for i in 0..60 {
+                assert!(apply_sample(&mut routes, &mut cur, id, &s(0.8), i as f64 / 30.0).is_empty(), "{id}");
+            }
+        }
+        assert!(cur.iter().all(|&v| v == 0.0));
+    }
+
+    #[test]
+    fn brightness_routes_to_signal_1() {
+        let mut routes = default_routes(true);
         let mut cur = [0.0f32; NUM_MACROS];
         // Feed constant brightness until the one-euro settles.
         for i in 0..90 {
@@ -106,6 +141,14 @@ mod tests {
         }
         assert!((cur[0] - 0.8).abs() < 0.05, "sig1 {}", cur[0]);
         assert!((cur[1] - 0.0).abs() < 0.05);
+    }
+
+    #[test]
+    fn perception_defaults_are_engine_ids() {
+        let ids: Vec<&str> = crate::signal::perception_ids().collect();
+        for (id, _) in PERCEPTION_DEFAULTS {
+            assert!(ids.contains(id), "{id}");
+        }
     }
 
     #[test]

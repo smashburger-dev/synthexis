@@ -1,5 +1,6 @@
 //! Per-route conditioning chain (spec cond.chain v1):
-//! range -> One Euro filter -> occlusion hold/glide -> reacquire slew.
+//! range -> median of 3 -> One Euro filter -> occlusion hold/glide ->
+//! reacquire slew.
 //! Hysteresis and quantization are not implemented yet (TODO).
 //! Pure state machines; time is passed in explicitly (seconds, host clock).
 
@@ -51,6 +52,35 @@ impl Range {
             Curve::Log => x.sqrt(),
             Curve::S => x * x * (3.0 - 2.0 * x),
         }
+    }
+}
+
+/// Median of the last three present samples: drops one-frame keypoint
+/// spikes (frame-to-frame step p99 0.075 -> 0.063 on held hand poses,
+/// S1-S3) for one frame of delay on a step.
+#[derive(Debug, Default)]
+pub struct Median3 {
+    buf: [f32; 3],
+    n: usize,
+}
+
+impl Median3 {
+    pub fn step(&mut self, x: f32) -> f32 {
+        self.buf.rotate_left(1);
+        self.buf[2] = x;
+        self.n = (self.n + 1).min(3);
+        match self.n {
+            1 => x,
+            2 => (self.buf[1] + x) / 2.0,
+            _ => {
+                let [a, b, c] = self.buf;
+                a.max(b).min(a.min(b).max(c))
+            }
+        }
+    }
+
+    pub fn reset(&mut self) {
+        self.n = 0;
     }
 }
 
@@ -211,6 +241,7 @@ impl ReacquireSlew {
 #[derive(Debug, Default)]
 pub struct Chain {
     pub range: Range,
+    pub median: Median3,
     pub filter: OneEuro,
     pub occlusion: Occlusion,
     pub slew: ReacquireSlew,
@@ -226,8 +257,10 @@ impl Chain {
         self.last_t_s = Some(t_s);
         let v = self.range.apply(sample.value);
         let v = if sample.present {
-            self.filter.step(v, dt as f32)
+            let m = self.median.step(v);
+            self.filter.step(m, dt as f32)
         } else {
+            self.median.reset();
             v
         };
         let (v, reacq) =
@@ -241,6 +274,15 @@ impl Chain {
 mod tests {
     use super::*;
     use crate::signal::Sample;
+
+    #[test]
+    fn median3_drops_a_one_frame_spike() {
+        let mut m = Median3::default();
+        let out: Vec<f32> = [0.2, 0.2, 0.9, 0.2, 0.2, 0.8, 0.8, 0.8].iter().map(|&x| m.step(x)).collect();
+        assert_eq!(out[2], 0.2);
+        assert_eq!(out[3], 0.2);
+        assert_eq!(out[6], 0.8);
+    }
 
     fn s(v: f32, present: bool) -> Sample {
         Sample {

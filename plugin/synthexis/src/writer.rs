@@ -17,7 +17,7 @@ use nih_plug::prelude::*;
 use crate::engine::SignalSubscriber;
 use crate::log;
 use crate::route::{apply_sample, default_routes, Route, NUM_MACROS};
-use crate::signal::{Sample, SIG_TRIANGLE};
+use crate::signal::Sample;
 
 const WRITE_EPS: f32 = 1.0 / 1024.0;
 const LOG_EVERY_S: u64 = 5;
@@ -154,10 +154,9 @@ impl SignalSubscriber for Writer {
     fn on_sample(&self, signal_id: &str, sample: &Sample) {
         {
             let mut routes = self.routes.lock();
-            for r in routes.iter_mut() {
-                if r.signal == SIG_TRIANGLE {
-                    r.enabled = self.params.test_signal.value();
-                }
+            let test_on = self.params.test_signal.value();
+            for r in routes.iter_mut().filter(|r| r.test) {
+                r.enabled = test_on;
             }
             let mut current = *self.written.lock();
             let t_s = sample.t_capture_ns as f64 / 1e9;
