@@ -5,9 +5,10 @@ Noa's idea from 2026-11-01: while the user types a mapping sentence, the field c
 ## What it does
 
 - Ghost text after the cursor shows the best item. Tab accepts it. It only appears from 2 typed characters, when the typed text is a prefix of the label or of the glossary phrase that led to it, and when the score is at least 0.8. A fuzzy match ("frq") never shows as ghost text, only in the list.
-- Arrow down opens the top 3 by score; arrows move, Enter or Tab picks, Esc closes. The list opens in 150 ms with a cubic ease-out. Space never accepts.
+- From 2 typed characters, when there are at least two items, a list of up to 8 opens below the field on its own (Noa, 11-03: show lower-scored alternatives too). Its first row is the ghost item. Five rows are visible and the list scrolls, with a thin bar for the position. Arrows move, Tab picks the selected row, Esc closes, arrow down reopens it. Enter picks only after an arrow key; without one Enter sends the sentence, so a finished sentence never turns into a chip. The list opens in 150 ms with a cubic ease-out; the selection and the scroll glide in 80 ms. Space never accepts.
+- At most 3 rows of one kind (a parameter class or a gesture source) come before the other kinds; the rest follow in score order. On Serum 2 "the vol" listed seven send levels before; now it lists Amp and two sends, then Filter Wet and Env Sustain. A top 3 never changes, so the measured ghost and list numbers below still hold for the first three rows.
 - An accepted item becomes a chip: its label goes into the text with a background, and the chip carries an id (`param:<plugin id>#<index>` or `gesture:<source>[/<shape>]`). Typing inside a chip turns it back into text; a backspace into a chip removes the whole chip.
-- Enter with the list closed sends the sentence and its chips to the parser worker. The log shows the parser's frame and the pinned frame.
+- Enter with no row chosen by an arrow key sends the sentence and its chips to the parser worker. The log shows the parser's frame and the pinned frame.
 - Settings > "Completion in the sentence field" switches it off; the choice is saved with the plugin state, as is the picked plugin.
 
 Two kinds of items:
@@ -54,7 +55,7 @@ Checked with the shipped v9 ensemble on four synthetic sentences (`plugin/parser
 
 - `plugin/complete`: 32 tests on synthetic vocabularies and sentences (never the real sets in `data/mapping/eval/`): fuzzy score, prefix index, query spans, gesture positions, switching words, ranking, recent picks, chip text edits, latency.
 - `plugin/parser/src/pin.rs`: 18 tests on hand-built frames (fan-out, fan-in, fold, side kept).
-- `plugin/synthexis/src/sentence.rs`: 5 headless egui tests that send key events through the field: Tab accepts and keeps the focus, arrows and Enter pick from the list, Esc dismisses, space never accepts, Tab with nothing to accept inserts nothing, chips become pins.
+- `plugin/synthexis/src/sentence.rs`: 7 headless egui tests that send key events through the field: Tab accepts and keeps the focus, arrows and Enter pick from the list, the list opens while typing and Enter without an arrow key still sends, the list scrolls past five rows, Esc dismisses, space never accepts, Tab with nothing to accept inserts nothing, chips become pins.
 - Checked by hand in the standalone build: plugin picker, ghost text, the list, chips. Esc and the second Tab fix were checked only by the headless tests: the window sat on another Space for the second round.
 
 ## Open

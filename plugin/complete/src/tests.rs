@@ -74,6 +74,17 @@ fn cut_offers_filter_freq() {
 }
 
 #[test]
+fn three_rows_per_kind_then_other_kinds() {
+    let mut e = engine();
+    let filters = (0..6).map(|i| p(i, &format!("Filter {i} Freq"), "filter.cutoff"));
+    e.set_plugin("Synth/Test", filters.chain([p(9, "Filter Drive", "fx.drive")]).collect());
+    let s = e.complete("the fil", 7, 0, 5);
+    assert!(s[..3].iter().all(|s| kind(&s.chip) == "filter.cutoff"));
+    assert_eq!(s[3].chip.label(), "Filter Drive");
+    assert_eq!(s[4].chip.label(), "Filter 3 Freq");
+}
+
+#[test]
 fn german_phrase_over_two_words() {
     let e = engine();
     let t = "mit der Faust Filter auf";

@@ -35,7 +35,7 @@ fn main() {
                 continue;
             }
             let t = Instant::now();
-            let s = e.complete(text, end, 0, 3);
+            let s = e.complete(text, end, 0, 8);
             ms.push(t.elapsed().as_secs_f64() * 1e3);
             if end == text.len() {
                 println!("{text:?}");

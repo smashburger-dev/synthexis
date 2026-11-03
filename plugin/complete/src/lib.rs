@@ -340,9 +340,38 @@ impl Engine {
                 .then_with(|| a.chip.label().cmp(b.chip.label()))
                 .then_with(|| a.chip.id().cmp(&b.chip.id()))
         });
+        contrast(&mut out);
         out.truncate(k);
         out
     }
+}
+
+/// What a list row offers: a gesture source, or a parameter class.
+fn kind(c: &Chip) -> &str {
+    match c {
+        Chip::Param { class, .. } => class,
+        Chip::Gesture { source, .. } => source,
+    }
+}
+
+/// At most this many rows of one kind before the other kinds get a row.
+const PER_KIND: usize = 3;
+
+/// Moves rows past the third of one kind (seven send levels for "vol")
+/// behind the other kinds, so a long list also holds the readings the user
+/// may have meant. The order within a kind stays; a top 3 never changes.
+fn contrast(out: &mut Vec<Suggestion>) {
+    if out.len() <= PER_KIND {
+        return;
+    }
+    let mut count: HashMap<String, usize> = HashMap::new();
+    let (front, back): (Vec<Suggestion>, Vec<Suggestion>) = std::mem::take(out).into_iter().partition(|s| {
+        let n = count.entry(kind(&s.chip).to_string()).or_default();
+        *n += 1;
+        *n <= PER_KIND
+    });
+    *out = front;
+    out.extend(back);
 }
 
 fn param_index(c: &Chip) -> u32 {
