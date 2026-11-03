@@ -1,0 +1,65 @@
+{
+ "seg": {
+  "run": "seg-a-s0",
+  "epoch": 14,
+  "gate_passed": false,
+  "package": "seg.mlpackage",
+  "export_check": {
+   "argmax_agreement": 0.999951774691358
+  },
+  "note": "seg-v3l (data/models/archive/seg-v3l.mlpackage) was shipped 2026-11-03 10:15 and rolled back: better S4 IoU but in the plugin S4 bench it adds small spurious hand blobs (one-hand frames with a 2nd candidate 505 vs 148), finger accuracy 0.925 -> 0.887, finger count MAE 0.14 -> 0.30",
+  "seg_v3l": {
+   "s4_sequential_own_prev": {
+    "person": 0.792,
+    "face": 0.8302,
+    "hand": 0.8133,
+    "eye": 0.1628,
+    "mouth": 0.6446,
+    "hand_frame_recall": 0.9909
+   },
+   "s4_zero_prev": {
+    "person": 0.8038,
+    "face": 0.8298,
+    "hand": 0.8084
+   },
+   "ane_p95_ms": 0.862
+  },
+  "pick": "seg-a-s0 over seg-v3l on dev only (2026-11-03): plugin end-to-end present x finger 0.938 vs 0.920 on 14 block A dev segments; see probes/train-students/RESULT.md \"Seg pick on dev\""
+ },
+ "hand": {
+  "run": "hand-chir",
+  "epoch": 14,
+  "gate_passed": false,
+  "package": "hand.mlpackage",
+  "backbone": "mobilenetv3_small_100",
+  "outputs": "keypoints 1x21x2 (42 values), finger logits 1x5, handedness logit 1x1 (> 0 = person's right hand); pick by element count",
+  "finger_logits": "dev-calibrated thresholds folded in: extended = logit > 0",
+  "folded_thresholds": [
+   0.94,
+   0.94,
+   0.87,
+   0.65,
+   0.83
+  ],
+  "s4": {
+   "state_accuracy": 0.8899,
+   "handedness_accuracy": 0.9408,
+   "handedness_block_a_one_hand": 0.9818,
+   "kp_px_mean": 9.09
+  },
+  "export_check": {
+   "max_abs_diff_chirality": 0.028501033782958984,
+   "max_abs_diff_fingers": 0.10120916366577148,
+   "max_abs_diff_keypoints": 0.0057239532470703125
+  }
+ },
+ "face": {
+  "run": "face-a-s1",
+  "epoch": 19,
+  "gate_passed": false,
+  "package": "face.mlpackage",
+  "export_check": {
+   "argmax_agreement": 0.9991455078125
+  }
+ }
+}

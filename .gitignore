@@ -9,8 +9,12 @@ recordings/
 *.mov
 *.mp4
 
-# Model artifacts are published as release assets, not in git
+# Model artifacts stay out of git, except the three shipped perception
+# students (9 MB, no training data inside), so a clone runs the plugin
 *.mlpackage/
+!plugin/models/*.mlpackage/
+# macOS matches data/ above case-blind against the package folder Data/
+!plugin/models/*.mlpackage/Data/
 *.mlmodelc/
 *.onnx
 *.pt
