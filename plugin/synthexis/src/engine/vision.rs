@@ -14,7 +14,7 @@ use objc2_core_foundation::{CGPoint, CGRect, CGSize};
 use objc2_foundation::{NSArray, NSDictionary};
 use objc2_vision::*;
 
-use super::coreml::Frame;
+use super::coreml::{Frame, PixelBuf};
 use super::geom::*;
 use super::perception::{Backend, Percept};
 use crate::log::log;
@@ -86,34 +86,51 @@ fn hand_points(obs: &VNHumanHandPoseObservation, w: f32, h: f32) -> Option<([[f3
     (good >= 15).then_some((kp, conf_sum / 21.0))
 }
 
-fn region(r: Option<Retained<VNFaceLandmarkRegion2D>>, w: f32, h: f32) -> Option<Vec<[f32; 2]>> {
-    let r = r?;
-    unsafe {
-        let n = r.pointCount();
-        let pts = r.pointsInImageOfSize(CGSize { width: w as f64, height: h as f64 });
-        let pts = std::slice::from_raw_parts(pts.as_ptr(), n);
-        Some(pts.iter().map(|p| [p.x as f32, h - p.y as f32]).collect())
+/// Image the observation was made on (w, h) and where it sits in the
+/// camera frame: frame = (x0, y0) + image * k.
+#[derive(Clone, Copy)]
+struct Place {
+    w: f32,
+    h: f32,
+    x0: f32,
+    y0: f32,
+    k: f32,
+}
+
+impl Place {
+    fn frame(w: f32, h: f32) -> Self {
+        Self { w, h, x0: 0.0, y0: 0.0, k: 1.0 }
+    }
+
+    fn map(&self, x: f32, y: f32) -> [f32; 2] {
+        [self.x0 + x * self.k, self.y0 + y * self.k]
     }
 }
 
-fn face(obs: &VNFaceObservation, w: f32, h: f32) -> Option<(FaceFeatures, f32)> {
+fn region(r: Option<Retained<VNFaceLandmarkRegion2D>>, at: Place) -> Option<Vec<[f32; 2]>> {
+    let r = r?;
+    unsafe {
+        let n = r.pointCount();
+        let pts = r.pointsInImageOfSize(CGSize { width: at.w as f64, height: at.h as f64 });
+        let pts = std::slice::from_raw_parts(pts.as_ptr(), n);
+        Some(pts.iter().map(|p| at.map(p.x as f32, at.h - p.y as f32)).collect())
+    }
+}
+
+fn face(obs: &VNFaceObservation, at: Place) -> Option<(FaceFeatures, f32)> {
     unsafe {
         let bb = obs.boundingBox();
-        let fbox = [
-            bb.origin.x as f32 * w,
-            (1.0 - (bb.origin.y + bb.size.height) as f32) * h,
-            bb.size.width as f32 * w,
-            bb.size.height as f32 * h,
-        ];
+        let tl = at.map(bb.origin.x as f32 * at.w, (1.0 - (bb.origin.y + bb.size.height) as f32) * at.h);
+        let fbox = [tl[0], tl[1], bb.size.width as f32 * at.w * at.k, bb.size.height as f32 * at.h * at.k];
         let lm = obs.landmarks()?;
-        let eyes: Vec<Shape> = [region(lm.leftEye(), w, h), region(lm.rightEye(), w, h)]
+        let eyes: Vec<Shape> = [region(lm.leftEye(), at), region(lm.rightEye(), at)]
             .into_iter()
             .flatten()
             .filter_map(|p| Shape::from_outline(&p))
             .collect();
-        let mouth = region(lm.innerLips(), w, h).and_then(|p| Shape::from_outline(&p));
+        let mouth = region(lm.innerLips(), at).and_then(|p| Shape::from_outline(&p));
         let mut f = face_features(fbox, &eyes, mouth, CAL_LANDMARKS);
-        if let Some(lift) = region(lm.outerLips(), w, h).and_then(|p| lip_corner_lift(&p)) {
+        if let Some(lift) = region(lm.outerLips(), at).and_then(|p| lip_corner_lift(&p)) {
             f.raw[3] = lift;
             f.smile = (lift - SMILE_LIFT.0) / (SMILE_LIFT.1 - SMILE_LIFT.0);
             f.smile = f.smile.clamp(0.0, 1.0);
@@ -136,35 +153,62 @@ fn face(obs: &VNFaceObservation, w: f32, h: f32) -> Option<(FaceFeatures, f32)> 
 /// Face landmarks only, on the seg student's face box: skips Vision's own
 /// face detection. The `hybrid` backend uses it for the face because the
 /// face student's eye and mouth masks do not separate open from closed.
+/// Where a face crop for the landmarks came from: the crop square in frame
+/// pixels and the seed box inside it (normalised, origin top-left).
+#[derive(Clone, Copy)]
+pub struct Seed {
+    x0: f32,
+    y0: f32,
+    side: f32,
+    rect: [f32; 4],
+}
+
+/// Side of the square face crop handed to Vision, and its padding around
+/// the seg face box.
+pub const LM_CROP: usize = 256;
+const LM_PAD: f32 = 1.4;
+
+/// Crops the face around `fbox` (frame px, x y w h) into `buf`
+/// (`LM_CROP` square).
+pub fn face_crop(src: &Bgra, fbox: [f32; 4], buf: &PixelBuf) -> Seed {
+    let (x0, y0, side) = square(fbox[0], fbox[1], fbox[2], fbox[3], LM_PAD);
+    buf.write(|d, ds| super::vimage::crop_square(src, x0, y0, side, d, ds, LM_CROP));
+    Seed { x0, y0, side, rect: [(fbox[0] - x0) / side, (fbox[1] - y0) / side, fbox[2] / side, fbox[3] / side] }
+}
+
+/// Face landmarks only, on a face crop seeded with the seg face box, so
+/// Vision skips its own face detection. The `hybrid` backend uses it for
+/// the face because the face student's eye and mouth masks do not
+/// separate open from closed.
 pub struct FaceLandmarks {
     req: Retained<VNDetectFaceLandmarksRequest>,
+    adapt: FaceAdapt,
     errors: u64,
 }
 
 impl FaceLandmarks {
     pub fn new() -> Self {
-        Self { req: unsafe { VNDetectFaceLandmarksRequest::new() }, errors: 0 }
+        Self { req: unsafe { VNDetectFaceLandmarksRequest::new() }, adapt: FaceAdapt::default(), errors: 0 }
     }
 
-    /// `bb`: face box in normalised image coordinates, origin top-left
-    /// (x, y, w, h).
-    pub fn run(&mut self, frame: &Frame, bb: [f32; 4]) -> Option<(FaceFeatures, f32)> {
-        let (w, h) = frame.read(|_, _, w, h| (w as f32, h as f32))?;
+    pub fn run(&mut self, buf: &PixelBuf, seed: &Seed, t_ns: u64, hand_on_face: bool) -> Option<(FaceFeatures, f32)> {
+        let n = LM_CROP as f32;
+        let [fx, fy, fw, fh] = seed.rect;
         unsafe {
             let rect = CGRect {
-                origin: CGPoint { x: bb[0] as f64, y: (1.0 - bb[1] - bb[3]) as f64 },
-                size: CGSize { width: bb[2] as f64, height: bb[3] as f64 },
+                origin: CGPoint { x: fx as f64, y: (1.0 - fy - fh) as f64 },
+                size: CGSize { width: fw as f64, height: fh as f64 },
             };
-            let seed = VNFaceObservation::faceObservationWithRequestRevision_boundingBox_roll_yaw(
+            let obs = VNFaceObservation::faceObservationWithRequestRevision_boundingBox_roll_yaw(
                 VNDetectFaceRectanglesRequestRevision3,
                 rect,
                 None,
                 None,
             );
-            self.req.setInputFaceObservations(Some(&NSArray::from_retained_slice(&[seed])));
+            self.req.setInputFaceObservations(Some(&NSArray::from_retained_slice(&[obs])));
             let handler = VNImageRequestHandler::initWithCVPixelBuffer_options(
                 VNImageRequestHandler::alloc(),
-                frame.pixel_buffer(),
+                buf.pixel_buffer(),
                 &NSDictionary::new(),
             );
             let reqs: [&VNRequest; 1] = [&self.req];
@@ -176,7 +220,34 @@ impl FaceLandmarks {
                 return None;
             }
             let obs = self.req.results()?.firstObject()?;
-            face(&obs, w, h)
+            let mut f = face(&obs, Place { w: n, h: n, x0: seed.x0, y0: seed.y0, k: seed.side / n })?;
+            if let Some(lm) = obs.landmarks() {
+                let crop = Place::frame(n, n);
+                let mut eyes: Vec<Vec<[f32; 2]>> = [region(lm.leftEye(), crop), region(lm.rightEye(), crop)].into_iter().flatten().collect();
+                // Image-left eye first: the person's right.
+                eyes.sort_by(|a, b| a[0][0].total_cmp(&b[0][0]));
+                if eyes.len() == 2 {
+                    let px = buf.read(|data, stride, w, h| {
+                        let img = Bgra { data, stride, w, h };
+                        [eye_pixels(&img, &eyes[1]), eye_pixels(&img, &eyes[0])]
+                    });
+                    if let Some([Some(l), Some(r)]) = px {
+                        f.0.eye_px = [l, r];
+                    }
+                    let centre = |p: &[[f32; 2]]| {
+                        let n = p.len().max(1) as f32;
+                        [p.iter().map(|q| q[0]).sum::<f32>() / n, p.iter().map(|q| q[1]).sum::<f32>() / n]
+                    };
+                    let (a, b) = (centre(&eyes[0]), centre(&eyes[1]));
+                    let eye_d = ((a[0] - b[0]).powi(2) + (a[1] - b[1]).powi(2)).sqrt().max(1.0);
+                    if let Some(outer) = region(lm.outerLips(), crop) {
+                        let (lo, hi) = outer.iter().fold((f32::MAX, f32::MIN), |(lo, hi), q| (lo.min(q[0]), hi.max(q[0])));
+                        f.0.mouth_px = [(hi - lo) / eye_d, lip_corner_lift(&outer).unwrap_or(0.0)];
+                    }
+                }
+            }
+            self.adapt.apply(&mut f.0, t_ns, hand_on_face);
+            Some(f)
         }
     }
 }
@@ -209,7 +280,7 @@ impl Backend for VisionBackend {
         let mut p = Percept::default();
         let faces = unsafe { self.faces.results() };
         if let Some(obs) = faces.as_ref().and_then(|a| a.firstObject()) {
-            p.face = face(&obs, w, h);
+            p.face = face(&obs, Place::frame(w, h));
         }
         let face_cx = faces
             .as_ref()

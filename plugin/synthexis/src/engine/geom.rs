@@ -7,6 +7,7 @@
 //! person's right. Every `x` feature is from the user's view (0 = the
 //! user's left), which is `1 - x_image`.
 
+use std::collections::VecDeque;
 use std::f32::consts::PI;
 
 pub const SEG_W: usize = 384;
@@ -534,12 +535,144 @@ pub struct FaceFeatures {
     /// Which parts were seen: eyes [L, R], mouth.
     pub seen_eye: [bool; 2],
     pub seen_mouth: bool,
+    /// Pixel cues inside each eye outline [L, R] (`eye_pixels`).
+    pub eye_px: [[f32; 3]; 2],
+    /// Mouth cues: outer-lip width / eye distance, corner lift.
+    pub mouth_px: [f32; 2],
 }
 
 impl FaceFeatures {
     pub fn values(&self) -> [f32; 9] {
         let e = self.eye_open;
         [self.mouth_open, self.smile, e[0], e[1], 1.0 - e[0], 1.0 - e[1], self.yaw, self.pitch, self.roll]
+    }
+}
+
+/// Luma cues inside an eye outline's box (grown to at least half its
+/// width in height, since a closed eye's outline is flat): spread
+/// (p90 - p10) / 255, share of pixels darker than half the box median,
+/// and the darkest decile / median. An open eye shows dark iris against
+/// sclera and skin; a closed lid is skin with a lash line.
+pub fn eye_pixels(img: &Bgra, outline: &[[f32; 2]]) -> Option<[f32; 3]> {
+    let (mut x0, mut y0, mut x1, mut y1) = (f32::MAX, f32::MAX, f32::MIN, f32::MIN);
+    for p in outline {
+        x0 = x0.min(p[0]);
+        y0 = y0.min(p[1]);
+        x1 = x1.max(p[0]);
+        y1 = y1.max(p[1]);
+    }
+    let (cy, half) = ((y0 + y1) / 2.0, ((y1 - y0) / 2.0).max((x1 - x0) / 4.0));
+    let xa = x0.max(0.0) as usize;
+    let xb = (x1.ceil().max(0.0) as usize).min(img.w);
+    let ya = (cy - half).max(0.0) as usize;
+    let yb = ((cy + half).ceil().max(0.0) as usize).min(img.h);
+    if xb <= xa + 2 || yb <= ya + 2 {
+        return None;
+    }
+    let mut luma: Vec<u8> = Vec::with_capacity((xb - xa) * (yb - ya));
+    for y in ya..yb {
+        let row = &img.data[y * img.stride..];
+        for x in xa..xb {
+            let px = &row[x * 4..x * 4 + 3];
+            luma.push(((29 * px[0] as u32 + 150 * px[1] as u32 + 77 * px[2] as u32) >> 8) as u8);
+        }
+    }
+    luma.sort_unstable();
+    let q = |f: f32| luma[((luma.len() - 1) as f32 * f) as usize] as f32;
+    let med = q(0.5).max(1.0);
+    let dark = luma.iter().filter(|&&v| (v as f32) < 0.5 * med).count() as f32 / luma.len() as f32;
+    Some([(q(0.9) - q(0.1)) / 255.0, dark, q(0.1) / med])
+}
+
+/// Quantile of the values pushed during the last `win_ns`.
+#[derive(Debug)]
+pub struct RollingQuantile {
+    win_ns: u64,
+    q: f32,
+    buf: VecDeque<(u64, f32)>,
+    scratch: Vec<f32>,
+}
+
+impl RollingQuantile {
+    pub fn new(win_s: f32, q: f32) -> Self {
+        Self { win_ns: (win_s * 1e9) as u64, q, buf: VecDeque::new(), scratch: Vec::new() }
+    }
+
+    /// Adds `v` at `t_ns` and returns the window's quantile.
+    pub fn push(&mut self, t_ns: u64, v: f32) -> f32 {
+        self.buf.push_back((t_ns, v));
+        while self.buf.front().is_some_and(|f| t_ns.saturating_sub(f.0) > self.win_ns) {
+            self.buf.pop_front();
+        }
+        self.scratch.clear();
+        self.scratch.extend(self.buf.iter().map(|b| b.1));
+        let k = ((self.scratch.len() - 1) as f32 * self.q) as usize;
+        let (_, kth, _) = self.scratch.select_nth_unstable_by(k, |a, b| a.total_cmp(b));
+        *kth
+    }
+}
+
+/// Eye geometry range (outline minor/major) for closed..open.
+const EYE_GEO: (f32, f32) = (0.08, 0.2);
+/// Gain of the pixel difference between the eyes, and the mean geometry
+/// below which it may no longer open an eye (both eyes shut).
+const EYE_PX_GAIN: f32 = 8.0;
+const EYE_PX_GATE: f32 = 0.2;
+/// Mouth width over its running median for smile 0 and 1.
+const SMILE_WIDTH: (f32, f32) = (1.05, 1.2);
+
+/// Per-person face calibration of the `hybrid` backend, fitted on S1 to S3
+/// block C (probes/plugin-perception). Eyes: the landmark outline gives
+/// how open both eyes are together, the pixels inside each outline say
+/// which one is more closed. Vision's landmarks move both outlines in a
+/// wink; the pixel spread does not. Each eye's spread is taken against its
+/// own open level (low decile of the closure over 10 s), which also
+/// absorbs glasses and lighting. Smile: mouth width over its 20 s median.
+#[derive(Debug)]
+pub struct FaceAdapt {
+    closure_open: [RollingQuantile; 2],
+    mouth_width: RollingQuantile,
+}
+
+impl Default for FaceAdapt {
+    fn default() -> Self {
+        Self {
+            closure_open: [RollingQuantile::new(10.0, 0.1), RollingQuantile::new(10.0, 0.1)],
+            mouth_width: RollingQuantile::new(20.0, 0.5),
+        }
+    }
+}
+
+impl FaceAdapt {
+    /// `hand_on_face`: a hand blob overlaps the face box; its skin and
+    /// shadow then reach the eye boxes, so the eyes fall back to the
+    /// outline and the open levels are left alone.
+    pub fn apply(&mut self, f: &mut FaceFeatures, t_ns: u64, hand_on_face: bool) {
+        if hand_on_face {
+            for e in 0..2 {
+                if f.seen_eye[e] {
+                    f.eye_open[e] = lin(f.raw[e], EYE_GEO.0, EYE_GEO.1);
+                }
+            }
+        } else if f.seen_eye[0] && f.seen_eye[1] && f.eye_px[0][0] > 0.0 && f.eye_px[1][0] > 0.0 {
+            let g = [lin(f.raw[0], EYE_GEO.0, EYE_GEO.1), lin(f.raw[1], EYE_GEO.0, EYE_GEO.1)];
+            let mut p = [0f32; 2];
+            for (e, pe) in p.iter_mut().enumerate() {
+                let closure = -f.eye_px[e][0];
+                *pe = closure - self.closure_open[e].push(t_ns, closure);
+            }
+            // > 0: this eye looks more open than the other.
+            let d = [p[1] - p[0], p[0] - p[1]];
+            let gate = ((g[0] + g[1]) / 2.0 / EYE_PX_GATE).min(1.0);
+            for e in 0..2 {
+                let shift = if d[e] < 0.0 { EYE_PX_GAIN * d[e] } else { EYE_PX_GAIN * d[e] * gate };
+                f.eye_open[e] = (g[e] + shift).clamp(0.0, 1.0);
+            }
+        }
+        if f.mouth_px[0] > 0.0 {
+            let median = self.mouth_width.push(t_ns, f.mouth_px[0]).max(1e-3);
+            f.smile = lin(f.mouth_px[0] / median, SMILE_WIDTH.0, SMILE_WIDTH.1);
+        }
     }
 }
 
@@ -808,6 +941,11 @@ impl SideTracker {
     }
 }
 
+/// Whether two blobs' bounding boxes overlap.
+pub fn boxes_overlap(a: &Blob, b: &Blob) -> bool {
+    a.x0 <= b.x1 && b.x0 <= a.x1 && a.y0 <= b.y1 && b.y0 <= a.y1
+}
+
 /// Square crop box (x0, y0, side) around a box (x0, y0, w, h) in frame px.
 pub fn square(x0: f32, y0: f32, w: f32, h: f32, pad: f32) -> (f32, f32, f32) {
     let side = pad * w.max(h);
@@ -1002,6 +1140,66 @@ mod tests {
         );
         // After the track expires a new hand starts from its own evidence.
         assert_eq!(t.assign(&[([640.0, 330.0], 0.6)], face, 1280.0, 2_000_000_000), vec![Side::L]);
+    }
+
+    #[test]
+    fn face_adapt_splits_a_wink_by_pixels() {
+        let mut a = FaceAdapt::default();
+        let open = |f: &mut FaceFeatures| {
+            f.seen_eye = [true, true];
+            f.raw = [0.3, 0.3, 0.05, 0.0];
+            f.eye_px = [[0.4, 0.1, 0.4], [0.4, 0.1, 0.4]];
+            f.mouth_px = [0.8, 0.0];
+        };
+        // Two seconds of open eyes set the open levels and the mouth width.
+        for k in 0..60u64 {
+            let mut f = FaceFeatures::default();
+            open(&mut f);
+            a.apply(&mut f, k * 33_000_000, false);
+            assert!(f.eye_open[0] > 0.99 && f.eye_open[1] > 0.99 && f.smile < 0.01);
+        }
+        // Wink L: both outlines half shut, only the left eye loses spread.
+        let mut f = FaceFeatures::default();
+        open(&mut f);
+        f.raw = [0.14, 0.14, 0.05, 0.0];
+        f.eye_px[0][0] = 0.25;
+        f.mouth_px = [0.96, 0.0];
+        a.apply(&mut f, 61 * 33_000_000, false);
+        assert!(f.eye_open[0] < 0.1 && f.eye_open[1] > 0.9, "{:?}", f.eye_open);
+        assert!(f.smile > 0.9, "{}", f.smile);
+        // Both shut: the pixel difference may not reopen an eye.
+        let mut f = FaceFeatures::default();
+        open(&mut f);
+        f.raw = [0.06, 0.06, 0.05, 0.0];
+        f.eye_px[0][0] = 0.3;
+        a.apply(&mut f, 62 * 33_000_000, false);
+        assert!(f.eye_open[0] < 0.01 && f.eye_open[1] < 0.01, "{:?}", f.eye_open);
+        // A hand on the face: outline only, even with lopsided pixels.
+        let mut f = FaceFeatures::default();
+        open(&mut f);
+        f.eye_px[1][0] = 0.1;
+        a.apply(&mut f, 63 * 33_000_000, true);
+        assert!(f.eye_open[0] > 0.99 && f.eye_open[1] > 0.99, "{:?}", f.eye_open);
+    }
+
+    #[test]
+    fn blob_overlap_of_boxes() {
+        let mut mask = vec![0u8; 40 * 20];
+        for y in 2..8 {
+            for x in 2..8 {
+                mask[y * 40 + x] = 1;
+            }
+            for x in 6..12 {
+                mask[(y + 4) * 40 + x] = 2;
+            }
+            for x in 30..35 {
+                mask[y * 40 + x] = 2;
+            }
+        }
+        let mut labels = Vec::new();
+        let a = components(&mask, 40, 20, |c| c == 1, &mut labels).remove(0);
+        let bs = components(&mask, 40, 20, |c| c == 2, &mut labels);
+        assert!(boxes_overlap(&a, &bs[0]) != boxes_overlap(&a, &bs[1]));
     }
 
     #[test]

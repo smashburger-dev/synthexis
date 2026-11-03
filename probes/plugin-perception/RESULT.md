@@ -8,7 +8,7 @@ The plugin's engine now runs perception on its own thread and emits the `feat.*`
 
 Runtime use of Vision is allowed (`probes/licence-check`); nothing trains on it. The trained students come from `probes/train-students` (branch `claude/train-students-1137e2`: seg-a-s0, face-a-s1, and hand-final with the finger thresholds folded into the logits).
 
-On S4, the held-out session, `hybrid` takes 9.7 / 11.3 ms per frame against 21 to 31 / 29 to 39 ms for `vision` offline and 40 to 58 ms median in FL. Hands land on the labelled side in 97.1% of block A frames (Vision 99.0%), the face values separate as well as Vision's or better. It misses the 5 ms frame budget: the landmarks alone take 6.7 / 7.8 ms. `students` meets the budget, but its face student does not separate open from closed eyes.
+On S4, the held-out session, `hybrid` emits hands after 2.9 / 4.2 ms (median / p95) and the face after 8.0 ms median, against 21 to 31 ms for `vision` offline and 40 to 58 ms median in FL. Hands land on the labelled side in 97.1% of block A frames (Vision 99.0%). The landmarks run on their own thread beside the hands; they take about 6 ms on any device Vision offers. `students` alone is faster, but its face student does not separate open from closed eyes.
 
 ## Commands
 
@@ -89,24 +89,59 @@ On S4 with `SideTracker`: finger accuracy 0.935 (Vision 0.962), finger count err
 
 ## Face: hybrid (2026-11-03)
 
-The face student cannot be recalibrated into a usable eye signal. Its raw eye ratio is 0.50 to 0.65 neutral and 0.41 to 0.50 closed on S1 to S3, overlapping between sessions, and it finds no eyes with glasses (S2). The mouth separates (0.53 to 0.58 neutral, 0.68 to 0.90 wide) but not with one calibration for all sessions.
+The face student cannot be recalibrated into a usable eye signal. Its raw eye ratio is 0.50 to 0.65 neutral and 0.41 to 0.50 closed on S1 to S3, overlapping between sessions, and it finds no eyes with glasses (S2).
 
-`hybrid` seeds `VNDetectFaceLandmarksRequest` with a `VNFaceObservation` built from the seg face blob's box, so Vision computes landmarks without its face detector. The landmarks go through the same `face()` geometry and `CAL_LANDMARKS` as the `vision` backend; head angles come from the landmark geometry, because a seeded observation carries no Vision yaw or roll.
+`hybrid` takes the face box from the seg student, crops a 256 px square around it (1.4x) and runs `VNDetectFaceLandmarksRequest` seeded with that box, so Vision skips its face detector. The landmarks go through the `face()` geometry of the `vision` backend; head angles come from the landmark geometry, because a seeded observation carries no Vision yaw or roll.
 
-| S4 block C (segment means; p5 to p95 span for angles) | `hybrid` | `vision` | face student |
+### Latency
+
+The landmarks cost about 6 ms whatever we try: on the full 1280x720 frame 6.7 ms median, on the 256 px crop 6.0 ms; revisions 1 and 2 take 7.5 ms; GPU 11.6 ms, CPU 10.7 ms, Neural Engine (Vision's default) 6.1 ms (S1 block C, 1,800 frames each). Training our own landmark model on Vision output is ruled out (`probes/licence-check`).
+
+So the landmarks run on their own thread (`LandmarkWorker`, `perception.rs`). After the seg mask the perception thread crops the face and hands it over, runs the hand crops and hand model meanwhile, and emits hands, hand distance and object at once (`Emitter::emit_body`). The face follows when the worker returns (`emit_face`), with the same capture timestamp.
+
+| per frame, median / p95 ms | hands and object out (`early`) | face out (`frame`) |
+|---|---:|---:|
+| S1 block C, 3,600 frames, load 4 to 5 | 2.22 / 3.10, 2.51 / 2.99 | 7.84 / 16.81, 8.15 / 9.20 |
+| S1 block A, 1,800 frames | 3.59 / 4.06 | 8.14 / 9.21 |
+| S4, 7,977 frames, load 8 to 12 | 2.91 / 4.17 | 7.98 / 16.22 |
+
+Hands now meet the 5 ms frame budget again; the face takes about 8 ms. The p95 of the face swings between 9 and 17 ms with the machine load.
+
+### Values: per-person calibration (`FaceAdapt`, `geom.rs`)
+
+Fitted on S1 to S3 block C, leave-one-session-out, with a 60 s lead-in before block C so the running references start the way they do live.
+
+- Eyes. The outline ratio (minor / major) says how open both eyes are together; Vision's landmarks move both outlines in a wink (S1 wink_L: 0.133 / 0.172, S2: 0.218 / 0.218). The pixels do not: the luma spread inside each eye box (p90 - p10) drops when the lid closes. Each eye's closure (minus spread) is taken against its own open level, the 10th percentile over 10 s, which absorbs glasses and uneven light. The difference between the two eyes, times 8, shifts the more closed eye down and the other up; the upward shift fades when the mean outline says both eyes are shut (gate 0.2). Outline range 0.08 to 0.2. Other pixel cues were weaker (share of dark pixels, darkest decile / median); a linear fit of all cues did no better than the static calibration.
+- Hand on the face. A hand box that overlaps the face box shades the eye boxes. The eyes then fall back to the outline and the open levels stay frozen.
+- Smile. Mouth width over eye distance, against its own 20 s median: 1.05 to 1.2 maps to 0 to 1. The old lip-corner lift moved more with an open mouth than with a smile. Mouth open stays on the inner-lip ratio (0.06 to 0.5).
+
+| eye error (mean abs, neutral / closed / both winks), S1 / S2 / S3 | |
+|---|---|
+| static outline calibration (before) | 0.194 / 0.377 / 0.202 |
+| `FaceAdapt` | **0.119 / 0.277 / 0.028** |
+
+| segment means, eye L / R | S1 | S2 (glasses) | S3 |
 |---|---|---|---|
-| mouth.open neutral / wide | 0.003 / 0.999 | 0.003 / 1.0 | 0.48 / 0.89 |
-| eye.L.open neutral / closed | 0.994 / 0.018 | 0.80 / 0.00 | 0.94 / 0.76 |
-| eye.L / eye.R in wink_L | 0.097 / 0.284 | 0.001 / 0.044 | |
-| eye.L / eye.R in wink_R | 0.241 / 0.138 | 0.033 / 0.006 | |
-| face.smile neutral / smile | 0.0 / 0.67 | -0.017 raw / +0.022 raw | 0.0 / 0.37 |
-| head.yaw span, yaw sweep / neutral | 1.0 / 0.18 | 1.0 / 0.0 | 0.59 / 0.19 |
-| head.pitch span, pitch sweep / neutral | 0.77 / 0.23 | 0.53 / 0.06 | 0.26 / 0.38 |
-| head.roll span, roll sweep / neutral | 1.0 / 0.04 | 1.0 / 0.0 | 0.31 / 0.09 |
+| neutral | 0.94 / 0.99 | 0.76 / 0.91 | 0.95 / 0.91 |
+| eyes closed | 0.03 / 0.03 | 0.23 / 0.87 | 0.00 / 0.02 |
+| wink L | 0.19 / 0.91 | 0.57 / 0.86 | 0.00 / 0.98 |
+| wink R | 0.91 / 0.46 | 1.00 / 0.09 | 0.96 / 0.00 |
+| smile (neutral / smile / mouth wide) | 0.00 / 0.72 / 0.00 | 0.02 / 1.00 / 0.63 | 0.15 / 0.62 / 0.00 |
 
-`CAL_LANDMARKS` and `SMILE_LIFT` were calibrated on S4 with the `vision` backend, so these face numbers are in-sample for the calibration. In a wink the closed eye drops further than the open one but both fall, as with `vision`.
+S2 with glasses stays the weak case: closed eyes keep a high outline ratio behind the frames.
 
-Per frame on S4 (7,977 frames, load average 5 to 8): `hybrid` 9.66 / 11.30 ms, of which landmarks 6.71 / 7.79, seg 1.29 / 1.51, hands 0.90 / 1.98. `students` with `SideTracker` 3.22 / 5.76 ms at load 6 to 10. Running the landmarks on a second thread beside the hand crops would save about 1 ms; it is not done.
+S4. The first S4 run of `FaceAdapt` read the right eye as half shut in neutral (0.26). A hand blob overlaps the face in most of S4's block C (81% of neutral frames, 93 to 100% of the eye segments), which S1 to S3 do not have. That run led to the hand-on-face rule, so the S4 face numbers below are no longer held out.
+
+| S4 block C | before (static) | `FaceAdapt` without hand rule | with hand rule (installed) |
+|---|---|---|---|
+| eye error | 0.220 | 0.204 | 0.211 |
+| eye L / R neutral | 0.99 / 1.00 | 1.00 / 0.26 | 1.00 / 0.85 |
+| wink L | 0.07 / 0.25 | 0.00 / 0.91 | 0.12 / 0.42 |
+| wink R | 0.23 / 0.13 | 0.45 / 0.18 | 0.41 / 0.21 |
+| eyes closed | 0.01 / 0.02 | 0.07 / 0.00 | 0.03 / 0.02 |
+| smile: neutral / smile / mouth wide | 0.00 / 0.65 / 0.52 | 0.00 / 1.00 / 0.00 | 0.00 / 1.00 / 0.00 |
+
+With a hand on the face, winks fall back to what the outline alone gives. Mouth open (neutral 0.005, wide 1.0), yaw and roll (span 1.0) are unchanged.
 
 ## FL Studio, live (2026-11-03)
 
@@ -149,7 +184,9 @@ Latency in FL, from `~/Library/Logs/synthexis.log`, 5 s windows over the run (al
 
 ## Open
 
-- FL live run with `hybrid`: camera to parameter latency and the same macro phases as above (needs FL closed for the install).
-- 5 ms budget: `hybrid` takes 11.3 ms p95 because of the face landmarks. Either the spec budget moves for the face, or the face student needs eye training that works with glasses.
-- Side errors left: 1.8% on S4, concentrated in single segments; a hand that crosses to the other side of the body still trusts its track's history for up to 40 frames of evidence.
+- FL live run with `hybrid`: camera to parameter latency and the same macro phases as above.
+- Face p95 swings between 9 and 17 ms with machine load; hands stay under 5 ms.
+- Winks while a hand overlaps the face fall back to the outline; the rule checks the whole face box, not the eye band.
+- S2 (glasses): closed eyes read 0.23 / 0.87.
+- Side errors left: 1.8% on S4, concentrated in single segments.
 - Default routes (Signal 3 to 10, `route.rs`) stand in until the assistant writes routes. With Live on they all move, and FL records every moving macro as automation; Noa's rule is that recording one parameter records only that one.

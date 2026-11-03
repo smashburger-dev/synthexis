@@ -82,7 +82,13 @@ pub fn run(path: &str) -> i32 {
         let t_ns = (t.max(0.0) * 1e9) as u64;
         let start = Instant::now();
         let mut stages = Vec::new();
-        let p = backend.process(&frame, t_ns, &mut stages);
+        let mut p = backend.process(&frame, t_ns, &mut stages);
+        stats.push("early", start.elapsed());
+        if let Some(face) = backend.face_later(&mut stages) {
+            if let Some(p) = p.as_mut() {
+                p.face = face;
+            }
+        }
         stats.push("frame", start.elapsed());
         for (n, ms) in stages {
             stats.push_ms(n, ms);
@@ -99,9 +105,10 @@ pub fn run(path: &str) -> i32 {
         if let Some((f, c)) = &p.face {
             seen_face += 1;
             line += &format!(
-                ",\"face\":{},\"face_raw\":{},\"face_conf\":{c:.2},\"face_seen\":[{},{},{}]",
+                ",\"face\":{},\"face_raw\":{},\"eye_px\":{},\"face_conf\":{c:.2},\"face_seen\":[{},{},{}]",
                 json_floats(&f.values()),
                 json_floats(&f.raw),
+                json_floats(&[&f.eye_px[0][..], &f.eye_px[1][..], &f.mouth_px[..]].concat()),
                 f.seen_eye[0] as u8,
                 f.seen_eye[1] as u8,
                 f.seen_mouth as u8

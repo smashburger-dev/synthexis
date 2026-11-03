@@ -21,6 +21,7 @@ use crossbeam_channel::{bounded, Receiver, Sender, TrySendError};
 
 use super::coreml::{F16Array, Frame, Input, Model, PixelBuf};
 use super::geom::*;
+use super::vision::{face_crop, FaceLandmarks, Seed, LM_CROP};
 use crate::log::log;
 use crate::signal::{Sample, FACE_IDS, HAND_L, HAND_R, OBJECT_IDS, SIG_HANDS_DISTANCE};
 
@@ -112,6 +113,11 @@ pub trait Backend {
     fn name(&self) -> &'static str;
     /// Runs on one frame; `stages` gets named stage times in ms.
     fn process(&mut self, frame: &Frame, t_ns: u64, stages: &mut Vec<(&'static str, f64)>) -> Option<Percept>;
+    /// The face of the last `process` call when it finishes after the rest
+    /// (on another thread); None when `process` already returned it.
+    fn face_later(&mut self, _stages: &mut Vec<(&'static str, f64)>) -> Option<Option<(FaceFeatures, f32)>> {
+        None
+    }
 }
 
 /// The backend `choice` asks for ("students", "vision", "off").
@@ -122,7 +128,7 @@ pub fn make_backend(dir: &Path, choice: &str) -> Option<Box<dyn Backend>> {
         _ => match Students::new(&dir) {
             Some(mut s) => {
                 if choice == "hybrid" {
-                    s.landmarks = Some(super::vision::FaceLandmarks::new());
+                    s.landmarks = LandmarkWorker::start();
                 }
                 Some(Box::new(s))
             }
@@ -152,14 +158,24 @@ fn run(rx: &Receiver<Job>) {
         let percept = b.process(&job.frame, job.t_capture_ns, &mut stages);
         drop(job.frame);
         let done = Instant::now();
-        if let Some(p) = percept {
-            emitter.emit(&p, job.t_capture_ns);
+        if let Some(p) = &percept {
+            emitter.emit_body(p, job.t_capture_ns);
         }
         let emitted = Instant::now();
+        // Hands and object are out; the face may still be on its thread.
+        let face = match b.face_later(&mut stages) {
+            Some(face) => Some(face),
+            None => percept.map(|p| p.face),
+        };
+        if let Some(face) = face {
+            emitter.emit_face(face.as_ref(), job.t_capture_ns);
+        }
+        let face_emitted = Instant::now();
         stats.push("wait", start.duration_since(job.callback));
         stats.push("frame", done.duration_since(start));
         stats.push("emit", emitted.duration_since(done));
         stats.push("cb_to_emit", emitted.duration_since(job.callback));
+        stats.push("cb_to_face", face_emitted.duration_since(job.callback));
         for (name, ms) in stages {
             stats.push_ms(name, ms);
         }
@@ -230,12 +246,17 @@ struct Emitter {
     distance: f32,
 }
 
+fn sender(t_ns: u64) -> impl Fn(&str, f32, f32, bool) {
+    let eng = super::engine();
+    move |id: &str, value: f32, confidence: f32, present: bool| {
+        eng.emit(id, &Sample { value, confidence, t_capture_ns: t_ns, present });
+    }
+}
+
 impl Emitter {
-    fn emit(&mut self, p: &Percept, t_ns: u64) {
-        let eng = super::engine();
-        let send = |id: &str, value: f32, confidence: f32, present: bool| {
-            eng.emit(id, &Sample { value, confidence, t_capture_ns: t_ns, present });
-        };
+    /// Hands, hand distance and object.
+    fn emit_body(&mut self, p: &Percept, t_ns: u64) {
+        let send = sender(t_ns);
         for (s, ids) in [HAND_L, HAND_R].iter().enumerate() {
             let seen = p.hands[s].as_ref();
             if let Some((f, _)) = seen {
@@ -256,7 +277,17 @@ impl Emitter {
             _ => None,
         };
         send(SIG_HANDS_DISTANCE, self.distance, both.unwrap_or(0.0), both.is_some());
-        let face = p.face.as_ref();
+        let obj = p.object.as_ref();
+        if let Some((v, _)) = obj {
+            self.object = *v;
+        }
+        for (id, v) in OBJECT_IDS.iter().zip(self.object) {
+            send(id, v, obj.map_or(0.0, |o| o.1), obj.is_some());
+        }
+    }
+
+    fn emit_face(&mut self, face: Option<&(FaceFeatures, f32)>, t_ns: u64) {
+        let send = sender(t_ns);
         if let Some((f, _)) = face {
             let v = f.values();
             // Keep the last value of a part that was not seen this frame.
@@ -278,13 +309,6 @@ impl Emitter {
                 _ => f.seen_eye[0] && f.seen_eye[1],
             });
             send(id, self.face[i], if part_seen { face.map_or(0.0, |f| f.1) } else { 0.0 }, part_seen);
-        }
-        let obj = p.object.as_ref();
-        if let Some((v, _)) = obj {
-            self.object = *v;
-        }
-        for (id, v) in OBJECT_IDS.iter().zip(self.object) {
-            send(id, v, obj.map_or(0.0, |o| o.1), obj.is_some());
         }
     }
 }
@@ -308,6 +332,57 @@ struct FaceHead {
     logits: String,
 }
 
+/// Runs the face landmarks (backend `hybrid`) on their own thread, so a
+/// frame's hand signals go out while Vision still works on its face.
+struct LandmarkWorker {
+    tx: Sender<(PixelBuf, Seed, u64, bool)>,
+    rx: Receiver<(PixelBuf, Option<(FaceFeatures, f32)>, f64)>,
+    buf: Option<PixelBuf>,
+}
+
+impl LandmarkWorker {
+    fn start() -> Option<Self> {
+        let buf = PixelBuf::new(LM_CROP, LM_CROP).map_err(|e| log(&format!("perception: landmarks crop: {e}"))).ok()?;
+        let (tx, jobs) = bounded::<(PixelBuf, Seed, u64, bool)>(1);
+        let (done, rx) = bounded(1);
+        std::thread::Builder::new()
+            .name("synthexis-landmarks".into())
+            .spawn(move || {
+                let mut lm = FaceLandmarks::new();
+                for (buf, seed, t_ns, hand_on_face) in jobs {
+                    let t0 = Instant::now();
+                    let face = lm.run(&buf, &seed, t_ns, hand_on_face);
+                    if done.send((buf, face, t0.elapsed().as_secs_f64() * 1e3)).is_err() {
+                        break;
+                    }
+                }
+            })
+            .map_err(|e| log(&format!("perception: landmarks thread: {e}")))
+            .ok()?;
+        Some(Self { tx, rx, buf: Some(buf) })
+    }
+
+    /// Crops the face and hands it to the thread; false if it cannot.
+    fn submit(&mut self, src: &Bgra, fbox: [f32; 4], t_ns: u64, hand_on_face: bool) -> bool {
+        let Some(buf) = self.buf.take() else { return false };
+        let seed = face_crop(src, fbox, &buf);
+        match self.tx.send((buf, seed, t_ns, hand_on_face)) {
+            Ok(()) => true,
+            Err(e) => {
+                self.buf = Some(e.into_inner().0);
+                false
+            }
+        }
+    }
+
+    /// Waits for the submitted face: (face, landmark ms).
+    fn wait(&mut self) -> Option<(Option<(FaceFeatures, f32)>, f64)> {
+        let (buf, face, ms) = self.rx.recv().ok()?;
+        self.buf = Some(buf);
+        Some((face, ms))
+    }
+}
+
 /// The three CoreML students.
 pub struct Students {
     seg: Model,
@@ -328,7 +403,8 @@ pub struct Students {
     hand_ms: [f64; 2],
     raw: bool,
     /// Backend `hybrid`: Vision face landmarks on the seg face box.
-    landmarks: Option<super::vision::FaceLandmarks>,
+    landmarks: Option<LandmarkWorker>,
+    face_pending: bool,
 }
 
 impl Students {
@@ -366,6 +442,7 @@ impl Students {
             hand_ms: [0.0; 2],
             raw: std::env::var_os("SYNTHEXIS_BENCH_RAW").is_some(),
             landmarks: None,
+            face_pending: false,
         })
     }
 
@@ -498,6 +575,18 @@ impl Backend for Students {
         }
     }
 
+    fn face_later(&mut self, stages: &mut Vec<(&'static str, f64)>) -> Option<Option<(FaceFeatures, f32)>> {
+        let lm = self.landmarks.as_mut()?;
+        if !std::mem::take(&mut self.face_pending) {
+            return Some(None);
+        }
+        let t0 = Instant::now();
+        let (face, ms) = lm.wait()?;
+        stages.push(("face_wait", t0.elapsed().as_secs_f64() * 1e3));
+        stages.push(("landmarks", ms));
+        Some(face)
+    }
+
     fn process(&mut self, frame: &Frame, t_ns: u64, stages: &mut Vec<(&'static str, f64)>) -> Option<Percept> {
         frame.read(|data, stride, w, h| {
             let src = Bgra { data, stride, w, h };
@@ -534,6 +623,14 @@ impl Backend for Students {
             stage(stages, "mask");
             let (fw, fh) = (w as f32, h as f32);
             let (kx, ky) = (fw / SEG_W as f32, fh / SEG_H as f32);
+            // Landmarks start first and run beside the hands.
+            self.face_pending = false;
+            if let (Some(lm), Some(f)) = (self.landmarks.as_mut(), face.as_ref()) {
+                let (x, y, bw, bh) = blob_box(f, fw, fh);
+                let hand_on_face = hands.iter().any(|h| boxes_overlap(h, f));
+                self.face_pending = lm.submit(&src, [x, y, bw, bh], t_ns, hand_on_face);
+                stage(stages, "face_crop");
+            }
             self.hand_ms = [0.0; 2];
             let pts: Vec<_> = hands.iter().map(|b| self.hand_points(&src, b)).collect();
             let cues: Vec<([f32; 2], f32)> = hands
@@ -570,20 +667,8 @@ impl Backend for Students {
             if self.raw {
                 p.debug = Some(self.raw_line(&src, face.as_ref()));
             }
-            let face_box = face.map(|f| {
-                let (x, y, w, h) = blob_box(&f, 1.0, 1.0);
-                [x, y, w, h]
-            });
-            Some((p, face_box))
+            Some(p)
         })
         .flatten()
-        .map(|(mut p, face_box)| {
-            if let (Some(lm), Some(bb)) = (self.landmarks.as_mut(), face_box) {
-                let t0 = Instant::now();
-                p.face = lm.run(frame, bb);
-                stages.push(("landmarks", t0.elapsed().as_secs_f64() * 1e3));
-            }
-            p
-        })
     }
 }

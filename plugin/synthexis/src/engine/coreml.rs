@@ -154,6 +154,15 @@ impl PixelBuf {
         }
     }
 
+    pub fn pixel_buffer(&self) -> &CVPixelBuffer {
+        &self.buf
+    }
+
+    /// Read-only BGRA view while locked: `f(bytes, stride, w, h)`.
+    pub fn read<R>(&self, f: impl FnOnce(&[u8], usize, usize, usize) -> R) -> Option<R> {
+        read_locked(&self.buf, f)
+    }
+
     /// Writes the pixels: `f(bytes, stride)`.
     pub fn write(&self, f: impl FnOnce(&mut [u8], usize)) {
         unsafe {
@@ -210,6 +219,28 @@ pub struct Frame {
 // retained and read from any thread; only one thread locks this one.
 unsafe impl Send for Frame {}
 
+fn read_locked<R>(buf: &CVPixelBuffer, f: impl FnOnce(&[u8], usize, usize, usize) -> R) -> Option<R> {
+    use objc2_core_video::{CVPixelBufferGetHeight, CVPixelBufferGetWidth};
+    unsafe {
+        CVPixelBufferLockBaseAddress(buf, CVPixelBufferLockFlags::ReadOnly);
+        let w = CVPixelBufferGetWidth(buf);
+        let h = CVPixelBufferGetHeight(buf);
+        let stride = CVPixelBufferGetBytesPerRow(buf);
+        let base = CVPixelBufferGetBaseAddress(buf) as *const u8;
+        let r = if base.is_null() || stride < w * 4 || w == 0 || h == 0 {
+            None
+        } else {
+            Some(f(std::slice::from_raw_parts(base, stride * h), stride, w, h))
+        };
+        CVPixelBufferUnlockBaseAddress(buf, CVPixelBufferLockFlags::ReadOnly);
+        r
+    }
+}
+
+// SAFETY: as for Frame; a PixelBuf moves between the perception thread and
+// the landmark worker and is only touched by the thread that holds it.
+unsafe impl Send for PixelBuf {}
+
 impl Frame {
     pub fn new(buf: CFRetained<CVPixelBuffer>) -> Self {
         Self { buf }
@@ -217,21 +248,7 @@ impl Frame {
 
     /// Read-only BGRA view while locked: `f(bytes, stride, w, h)`.
     pub fn read<R>(&self, f: impl FnOnce(&[u8], usize, usize, usize) -> R) -> Option<R> {
-        use objc2_core_video::{CVPixelBufferGetHeight, CVPixelBufferGetWidth};
-        unsafe {
-            CVPixelBufferLockBaseAddress(&self.buf, CVPixelBufferLockFlags::ReadOnly);
-            let w = CVPixelBufferGetWidth(&self.buf);
-            let h = CVPixelBufferGetHeight(&self.buf);
-            let stride = CVPixelBufferGetBytesPerRow(&self.buf);
-            let base = CVPixelBufferGetBaseAddress(&self.buf) as *const u8;
-            let r = if base.is_null() || stride < w * 4 || w == 0 || h == 0 {
-                None
-            } else {
-                Some(f(std::slice::from_raw_parts(base, stride * h), stride, w, h))
-            };
-            CVPixelBufferUnlockBaseAddress(&self.buf, CVPixelBufferLockFlags::ReadOnly);
-            r
-        }
+        read_locked(&self.buf, f)
     }
 
     pub fn pixel_buffer(&self) -> &CVPixelBuffer {
