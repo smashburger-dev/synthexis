@@ -3,7 +3,9 @@
 use nih_plug::prelude::*;
 
 /// "Live" gate: when off, the writer skips automation writes.
-/// `test_signal`: routes test.triangle -> Signal 32 while on.
+/// `test_signal`: turns the built-in test routes on (camera brightness and
+/// motion -> Signal 1/2, test.triangle -> Signal 32, perception -> Signal
+/// 3..10); off, only assigned routes move macros.
 /// Hand roles are stored with the project but have no behaviour yet.
 
 #[derive(Enum, Debug, Clone, Copy, PartialEq)]

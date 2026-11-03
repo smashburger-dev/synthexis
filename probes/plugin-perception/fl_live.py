@@ -11,7 +11,8 @@ routed macro at 20 Hz (plugins.getParamValue through the bridge) and reports
 its range. Last, it records 10 s of automation from right-hand open/close
 with Live on and replays the pattern with Live off: a range above 0.3 means
 FL recorded the perception signal as automation. Routes are the plugin's
-defaults (route.rs PERCEPTION_DEFAULTS).
+built-in test routes (route.rs PERCEPTION_DEFAULTS), which run only while
+the "Test signal" parameter is on; the script turns it on and restores it.
 """
 
 import argparse
@@ -85,6 +86,8 @@ def main():
     must(call("ping"))
     ch = channel()
     idx = {p["name"]: p["i"] for p in must(call("params", ch=ch, max=128))["params"]}
+    test_was = must(call("get", ch=ch, idx=idx["Test signal"])).get("v", 0.0)
+    must(call("rec", ch=ch, idx=idx["Test signal"], value=1.0))
     must(call("rec", ch=ch, idx=idx["Live"], value=1.0))
     log = {"channel": ch, "phases": []}
     for macro, sig, text in PHASES:
@@ -116,6 +119,7 @@ def main():
     replay["verdict"] = "recorded" if replay.get("range", 0) > 0.3 else "flat"
     log["automation_replay"] = replay
     print(f"    replay Signal 3: {replay}")
+    must(call("rec", ch=ch, idx=idx["Test signal"], value=test_was))
 
     OUT.mkdir(exist_ok=True)
     out = OUT / f"{int(time.time())}-fl_live.json"

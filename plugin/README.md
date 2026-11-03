@@ -2,11 +2,15 @@
 
 Camera-to-parameter macro plugin. 32 "Signal N" FloatParams are driven by
 the shared perception engine (built-in camera: brightness + motion, plus a
-30 Hz test.triangle) through the cond chain (range, One Euro, occlusion,
-reacquire slew) and the route table, then written to the host via a
+30 Hz test.triangle) through the cond chain (range, median of 3, One Euro,
+occlusion, reacquire slew) and the route table, then written to the host via a
 coalesced main-queue dispatch of begin/set/end parameter gestures — the H2
 write path (FL Studio 2026 records main-thread VST3 edits with the editor
 closed). Audio is stereo silence; perception never runs on the audio thread.
+The built-in routes (brightness, motion, test.triangle, perception on
+Signal 3..10) are test routes: they move macros only while the "Test
+signal" parameter is on. With it off, only assigned routes move macros, so
+FL records only those.
 
 ## Commands
 

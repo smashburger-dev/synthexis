@@ -346,4 +346,4 @@ Live in FL afterwards (`runs/1793705120-fl_live.json`): right-hand openness 0.02
 - Winks while a hand overlaps the face fall back to the outline; the rule checks the whole face box, not the eye band.
 - S2 (glasses): closed eyes read 0.23 / 0.87.
 - Side errors left: 0.2% on S4.
-- Default routes (Signal 3 to 10, `route.rs`) stand in until the assistant writes routes. With Live on they all move, and FL records every moving macro as automation; Noa's rule is that recording one parameter records only that one.
+- Routes: only assigned routes may move a macro, so FL records only those (Noa's rule). The built-in routes (camera brightness and motion on Signal 1 and 2, perception on Signal 3 to 10, test.triangle on Signal 32) are test routes and run only while the "Test signal" parameter is on; `fl_live.py` turns it on. No branch assigns routes from the UI yet: `docs/ux-plugin.md` (on main) plans profiles compiled into a route table swapped into the engine. Until that lands, the plugin moves no macro with Test signal off.
