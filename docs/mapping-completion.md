@@ -54,7 +54,7 @@ Checked with the shipped v9 ensemble on four synthetic sentences (`plugin/parser
 ## Open
 
 - Learning from picks: recent picks only add a fixed bonus that decays by position. A per-user count of (typed prefix, picked id), saved with the plugin state, would let "cut" rank "Filter 1 Freq" over "Cutoff Rand" after a few picks. Weights are hand-set on synthetic sentences; nothing is tuned on Noa's sentences.
-- Plugin picker: a stand-in combo over the exported plugins until the FL target picker (session fl-target-picker) gives the live inventory. The export holds 10 demo plugins; `--plugin` adds more.
+- Plugin picker: a stand-in combo over the exported plugins. The export holds 10 demo plugins; `--plugin` adds more, so the combo lists plugins that are not in the FL project (Noa, 11-03). The FL side is measured in `probes/fl-target-picker/RESULT.md`: the FL device script lists every mixer track, slot and plugin in 0.4 ms and the parameter names of one plugin in 7-20 ms (drop index >= 4096, FL's MIDI CC entries); with FL in front `OnRefresh` reports the clicked plugin (`getActiveEffectIndex` = (track, slot), form ID = channel for generators). Missing: a channel from the device script into the plugin, so the combo shows the live project and follows FL focus.
 - Ambiguous glossary phrases show twice ("Faust" as hand.fist and as the fist shape; "spread my fingers" also under hand.openness). The list shows the source next to each item; the glossary's ambiguous list could pick one.
 - Phrases with negative polarity ("Finger zusammen", "Hand öffnen") pin their source without setting INV; the parser still reads the words and decides.
 - A gesture chip that is meant as a gate ("only while I make a fist") is pinned as the route's source.
