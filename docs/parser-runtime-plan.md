@@ -92,7 +92,8 @@ Latency and memory, four v11 runs, one thread, first 200 rows of ds-v11c dev, me
 | f16, widened per call | 78.4 ms | 152.2 ms | 223.4 ms | 539 MB | 578 MB |
 | Q8_0, candle's quantised matmul (dropped) | 68.9 ms | 177.9 ms | 490.6 ms | 534 MB | 570 MB |
 
-- The machine was loaded by other sessions while these ran (swap full, load above 90 at times, two runs killed by the system); the v9 control ran 9 to 18 % slower than on 2026-11-01. The numbers are an upper bound; one quiet re-measurement is open.
+- The machine was loaded by other sessions while these ran (swap full, load above 90 at times, two runs killed by the system); the v9 control ran 9 to 18 % slower than on 2026-11-01.
+- A second attempt on 2026-11-03 (load rising from 11 to 28 during the runs) gave Q8_0 119 and 187 ms median in two runs and f16 90 ms. Q8_0's memory saving holds; whether it is faster or slower than f16 is not settled, and a measurement on an idle Mac is still open.
 - On all 805 rows under that load Q8_0 took 127 ms median and 226 ms p95, so long sentences can exceed 150 ms on a busy Mac.
 - The first Q8_0 dequantisation pushed element by element and took 113 ms median; writing fixed 32-weight blocks lets LLVM vectorise it.
 - candle's quantised matmul (it quantises the activations too) was fastest in the median for one run but had stalls up to 1.8 s for four runs and more memory; it is gone from the code.
