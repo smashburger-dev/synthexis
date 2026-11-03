@@ -433,22 +433,114 @@ pub fn resolve(
         .collect()
 }
 
+/// The words of a route line, so the plugin can show it in its language.
+/// Templates fill "{}" in order. Source ids and parameter names stay as
+/// they are.
+#[derive(Clone, Copy, Debug)]
+pub struct Words {
+    pub left: &'static str,
+    pub right: &'static str,
+    pub both_hands: &'static str,
+    /// "left hand openness" (true) or "hand openness (links)" (false).
+    pub side_first: bool,
+    pub inverted: &'static str,
+    pub no_parameter: &'static str,
+    pub range: &'static str,
+    pub amount: &'static str,
+    pub steps: &'static str,
+    pub toggles: &'static str,
+    pub while_held: &'static str,
+    pub ramps: &'static str,
+    pub curve: &'static str,
+    pub snappy: &'static str,
+    pub smooth: &'static str,
+    pub smoothing: &'static str,
+    pub holds: &'static str,
+    pub freezes: &'static str,
+    pub resets: &'static str,
+    pub quantize: &'static str,
+    pub centred: &'static str,
+    pub while_: &'static str,
+}
+
+pub const EN_WORDS: Words = Words {
+    left: "left",
+    right: "right",
+    both_hands: "both hands",
+    side_first: true,
+    inverted: "inverted",
+    no_parameter: "{} (no parameter)",
+    range: "range {}-{} %",
+    amount: "amount {} %",
+    steps: "steps",
+    toggles: "toggles",
+    while_held: "while held",
+    ramps: "ramps",
+    curve: "{} curve",
+    snappy: "snappy",
+    smooth: "smooth",
+    smoothing: "{} smoothing",
+    holds: "holds",
+    freezes: "freezes",
+    resets: "resets",
+    quantize: "{} steps",
+    centred: "centred",
+    while_: "while {}",
+};
+
+/// `template` with each "{}" replaced by the next of `args`.
+fn fill(template: &str, args: &[&str]) -> String {
+    let mut out = String::new();
+    let mut args = args.iter();
+    let mut rest = template;
+    while let Some(i) = rest.find("{}") {
+        out.push_str(&rest[..i]);
+        out.push_str(args.next().copied().unwrap_or_default());
+        rest = &rest[i + 2..];
+    }
+    out.push_str(rest);
+    out
+}
+
+impl Words {
+    fn side(&self, s: &str) -> String {
+        match s {
+            "left" => self.left.into(),
+            "right" => self.right.into(),
+            "both" => self.both_hands.into(),
+            s => s.into(),
+        }
+    }
+
+    fn sided(&self, side: Option<&str>, what: &str) -> String {
+        match side {
+            Some(s) if self.side_first => format!("{} {what}", self.side(s)),
+            Some(s) => format!("{what} ({})", self.side(s)),
+            None => what.to_string(),
+        }
+    }
+}
+
 impl Route {
     /// "left hand openness": side, then the source with its dots as spaces.
     pub fn source_label(&self) -> String {
+        self.source_label_in(&EN_WORDS)
+    }
+
+    pub fn source_label_in(&self, w: &Words) -> String {
         let src = self.source.replace(['.', '_'], " ");
         let src = if src.is_empty() { "?".to_string() } else { src };
-        let side = self.side.as_deref().map(|s| if s == "both" { "both hands" } else { s });
-        let inv = if self.inv { " inverted" } else { "" };
-        match side {
-            Some(s) => format!("{s} {src}{inv}"),
-            None => format!("{src}{inv}"),
-        }
+        let inv = if self.inv { format!(" {}", w.inverted) } else { String::new() };
+        format!("{}{inv}", w.sided(self.side.as_deref(), &src))
     }
 
     /// "left hand openness -> Topos / Drive"; a target without a parameter
     /// shows its kind ("drive (no parameter)", "macro 3").
     pub fn describe(&self, plugin: &str) -> String {
+        self.describe_in(plugin, &EN_WORDS)
+    }
+
+    pub fn describe_in(&self, plugin: &str, w: &Words) -> String {
         let targets: Vec<String> = self
             .targets
             .iter()
@@ -456,52 +548,57 @@ impl Route {
                 (Some(b), _) => format!("{} / {}", b.plugin.as_deref().map_or(plugin, plugin_name), b.name),
                 (None, kind) if is_param_target(&t.token) => {
                     let what = kind.split_once(':').map_or(kind, |x| x.1);
-                    format!("{what} (no parameter)")
+                    fill(w.no_parameter, &[what])
                 }
                 (None, kind) => kind.replace(':', " ").trim().to_string(),
             })
             .collect();
         let targets = if targets.is_empty() { "?".to_string() } else { targets.join(", ") };
-        let mods = self.mod_labels();
+        let mods = self.mod_labels_in(w);
         let mods = if mods.is_empty() { String::new() } else { format!(" ({})", mods.join(", ")) };
-        format!("{} -> {targets}{mods}", self.source_label())
+        format!("{} -> {targets}{mods}", self.source_label_in(w))
     }
 
     /// The words between gesture and parameter, as the frame read them:
     /// "range 5-35 %", "amount 25 %", "steps", "snappy", "centred".
     pub fn mod_labels(&self) -> Vec<String> {
+        self.mod_labels_in(&EN_WORDS)
+    }
+
+    pub fn mod_labels_in(&self, w: &Words) -> Vec<String> {
         let get = |p: &str| self.mods.iter().find_map(|m| m.strip_prefix(p));
         let mut out: Vec<String> = self
             .gates
             .iter()
             .map(|g| {
                 let src = g[0].trim_start_matches("G:").replace(['.', '_'], " ");
-                let side = g.iter().find_map(|t| t.strip_prefix("side:")).map(|s| format!("{s} ")).unwrap_or_default();
+                let side = g.iter().find_map(|t| t.strip_prefix("side:"));
                 let shape = g.iter().find_map(|t| t.strip_prefix("shape:")).map(|s| format!(" {s}")).unwrap_or_default();
-                format!("while {side}{src}{shape}")
+                fill(w.while_, &[&format!("{}{shape}", w.sided(side, &src))])
             })
             .collect();
         if get("lo:").is_some() || get("hi:").is_some() {
-            out.push(format!("range {}-{} %", percent(get("lo:").unwrap_or("0")), percent(get("hi:").unwrap_or("1"))));
+            out.push(fill(w.range, &[&percent(get("lo:").unwrap_or("0")), &percent(get("hi:").unwrap_or("1"))]));
         }
         for m in &self.mods {
             let (k, v) = m.split_once(':').unwrap_or((m, ""));
             let label = match (k, v) {
                 ("lo" | "hi", _) => continue,
-                ("amt", v) => format!("amount {} %", percent(v)),
+                ("amt", v) => fill(w.amount, &[&percent(v)]),
                 ("delta", v) => format!("{}{} %", if v.starts_with('-') { "-" } else { "+" }, percent(v.trim_start_matches(['+', '-']))),
-                ("mode", "step") => "steps".into(),
-                ("mode", "toggle") => "toggles".into(),
-                ("mode", "momentary") => "while held".into(),
-                ("mode", "ramp") => "ramps".into(),
-                ("curve", c) => format!("{c} curve"),
-                ("smooth", "low") => "snappy".into(),
-                ("smooth", "high") => "smooth".into(),
-                ("smooth", v) => format!("{v} smoothing"),
-                ("hold", "hold") => "holds".into(),
-                ("hold", v) => format!("{v}s"),
-                ("quantize", v) => format!("{v} steps"),
-                ("BIP", _) => "centred".into(),
+                ("mode", "step") => w.steps.into(),
+                ("mode", "toggle") => w.toggles.into(),
+                ("mode", "momentary") => w.while_held.into(),
+                ("mode", "ramp") => w.ramps.into(),
+                ("curve", c) => fill(w.curve, &[c]),
+                ("smooth", "low") => w.snappy.into(),
+                ("smooth", "high") => w.smooth.into(),
+                ("smooth", v) => fill(w.smoothing, &[v]),
+                ("hold", "hold") => w.holds.into(),
+                ("hold", "freeze") => w.freezes.into(),
+                ("hold", "reset") => w.resets.into(),
+                ("quantize", v) => fill(w.quantize, &[v]),
+                ("BIP", _) => w.centred.into(),
                 (k, v) => format!("{k} {v}"),
             };
             out.push(label);

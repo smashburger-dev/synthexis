@@ -110,6 +110,56 @@ texts! {
     keys_both: "← → hand   ↑ ↓ finger   Enter", "← → Hand   ↑ ↓ Finger   Enter";
     keys_side: "← left   → right   Enter", "← links   → rechts   Enter";
     keys_finger: "↑ ↓ finger   Enter", "↑ ↓ Finger   Enter";
+    // routes under the sentence field
+    keep: "Keep", "Behalten";
+    discard: "Discard", "Verwerfen";
+    flip_hover: "flip the direction", "Richtung umdrehen";
+    remove_hover: "remove this route", "Route entfernen";
+    assigned: "assigned", "zugewiesen";
+    parsing: "parsing", "wird gelesen";
+    parser_unavailable: "parser unavailable (see the log)", "Parser nicht verfügbar (siehe Log)";
+    removed_n: "removed {} route(s)", "{} Route(n) entfernt";
+    undid_n: "undid {} route(s)", "{} Route(n) zurückgenommen";
+    clear_scoped: "clearing one movement, target or track is not live yet; say which route to unmap",
+        "Löschen nach Bewegung, Ziel oder Spur geht noch nicht live; sag, welche Route weg soll";
+    unmap_unknown_move: "unmap: that movement has no route, nothing removed", "entfernen: diese Bewegung hat keine Route, nichts entfernt";
+    unmap_unknown_target: "unmap: that target is not a parameter here, nothing removed",
+        "entfernen: dieses Ziel ist hier kein Parameter, nichts entfernt";
+    unmap_say_what: "unmap: say which movement or target", "entfernen: sag, welche Bewegung oder welches Ziel";
+    partly: "partly removed", "teilweise entfernt";
+    // notes on a route line (assign.rs)
+    n_which_move: "which movement?", "welche Bewegung?";
+    n_which_eye: "which eye? say left or right", "welches Auge? sag links oder rechts";
+    n_which_hand: "which hand? say left or right", "welche Hand? sag links oder rechts";
+    n_not_live: "{} is not live yet", "{} geht noch nicht live";
+    n_no_param: "no parameter to drive", "kein Parameter zum Steuern";
+    n_mods_not_live: "{} not live yet", "{} geht noch nicht live";
+    n_gate: "gate {}: {}", "Gate {}: {}";
+    n_gate_shape: "gate {} (a hand shape) not live yet", "Gate {} (eine Handform) geht noch nicht live";
+    // words of a route line (resolve::Words)
+    // "first": the side before the movement ("left hand openness"), else after it
+    r_side_order: "first", "after";
+    r_left: "left", "links";
+    r_right: "right", "rechts";
+    r_both: "both hands", "beide Hände";
+    r_inverted: "inverted", "umgekehrt";
+    r_no_param: "{} (no parameter)", "{} (kein Parameter)";
+    r_range: "range {}-{} %", "Bereich {}-{} %";
+    r_amount: "amount {} %", "Stärke {} %";
+    r_steps: "steps", "Stufen";
+    r_toggles: "toggles", "schaltet um";
+    r_while_held: "while held", "solange gehalten";
+    r_ramps: "ramps", "Rampe";
+    r_curve: "{} curve", "Kurve {}";
+    r_snappy: "snappy", "direkt";
+    r_smooth: "smooth", "weich";
+    r_smoothing: "{} smoothing", "Glättung {}";
+    r_holds: "holds", "hält";
+    r_freezes: "freezes", "friert ein";
+    r_resets: "resets", "setzt zurück";
+    r_quantize: "{} steps", "{} Stufen";
+    r_centred: "centred", "mittig";
+    r_while: "while {}", "solange {}";
 }
 
 pub fn text(lang: Lang) -> &'static Text {
@@ -127,6 +177,35 @@ impl Text {
 
     pub fn side_badges(&self) -> [&'static str; 2] {
         [self.badge_left, self.badge_right]
+    }
+
+    /// The words of a route line; German names the side after the movement
+    /// ("hand openness (links)"), since movement ids stay English.
+    pub fn words(&self) -> synthexis_parser::resolve::Words {
+        synthexis_parser::resolve::Words {
+            left: self.r_left,
+            right: self.r_right,
+            both_hands: self.r_both,
+            side_first: self.r_side_order == "first",
+            inverted: self.r_inverted,
+            no_parameter: self.r_no_param,
+            range: self.r_range,
+            amount: self.r_amount,
+            steps: self.r_steps,
+            toggles: self.r_toggles,
+            while_held: self.r_while_held,
+            ramps: self.r_ramps,
+            curve: self.r_curve,
+            snappy: self.r_snappy,
+            smooth: self.r_smooth,
+            smoothing: self.r_smoothing,
+            holds: self.r_holds,
+            freezes: self.r_freezes,
+            resets: self.r_resets,
+            quantize: self.r_quantize,
+            centred: self.r_centred,
+            while_: self.r_while,
+        }
     }
 
     /// Finger names in panel order (synthexis_complete::FINGERS).

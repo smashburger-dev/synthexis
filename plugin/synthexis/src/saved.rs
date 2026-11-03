@@ -21,6 +21,9 @@ pub struct Saved {
     pub line: u64,
     pub batch: u64,
     pub full: usize,
+    /// The line lost part of its routes.
+    #[serde(default)]
+    pub partly: bool,
     pub note: String,
     /// The engine routes the line still has, as (signal, target_id).
     pub keys: Vec<(String, String)>,

@@ -12,13 +12,15 @@ use synthexis_parser::resolve;
 
 use crate::cond::Curve;
 use crate::fl;
+use crate::i18n::{fill, Text, EN};
 use crate::route::{Route, Target, NUM_MACROS};
 use crate::signal::perception_ids;
 
-/// Engine signal ids for a source and side; Err names why there is none.
-pub fn signals(source: &str, side: Option<&str>) -> Result<Vec<String>, String> {
+/// Engine signal ids for a source and side; Err names why there is none,
+/// in the language of `t`.
+pub fn signals_in(source: &str, side: Option<&str>, t: &Text) -> Result<Vec<String>, String> {
     if source.is_empty() {
-        return Err("which movement?".into());
+        return Err(t.n_which_move.into());
     }
     let ids: Vec<&str> = perception_ids().collect();
     let (head, rest) = source.split_once('.').unwrap_or((source, ""));
@@ -28,15 +30,15 @@ pub fn signals(source: &str, side: Option<&str>) -> Result<Vec<String>, String> 
             Some("left") => Ok(vec![sided("L")]),
             Some("right") => Ok(vec![sided("R")]),
             Some("both") => Ok(vec![sided("L"), sided("R")]),
-            _ if head == "eye" => Err("which eye? say left or right".into()),
-            _ => Err("which hand? say left or right".into()),
+            _ if head == "eye" => Err(t.n_which_eye.into()),
+            _ => Err(t.n_which_hand.into()),
         };
     }
     let id = format!("cam0.{source}");
     if ids.contains(&id.as_str()) {
         Ok(vec![id])
     } else {
-        Err(format!("{} is not live yet", source.replace('.', " ")))
+        Err(fill(t.n_not_live, &[&source.replace('.', " ")]))
     }
 }
 
@@ -67,7 +69,7 @@ pub fn targets(r: &resolve::Route, plugin: Option<&fl::Key>) -> Vec<Target> {
 /// the sentence's side when the source has none ("with my right hand: mouth
 /// opens the mix while I pinch"); an eye never lends its side to a hand.
 /// Err when a gate cannot run, then the route must not run either.
-fn gate_signals(r: &resolve::Route, sig: &str) -> Result<Vec<String>, String> {
+fn gate_signals(r: &resolve::Route, sig: &str, t: &Text) -> Result<Vec<String>, String> {
     let parts: Vec<&str> = sig.split('.').collect();
     let sided = parts.get(2).is_some_and(|h| *h == "L" || *h == "R");
     r.gates
@@ -76,7 +78,7 @@ fn gate_signals(r: &resolve::Route, sig: &str) -> Result<Vec<String>, String> {
             let src = g[0].trim_start_matches("G:");
             let named = src.replace('.', " ");
             if g.iter().any(|t| t.starts_with("shape:")) {
-                return Err(format!("gate {named} (a hand shape) not live yet"));
+                return Err(fill(t.n_gate_shape, &[&named]));
             }
             let lent = match (sided, parts.get(1), parts.get(2)) {
                 (true, Some(body), Some(h)) if src.split('.').next() == Some(*body) => {
@@ -88,8 +90,8 @@ fn gate_signals(r: &resolve::Route, sig: &str) -> Result<Vec<String>, String> {
             let side = g.iter().find_map(|t| t.strip_prefix("side:")).or(lent);
             match side {
                 // "both hands pinch": both must be open
-                Some("both") => signals(src, Some("both")).map_err(|e| format!("gate {named}: {e}")),
-                s => signals(src, s).map_err(|e| format!("gate {named}: {e}")),
+                Some("both") => signals_in(src, Some("both"), t).map_err(|e| fill(t.n_gate, &[&named, &e])),
+                s => signals_in(src, s, t).map_err(|e| fill(t.n_gate, &[&named, &e])),
             }
         })
         .collect::<Result<Vec<Vec<String>>, String>>()
@@ -99,13 +101,18 @@ fn gate_signals(r: &resolve::Route, sig: &str) -> Result<Vec<String>, String> {
 /// What a resolved route becomes: engine routes and a note for the line
 /// ("" when everything runs).
 pub fn routes(r: &resolve::Route, plugin: Option<&fl::Key>) -> (Vec<Route>, String) {
-    let sigs = match signals(&r.source, r.side.as_deref()) {
+    routes_in(r, plugin, &EN)
+}
+
+/// `routes` with the note in the language of `t`.
+pub fn routes_in(r: &resolve::Route, plugin: Option<&fl::Key>, t: &Text) -> (Vec<Route>, String) {
+    let sigs = match signals_in(&r.source, r.side.as_deref(), t) {
         Ok(s) => s,
         Err(e) => return (Vec::new(), e),
     };
     let targets = targets(r, plugin);
     if targets.is_empty() {
-        return (Vec::new(), "no parameter to drive".into());
+        return (Vec::new(), t.n_no_param.into());
     }
     let mut notes: Vec<String> = Vec::new();
     let get = |p: &str| r.mods.iter().find_map(|m| m.strip_prefix(p)).and_then(|v| v.parse::<f32>().ok());
@@ -116,11 +123,11 @@ pub fn routes(r: &resolve::Route, plugin: Option<&fl::Key>) -> (Vec<Route>, Stri
         .map(String::as_str)
         .collect();
     if !skipped.is_empty() {
-        notes.push(format!("{} not live yet", skipped.join(" ")));
+        notes.push(fill(t.n_mods_not_live, &[&skipped.join(" ")]));
     }
     let mut out = Vec::new();
     for sig in &sigs {
-        let gates = match gate_signals(r, sig) {
+        let gates = match gate_signals(r, sig, t) {
             Ok(g) => g,
             Err(e) => return (Vec::new(), e),
         };
