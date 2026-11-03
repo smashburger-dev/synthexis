@@ -77,6 +77,8 @@ pub struct Sentence {
     /// Target whose parameters the engine holds.
     applied: Option<fl::Key>,
     pick_note: String,
+    /// Where the picker button sat last frame (its list matches its width).
+    picker_button: Rect,
     sugg: Vec<Suggestion>,
     list_open: bool,
     /// An arrow key moved through the list; Enter now picks instead of sending.
@@ -202,6 +204,7 @@ impl Sentence {
             want: None,
             applied: None,
             pick_note: String::new(),
+            picker_button: Rect::NOTHING,
             sugg: Vec::new(),
             list_open: false,
             nav: false,
@@ -401,13 +404,15 @@ impl Sentence {
             if button.clicked() {
                 ui.memory_mut(|m| m.toggle_popup(popup));
             }
+            self.picker_button = button.rect;
             // opening or closing a track group must not close the list
             egui::popup_below_widget(ui, popup, &button, PopupCloseBehavior::CloseOnClickOutside, |ui| {
+                // as wide as the button: the popup sets that width, the list fills it
                 egui::ScrollArea::vertical()
                     .max_height(PICKER_H)
                     .min_scrolled_height(PICKER_H)
+                    .auto_shrink([false, true])
                     .show(ui, |ui| {
-                        ui.set_min_width(width);
                         let current = pinned.as_ref().or(self.want.as_ref());
                         if pick_row(ui, pinned.is_none(), "Follow FL", "", "the plugin window last clicked in FL") {
                             choice = Some(None);
@@ -985,6 +990,9 @@ mod tests {
         for row in ["Sound", "Serum 2", "FX", "ValhallaSupermassive", "Portal", "Pro-Q 3", "Track 3"] {
             assert!(h.find(row).is_some(), "{row} not visible in the opened list");
         }
+        let list = h.ctx.memory(|m| m.area_rect(Id::new("synthexis-picker-popup")));
+        let button = h.s.picker_button;
+        assert!(list.is_some_and(|r| (r.width() - button.width()).abs() < 1.0), "list {list:?}, button {button:?}");
         assert!(h.click("Portal"));
         assert_eq!(*h.picked.read(), "fx:0:1:Portal");
         assert!(!h.popup_open(), "picking a row closes the list");

@@ -90,7 +90,7 @@ Left to right: name, target picker, profile tabs, Live toggle (the existing `liv
 The picker names the plugin that new moves, presets and sentences are about. It sits in the top bar as a breadcrumb: mixer track > plugin.
 
 Opening it shows the project as a tree: each mixer track by number and name, under it the generators routed to it (channel rack) and its effect slots. A search field sits on top. Two entries sit above the tree:
-- Follow FL focus: the picker follows the last plugin window Noa focused in FL, ignoring synthexis' own window. A pin icon freezes the current choice. How FL reports focus to a script is being probed in a parallel session (`probes/fl-target-picker/`). Until that works, the picker is a manual list.
+- Follow FL focus: the picker follows the last plugin window Noa focused in FL, ignoring synthexis' own window. A pin icon freezes the current choice. Measured in `probes/fl-target-picker/` and built on 11-03 (see "Built so far" below).
 - Whole project: the resolver searches every plugin. The assistant line then says which plugin it chose.
 
 What the picker scopes:
@@ -103,6 +103,14 @@ Existing rows keep their own target. Changing the picker never rewires them.
 Several plugins of one kind: entries carry the track, "Serum 2 . Pad (Mixer 3)" and "Serum 2 . Bass (Mixer 5)". Two instances on one track add the slot number.
 
 The first time a plugin is picked, synthexis reads its parameter list through the FL script and param-sense tags each parameter (`map.live_inventory`, proposal). The picker shows a short progress note while it reads. Lists get long: Serum 2 has 2,621 parameters in the AU harvest, so the parameter list needs a search and class sorting from day one.
+
+Built so far (11-03, plain egui styling; `plugin/synthexis/src/fl.rs`, `sentence.rs`, `sense.rs`), tested in FL with Noa:
+- The plugin opens the bridge's MIDI ports itself; the FL script (`plugin/fl/device_synthexis_bridge.py`) sends the project's plugins and every plugin-window focus.
+- One list, as wide as its button: "Follow FL", then the project by mixer track. A track with one plugin is one row; a track with two or more is a folding group (arrow, count), Sound (generators routed to it) above FX (its slots), slot or channel number right-aligned, full name on hover. The list grows with opened groups up to 420 px, then scrolls; folding a group never closes it, picking a row does.
+- Picking a row or "Pin" freezes the target; "Follow FL" or "Unpin" releases it. A pin whose slot now holds another plugin is dropped.
+- Parameter names load on pick (1 to 14 ms); classes come from the labels of the 887 mapped plugins, else from param-sense in Rust (16 ms for 2,600 names), so no prompt is needed for an unmapped plugin.
+
+Idea (Noa, 11-03, to work out in Figma): a frosted overlay over the whole plugin window as the picker, like FL's own overview of plugin windows with preview images (Noa did not remember how FL opens it; FL's Plugin Picker is on F8, from memory, not checked). The same structure as the list: mixer tracks fold open, previews large enough to recognise a plugin, the overlay scrolls.
 
 ### 4. Moves list (`ui.moves`, new; replaces the routes part of `ui.panel`)
 
@@ -162,6 +170,8 @@ Row states:
 - missing: the target plugin is gone, red tag and a re-pick button.
 
 Each row shows its path: "direct" through the FL script, or "S7" for Signal 7, with a one-line hint how to link it in FL.
+
+Idea (Noa, 11-03): besides the rows, a node graph of the routings, styled like a FigJam board: hand and finger icons on the left, plugin parameters on the right, edges for the moves, each node opening into the same dropdowns as the row cells. Found in the FL test the same day: after a sentence the status said "sent, 2 pinned" and nothing showed what was mapped. Until the moves list or the graph exists, a sentence's result is invisible to Noa; the assistant line has to show the route it made.
 
 ### 5. Hands: roles and presets (`ui.hands`, new; UI of `gest.hand_role` and `gest.presets`)
 
@@ -230,6 +240,7 @@ After Enter:
 - Enter or Accept keeps the whole diff as one undo step. Esc discards it.
 - A new sentence while rows are pending works on top of them ("nein, nimm Filter 2"), so a correction during listening needs no Esc first. Enter keeps the combined result as one step.
 - Pending rows stay pending until Enter or Esc; nothing is kept or dropped silently. Decided by Noa on 10-31: every result has to be checked by ear before it is kept.
+- Hand side: completion offers "open my fist" without saying which hand (Noa, 11-03). Gesture items need a side choice (left, right, either) when both hands can do the move, in the list or as a follow-up chip.
 - Unsure terms (score below the calibrated threshold, or a small margin to the second candidate; `map.resolver`, P) open their chip with the top 3 and a search. Noa picks one, and the pick is stored as an alias (`map.aliases`, P), so the same phrase binds directly next time.
 - A sentence the parser marks `none` gets "not a command". A `query` gets an answer line and highlights the rows it means.
 - Voice: push-to-talk on the mic (`map.voice`, online, off by default; Noa decides). Later.
