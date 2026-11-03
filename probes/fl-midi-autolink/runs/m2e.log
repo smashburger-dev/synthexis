@@ -1,0 +1,29 @@
+  0.015 open src="synthexis probe e" dst="synthexis probe e return" identity=7D 53 58 01 00 00 00 00 00
+  0.265 notify 2
+  0.265 notify 2
+  0.265 notify 1
+  0.934 in  DEVICE INQUIRY F0 7E 7F 06 01 F7
+  0.934 out identity F0 7E 7F 06 02 7D 53 58 01 00 00 00 00 00 F7
+  3.127 in  json {"script": "hw", "dev": "synthexis probe e", "port": 237, "assigned": true, "ev": "hello"}
+  4.030 in  json {"script": "hw", "dev": "synthexis probe e", "port": 237, "assigned": true, "id": 4}
+  5.035 in  json {"script": "hw", "dev": "synthexis probe e", "port": 237, "assigned": true, "id": 5}
+  6.039 in  json {"script": "hw", "dev": "synthexis probe e", "port": 237, "assigned": true, "id": 6}
+  7.044 in  json {"script": "hw", "dev": "synthexis probe e", "port": 237, "assigned": true, "id": 7}
+  8.049 in  json {"script": "hw", "dev": "synthexis probe e", "port": 237, "assigned": true, "id": 8}
+  9.054 in  json {"script": "hw", "dev": "synthexis probe e", "port": 237, "assigned": true, "id": 9}
+ 10.059 in  json {"script": "hw", "dev": "synthexis probe e", "port": 237, "assigned": true, "id": 10}
+ 11.063 in  json {"script": "hw", "dev": "synthexis probe e", "port": 237, "assigned": true, "id": 11}
+ 12.068 in  json {"script": "hw", "dev": "synthexis probe e", "port": 237, "assigned": true, "id": 12}
+ 13.073 in  json {"script": "hw", "dev": "synthexis probe e", "port": 237, "assigned": true, "id": 13}
+ 14.078 in  json {"script": "hw", "dev": "synthexis probe e", "port": 237, "assigned": true, "id": 14}
+ 15.083 in  json {"script": "hw", "dev": "synthexis probe e", "port": 237, "assigned": true, "id": 15}
+ 16.088 in  json {"script": "hw", "dev": "synthexis probe e", "port": 237, "assigned": true, "id": 16}
+ 17.092 in  json {"script": "hw", "dev": "synthexis probe e", "port": 237, "assigned": true, "id": 17}
+ 18.097 in  json {"script": "hw", "dev": "synthexis probe e", "port": 237, "assigned": true, "id": 18}
+ 19.101 in  json {"script": "hw", "dev": "synthexis probe e", "port": 237, "assigned": true, "id": 19}
+ 20.105 in  json {"script": "hw", "dev": "synthexis probe e", "port": 237, "assigned": true, "id": 20}
+ 21.109 in  json {"script": "hw", "dev": "synthexis probe e", "port": 237, "assigned": true, "id": 21}
+ 22.114 in  json {"script": "hw", "dev": "synthexis probe e", "port": 237, "assigned": true, "id": 22}
+ 23.118 in  json {"script": "hw", "dev": "synthexis probe e", "port": 237, "assigned": true, "id": 23}
+ 24.122 in  json {"script": "hw", "dev": "synthexis probe e", "port": 237, "assigned": true, "id": 24}
+ 25.125 done

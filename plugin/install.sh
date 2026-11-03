@@ -61,6 +61,23 @@ cp -R target/bundled/synthexis.vst3 "$HOME/Library/Audio/Plug-Ins/VST3/"
 cp -R target/bundled/synthexis.clap "$HOME/Library/Audio/Plug-Ins/CLAP/"
 echo "installed synthexis.vst3 + synthexis.clap"
 
+# FL device script. With it in place FL sets up the plugin's "synthexis"
+# MIDI ports itself (fl/device_synthexis_bridge.py, header). FL reads the
+# folder only at start, and a port name it once saw without a matching
+# script stays without one, so FL has to restart before synthexis is
+# inserted for the first time (probes/fl-midi-autolink/RESULT.md).
+FL_HW="$HOME/Documents/Image-Line/FL Studio/Settings/Hardware"
+if [ -d "$FL_HW" ]; then
+    mkdir -p "$FL_HW/synthexis bridge"
+    cp fl/device_synthexis_bridge.py "$FL_HW/synthexis bridge/"
+    echo "installed the FL device script"
+    if pgrep -x OsxFL >/dev/null; then
+        echo "FL Studio is running: quit and restart it before inserting synthexis."
+    fi
+else
+    echo "no FL Studio settings folder at $FL_HW: FL device script not installed (plugin/README.md)"
+fi
+
 # Perception students: data/models (train-students' working copies, a dev
 # override), else the tracked copies in plugin/models (a fresh clone has
 # no data/), else the preflight stand-ins; compiled for this Mac into the

@@ -74,8 +74,8 @@ texts! {
     n_params: "{} parameters", "{} Parameter";
     reading_classes: "reading parameter classes", "lese Parameterklassen";
     fl_waiting: "waiting for FL", "warte auf FL";
-    fl_no_answer: "FL does not answer. In FL, open Options > MIDI settings and give the input \"synthexis bridge\" the controller type \"synthexis bridge\".",
-        "FL antwortet nicht. In FL unter Options > MIDI settings dem Eingang \"synthexis bridge\" den Controller-Typ \"synthexis bridge\" geben.";
+    fl_no_answer: "FL does not answer. Restart FL once after installing synthexis. Still nothing: in Options > MIDI settings give the input \"synthexis\" the controller type \"synthexis bridge\" and the output \"synthexis\" the same port.",
+        "FL antwortet nicht. FL nach der Installation von synthexis einmal neu starten. Danach immer noch nicht: unter Options > MIDI settings dem Eingang \"synthexis\" den Controller-Typ \"synthexis bridge\" und dem Ausgang \"synthexis\" denselben Port geben.";
     fl_old_script: "FL runs an old bridge script ({}). Copy plugin/fl/device_synthexis_bridge.py into FL's Hardware folder.",
         "FL nutzt ein altes Bridge-Skript ({}). plugin/fl/device_synthexis_bridge.py in FLs Hardware-Ordner kopieren.";
     fl_no_plugins: "no plugins in the project", "keine Plugins im Projekt";

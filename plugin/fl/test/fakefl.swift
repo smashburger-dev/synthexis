@@ -2,7 +2,7 @@ import CoreMIDI
 import Foundation
 
 // Fake FL for the bridge test without FL: connects to the plugin's virtual
-// ports ("synthexis bridge" source, "synthexis bridge return" destination)
+// ports (source and destination both named "synthexis")
 // and carries SysEx frames to and from fake_fl.py, which runs the real
 // device script. Exits when fake_fl.py exits.
 //
@@ -12,7 +12,7 @@ import Foundation
 
 let args = CommandLine.arguments
 let script = args.count > 1 ? args[1] : "fake_fl.py"
-let port = args.count > 2 ? args[2] : "synthexis bridge"
+let port = args.count > 2 ? args[2] : "synthexis"
 
 func endpoint(_ name: String, sources: Bool) -> MIDIEndpointRef? {
     let n = sources ? MIDIGetNumberOfSources() : MIDIGetNumberOfDestinations()
@@ -34,7 +34,7 @@ var src: MIDIEndpointRef? = nil
 var dst: MIDIEndpointRef? = nil
 for _ in 0..<100 {
     src = endpoint(port, sources: true)
-    dst = endpoint(port + " return", sources: false)
+    dst = endpoint(port, sources: false)
     if src != nil && dst != nil { break }
     RunLoop.main.run(until: Date().addingTimeInterval(0.1))
 }

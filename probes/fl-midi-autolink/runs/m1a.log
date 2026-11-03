@@ -1,0 +1,6 @@
+  0.016 open src="synthexis probe" dst="synthexis probe return" identity=none
+  0.267 notify 2
+  0.267 notify 2
+  0.267 notify 1
+  1.009 in  DEVICE INQUIRY F0 7E 7F 06 01 F7
+ 30.159 done
