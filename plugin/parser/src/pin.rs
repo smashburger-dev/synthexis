@@ -6,8 +6,9 @@
 //!   drive several targets (fan-out, "resonance and cutoff"). It takes the
 //!   free target next to the PNAME span that covers it, else a free target
 //!   of its class, else the only free parameter or toggle target when it is
-//!   the last chip; that target becomes T:param:<class> (T:toggle for a
-//!   switch) and carries the parameter id;
+//!   the last chip, else one more target in the nearest route that has a
+//!   source; that target becomes T:param:<class> (T:toggle for a switch)
+//!   and carries the parameter id;
 //! - a gesture chip goes to the route that already has its source; the
 //!   others go in sentence order to the free routes when their counts are
 //!   equal, else each to the free route nearest to it (by its spans and
@@ -235,6 +236,10 @@ impl Route {
         };
         self.tgt_pinned[i] = true;
         self.widen(bytes);
+    }
+
+    fn has_source(&self) -> bool {
+        self.items.iter().any(|it| tok(it).starts_with("S:"))
     }
 
     /// Position after the leading source tokens.
@@ -469,11 +474,22 @@ pub fn pin(items: &[Item], pins: &[Pin]) -> Frame {
             placed[k] = true;
         }
     }
+    // 4. a chip no target takes joins the nearest route with a source as
+    // one more target (the parser left it out: "more dreamy and ring
+    // longer"); a route of its own would have nothing to drive it
+    // (probes/pin-hill, C2)
     for (k, &(bytes, id, class, switch)) in params.iter().enumerate() {
-        if !placed[k] {
-            let mut r = Route::default();
-            r.set_param(None, id, class, switch, bytes);
-            f.add_route(r);
+        if placed[k] {
+            continue;
+        }
+        let mut routes = f.routes_mut();
+        match routes.iter_mut().filter(|r| r.has_source()).min_by_key(|r| r.gap(bytes)) {
+            Some(r) => r.set_param(None, id, class, switch, bytes),
+            None => {
+                let mut r = Route::default();
+                r.set_param(None, id, class, switch, bytes);
+                f.add_route(r);
+            }
         }
     }
     for p in &pins {
@@ -695,7 +711,7 @@ mod tests {
     }
 
     #[test]
-    fn uncovered_chip_adds_route() {
+    fn uncovered_chip_joins_the_nearest_route() {
         let t = "my fist drives the cutoff and also Reverb Mix";
         let fr = ["I:map", "<route>", "S:hand.fist", "T:param:filter.cutoff", "</route>"];
         let pins = [param(t, "Reverb Mix", "p#9", "fx.reverb.mix", false)];
@@ -705,10 +721,14 @@ mod tests {
             param(t, "cutoff", "p#1", "filter.cutoff", false),
             param(t, "Reverb Mix", "p#9", "fx.reverb.mix", false),
         ];
+        // the parser wrote one target for two chips: the second joins the
+        // fist's route instead of a route with nothing to drive it
         let f = pin(&items(&fr, t), &pins);
-        let out = f.frame();
-        assert_eq!(f.routes().count(), 2);
-        assert_eq!(out[out.len() - 4..], ["<route>", "T:param:fx.reverb.mix", "@p#9", "</route>"]);
+        assert_eq!(f.routes().count(), 1);
+        assert_eq!(
+            f.frame(),
+            ["I:map", "<route>", "S:hand.fist", "T:param:fx.reverb.mix", "@p#9", "T:param:filter.cutoff", "@p#1", "</route>"]
+        );
     }
 
     #[test]
