@@ -37,7 +37,7 @@ Hard dates: S3 and S4 recorded 10-30/10-31, training from 11-01 (new Modal credi
 
 ## Plugin (hill-climb line owns `plugin/`)
 
-- [ ] Students in the plugin (CoreML from Rust), derived features (`feat.*`)
+- [x] Students in the plugin (CoreML from Rust), derived features (`feat.*`): backend `hybrid`, numbers, tuning handoff in `probes/plugin-perception/` (RESULT.md, TUNING.md)
 - [ ] Motion primitives, presets Pong and Orb, motifs
 - [ ] Gestures and MIDI: finger states, chords, patterns, scale, transport
 - [ ] Recording latency compensation (`rec.latency_comp`)
@@ -46,6 +46,7 @@ Hard dates: S3 and S4 recorded 10-30/10-31, training from 11-01 (new Modal credi
 - [ ] UI in the glass language (last, after perception and routes are stable)
 - [ ] Target picker: follow the plugin FL has focused, or pick mixer track then plugin; the assistant resolves only there (resolver top-1 0.676 with the plugin picked, 0.580 with 6 plugins, 0.538 with 30: `probes/open-vocab-mapping/picker.py`); FL side in session fl-target-picker
 - [ ] UX structure (session plugin-ux, `docs/ux-plugin.md`): assigned-moves panel per hand, finger and movement class with icons; objects you add and name; profiles 1..n with routes and presets per hand and object, switchable live while the song plays, saved with the project
+- [ ] Assigned routes into the engine: only assigned routes may move a macro, so FL records only those (Noa). The built-in routes are test routes behind the "Test signal" parameter (commit 9d9b9ae); until the UX route table lands, the plugin moves no macro with Test signal off. Keep this when merging.
 
 ## Mapping assistant (own session; state in `docs/session-2026-10-30-mapping-train.md`)
 
@@ -91,4 +92,7 @@ Hard dates: S3 and S4 recorded 10-30/10-31, training from 11-01 (new Modal credi
 - [ ] FigJam: update again after Noa's sentences, the retrain and the FL test
 - [ ] Demo project in FL, 3-minute video with presets and behind the scenes (11-03)
 - [ ] README with real request counts, repo public (11-03)
+- [ ] Install from source for others: `plugin/install.sh` offers Apple's Command Line Tools and the official rustup installer when missing (commit 4778556); parser and completion runtime still come from `data/` and have to be tracked like `plugin/models/` (asked of the mapping assistant session, 11-03)
+- [ ] Download release (Noa, 11-03): signed synthexis.vst3 and .clap with the three models as a GitHub release, installed by copying only, without Rust or the Command Line Tools; publishing needs Noa's OK
+- [ ] Final install test once everything is merged and before the demo: fresh clone without `data/`, `./install.sh` with its prompts, FL loads the plugin, one assigned route moves and is recorded alone, `fl_live.py`; then the release zip on a clean user account
 - [ ] Submission (11-04)

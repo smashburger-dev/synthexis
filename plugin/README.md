@@ -80,7 +80,7 @@ python3 ../probes/plugin-perception/eval.py /tmp/s4.jsonl \
   ../data/recordings/2026-11-01-S4/segments.json
 ```
 
-Numbers: `probes/plugin-perception/RESULT.md`.
+Numbers: `probes/plugin-perception/RESULT.md`; where the tuning knobs are and how to change them: `probes/plugin-perception/TUNING.md`.
 
 ## Vendored nih-plug patch
 

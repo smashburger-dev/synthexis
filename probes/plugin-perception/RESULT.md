@@ -10,6 +10,8 @@ Runtime use of Vision is allowed (`probes/licence-check`); nothing trains on it.
 
 On S4, the held-out session, `hybrid` emits hands after 2.9 / 4.2 ms (median / p95) and the face after 8.0 ms median, against 21 to 31 ms for `vision` offline and 40 to 58 ms median in FL. Hands land on the labelled side in 98.7% of block A frames and on the wrong side in 0.2% (Vision 99.0% / 0.0%). Several choices looked at S4 before the dev-only rule, so S4 is partly a selection set (list in the section on the dev rule). The landmarks run on their own thread beside the hands; they take about 6 ms on any device Vision offers. `students` alone is faster, but its face student does not separate open from closed eyes.
 
+Tuning and calibration later: `TUNING.md` (constants, rules, lab scripts in `lab/`).
+
 ## Commands
 
 ```
