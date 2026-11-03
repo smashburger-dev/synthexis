@@ -212,6 +212,44 @@ Hand seeds, dev finger state accuracy at the best epoch (seed 0 ran on Modal, se
 
 Seeds of one recipe differ by up to 4 points, and the per-epoch dev curve jumps by 3 to 8 points between neighbouring epochs (1,266 labelled finger crops). The 1-point finger gap the plugin measured on S4 between hand-chir and hand-final (0.925 against 0.935) is inside that noise. hand-chir seed 0 stays shipped: it is the best seed with the handedness output, and hand-final-s1 has no handedness output. Handedness of the new seeds: 0.915 / 0.914 over all dev crops (seed 0: 0.931). None of them was gated.
 
+## S4 use: decisions that already looked at S4 (2026-11-03)
+
+train.setup reserves S4 for one final measurement per frozen candidate. Noa, 2026-11-03: no more selection or tuning on S4 numbers; every choice (checkpoint, seg variant, thresholds in `students.json`) is made on dev from S1 to S3. These earlier decisions read S4, so the S4 figures in this file are partly used for selection and come out optimistic:
+
+1. seg-a: the first S4 gate showed hand IoU 0.02 with a SAM prev mask. That led to the BN bug fix and the BN recalibration (train data only), then a second S4 gate of the same weights. S4 was read twice for one candidate.
+2. Hand: hand-v3-s0 (0.885), hand-final (0.892) and hand-chir (0.890) were each gated on S4. Each next candidate was picked on dev or LOSO, but S4 had been seen before each choice.
+3. Handedness: the contract change and hand-chir came from a failure found on S4 block A (plugin side error 32 %), and my diagnosis of it (seg covers 99.7 % of block A hands) ran on S4 frames.
+4. Eye: the face eye failure was diagnosed on S4 (painted eye area 0.34x of SAM, crop zoom tests on dev). The decision to take eyes from Apple Vision landmarks in the plugin rests on S4 eye 0.243. No eye bias or threshold was fitted on S4.
+5. seg-v3l: picked on dev, gated on S4 and shipped, then rolled back on the plugin's S4 finger accuracy (0.925 against 0.887). Both the ship and the rollback were S4 decisions. The seg choice was then re-made on dev only ("Seg pick on dev"), with the same outcome.
+6. Plugin (probes/plugin-perception, its own record): the hybrid default, the side fix and the handedness vote weights were fitted on S1 to S3 but scored on S4 several times; its RESULT.md marks its S4 face numbers as no longer held out.
+7. Not decisions, but S4 reads: the plugin's hand-chir against hand-final finger comparison (0.925 against 0.935) and the S4 one-hand blob counts behind the rollback.
+
+From here on S4 is read only for a final candidate frozen on dev, once, and no model, threshold or variant changes because of it.
+
+## Seg pick on dev (2026-11-03, no S4)
+
+Joint pick with the plugin session, made on the packer's dev segments only. The plugin's end-to-end number decides, and my dev numbers sit next to it.
+
+Plugin (probes/plugin-perception, students backend, hand-chir seed 0, the 14 block A dev segments, 2,720 labelled hand frames over S1 to S3). Columns: present, wrong side, finger accuracy on present frames, finger count MAE, present x finger:
+
+| seg | pair gate | present | wrong side | fingers | count MAE | present x finger |
+|---|---|---|---|---|---|---|
+| seg-a-s0 | none | 0.981 | 0.000 | 0.954 | 0.166 | 0.936 |
+| seg-a-s0 | 0.1 | 0.979 | 0.000 | 0.958 | 0.148 | 0.938 |
+| seg-v3l | none | 0.975 | 0.0007 | 0.943 | 0.224 | 0.920 |
+| seg-v3l | 0.1 | 0.965 | 0.0007 | 0.953 | 0.177 | 0.920 |
+
+The pair gate drops a second hand blob below 0.1x the first. Its ratio was swept on dev. The gap comes from two-hand segments.
+
+`train.py --dev-eval` (all 7,123 dev frames, own prev in time order, hand candidates as the plugin builds them: 4-neighbour regions >= 60 px, largest two):
+
+| seg | person / face / hand IoU | hand frame recall | spurious blobs per frame | one-hand frames with a second blob | missing hand |
+|---|---|---|---|---|---|
+| seg-a-s0 | 0.886 / 0.870 / 0.729 | 0.968 | 0.096 | 0.068 | 0.052 |
+| seg-v3l | 0.897 / 0.884 / 0.751 | 0.968 | 0.086 | 0.069 | 0.051 |
+
+On dev, seg-v3l is not worse on spurious blobs, so the S4 speck effect does not reproduce there. The plugin still scores it 1.6 to 1.8 points lower end to end. Neither class IoU nor blob counts predict that, so for seg only the plugin bench on dev counts. Pick: seg-a-s0 stays in `data/models/seg.mlpackage`. seg-v3l stays archived.
+
 ## Shipped state (2026-11-03)
 
 | student | run | S4 | gate | ANE median / p95 ms |

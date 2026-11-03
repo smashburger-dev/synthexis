@@ -573,6 +573,23 @@ def calibrate(probs, labels):
 
 
 @torch.no_grad()
+def hand_blobs(m, min_area=60, iters=400):
+    """Plugin hand candidates (engine/geom.rs components): 4-neighbour regions
+    of a bool mask (H, W) with >= min_area px, largest first, as a list of
+    bool masks. Label propagation by max over the 4 neighbours."""
+    h, w = m.shape
+    lab = torch.where(m, torch.arange(1, h * w + 1, device=m.device).view(h, w).float(), torch.zeros((), device=m.device))
+    for _ in range(iters):
+        p = torch.nn.functional.pad(lab, (1, 1, 1, 1))
+        nxt = torch.stack([lab, p[:-2, 1:-1], p[2:, 1:-1], p[1:-1, :-2], p[1:-1, 2:]]).amax(0) * m
+        if torch.equal(nxt, lab):
+            break
+        lab = nxt
+    ids, counts = lab[m].unique(return_counts=True)
+    keep = sorted(((int(c), i) for i, c in zip(ids.tolist(), counts.tolist()) if c >= min_area), reverse=True)
+    return [lab == i for _, i in keep]
+
+
 def eval_seg_sequential(model, files, args, cfg, limit=None):
     """Live-like: frames in time order, the prev-mask input is the student's own
     previous prediction (zeros after a gap), as the plugin will run it."""
@@ -589,7 +606,7 @@ def eval_seg_sequential(model, files, args, cfg, limit=None):
     # misses it (probes/plugin-perception); counted where SAM shows a hand of
     # >= 150 px, hit when the student covers >= 30 % of it; "centre" = hand
     # centroid in the middle third of the frame, where the side rule fails
-    recall = Counter()
+    recall, blobs = Counter(), Counter()
     last_idx, last_sess, last_pred = None, None, None
     for sess, idx, prev_idx, jpg, png in items:
         image = torch.from_numpy(_u8(jpg).copy()).permute(2, 0, 1).to(dev).float().unsqueeze(0) / 255
@@ -611,6 +628,18 @@ def eval_seg_sequential(model, files, args, cfg, limit=None):
             for key in ("all", "centre") if 1 / 3 <= cx <= 2 / 3 else ("all",):
                 recall[key + "_n"] += 1
                 recall[key + "_hit"] += hit
+        # plugin-like hand candidates (top 2 blobs >= 60 px) against SAM hands:
+        # small false blobs barely move IoU but become extra hands in the plugin
+        sam_n = min(2, len(hand_blobs(gt)))
+        cands = hand_blobs(pred[0] == 5)[:2]
+        spur = sum(int((c & gt).sum()) < 0.1 * int(c.sum()) for c in cands)
+        blobs["frames"] += 1
+        blobs["spurious"] += spur
+        blobs["extra"] += len(cands) > sam_n
+        blobs["missing"] += len(cands) < sam_n
+        if sam_n == 1:
+            blobs["one_hand"] += 1
+            blobs["one_hand_second"] += len(cands) > 1
         last_idx, last_sess, last_pred = idx, sess, pred
     total = sum(cms.values())
     out = {"samples": len(items), "iou_own": iou(total, SEG_CLASSES),
@@ -619,6 +648,10 @@ def eval_seg_sequential(model, files, args, cfg, limit=None):
     out["hand_frame_recall"] = {key: round(recall[key + "_hit"] / recall[key + "_n"], 4) if recall[key + "_n"] else None
                                 for key in ("all", "centre")}
     out["hand_frames"] = {key: recall[key + "_n"] for key in ("all", "centre")}
+    n = max(blobs["frames"], 1)
+    out["hand_blobs"] = {"spurious_per_frame": round(blobs["spurious"] / n, 4), "extra_rate": round(blobs["extra"] / n, 4),
+                         "missing_rate": round(blobs["missing"] / n, 4), "one_hand_frames": blobs["one_hand"],
+                         "one_hand_second_rate": round(blobs["one_hand_second"] / max(blobs["one_hand"], 1), 4)}
     return out
 
 
@@ -674,6 +707,7 @@ def main():
     ap.add_argument("--usd-per-hour", type=float, default=0.0, help="> 0 turns the spend guards on")
     ap.add_argument("--resume", action="store_true")
     ap.add_argument("--gate", action="store_true", help="calibrate on dev, gate best.pt on S4")
+    ap.add_argument("--dev-eval", action="store_true", help="seg: best.pt, live-like sequential eval on dev only (no S4)")
     ap.add_argument("--export", action="store_true", help="best.pt -> CoreML FP16 in data/models")
     ap.add_argument("--recal-bn", type=int, default=0, metavar="N",
                     help="seg: recompute BatchNorm running stats of best.pt over N augmented train batches")
@@ -691,6 +725,11 @@ def main():
 
     if args.recal_bn:
         return recal(args, run, cfg)
+    if args.dev_eval:
+        model, ck = load_best(args, run)
+        out = eval_seg_sequential(model, shard_files(args.data, "seg", "dev"), args, eval_cfg, args.eval_limit)
+        (run / "dev_eval.json").write_text(json.dumps({"epoch": ck["epoch"], **out}, indent=1))
+        return print(json.dumps(out, indent=1))
     if args.gate:
         return gate(args, run, eval_cfg)
     if args.export:
