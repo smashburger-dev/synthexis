@@ -25,7 +25,7 @@ A change (pin.rs, or a rule after decoding that only runs where chips exist) is 
 | C1: pin.rs writes a pinned shape after the side ("S: side: shape:", the order of parser and gold; route_edit compares the unit in order) | 0.7761 | 0.8219 | 0.8345 | rejected (+0.0003) |
 | C2: a parameter chip no target takes joins the nearest route that has a source, instead of a route of its own without a source | 0.7761 | 0.8231 | 0.8358 | rejected (+0.0016 < 0.002) |
 
-C2 halves the rows with a wrong route count (111 -> 63) but most of them stay wrong for another reason; it is the same change as completion-v11's P3 (+0.0015 there). Both are reverted.
+C2 halves the rows with a wrong route count (111 -> 63) but most of them stay wrong for another reason; it is the same change as completion-v11's P3 (+0.0015 there). Both were reverted by the rule. Noa then took C2 in anyway (11-03): a route without a source never drives anything, and no set lost by it. C2 is in pin.rs since then; C1 stays out.
 
 ## Where the rest is (h1, all 5,735 rows pooled)
 
@@ -48,7 +48,7 @@ The answer line shows what the frame read between gesture and parameter: "hand o
 
 ## Edge cases found on the way
 
-- Two chips for one parser target: the parser wrote fewer targets than the user chipped ("more wobbly ... more dreamy and ring longer"); pin.rs opens a route without a source for each extra chip (C2 above would fix it; kept out by the rule).
+- Two chips for one parser target: the parser wrote fewer targets than the user chipped ("more wobbly ... more dreamy and ring longer"); pin.rs opened a route without a source for each extra chip. Fixed by C2.
 - A gate's shape is not the source's: "blink ... only while my hand is open" has `G:hand.shape shape:open` on the blink route; a harness (and a user) must not give the source chip the gate's shape.
 - One gesture, parameters in opposite directions: INV is per route, so a fan-out with opposite directions needs one route per direction; pin.rs pins per target and keeps the parser's routes.
 - Ranges read as lo or hi ("nur bis 95 Prozent" as lo:0.95 in one gold row, hi:0.95 from the parser).
