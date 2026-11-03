@@ -201,7 +201,7 @@ The plugin (probes/plugin-perception) kept Apple Vision as default because a sin
 | seg-a-s0 | 0.886 | 0.870 | 0.729 | 0.454 | 0.646 | 0.828 | 0.968 |
 | seg-v3l | 0.897 | 0.884 | 0.751 | 0.496 | 0.636 | 0.844 | 0.968 |
 
-+1.6 points on the mean, above the 1-point rule (seg-a against seg-b, same recipe: 0.4 points), so seg-v3l was gated once on S4. Own prev in time order: person 0.792, face 0.830, hand 0.813, mouth 0.645, eye 0.163 (seg-a-s0: 0.766, 0.798, 0.797, 0.659, 0.137); zero prev: 0.804, 0.830, 0.808 (0.780, 0.794, 0.791); hand frame recall 0.991. Gate 0.85 still missed. With SAM masks as prev it is about equal (0.838 / 0.836 / 0.836 against 0.851 / 0.833 / 0.844), but the plugin never has SAM masks. Shipped as `seg.mlpackage` (epoch 6, argmax agreement 0.9999); seg-a-s0 kept in `data/models/archive/`. ANE 0.775 / 0.862 ms (median / p95; budget 3). The output name changed (`var_312`); the plugin picks outputs by element count.
++1.6 points on the mean, above the 1-point rule (seg-a against seg-b, same recipe: 0.4 points), so seg-v3l was gated once on S4. Own prev in time order: person 0.792, face 0.830, hand 0.813, mouth 0.645, eye 0.163 (seg-a-s0: 0.766, 0.798, 0.797, 0.659, 0.137); zero prev: 0.804, 0.830, 0.808 (0.780, 0.794, 0.791); hand frame recall 0.991. Gate 0.85 still missed. With SAM masks as prev it is about equal (0.838 / 0.836 / 0.836 against 0.851 / 0.833 / 0.844), but the plugin never has SAM masks. Exported (epoch 6, argmax agreement 0.9999; ANE 0.775 / 0.862 ms median / p95) and shipped at 10:15, then rolled back to seg-a-s0 the same morning. The plugin's S4 bench (probes/plugin-perception, same hybrid backend, only seg swapped) showed finger accuracy 0.925 -> 0.887 and finger count MAE 0.14 -> 0.30, with present rate (0.991) and wrong side (0.002) unchanged. Hand boxes of both models agree within 1 to 6 %; seg-v3l adds small spurious hand blobs (one-hand frames with a second candidate: 505 against 148, median 89 px), which the plugin turns into extra hands. Class IoU barely moves on a blob of 89 px, so the gate measure cannot see this failure. Lesson: a seg candidate ships only after the plugin bench, not on IoU alone. seg-v3l is in `data/models/archive/seg-v3l.mlpackage` for a retry with a blob filter.
 
 Hand seeds, dev finger state accuracy at the best epoch (seed 0 ran on Modal, seeds 1 and 2 on the Mac):
 
@@ -216,7 +216,7 @@ Seeds of one recipe differ by up to 4 points, and the per-epoch dev curve jumps 
 
 | student | run | S4 | gate | ANE median / p95 ms |
 |---------|-----|----|------|---------------------|
-| seg | seg-v3l, MobileNetV3-Large, self-prev | person 0.792, face 0.830, hand 0.813 (own prev, time order); mouth 0.645 | 0.85: no | 0.775 / 0.862 |
+| seg | seg-a-s0, BN recalibrated (seg-v3l rolled back, see above) | person 0.766, face 0.798, hand 0.797 (own prev, time order); mouth 0.659 | 0.85: no | 0.547 / 0.649 |
 | hand | hand-chir, MobileNetV3-Small, pseudo finger labels, handedness output | states 0.890; per finger 0.931 / 0.985 / 0.990 / 0.982 / 0.959; keypoints 9.1 / 6.7 px; handedness 0.941 (single hand, block A: 0.982) | 0.95: no | 0.400 / 0.657 |
 | face | face-a-s1 | mouth 0.705, eye 0.243 | 0.70: mouth yes, eye no | 0.339 / 0.500 |
 
