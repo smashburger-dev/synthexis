@@ -25,6 +25,13 @@ SYNTHEXIS_TEST="test_signal=on" \
   target/bundled/synthexis.app/Contents/MacOS/synthexis -r 44100
 ```
 
+install.sh needs Apple's Command Line Tools and Rust. When one is missing
+it says so and offers the official installer (`xcode-select --install`,
+rustup from https://rustup.rs) and installs only after a yes; without a
+terminal it stops with the command to run. If `coremlcompiler` cannot
+compile a model, the .mlpackage is copied and the plugin compiles it when
+it loads.
+
 install.sh refuses only when OsxFL is running AND the synthexis bundle is
 already installed (a loaded dylib can't be replaced safely; first install
 is fine — FL hasn't loaded it). Log: ~/Library/Logs/synthexis.log.

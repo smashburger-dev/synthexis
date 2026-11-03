@@ -14,6 +14,41 @@ if pgrep -x OsxFL >/dev/null && [ "$INSTALLED" = 1 ]; then
     exit 1
 fi
 
+# Building from source needs Apple's Command Line Tools (clang and the
+# linker Rust uses) and Rust (cargo). A missing one is offered through its
+# official installer and installed only after a yes.
+ask() { # prompt -> true on yes; false without a terminal
+    local a
+    [ -t 0 ] || return 1
+    read -r -p "$1 [y/N] " a
+    [[ "$a" =~ ^[YyJj] ]]
+}
+if ! xcode-select -p >/dev/null 2>&1; then
+    echo "Apple's Command Line Tools are missing: Rust links with their clang and linker."
+    echo "Apple's own installer is 'xcode-select --install' (a macOS dialog, no Apple ID)."
+    if ask "Open Apple's installer now?"; then
+        xcode-select --install || true
+        echo "Re-run $0 when the installation has finished."
+    fi
+    exit 1
+fi
+if ! command -v cargo >/dev/null 2>&1 && [ -x "$HOME/.cargo/bin/cargo" ]; then
+    export PATH="$HOME/.cargo/bin:$PATH"
+fi
+if ! command -v cargo >/dev/null 2>&1; then
+    echo "Rust is missing. The official installer is rustup from https://rustup.rs:"
+    echo "  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh"
+    echo "It installs into ~/.rustup and ~/.cargo for your user only (no sudo) and"
+    echo "shows its own menu first, where you can still cancel."
+    if ask "Run the official rustup installer now?"; then
+        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+        export PATH="$HOME/.cargo/bin:$PATH"
+        command -v cargo >/dev/null 2>&1 || { echo "cargo still not found; re-run $0 in a new terminal."; exit 1; }
+    else
+        exit 1
+    fi
+fi
+
 GUARD_MAX_LOAD=${GUARD_MAX_LOAD:-80} ./guarded-cargo.sh xtask bundle synthexis --release
 
 codesign --force --deep -s - target/bundled/synthexis.vst3
@@ -47,12 +82,17 @@ for spec in "seg:seg_mnv4s_384x216_pm.mlpackage" "hand:hand_mnv4s_128.mlpackage"
         echo "perception: no $name model"
         continue
     fi
+    rm -rf "${MODELS:?}/${name:?}.mlmodelc" "${MODELS:?}/${name:?}.mlpackage"
     tmp=$(mktemp -d)
-    xcrun coremlcompiler compile "$src" "$tmp" >/dev/null
-    rm -rf "${MODELS:?}/${name:?}.mlmodelc"
-    mv "$tmp"/*.mlmodelc "$MODELS/$name.mlmodelc"
-    rmdir "$tmp"
-    echo "perception: $name <- $src"
+    if xcrun coremlcompiler compile "$src" "$tmp" >/dev/null 2>&1; then
+        mv "$tmp"/*.mlmodelc "$MODELS/$name.mlmodelc"
+        echo "perception: $name <- $src"
+    else
+        # The plugin compiles an .mlpackage itself each time it loads (a few s).
+        cp -R "$src" "$MODELS/$name.mlpackage"
+        echo "perception: $name <- $src (copied; the plugin compiles it when it loads)"
+    fi
+    rm -rf "$tmp"
 done
 # hybrid by default: the students for hands and seg, Apple Vision face
 # landmarks on the seg face box (probes/plugin-perception). Others:
