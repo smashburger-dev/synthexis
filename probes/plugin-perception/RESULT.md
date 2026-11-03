@@ -329,6 +329,8 @@ Pinch. Touching thumb and index tips sit 0.1 to 0.3 palm lengths apart in the H_
 
 S4, scored once, block A: finger accuracy 0.929 (814c0ec: 0.935), openness against extended fingers 0.956 (0.965), side unchanged (0.987 / 0.002). The ramps were recorded at the protocol's pace, which moves fast through the middle; how a slow live opening feels is for Noa to judge.
 
+Live in FL afterwards (`runs/1793705120-fl_live.json`): right-hand openness 0.02 to 0.97 with 144 distinct values (before 0.00 to 0.87, 120), left hand 0.00 to 0.90, pinch 0.00 to 1.00 (before up to 0.84), automation replay 0.00 to 0.94 `recorded`; mouth, eye and yaw kept their full range.
+
 ## Signal contract
 
 - Ids: `cam0.` + ontology source id, side after the first segment for sided sources: `cam0.hand.R.openness`, `cam0.hand.L.finger.index.tilt`, `cam0.eye.L.open`, `cam0.mouth.open`, `cam0.face.smile`, `cam0.head.yaw`, `cam0.hands.distance`, `cam0.object.x`. `S:hand.openness side:right` maps to `cam0.hand.R.openness`. The spec's example `cam0.face.mouth.open` (sig.contract) differs from the ontology's `mouth.open`; the code follows the ontology.
