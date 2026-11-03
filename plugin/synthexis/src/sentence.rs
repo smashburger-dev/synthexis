@@ -27,9 +27,15 @@
 //! picked; their classes from the exported plugin of the same name, else
 //! the labels of a mapped plugin, else param-sense (sense.rs).
 //!
+//! Language: every string comes from i18n.rs in the language setting, and
+//! the engine filters its items by it (English items only in English, both
+//! with German first in German); what the user types is never restricted.
+//!
 //! Completion data: $SYNTHEXIS_COMPLETION_DIR, else
 //! ~/Library/Application Support/synthexis/completion, as
-//! tools/mapping/export_completion.py writes it. Loaded on its own thread;
+//! tools/mapping/export_completion.py writes it. Loaded on its own thread,
+//! the vocabulary first (typing needs only it, about 10 ms), then the
+//! labels and param-sense the picker classifies with (about 110 ms);
 //! queries run on the GUI thread (about 2 ms per keystroke for a plugin of
 //! 2,600 parameters), never on the audio thread.
 
@@ -45,11 +51,12 @@ use nih_plug_egui::egui::{
 use parking_lot::RwLock;
 use synthexis_complete::data::{self, PluginInfo};
 use synthexis_complete::doc::ChipText;
-use synthexis_complete::{finger_open, Chip, Engine, Param, Suggestion, Variants, FINGERS, GHOST_MIN_CHARS, SIDES};
+use synthexis_complete::{finger_open, Chip, Engine, Lang, Param, Suggestion, Variants, FINGERS, GHOST_MIN_CHARS, SIDES};
 use synthexis_parser::{Pin, PinWhat};
 
 use crate::assistant;
 use crate::fl::{self, Link};
+use crate::i18n::{self, fill, Text};
 use crate::log::log;
 use crate::sense;
 
@@ -62,7 +69,12 @@ const ROW_H: f32 = 22.0;
 const PICK_ROW_H: f32 = 26.0;
 const PICKER_H: f32 = 420.0;
 
-type Loaded = (Result<(Engine, Vec<PluginInfo>), String>, sense::Classes, Vec<String>);
+/// What the loader thread sends, in this order.
+enum Loaded {
+    Vocab(Result<(Engine, Vec<PluginInfo>), String>),
+    /// Labels of the mapped plugins and param-sense, with notes on what is missing.
+    Labels(sense::Classes, Vec<String>),
+}
 
 pub struct Sentence {
     doc: ChipText,
@@ -73,8 +85,9 @@ pub struct Sentence {
     /// Labels of the mapped plugins and param-sense, and their result per target.
     labels: sense::Classes,
     classified: HashMap<fl::Key, Vec<Param>>,
+    /// Open until the labels arrived; no target is classified before.
     loader: Option<Receiver<Loaded>>,
-    status: String,
+    status: Status,
     bridge: Option<&'static fl::Bridge>,
     seen: u64,
     link: Link,
@@ -86,7 +99,7 @@ pub struct Sentence {
     want: Option<fl::Key>,
     /// Target whose parameters the engine holds.
     applied: Option<fl::Key>,
-    pick_note: String,
+    pick_note: PickNote,
     /// Where the picker button sat last frame (its list matches its width).
     picker_button: Rect,
     sugg: Vec<Suggestion>,
@@ -106,6 +119,80 @@ pub struct Sentence {
     dismissed: bool,
     cursor: usize,
     id: Option<Id>,
+}
+
+/// The field's own line under the picker, shown in the current language.
+#[derive(Clone, Debug, PartialEq)]
+enum Status {
+    Ready,
+    Loading,
+    LoaderFailed(String),
+    NoData(String),
+    Sent(usize),
+}
+
+impl Status {
+    fn text(&self, t: &Text) -> String {
+        match self {
+            Status::Ready => String::new(),
+            Status::Loading => t.loading.to_string(),
+            Status::LoaderFailed(e) => fill(t.loader_failed, &[e]),
+            Status::NoData(e) => fill(t.no_data, &[e]),
+            Status::Sent(n) => fill(t.sent, &[n]),
+        }
+    }
+}
+
+/// What the picker says about its current target.
+#[derive(Clone, Debug, PartialEq)]
+enum PickNote {
+    None,
+    /// The pinned plugin left its slot (its label).
+    Gone(String),
+    Params(usize),
+    /// FL's own error for the parameter names.
+    Error(String),
+}
+
+impl PickNote {
+    fn text(&self, t: &Text) -> String {
+        match self {
+            PickNote::None => String::new(),
+            PickNote::Gone(label) => fill(t.pin_gone, &[label]),
+            PickNote::Params(n) => fill(t.n_params, &[n]),
+            PickNote::Error(e) => e.clone(),
+        }
+    }
+}
+
+/// The link to FL in words; MIDI port errors stay technical.
+fn link_text(link: &Link, t: &Text) -> Option<String> {
+    match link {
+        Link::Waiting => Some(t.fl_waiting.to_string()),
+        Link::Down(e) if e == fl::NO_ANSWER => Some(t.fl_no_answer.to_string()),
+        Link::Down(e) => Some(match e.strip_prefix(fl::OLD_SCRIPT) {
+            Some(rest) => fill(t.fl_old_script, &[&rest.split(',').next().unwrap_or(rest)]),
+            None => e.clone(),
+        }),
+        Link::Up => None,
+    }
+}
+
+/// The completion vocabulary as the loader thread reads it (also the
+/// load-time probe's completion part).
+pub fn load_vocab() -> Result<(Engine, Vec<PluginInfo>), String> {
+    let t0 = std::time::Instant::now();
+    let res = data::load(&data_dir());
+    log(&format!("completion: vocab loaded in {:.0} ms", t0.elapsed().as_secs_f64() * 1e3));
+    res
+}
+
+/// Labels and param-sense as the loader thread reads them (also the probe's).
+pub fn load_labels() -> (sense::Classes, Vec<String>) {
+    let t0 = std::time::Instant::now();
+    let out = sense::Classes::load(&data_dir());
+    log(&format!("completion: labels and param-sense loaded in {:.0} ms", t0.elapsed().as_secs_f64() * 1e3));
+    out
 }
 
 fn data_dir() -> PathBuf {
@@ -167,14 +254,11 @@ fn to_pin(range: &std::ops::Range<usize>, chip: &Chip) -> Pin {
     Pin { bytes: (range.start, range.end), what }
 }
 
-/// A side as the panel, the ghost text and a chip badge show it.
-const SIDE_BADGES: [&str; 2] = ["L", "R"];
-
 /// The open or made choice of a row, for the ghost text: "left/right?",
 /// "left, finger?", "right, index".
-fn variant_note(v: Variants, side: Option<usize>, finger: Option<usize>) -> String {
-    let s = side.and_then(|i| SIDES.get(i)).map_or_else(|| "left/right?".to_string(), |s| s.to_string());
-    let f = finger.and_then(|i| FINGERS.get(i)).map_or_else(|| "finger?".to_string(), |f| f.to_string());
+fn variant_note(v: Variants, side: Option<usize>, finger: Option<usize>, t: &Text) -> String {
+    let s = side.and_then(|i| t.sides().get(i).copied()).unwrap_or(t.side_open).to_string();
+    let f = finger.and_then(|i| t.fingers().get(i).copied()).unwrap_or(t.finger_open).to_string();
     match (v.sided, v.finger) {
         (true, true) => format!("{s}, {f}"),
         (false, true) => f,
@@ -183,10 +267,13 @@ fn variant_note(v: Variants, side: Option<usize>, finger: Option<usize>) -> Stri
 }
 
 /// The badge after a chip: its finger when the phrase named none, its side.
-fn badge(chip: &Chip) -> Option<String> {
+fn badge(chip: &Chip, t: &Text) -> Option<String> {
     let Chip::Gesture { source, phrase, side, .. } = chip else { return None };
-    let finger = finger_open(phrase_source(source), phrase).then(|| source.trim_start_matches("hand.finger.").to_string());
-    let side = side.as_deref().and_then(|s| SIDES.iter().position(|x| *x == s)).map(|i| SIDE_BADGES[i].to_string());
+    let finger = finger_open(phrase_source(source), phrase)
+        .then(|| FINGERS.iter().position(|f| source.strip_prefix("hand.finger.") == Some(*f)))
+        .flatten()
+        .map(|i| t.fingers()[i].to_string());
+    let side = side.as_deref().and_then(|s| SIDES.iter().position(|x| *x == s)).map(|i| t.side_badges()[i].to_string());
     let parts: Vec<String> = [finger, side].into_iter().flatten().collect();
     (!parts.is_empty()).then(|| parts.join(" "))
 }
@@ -200,22 +287,23 @@ fn phrase_source(source: &str) -> &str {
     }
 }
 
-/// Secondary text of a list row: what the item is.
-fn hint(s: &Suggestion) -> String {
+/// Secondary text of a list row: what the item is (class and source ids
+/// stay ids in both languages).
+fn hint(s: &Suggestion, t: &Text) -> String {
     match (&s.chip, &s.via) {
         (Chip::Param { class, .. }, Some(v)) => format!("{class} · \"{v}\""),
         (Chip::Param { class, .. }, None) => class.clone(),
         (Chip::Gesture { source, shape: Some(sh), .. }, _) => format!("{source}/{sh}"),
-        (Chip::Gesture { source, pol, .. }, _) if *pol < 0 => format!("{source} (inverse)"),
+        (Chip::Gesture { source, pol, .. }, _) if *pol < 0 => fill(t.inverse, &[source]),
         (Chip::Gesture { source, .. }, _) => source.clone(),
         (Chip::Target { kind, .. }, _) => match kind.as_str() {
-            "midi.note" => "MIDI note".into(),
-            "midi.chord" => "MIDI chord".into(),
-            "midi.pattern" => "MIDI pattern".into(),
-            "midi.cc" => "MIDI CC".into(),
-            "macro" => "macro".into(),
-            "xy" => "XY pad".into(),
-            k => k.strip_prefix("midi.prop:").map_or_else(|| k.to_string(), |p| format!("MIDI {p}")),
+            "midi.note" => t.midi_note.into(),
+            "midi.chord" => t.midi_chord.into(),
+            "midi.pattern" => t.midi_pattern.into(),
+            "midi.cc" => t.midi_cc.into(),
+            "macro" => t.macro_.into(),
+            "xy" => t.xy_pad.into(),
+            k => k.strip_prefix("midi.prop:").map_or_else(|| k.to_string(), |p| fill(t.midi_prop, &[&p])),
         },
     }
 }
@@ -223,17 +311,18 @@ fn hint(s: &Suggestion) -> String {
 impl Sentence {
     /// `bridge`: None runs without FL (tests).
     pub fn new(bridge: Option<&'static fl::Bridge>) -> Self {
-        let (tx, rx) = bounded(1);
+        let (tx, rx) = bounded(2);
         let spawned = std::thread::Builder::new()
             .name("synthexis-completion".into())
             .spawn(move || {
-                let dir = data_dir();
-                let (labels, notes) = sense::Classes::load(&dir);
-                let _ = tx.send((data::load(&dir), labels, notes));
+                if tx.send(Loaded::Vocab(load_vocab())).is_ok() {
+                    let (labels, notes) = load_labels();
+                    let _ = tx.send(Loaded::Labels(labels, notes));
+                }
             });
         let status = match spawned {
-            Ok(_) => "loading completion".to_string(),
-            Err(e) => format!("completion loader not started: {e}"),
+            Ok(_) => Status::Loading,
+            Err(e) => Status::LoaderFailed(e.to_string()),
         };
         Self {
             doc: ChipText::default(),
@@ -253,7 +342,7 @@ impl Sentence {
             got: None,
             want: None,
             applied: None,
-            pick_note: String::new(),
+            pick_note: PickNote::None,
             picker_button: Rect::NOTHING,
             sugg: Vec::new(),
             list_open: false,
@@ -270,22 +359,26 @@ impl Sentence {
     }
 
     fn poll_loader(&mut self) {
-        let Some(rx) = &self.loader else { return };
-        let Ok((res, labels, notes)) = rx.try_recv() else { return };
-        self.loader = None;
-        self.labels = labels;
-        for n in notes {
-            log(&format!("completion: classes: {n}"));
-        }
-        match res {
-            Ok((engine, plugins)) => {
-                self.engine = Some(engine);
-                self.exported = plugins;
-                self.status.clear();
-            }
-            Err(e) => {
-                log(&format!("completion: {e}"));
-                self.status = format!("no completion data ({e})");
+        while let Some(rx) = &self.loader {
+            match rx.try_recv() {
+                Ok(Loaded::Vocab(Ok((engine, plugins)))) => {
+                    self.engine = Some(engine);
+                    self.exported = plugins;
+                    self.status = Status::Ready;
+                }
+                Ok(Loaded::Vocab(Err(e))) => {
+                    log(&format!("completion: {e}"));
+                    self.status = Status::NoData(e);
+                }
+                Ok(Loaded::Labels(labels, notes)) => {
+                    self.labels = labels;
+                    for n in notes {
+                        log(&format!("completion: classes: {n}"));
+                    }
+                    self.loader = None;
+                }
+                Err(crossbeam_channel::TryRecvError::Empty) => return,
+                Err(crossbeam_channel::TryRecvError::Disconnected) => self.loader = None,
             }
         }
     }
@@ -321,7 +414,7 @@ impl Sentence {
         let pinned = fl::Key::parse(&pin.read());
         if let Some(p) = &pinned {
             if self.fl_loaded && !self.targets.iter().any(|t| t.key == *p) {
-                self.pick_note = format!("pinned {} is gone, following FL", p.label());
+                self.pick_note = PickNote::Gone(p.label());
                 pin.write().clear();
             }
         }
@@ -340,7 +433,8 @@ impl Sentence {
             }
         }
         let Some(want) = self.want.clone() else { return };
-        if self.applied.as_ref() == Some(&want) || self.engine.is_none() {
+        // classes need the labels, which arrive after the vocabulary
+        if self.applied.as_ref() == Some(&want) || self.engine.is_none() || self.loader.is_some() {
             return;
         }
         let Some((k, res)) = self.got.clone() else { return };
@@ -369,19 +463,19 @@ impl Sentence {
                     self.classified.insert(want.clone(), params);
                 }
                 let params = self.classified.get(&want).cloned().unwrap_or_default();
-                self.pick_note = format!("{} parameters", params.len());
+                self.pick_note = PickNote::Params(params.len());
                 if let Some(e) = self.engine.as_mut() {
                     e.set_plugin(&want.id(), params);
                 }
                 self.applied = Some(want);
             }
-            Err(e) => self.pick_note = e,
+            Err(e) => self.pick_note = PickNote::Error(e),
         }
     }
 
     /// The project's plugins by mixer track; returns the clicked one.
     /// `current` is the pin, else the followed plugin.
-    fn picker_list(&self, ui: &mut Ui, current: Option<&fl::Key>) -> Option<fl::Key> {
+    fn picker_list(&self, ui: &mut Ui, current: Option<&fl::Key>, t: &Text) -> Option<fl::Key> {
         let mut tracks: BTreeMap<u32, Vec<&fl::Target>> = BTreeMap::new();
         for t in &self.targets {
             tracks.entry(t.track).or_default().push(t);
@@ -400,7 +494,7 @@ impl Sentence {
                 .id_salt(("synthexis-picker-track", *track))
                 .default_open(open)
                 .show(ui, |ui| {
-                    for (title, sound) in [("Sound", true), ("FX", false)] {
+                    for (title, sound) in [(t.sound, true), (t.fx, false)] {
                         let mut part: Vec<&&fl::Target> = items.iter().filter(|t| t.is_sound() == sound).collect();
                         if part.is_empty() {
                             continue;
@@ -427,16 +521,16 @@ impl Sentence {
         clicked
     }
 
-    fn picker(&mut self, ui: &mut Ui, pin: &RwLock<String>) {
+    fn picker(&mut self, ui: &mut Ui, pin: &RwLock<String>, t: &Text) {
         let pinned = fl::Key::parse(&pin.read());
         let shown = match (&pinned, &self.want) {
             (Some(p), _) => p.label(),
-            (None, Some(f)) => format!("{} (follows FL)", f.label()),
-            (None, None) => "follows FL".to_string(),
+            (None, Some(f)) => fill(t.follows_fl_after, &[&f.label()]),
+            (None, None) => t.follows_fl.to_string(),
         };
         let mut choice = None;
         ui.horizontal(|ui| {
-            ui.label("Plugin");
+            ui.label(t.plugin);
             let width = (ui.available_width() - 70.0).clamp(240.0, 420.0);
             // A ComboBox's list keeps the height of the previous frame, so an
             // opened track group would be cut off; this list grows with its
@@ -467,11 +561,11 @@ impl Sentence {
                     .auto_shrink([false, true])
                     .show(ui, |ui| {
                         let current = pinned.as_ref().or(self.want.as_ref());
-                        if pick_row(ui, pinned.is_none(), "Follow FL", "", "the plugin window last clicked in FL") {
+                        if pick_row(ui, pinned.is_none(), t.follow_fl, "", t.follow_fl_hover) {
                             choice = Some(None);
                         }
                         ui.separator();
-                        if let Some(k) = self.picker_list(ui, current) {
+                        if let Some(k) = self.picker_list(ui, current, t) {
                             choice = Some(Some(k));
                         }
                     });
@@ -481,12 +575,12 @@ impl Sentence {
             }
             match (&pinned, &self.want) {
                 (Some(_), _) => {
-                    if ui.button("Unpin").clicked() {
+                    if ui.button(t.unpin).clicked() {
                         choice = Some(None);
                     }
                 }
                 (None, Some(f)) => {
-                    if ui.button("Pin").clicked() {
+                    if ui.button(t.pin).clicked() {
                         choice = Some(Some(f.clone()));
                     }
                 }
@@ -495,17 +589,17 @@ impl Sentence {
         });
         if let Some(c) = choice {
             *pin.write() = c.map(|k| k.id()).unwrap_or_default();
-            self.pick_note.clear();
+            self.pick_note = PickNote::None;
         }
         let note = match &self.link {
             _ if self.bridge.is_none() => String::new(),
-            Link::Waiting => "waiting for FL".to_string(),
-            Link::Down(e) => e.clone(),
-            Link::Up if self.fl_loaded && self.targets.is_empty() => "no plugins in the project".to_string(),
-            Link::Up if self.want.is_none() => "click a plugin window in FL".to_string(),
-            Link::Up => self.pick_note.clone(),
+            Link::Up if self.fl_loaded && self.targets.is_empty() => t.fl_no_plugins.to_string(),
+            Link::Up if self.want.is_none() => t.fl_click_plugin.to_string(),
+            Link::Up => self.pick_note.text(t),
+            l => link_text(l, t).unwrap_or_default(),
         };
-        let notes: Vec<&str> = [note.as_str(), self.status.as_str()].into_iter().filter(|n| !n.is_empty()).collect();
+        let status = self.status.text(t);
+        let notes: Vec<&str> = [note.as_str(), status.as_str()].into_iter().filter(|n| !n.is_empty()).collect();
         if !notes.is_empty() {
             ui.weak(notes.join(" · "));
         }
@@ -604,7 +698,7 @@ impl Sentence {
             .filter(|c| c.range.end <= text.len())
             .map(|c| to_pin(&c.range, &c.chip))
             .collect();
-        self.status = format!("sent, {} pinned", pins.len());
+        self.status = Status::Sent(pins.len());
         assistant::submit(&text, pins);
         self.doc.clear();
         self.cursor = 0;
@@ -612,13 +706,19 @@ impl Sentence {
         self.list_open = false;
     }
 
-    /// `pin`: the pinned target's fl::Key id, empty while following FL.
-    pub fn ui(&mut self, ui: &mut Ui, enabled: bool, pin: &RwLock<String>) {
+    /// `pin`: the pinned target's fl::Key id, empty while following FL;
+    /// `lang`: the language setting, for the strings and the items.
+    pub fn ui(&mut self, ui: &mut Ui, enabled: bool, pin: &RwLock<String>, lang: Lang) {
+        let t = i18n::text(lang);
         self.poll_loader();
+        if let Some(e) = self.engine.as_mut().filter(|e| e.lang() != Some(lang)) {
+            e.set_lang(Some(lang));
+            self.refresh(enabled);
+        }
         self.sync_fl(pin);
         let id = ui.make_persistent_id("synthexis-sentence");
         self.id = Some(id);
-        self.picker(ui, pin);
+        self.picker(ui, pin, t);
 
         let has_focus = ui.memory(|m| m.has_focus(id));
         let active = enabled && has_focus && !self.sugg.is_empty();
@@ -723,14 +823,14 @@ impl Sentence {
             .id(id)
             .font(FontId::proportional(14.0))
             .desired_width(f32::INFINITY)
-            .hint_text("when I spread my fingers, open the filter")
+            .hint_text(t.placeholder)
             .lock_focus(enabled)
             .layouter(&mut layouter)
             .show(ui);
         // a small badge over the end of a chip with a picked finger or side
         if text == self.doc.text {
             for c in &self.doc.chips {
-                let Some(b) = badge(&c.chip) else { continue };
+                let Some(b) = badge(&c.chip, t) else { continue };
                 let ci = self.doc.text[..c.range.end.min(self.doc.text.len())].chars().count();
                 let at = out.galley.pos_from_ccursor(CCursor::new(ci)).translate(out.galley_pos.to_vec2());
                 let p = ui.painter().with_clip_rect(out.text_clip_rect.expand(8.0));
@@ -783,7 +883,7 @@ impl Sentence {
             // the choice Tab takes, or the one still open ("left/right?")
             if s.variants.any() {
                 let (side, finger) = self.choice(0);
-                let note = variant_note(s.variants, side, finger);
+                let note = variant_note(s.variants, side, finger, t);
                 ghost = if self.needs_choice(0) { format!("{ghost}  ({note})") } else { format!("{ghost}  · {note}") };
             }
             let pos = out.galley_pos + egui::vec2(out.galley.rect.right(), 0.0);
@@ -810,7 +910,7 @@ impl Sentence {
                 )
             });
         }
-        let t = ui
+        let open = ui
             .ctx()
             .animate_bool_with_time_and_easing(id.with("list"), shown, OPEN_SECS, easing::cubic_out);
         let ctx = ui.ctx().clone();
@@ -832,8 +932,8 @@ impl Sentence {
             .order(Order::Foreground)
             .fixed_pos(pos)
             .show(&ctx, |ui| {
-                ui.set_clip_rect(Rect::from_min_size(pos, egui::vec2(width + 16.0, full * t + 8.0)));
-                ui.multiply_opacity(t);
+                ui.set_clip_rect(Rect::from_min_size(pos, egui::vec2(width + 16.0, full * open + 8.0)));
+                ui.multiply_opacity(open);
                 egui::Frame::popup(ui.style()).show(ui, |ui| {
                     let (bx, _) = ui.allocate_exact_size(egui::vec2(width, ROW_H * rows as f32), Sense::hover());
                     let mut ui = ui.new_child(egui::UiBuilder::new().max_rect(bx));
@@ -866,7 +966,7 @@ impl Sentence {
                         p.text(
                             rect.right_center() - egui::vec2(10.0, 0.0),
                             Align2::RIGHT_CENTER,
-                            hint(s),
+                            hint(s, t),
                             FontId::proportional(11.0),
                             if i == self.sel {
                                 ui.visuals().selection.stroke.color
@@ -882,7 +982,7 @@ impl Sentence {
             });
         let list = Rect::from_min_size(pos, egui::vec2(width + 16.0, full + 8.0));
         if let Some(r) = sel_rect.filter(|r| r.height() > 0.0) {
-            self.variant_panel(&ctx, ui, id, list, r, t);
+            self.variant_panel(&ctx, ui, id, list, r, open, t);
         }
         if let Some(i) = clicked {
             self.take(ui.ctx(), id, i);
@@ -895,7 +995,8 @@ impl Sentence {
     /// and for a bare "finger" the finger row once a side is picked. The
     /// current value is highlighted; a click picks it, and a click that
     /// completes the choice makes the chip.
-    fn variant_panel(&mut self, ctx: &egui::Context, ui: &Ui, id: Id, list: Rect, row: Rect, t: f32) {
+    #[allow(clippy::too_many_arguments)]
+    fn variant_panel(&mut self, ctx: &egui::Context, ui: &Ui, id: Id, list: Rect, row: Rect, t: f32, tx: &Text) {
         if !self.panel_open() {
             return;
         }
@@ -903,9 +1004,9 @@ impl Sentence {
         let fingers = v.finger && (self.side.is_some() || !v.sided);
         let at = egui::pos2(list.right() + 4.0, row.top() - 6.0);
         let hint = match (v.sided, fingers) {
-            (true, true) => "← → hand   ↑ ↓ finger   Enter",
-            (true, false) => "← left   → right   Enter",
-            _ => "↑ ↓ finger   Enter",
+            (true, true) => tx.keys_both,
+            (true, false) => tx.keys_side,
+            _ => tx.keys_finger,
         };
         let mut picked = None;
         egui::Area::new(id.with("variant-area"))
@@ -925,10 +1026,10 @@ impl Sentence {
                         });
                     };
                     if v.sided {
-                        axis(ui, "Hand", &SIDES, self.side, 0);
+                        axis(ui, tx.panel_hand, &tx.sides(), self.side, 0);
                     }
                     if fingers {
-                        axis(ui, "Finger", &FINGERS, self.finger, 1);
+                        axis(ui, tx.panel_finger, &tx.fingers(), self.finger, 1);
                     }
                     ui.label(RichText::new(hint).weak().size(11.0));
                 });
@@ -958,11 +1059,19 @@ mod tests {
 
     fn engine() -> Engine {
         let g = |source: &str, phrase: &str| Gesture { source: source.into(), shape: None, phrase: phrase.into(), pol: 1 };
+        let (de, en) = (Some(Lang::De), Some(Lang::En));
         let mut e = Engine::new(
-            vec![g("hand.spread", "spread my fingers"), g("hand.fist", "Faust schließen"), g("hand.finger.index", "Finger")],
-            vec![("filter.cutoff".into(), "Cutoff".into())],
+            vec![
+                g("hand.spread", "spread my fingers"),
+                g("hand.fist", "Faust schließen"),
+                g("hand.finger.index", "Finger"),
+                g("hand.fist", "close my fist"),
+                g("hand.finger.index", "finger"),
+            ],
+            vec![("filter.cutoff".into(), "Cutoff".into()), ("filter.cutoff".into(), "cutoff".into())],
             &HashMap::new(),
         )
+        .with_langs(vec![en, de, de, en, en], vec![de, en], Vec::new())
         .with_sided(vec!["hand.fist".into(), "hand.finger.index".into()]);
         let p = |index: u32, name: &str, class: &str| Param { index, name: name.into(), class: class.into() };
         e.set_plugin("Synth/Test", vec![p(0, "Filter 1 Freq", "filter.cutoff"), p(1, "Filter 2 Freq", "filter.cutoff")]);
@@ -989,15 +1098,26 @@ mod tests {
         ctx: egui::Context,
         s: Sentence,
         picked: RwLock<String>,
+        lang: Lang,
         out: Option<egui::FullOutput>,
     }
 
     impl Harness {
+        /// English, the default setting.
         fn new() -> Self {
+            Self::with(Lang::En)
+        }
+
+        /// German: German and English items, German strings.
+        fn de() -> Self {
+            Self::with(Lang::De)
+        }
+
+        fn with(lang: Lang) -> Self {
             let mut s = Sentence::new(None);
             s.loader = None;
             s.engine = Some(engine());
-            let mut h = Self { ctx: egui::Context::default(), s, picked: RwLock::new(String::new()), out: None };
+            let mut h = Self { ctx: egui::Context::default(), s, picked: RwLock::new(String::new()), lang, out: None };
             h.frame(vec![]);
             let id = h.s.id;
             h.ctx.memory_mut(|m| id.into_iter().for_each(|id| m.request_focus(id)));
@@ -1011,9 +1131,9 @@ mod tests {
                 screen_rect: Some(Rect::from_min_size(Pos2::ZERO, egui::vec2(800.0, 600.0))),
                 ..Default::default()
             };
-            let (s, picked) = (&mut self.s, &self.picked);
+            let (s, picked, lang) = (&mut self.s, &self.picked, self.lang);
             self.out = Some(self.ctx.run(raw, |ctx| {
-                egui::CentralPanel::default().show(ctx, |ui| s.ui(ui, true, picked));
+                egui::CentralPanel::default().show(ctx, |ui| s.ui(ui, true, picked, lang));
             }));
         }
 
@@ -1221,14 +1341,14 @@ mod tests {
 
     #[test]
     fn left_right_pick_the_hand_not_the_cursor() {
-        let mut h = Harness::new();
+        let mut h = Harness::de();
         h.frame(vec![Event::Text("wenn ich die Fau".into())]);
         h.frame(vec![key(Key::ArrowDown)]);
         assert!(h.s.panel_open());
         assert_eq!(h.s.side, None, "no default side");
         h.frame(vec![]);
         let row = h.find("Faust").expect("row drawn");
-        let panel = h.find("right").expect("variant panel drawn");
+        let panel = h.find("rechts").expect("variant panel drawn");
         assert!(panel.x > row.x, "panel sits right of the list");
         h.frame(vec![key(Key::ArrowRight)]);
         assert_eq!(h.s.cursor, "wenn ich die Fau".len(), "Right moved the cursor");
@@ -1239,12 +1359,12 @@ mod tests {
         assert_eq!(gesture_of(&h), ("hand.fist".into(), Some("left".into())));
         let c = &h.s.doc.chips[0];
         assert!(matches!(to_pin(&c.range, &c.chip).what, PinWhat::Gesture { side: Some(ref s), .. } if s == "left"));
-        assert_eq!(badge(&c.chip).as_deref(), Some("L"));
+        assert_eq!(badge(&c.chip, &i18n::DE).as_deref(), Some("L"));
     }
 
     #[test]
     fn tab_without_a_side_opens_the_panel_and_inserts_nothing() {
-        let mut h = Harness::new();
+        let mut h = Harness::de();
         h.frame(vec![Event::Text("wenn ich die Fau".into())]);
         assert!(h.s.needs_choice(0));
         h.frame(vec![key(Key::Tab)]);
@@ -1260,34 +1380,34 @@ mod tests {
 
     #[test]
     fn a_side_named_right_before_is_preset() {
-        let mut h = Harness::new();
+        let mut h = Harness::de();
         h.frame(vec![Event::Text("wenn ich die rechte Fau".into())]);
         assert_eq!(h.s.side, Some(1));
         h.frame(vec![key(Key::Tab)]);
         assert_eq!(gesture_of(&h), ("hand.fist".into(), Some("right".into())));
         // "beide" is no side the panel offers: the choice stays open
-        let mut h = Harness::new();
+        let mut h = Harness::de();
         h.frame(vec![Event::Text("wenn ich beide Fau".into())]);
         assert!(h.s.needs_choice(0));
     }
 
     #[test]
     fn a_bare_finger_takes_side_then_finger_and_the_side_never_locks() {
-        let mut h = Harness::new();
+        let mut h = Harness::de();
         // two items: the list is open already, "Finger" selected
         h.frame(vec![Event::Text("wenn ich die Fin".into())]);
         assert!(h.s.panel_open());
         h.frame(vec![]);
-        assert!(h.find("thumb").is_none(), "fingers show only after the side");
+        assert!(h.find("Daumen").is_none(), "fingers show only after the side");
         h.frame(vec![key(Key::ArrowLeft)]);
         h.frame(vec![]);
-        assert!(h.find("thumb").is_some(), "fingers show once a side is picked");
+        assert!(h.find("Daumen").is_some(), "fingers show once a side is picked");
         h.frame(vec![key(Key::ArrowDown)]);
         h.frame(vec![key(Key::ArrowDown)]);
         assert_eq!((h.s.sel, h.s.finger), (0, Some(1)), "Up/Down move the fingers, not the list");
         h.frame(vec![key(Key::Enter)]);
         assert_eq!(gesture_of(&h), ("hand.finger.index".into(), Some("left".into())));
-        let mut h = Harness::new();
+        let mut h = Harness::de();
         h.frame(vec![Event::Text("wenn ich die Fin".into())]);
         for k in [Key::ArrowLeft, Key::ArrowDown, Key::ArrowDown, Key::ArrowDown] {
             h.frame(vec![key(k)]);
@@ -1296,12 +1416,13 @@ mod tests {
         assert_eq!((h.s.side, h.s.finger), (Some(1), Some(2)), "Right switches the hand in the finger step");
         h.frame(vec![key(Key::Enter)]);
         assert_eq!(gesture_of(&h), ("hand.finger.middle".into(), Some("right".into())));
-        assert_eq!(badge(&h.s.doc.chips[0].chip).as_deref(), Some("middle R"));
+        assert_eq!(badge(&h.s.doc.chips[0].chip, &i18n::DE).as_deref(), Some("Mittel R"));
+        assert_eq!(badge(&h.s.doc.chips[0].chip, &i18n::EN).as_deref(), Some("middle R"));
     }
 
     #[test]
     fn esc_closes_the_panel_then_the_list() {
-        let mut h = Harness::new();
+        let mut h = Harness::de();
         h.frame(vec![Event::Text("wenn ich die Fin".into())]);
         h.frame(vec![key(Key::ArrowLeft)]);
         h.frame(vec![key(Key::Escape)]);
@@ -1321,9 +1442,73 @@ mod tests {
         assert_eq!(h.s.cursor, "the cu".len());
     }
 
+    /// Every text the last frame drew.
+    fn texts(h: &Harness) -> Vec<String> {
+        fn walk(s: &egui::Shape, out: &mut Vec<String>) {
+            match s {
+                egui::Shape::Text(t) => out.push(t.galley.text().to_string()),
+                egui::Shape::Vec(v) => v.iter().for_each(|s| walk(s, out)),
+                _ => {}
+            }
+        }
+        let mut out = Vec::new();
+        for c in h.out.iter().flat_map(|o| &o.shapes) {
+            walk(&c.shape, &mut out);
+        }
+        out
+    }
+
+    #[test]
+    fn english_mode_offers_no_german_item_and_speaks_english() {
+        let mut h = Harness::new();
+        h.frame(vec![Event::Text("wenn ich die Fau".into())]);
+        assert!(h.s.sugg.is_empty(), "German gesture offered: {:?}", h.s.sugg);
+        h.frame(vec![key(Key::Tab)]);
+        assert_eq!(h.s.doc.text, "wenn ich die Fau", "typing German is still allowed");
+        let mut h = Harness::new();
+        h.frame(vec![Event::Text("when I clo".into())]);
+        assert_eq!(h.s.sugg.iter().map(|s| s.chip.label()).collect::<Vec<_>>(), ["close my fist"]);
+        h.frame(vec![key(Key::Tab)]);
+        h.frame(vec![]);
+        let drawn = texts(&h);
+        for s in [i18n::EN.side_left, i18n::EN.side_right, i18n::EN.keys_side] {
+            assert!(drawn.iter().any(|x| x == s), "{s:?} not drawn: {drawn:?}");
+        }
+        let german: Vec<&str> =
+            i18n::DE.entries().into_iter().zip(i18n::EN.entries()).filter(|(d, e)| d.1 != e.1).map(|(d, _)| d.1).collect();
+        assert!(!drawn.iter().any(|x| german.contains(&x.as_str())), "German text drawn: {drawn:?}");
+        h.frame(vec![key(Key::ArrowRight), key(Key::Enter)]);
+        assert_eq!(gesture_of(&h), ("hand.fist".into(), Some("right".into())));
+    }
+
+    #[test]
+    fn a_bare_english_finger_gets_the_finger_panel() {
+        let mut h = Harness::new();
+        h.frame(vec![Event::Text("when I move my fin".into())]);
+        assert_eq!(h.s.sugg[0].chip.label(), "finger");
+        assert!(h.s.sugg.iter().all(|s| s.chip.label() != "Finger"), "the German twin stays hidden");
+        h.frame(vec![key(Key::Tab), key(Key::ArrowLeft)]);
+        h.frame(vec![]);
+        assert!(h.find("thumb").is_some());
+    }
+
+    #[test]
+    fn switching_the_language_refilters_at_once() {
+        let mut h = Harness::de();
+        h.frame(vec![Event::Text("the cut".into())]);
+        assert_eq!(h.s.sugg[0].via.as_deref(), Some("Cutoff"));
+        h.lang = Lang::En;
+        h.frame(vec![]);
+        assert_eq!(h.s.sugg[0].via.as_deref(), Some("cutoff"));
+        assert!(h.find(i18n::EN.placeholder).is_none(), "the field is not empty");
+        let mut h = Harness::de();
+        h.frame(vec![]);
+        assert!(h.find(i18n::DE.placeholder).is_some(), "German placeholder");
+    }
+
     #[test]
     fn pins_follow_chips() {
-        let mut h = Harness::new();
+        let mut h = Harness::de();
         h.frame(vec![Event::Text("Fau".into())]);
         h.frame(vec![key(Key::Tab)]);
         h.frame(vec![key(Key::ArrowLeft)]);

@@ -56,22 +56,27 @@ fn model_dir() -> PathBuf {
     PathBuf::from(home).join("Library/Application Support/synthexis/parser")
 }
 
-fn run(rx: &Receiver<Job>) {
+/// The parser the worker uses (also the load-time probe's parser part).
+pub fn load() -> Option<Parser> {
     let dir = model_dir();
     let runs = std::env::var("SYNTHEXIS_PARSER_RUNS").unwrap_or_else(|_| DEFAULT_RUNS.into());
     let names: Vec<&str> = runs.split(',').map(str::trim).collect();
     let t0 = Instant::now();
-    let parser = match Parser::load(&dir, &names, &Options::default()) {
-        Ok(p) => p,
+    match Parser::load(&dir, &names, &Options::default()) {
+        Ok(p) => {
+            log(&format!("assistant: parser {runs} loaded in {:.0} ms", t0.elapsed().as_secs_f64() * 1e3));
+            Some(p)
+        }
         Err(e) => {
             log(&format!("assistant: parser {runs} not loaded from {}: {e:#}", dir.display()));
-            return; // drops rx, so submit() reports the parser as unavailable
+            None
         }
-    };
-    log(&format!(
-        "assistant: parser {runs} loaded in {:.0} ms",
-        t0.elapsed().as_secs_f64() * 1e3
-    ));
+    }
+}
+
+fn run(rx: &Receiver<Job>) {
+    // None drops rx, so submit() reports the parser as unavailable
+    let Some(parser) = load() else { return };
     if let Ok(text) = std::env::var("SYNTHEXIS_PARSE") {
         parse(&parser, &text, &[]);
     }

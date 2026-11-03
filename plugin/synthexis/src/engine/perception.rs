@@ -36,10 +36,10 @@ struct Job {
 
 static TX: OnceLock<Option<Sender<Job>>> = OnceLock::new();
 
-/// Hands a camera frame to the perception thread (started on first use).
-/// Drops the frame while the thread is still busy with the last one.
-pub fn submit(frame: Frame, t_capture_ns: u64, callback: Instant) {
-    let tx = TX.get_or_init(|| {
+/// The perception thread's queue; the first call starts the thread, which
+/// loads its models right away.
+fn queue() -> &'static Option<Sender<Job>> {
+    TX.get_or_init(|| {
         let (tx, rx) = bounded(1);
         std::thread::Builder::new()
             .name("synthexis-perception".into())
@@ -47,8 +47,19 @@ pub fn submit(frame: Frame, t_capture_ns: u64, callback: Instant) {
             .map_err(|e| log(&format!("perception: thread not started: {e}")))
             .ok()
             .map(|_| tx)
-    });
-    if let Some(tx) = tx {
+    })
+}
+
+/// Starts the perception thread and its model loading, so the models load
+/// while the camera starts (plugin initialize()). Never on the audio thread.
+pub fn start() {
+    queue();
+}
+
+/// Hands a camera frame to the perception thread (started on first use).
+/// Drops the frame while the thread is still busy with the last one.
+pub fn submit(frame: Frame, t_capture_ns: u64, callback: Instant) {
+    if let Some(tx) = queue() {
         match tx.try_send(Job { frame, t_capture_ns, callback }) {
             Ok(()) | Err(TrySendError::Full(_)) => {}
             Err(TrySendError::Disconnected(_)) => {}
@@ -69,6 +80,13 @@ fn find_model(dir: &Path, name: &str) -> Option<PathBuf> {
         .iter()
         .map(|ext| dir.join(format!("{name}.{ext}")))
         .find(|p| p.exists())
+}
+
+/// Loads the named models at the same time, one thread each: a cold
+/// CoreML load (after install.sh compiled them) takes about 0.5 s per
+/// student on an idle Mac and several seconds in FL.
+fn load_all<const N: usize>(dir: &Path, names: [&'static str; N]) -> [Option<Model>; N] {
+    std::thread::scope(|s| names.map(|n| s.spawn(move || load(dir, n))).map(|h| h.join().ok().flatten()))
 }
 
 fn load(dir: &Path, name: &str) -> Option<Model> {
@@ -143,15 +161,24 @@ pub fn make_backend(dir: &Path, choice: &str) -> Option<Box<dyn Backend>> {
     }
 }
 
-fn run(rx: &Receiver<Job>) {
+/// The backend the model dir asks for, loaded as the perception thread
+/// loads it (also the load-time probe's perception part).
+pub fn load_backend() -> Option<Box<dyn Backend>> {
     let dir = model_dir();
     let choice = backend_choice(&dir);
-    let mut backend = make_backend(&dir, &choice);
+    let backend = make_backend(&dir, &choice);
     log(&format!(
         "perception: backend {} (asked for {choice}, models in {})",
         backend.as_ref().map_or("off", |b| b.name()),
         dir.display()
     ));
+    backend
+}
+
+fn run(rx: &Receiver<Job>) {
+    let mut backend = load_backend();
+    // a frame queued while the models loaded is old by now
+    while rx.try_recv().is_ok() {}
     let mut emitter = Emitter::default();
     let mut stats = Stats::default();
     for job in rx {
@@ -425,13 +452,13 @@ pub struct Students {
 
 impl Students {
     pub fn new(dir: &Path) -> Option<Self> {
-        let seg = load(dir, "seg")?;
+        let [seg, hand, face] = load_all(dir, ["seg", "hand", "face"]);
+        let seg = seg?;
         let seg_out = seg.output_with(N_SEG * SEG_W * SEG_H)?;
-        let hand = load(dir, "hand").and_then(|model| {
+        let hand = hand.and_then(|model| {
             Some(HandHead { keypoints: model.output_with(42)?, fingers: model.output_with(5)?, handedness: model.output_with(1), model })
         });
-        let face = load(dir, "face")
-            .and_then(|model| Some(FaceHead { logits: model.output_with(3 * CROP * CROP)?, model }));
+        let face = face.and_then(|model| Some(FaceHead { logits: model.output_with(3 * CROP * CROP)?, model }));
         let buffers = (|| -> Result<_, String> {
             Ok((PixelBuf::new(SEG_W, SEG_H)?, F16Array::new(&[1, 1, SEG_H, SEG_W])?, PixelBuf::new(CROP, CROP)?))
         })();

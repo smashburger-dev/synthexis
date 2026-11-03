@@ -10,11 +10,13 @@ mod cond;
 mod editor;
 mod engine;
 mod fl;
+mod i18n;
 mod log;
 mod params;
 mod route;
 mod sense;
 mod sentence;
+mod settings;
 mod signal;
 mod writer;
 
@@ -30,6 +32,38 @@ use writer::Writer;
 /// Offline perception bench over a recording (engine/bench.rs).
 pub fn perception_bench(path: &str) -> i32 {
     engine::bench::run(path)
+}
+
+/// Load-time probe (probes/plugin-settings): loads parser, completion data
+/// and the perception backend on their own threads, as an instance does,
+/// and prints when each was ready, in ms from the start, as one JSON line
+/// (completion: the vocabulary, typing can start; labels: the picker's
+/// classes, loaded after it on the same thread). No camera (it needs the
+/// host's permission).
+pub fn load_probe() -> i32 {
+    let t0 = std::time::Instant::now();
+    let ms = move || (t0.elapsed().as_secs_f64() * 1e3).round();
+    let parser = std::thread::spawn(move || (assistant::load().is_some(), ms()));
+    let completion = std::thread::spawn(move || {
+        let vocab = (sentence::load_vocab().is_ok(), ms());
+        (vocab, (sentence::load_labels().1.is_empty(), ms()))
+    });
+    let perception = std::thread::spawn(move || (engine::perception::load_backend().is_some(), ms()));
+    let failed = (false, -1.0);
+    let (vocab, labels) = completion.join().unwrap_or((failed, failed));
+    let parts = [
+        ("parser", parser.join().unwrap_or(failed)),
+        ("completion", vocab),
+        ("labels", labels),
+        ("perception", perception.join().unwrap_or(failed)),
+    ];
+    let mut out = serde_json::Map::new();
+    for (name, (_, at)) in parts {
+        out.insert(format!("{name}_ms"), serde_json::json!(at));
+    }
+    out.insert("all_ms".into(), serde_json::json!(ms()));
+    println!("{}", serde_json::Value::Object(out));
+    i32::from(!parts.iter().all(|(_, (ok, _))| *ok))
 }
 
 pub struct Synthexis {
@@ -98,9 +132,12 @@ impl Plugin for Synthexis {
         _buffer_config: &BufferConfig,
         _context: &mut impl InitContext<Self>,
     ) -> bool {
-        // Not called during plugin scans; loads the parser in the background
-        // and opens the FL bridge, so focus is tracked with the editor closed.
+        // Not called during plugin scans; loads the parser and the
+        // perception models in the background (the models no longer wait
+        // for the first camera frame) and opens the FL bridge, so focus is
+        // tracked with the editor closed.
         assistant::start();
+        engine::perception::start();
         fl::bridge();
         true
     }

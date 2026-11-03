@@ -146,6 +146,10 @@ fn is_placeholder(name: &str) -> bool {
         || n == "internal"
 }
 
+/// Link::Down reasons the window puts in words (sentence.rs).
+pub const NO_ANSWER: &str = "FL not answering";
+pub const OLD_SCRIPT: &str = "FL script speaks protocol ";
+
 #[derive(Clone, Debug, Default, PartialEq)]
 pub enum Link {
     #[default]
@@ -364,7 +368,7 @@ impl Worker {
         loop {
             let left = deadline.saturating_duration_since(Instant::now());
             let Ok(f) = self.frames.recv_timeout(left) else {
-                return Err("FL not answering".into());
+                return Err(NO_ANSWER.into());
             };
             let Ok(v) = serde_json::from_slice::<Value>(&f) else { continue };
             if v.get("id").and_then(Value::as_u64) == Some(id) {
@@ -435,7 +439,7 @@ impl Worker {
                 }
             }
             Ok(r) => self.down(format!(
-                "FL script speaks protocol {}, install plugin/fl/device_synthexis_bridge.py",
+                "{OLD_SCRIPT}{}, install plugin/fl/device_synthexis_bridge.py",
                 r.get("proto").map_or("?".into(), Value::to_string)
             )),
             Err(e) => self.down(e),

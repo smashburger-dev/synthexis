@@ -7,6 +7,8 @@ use nih_plug::prelude::*;
 /// motion -> Signal 1/2, test.triangle -> Signal 32, perception -> Signal
 /// 3..10); off, only assigned routes move macros.
 /// Hand roles are stored with the project but have no behaviour yet.
+/// Language and completion on/off are per-user settings (settings.rs), not
+/// project state; the "completion" key of older projects is ignored.
 
 #[derive(Enum, Debug, Clone, Copy, PartialEq)]
 pub enum HandRole {
@@ -115,9 +117,6 @@ pub struct SynthexisParams {
     #[persist = "editor-state"]
     pub editor_state: Arc<EguiState>,
 
-    /// Settings: completion in the sentence field on or off.
-    #[persist = "completion"]
-    pub completion: Arc<AtomicBool>,
     /// Pinned plugin picker target (fl::Key id); empty follows FL focus.
     #[persist = "target-pin"]
     pub target_pin: Arc<RwLock<String>>,
@@ -169,7 +168,6 @@ impl Default for SynthexisParams {
             hand_role_left: EnumParam::new("Hand role left", HandRole::Parameter),
             hand_role_right: EnumParam::new("Hand role right", HandRole::Parameter),
             editor_state: EguiState::from_size(700, 760),
-            completion: Arc::new(AtomicBool::new(true)),
             target_pin: Arc::new(RwLock::new(String::new())),
         }
     }
@@ -177,5 +175,4 @@ impl Default for SynthexisParams {
 
 use nih_plug_egui::EguiState;
 use parking_lot::RwLock;
-use std::sync::atomic::AtomicBool;
 use std::sync::Arc;

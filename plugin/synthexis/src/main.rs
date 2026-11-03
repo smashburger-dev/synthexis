@@ -4,6 +4,9 @@ use nih_plug::nih_export_standalone;
 use synthexis::Synthexis;
 
 fn main() {
+    if std::env::var_os("SYNTHEXIS_LOADPROBE").is_some() {
+        std::process::exit(synthexis::load_probe());
+    }
     if let Ok(path) = std::env::var("SYNTHEXIS_BENCH") {
         std::process::exit(synthexis::perception_bench(&path));
     }
