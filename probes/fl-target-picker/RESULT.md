@@ -36,12 +36,14 @@ Sections 1 and 2 were measured with FL in the background.
 
 Every VST reports `getParamCount` = 4240. FL appends 144 MIDI-CC
 pseudo-parameters at index 4096 to 4239 to every plugin; Valhalla plugins
-and Serum also name their own CC slots (Serum: 2048 "CC# Chan #"). A
-resolver must drop index >= 4096 and the plugin's own CC names.
+and Serum also name their own CC slots (Serum: 2048 "CC# Chan #";
+Valhalla: "ReservedN"). A resolver must drop index >= 4096 and the
+plugin's own CC and reserved names. Corrected 11-03: an earlier version
+of this table counted Serum's own CC slots as real (2604).
 
 | Plugin | Named | Real | FL scan | Wall time at budget 3.5k / 16k / 56k |
 |---|---|---|---|---|
-| Serum 2 | 2765 | 2604 (idx 0..2620) | 7 ms | 20 / 14 / 13 ms |
+| Serum 2 | 2765 | 573 (2621 below idx 4096, minus 2048 own "CC# Chan #" slots; 541 after the picker session's filter) | 7 ms | 20 / 14 / 13 ms |
 | ShaperBox 3 | 1020 | 876 (idx 2..2956; harvest 5037, 875 shared) | 4 ms | 16 / 8 / 7 ms |
 | Pro-Q 3 | 502 | 358 | 2 ms | 2-5 ms |
 | Archetype John Mayer X | 316 | 172 (harvest 2253) | 2 ms | 2-5 ms |
