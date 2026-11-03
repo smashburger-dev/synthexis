@@ -114,6 +114,18 @@ Student numbers use untrained weights; latency does not depend on weight values.
 
 Planning board with all diagrams: [FigJam](https://www.figma.com/board/WJIE59w34hCSTXuq3XpKGH).
 
+## Platforms
+
+synthexis runs on macOS with Apple Silicon. Perception uses CoreML on the Neural Engine for the three students in [`plugin/models/`](plugin/models/README.md) and Apple Vision for face landmarks. Without Apple Vision, the face student takes over (mouth works; its eye signal is weak). A Windows or Linux port would swap two parts and keep the pipeline:
+
+| part | macOS today | Windows / Linux candidate |
+|---|---|---|
+| student models (seg, hand, face) | CoreML FP16 on the Neural Engine | the same weights exported to ONNX, run with ONNX Runtime through the Rust crate [`ort`](https://docs.rs/ort): DirectML on Windows; CPU, CUDA or OpenVINO on Linux (built from source) |
+| face landmarks (eyes, mouth, smile, head pose) | Apple Vision | [MediaPipe Face Landmarker](https://developers.google.com/edge/mediapipe/solutions/vision/face_landmarker/index): 478 points and 52 blendshapes such as `eyeBlinkLeft` and `jawOpen`; licence of the model bundle still to check |
+| hand keypoints (optional second source) | hand student | MediaPipe Hand Landmarker (Apache 2.0, already the keypoint teacher of the hand student) |
+
+None of this is built yet.
+
 ## Repository
 
 | Path | Content |
