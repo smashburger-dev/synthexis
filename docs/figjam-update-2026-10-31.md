@@ -164,3 +164,4 @@ Source: `probes/train-students/RESULT.md`. Changed on the board:
 - "Training on Modal GPUs and the Mac" (renamed): seg 1.5M, hand 1.6M instead of the caps.
 - "Data engine": the glasses eye question is decided (S2 eye masks left out of the loss), now yellow.
 - "Open": student training is done. "Budget": Modal about 41.6 $ of 42.50 $, students 14.06 $.
+- Later on Nov 3, after the focus test with FL in front: the grey focus sticky in "Writing into FL" is green (FL reports the clicked plugin with track and slot at once), and the UX 4 follow-FL note makes follow mode the default with the list as fallback.

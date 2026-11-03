@@ -9,10 +9,9 @@ and Serum 2. Raw runs: `runs/20261031-155838-inventory.json`,
 (gitignored, local only).
 
 The listening test ran on 2026-11-03 with Noa at FL (section 4, runs
-`20261103-114044-listen.json`, `20261103-114415-listen.json`). Still open:
-the focus test with FL in front (`focus_probe.py --manual 40
---skip-scripted`); until then follow-FL mode is unverified. Sections 1 to 3
-were measured with FL in the background.
+`20261103-114044-listen.json`, `20261103-114415-listen.json`) and the
+focus test with FL in front (section 3, `20261103-124703-focus.json`).
+Sections 1 and 2 were measured with FL in the background.
 
 ## 1. SysEx size limit and the deadlock
 
@@ -71,8 +70,30 @@ With FL in the background:
 
 OnRefresh flags seen: 65831 on `selectOneChannel`, 263 on `setTrackNumber`,
 256, and 32 (`HW_Dirty_FocusedWindow`) when the channel selection was
-restored. So FL does call back on selection changes; whether it calls back
-on plugin-window focus with FL in front is still open (manual test).
+restored. So FL does call back on selection changes.
+
+With FL in front (`focus_probe.py --manual 90 --skip-scripted`, Noa
+clicking plugin windows, the channel rack and mixer tracks for 90 s), FL
+reports the focused plugin and calls back on every change:
+
+| Clicked | `getFocusedPluginName` | `getFocusedFormID` | `getActiveEffectIndex` | `getFocused` wid |
+|---|---|---|---|---|
+| Portal window (Master slot 1) | Portal | 65536 | (0, 1) | 5, 6 |
+| ShaperBox window (Master slot 4) | ShaperBox 3 | 262144 | (0, 4) | 5, 6 |
+| Archetype window (Master slot 3) | Archetype John Mayer X | 196608 | (0, 3) | 5, 6 |
+| Serum 2 window (channel 1) | Serum 2 | 1 | None | 5, 7 |
+| mixer, channel rack, playlist | empty | 0 to 3 | None | 0 to 3 |
+
+- For a mixer effect the form ID equals `getTrackPluginId(track, slot)`
+  and `getActiveEffectIndex` returns (track, slot). For a generator the
+  form ID is the channel index. Window ids: 5 = any plugin, 6 = effect,
+  7 = generator.
+- Every plugin focus change arrived through `OnRefresh` with
+  `HW_Dirty_FocusedWindow`, so follow mode needs no polling. Mixer track
+  changes (tracks 1, 2, 4) arrived only through the poll, because they do
+  not raise that flag; the inventory events cover them.
+- Clicking a non-plugin window (mixer, channel rack) clears the plugin
+  name. Follow mode must keep the last focused plugin, not drop to none.
 300 `getParamName` calls raised no refresh flags (the NI Komplete Kontrol
 script claims they raise `HW_Dirty_FocusedWindow`; not confirmed here).
 
@@ -150,19 +171,20 @@ Pattern 80 now holds test notes and recorded automation; delete it.
 
 ### Picker modes
 
-1. Follow FL. The target is the plugin FL reports as focused
-   (`getFocusedFormID`, `getFocusedPluginName`), falling back to the
-   selected mixer track (`mixer.trackNumber`) or selected channel
-   (`channels.selectedChannel`). Updated from OnRefresh flags; a poll in
-   OnIdle (0.04 ms) covers what flags miss. Pending the manual test, which
-   decides whether plugin-window focus is visible at all.
+1. Follow FL. The target is the last plugin FL reported as focused:
+   `getActiveEffectIndex` gives (track, slot) for an effect,
+   `getFocusedFormID` the channel for a generator, `getFocusedPluginName`
+   the name. Updated on `OnRefresh` with `HW_Dirty_FocusedWindow`; focus
+   on a non-plugin window keeps the last plugin; the synthexis window itself
+   never becomes the target.
 2. Track then slot. The user picks a mixer track, then one of its 10 slots.
    Built from the `mixer` inventory (0.4 ms). Works whatever FL reports.
 3. Channel. The user picks a channel rack generator from `gens`.
 
-Mode 2 is the default for the demo; it rests only on calls that worked in
-every test. Mode 1 becomes the default once the manual test shows FL
-reports plugin focus while it is frontmost.
+Mode 1 is the default: it worked for effects and generators with FL in
+front. Modes 2 and 3 are the manual fallback, and the picker list for
+pinning a target. While FL is in the background focus reads stay empty,
+so the target simply keeps its last value.
 
 ### What the picker shows
 
