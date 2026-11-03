@@ -67,8 +67,6 @@ pub struct EngineShared {
     pub last_cb: parking_lot::Mutex<Option<Instant>>,
     pub last_log: parking_lot::Mutex<Option<Instant>>,
     pub emitted: AtomicUsize,
-    /// Rolling median helper for the editor line.
-    pub diag: parking_lot::Mutex<String>,
 }
 
 impl EngineShared {
@@ -87,7 +85,6 @@ impl EngineShared {
             last_cb: parking_lot::Mutex::new(None),
             last_log: parking_lot::Mutex::new(None),
             emitted: AtomicUsize::new(0),
-            diag: parking_lot::Mutex::new(String::new()),
         }
     }
 }

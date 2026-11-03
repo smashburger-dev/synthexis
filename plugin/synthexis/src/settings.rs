@@ -11,7 +11,7 @@ use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
 
 use parking_lot::RwLock;
-use serde_json::{json, Map, Value};
+use serde_json::{json, Value};
 use synthexis_complete::Lang;
 
 use crate::log::log;
@@ -69,10 +69,6 @@ pub fn store() -> &'static Store {
     STORE.get_or_init(|| Store::open(path()))
 }
 
-pub fn get() -> Settings {
-    store().get()
-}
-
 fn path() -> PathBuf {
     if let Some(p) = std::env::var_os("SYNTHEXIS_SETTINGS") {
         return p.into();
@@ -105,7 +101,7 @@ fn write(path: &Path, s: &Settings) -> Result<(), String> {
         .ok()
         .and_then(|t| serde_json::from_str::<Value>(&t).ok())
         .and_then(|v| v.as_object().cloned())
-        .unwrap_or_else(Map::new);
+        .unwrap_or_default();
     obj.insert("lang".into(), json!(s.lang.code()));
     obj.insert("completion".into(), json!(s.completion));
     if let Some(dir) = path.parent() {
