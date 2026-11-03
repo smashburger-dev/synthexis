@@ -80,13 +80,13 @@ stateDiagram-v2
 flowchart LR
     rec[/"Scripted recordings"/] --> samM["SAM 3.1 on Modal"] --> ds[("Masks + labels")]
     rec --> script["Labels from the script"] --> ds
-    img[/"Muse Image people"/] --> samM
-    ds --> train["Train on Modal"] --> coreml["CoreML FP16"] --> gate{"Held-out eval gate"}
-    gate -->|"pass"| plugin(["Ships in the plugin"])
-    gate -->|"fail"| climb["Hill-climb"] -.-> rec
+    rec --> kp["MediaPipe + SAM 3D Body hand keypoints"] --> ds
+    ds --> train["Train on Modal and the Mac"] --> pick{"Pick on dev sets"}
+    pick --> coreml["CoreML FP16"] --> plugin(["Ships in the plugin"])
+    pick -.-> s4["Held-out session S4, measured once"]
 ```
 
-The recordings follow a script ([recording protocol](docs/recording-protocol.md)): each segment shows one known finger state, face action or object, so gesture labels come from the script and cannot be invented by a model. SAM 3.1 adds the masks.
+The recordings follow a script ([recording protocol](docs/recording-protocol.md)): each segment shows one known finger state, face action or object, so gesture labels come from the script and cannot be invented by a model. SAM 3.1 adds the masks. Three students came out of it: seg, hand (keypoints, finger states, left or right) and face. None passed the held-out quality gate except the mouth; the plugin uses seg and hand, and takes the face from Apple Vision landmarks ([results](probes/train-students/RESULT.md)).
 
 ## Measured so far
 
@@ -97,18 +97,20 @@ All on an M1 Pro (16 GB, macOS 27) or real Modal GPUs. Raw logs and exact comman
 | SAM 3.1 on Modal, H100 | 46.8 ms per video frame, 59.6 ms per image; $0.051 per 1000 frames (API: $0.20) | [probes/sam31-modal](probes/sam31-modal/RESULT.md) |
 | Student candidates on the Neural Engine | 0.35 to 0.74 ms per inference at 1.5M to 3.2M parameters | [probes/coreml-student-latency](probes/coreml-student-latency/RESULT.md) |
 | Full frame: seg + two hand crops | 1.12 ms median, 2.06 ms p95, +16 MB memory | [probes/coreml-student-latency](probes/coreml-student-latency/RESULT.md) |
+| Trained students on the Neural Engine | p95 per call: seg 0.65 ms, hand 0.66 ms per crop, face 0.50 ms | [probes/train-students](probes/train-students/RESULT.md) |
+| Trained students on the held-out session S4 | seg IoU person / face / hand 0.77 / 0.80 / 0.80 (gate 0.85); finger states 0.89 (0.95); left/right 0.94; face mouth 0.71 (0.70), eye 0.24 | [probes/train-students](probes/train-students/RESULT.md) |
 | Apple Vision for comparison | 18.4 ms hand pose, 29.6 ms hand + face + body | [probes/apple-vision-fps](probes/apple-vision-fps/RESULT.md) |
 | Camera inside a Rust plugin (standalone, night light) | works; 18.6 fps, about 100 ms capture latency, light-bound | [probes/fl-camera-plugin](probes/fl-camera-plugin/RESULT.md) |
 
-Student numbers use untrained weights; latency does not depend on weight values. The [hill-climb log](docs/hillclimb.md) tracks every change against these baselines.
+The two candidate rows use untrained weights; latency does not depend on weight values. The [hill-climb log](docs/hillclimb.md) tracks every change against these baselines.
 
 ## Status
 
 - [x] Plan, feature inventory and decisions: [`spec/synthexis.yaml`](spec/synthexis.yaml), [`docs/plan.md`](docs/plan.md)
 - [x] Feasibility probes: SAM 3.1 on Modal, student latency, Apple Vision baseline, camera in a Rust plugin
 - [ ] Hardware probes in FL Studio: automation recording, MIDI out, FL Python bridge, Powerbeats motion and heart rate
-- [ ] Recordings and teacher labels
-- [ ] Students v1 and eval gate
+- [x] Recordings and teacher labels: four sessions, 47,367 frames
+- [x] Students v1 and eval gate: trained and in the plugin; the gate passes for the mouth only
 - [ ] Plugin: camera, signals, macros, gestures and MIDI, snapshot anchors, mapping agent
 - [ ] Demo video (3 min)
 
