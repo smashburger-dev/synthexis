@@ -45,6 +45,7 @@ Bench notes: `SYNTHEXIS_BENCH_SECONDS` is the absolute end time in the video, no
 | `paths.py` | shared paths, the session ids, the dev segments from the manifest |
 | `ramps.py` | helpers: segment windows, per-finger cues (bend, reach), the current finger formula in Python, a One Euro filter |
 | `eqlab.py` | fist curve: `make(p_fold, p_ext, eq_w)` builds anchors and the decile map, `evaluate()` gives dev finger accuracy, open and fist readings, time in the middle band and 20% to 80% time on the ramps |
+| `openlab.py` | openness as shipped since 11-03 (one line from `OPEN_LO` to `OPEN_HI`) against the old decile map: open and fist percentiles, dev finger accuracy, median step on held mixed poses, ramp middle share and 20% to 80% time; a new candidate is one `Map(...)` (`SYNTHEXIS_LAB=<dumps> python3 openlab.py`) |
 | `euro_sweep.py`, `euro_med.py` | smoothing: jitter on held poses against ramp error and step response, for One Euro settings and a median prefilter (`python3 euro_med.py 3,1,1,1,0 5,0.5,4,0.3,0.01`: median, min cutoff, beta, d cutoff, dead band) |
 | `mouthlab.py` | mouth cue anchors per session and the sweep, smile and shut-mouth readings for a range (`python3 mouthlab.py 0.06 0.6`) |
 | `devscore.py` | dev block A scores for any dump pattern (`python3 devscore.py 'ba_{s}.jsonl'`) |
@@ -55,7 +56,7 @@ Bench notes: `SYNTHEXIS_BENCH_SECONDS` is the absolute end time in the video, no
 
 ## Typical feedback and where to start
 
-- "Jumps between closed and open" or "pulls towards 0.5": the finger values are linear in bend and reach, openness linear between `OPEN_LO` and `OPEN_HI`. A decile map (`eqlab.make`, weight `eq_w`) slows the middle but holds half-curled hands at 0.5 to 0.6 and keeps fists off 0 (Noa, 11-03); wider anchors stop the ends from reaching 0 and 1. Check the open and fist readings and the held-pose step together; a slow live recording would settle the middle, the protocol ramps cannot.
+- "Jumps between closed and open" or "pulls towards 0.5": the finger values are linear in bend and reach, openness linear between `OPEN_LO` and `OPEN_HI`. A decile map (`eqlab.make`, weight `eq_w`) slows the middle but holds half-curled hands at 0.5 to 0.6 and keeps fists off 0 (Noa, 11-03); wider anchors stop the ends from reaching 0 and 1. Check the open and fist readings and the held-pose step together; a slow live recording would settle the middle, the protocol ramps cannot. State after Noa's second FL test (11-03 night): the line feels more abrupt than ever (a small curl takes 0.8 to 0.4); Noa left it as is for now. Next step there: record about 30 s of slow opening and closing live, then choose between the line, a softer S-curve and a blend on that recording (`openlab.py`).
 - "Never reaches 1" (or 0): move that end's anchor quantile towards the middle (open: lower `p_ext` quantile of extended frames; pinch: raise the 0.25). The slope rises with it.
 - "Too jittery when I hold still": held hand poses wander with a standard deviation of about 0.05, mostly slow drift that no filter removes without lag. Frame spikes are already cut by `Median3`. A wider median (5) or a lower One Euro min cutoff trades a little lag for less jitter (`euro_med.py`).
 - "Mouth or eye fires when I turn my head or smile": `mouthlab.py` shows the shut-mouth and smile readings for any range; the eye logic is in `FaceAdapt`.
@@ -66,4 +67,4 @@ Bench notes: `SYNTHEXIS_BENCH_SECONDS` is the absolute end time in the video, no
 - The hand keypoints come from the hand student; the `vision` backend feeds Apple Vision keypoints into the same formulas, but its keypoints were not checked against these anchors.
 - The protocol's open ramps are fast open-and-hold moves (about 0.4 s per opening), not slow ramps, so they say little about fine control in the middle. Only live tests settle the feel.
 - Live latency is mostly the camera: 50 to 130 ms from frame timestamp to callback. Perception adds 3 to 20 ms for hands (median) and the median filter one frame.
-- Without "Test signal" no route moves a macro until assigned routes from the UI land (`docs/ux-plugin.md`).
+- Without "Test signal" only assigned routes move a target: rows of the sentence field (`assign.rs`), saved with the project (`saved.rs`).
