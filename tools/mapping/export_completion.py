@@ -19,6 +19,12 @@ Writes into data/mapping/completion/ (or --out):
                         list of exported plugins
   plugins/<slug>.json   one picked plugin's parameters: index, name, class
 
+Every gesture, class and target phrase carries its language (`lang`: de or
+en); the plugin's language setting filters on it. A phrase both languages
+use is one row per language, each in its own spelling. Harvested target
+phrases take the languages of the training rows they come from
+(harvest_targets).
+
 Glossary rows marked as typos are left out: a completion inserts its label
 into the sentence, so labels have to be spelled right. Labels come from the
 Spark Open runs (final class of the priority runs, class of the bulk runs);
@@ -48,8 +54,13 @@ TRAIN = "train/ds-v11c/train_all.jsonl"
 HARVEST_MIN = 3  # occurrences; drops typos ("reverv")
 HARVEST_SHARE = 0.8  # of a text's occurrences on one target
 ONTOLOGY = Path(__file__).resolve().parent / "ontology.yaml"
-# a bare "Finger": the panel picks which one (index by default)
-GENERIC = [{"source": "hand.finger.index", "p": "Finger", "lang": "de", "pol": 1}]
+# a bare "Finger": the panel picks which one (index by default); the same
+# word in both languages, so one item per language
+GENERIC = [{"source": "hand.finger.index", "p": "Finger", "lang": "de", "pol": 1},
+           {"source": "hand.finger.index", "p": "finger", "lang": "en", "pol": 1}]
+# a harvested phrase gets every language with at least this share and
+# HARVEST_MIN of its occurrences in rows that are not code-switched
+LANG_SHARE = 0.25
 # demo plugins (probes/real-eval) plus a few common effects
 DEFAULT_PLUGINS = [
     "Xfer Records/Serum 2",
@@ -70,7 +81,7 @@ def slug(s: str) -> str:
 
 
 def train_targets(path: Path):
-    """(span text, target) for every TGT span of the training rows whose
+    """(span text, target, row lang, row register) for every TGT span of the training rows whose
     target token is known: TGT spans and T: tokens in the same count, else
     one per route (as probes/completion-targets/targets.py does for dev).
     The target drops values except a parameter's class and a MIDI
@@ -96,7 +107,7 @@ def train_targets(path: Path):
         for text, t in zip(tgts, ts):
             if t:
                 k = t[2:].split(":", 2)
-                yield text, ":".join(k[:2]) if k[0] in ("param", "midi.prop") else k[0]
+                yield text, ":".join(k[:2]) if k[0] in ("param", "midi.prop") else k[0], r["lang"], r["register"]
 
 
 def one_edit(a: str, b: str) -> bool:
@@ -115,13 +126,18 @@ def harvest_targets(path: Path, known: set[str]) -> list[dict]:
     of these targets, up to TARGET_WORDS words, not yet a glossary target
     phrase; shown in its most frequent spelling. Texts with a "." (ids) and
     texts one edit away from a more frequent one of the same target (the
-    training set carries deliberate typos) stay out."""
+    training set carries deliberate typos) stay out. `langs`: every row
+    language with at least LANG_SHARE and HARVEST_MIN of the text's
+    occurrences outside code-switched rows ("velocity" is said in German sentences too)."""
     by_text: dict[str, Counter] = {}
     spelling: dict[str, Counter] = {}
-    for text, target in train_targets(path):
+    by_lang: dict[str, Counter] = {}
+    for text, target, lang, register in train_targets(path):
         key = " ".join(text.casefold().split())
         by_text.setdefault(key, Counter())[target] += 1
         spelling.setdefault(key, Counter())[text.strip()] += 1
+        if register != "codeswitch":
+            by_lang.setdefault(key, Counter())[lang] += 1
     out = []
     for key, c in sorted(by_text.items()):
         target, n = c.most_common(1)[0]
@@ -132,7 +148,9 @@ def harvest_targets(path: Path, known: set[str]) -> list[dict]:
             continue
         if "." in key:
             continue
-        out.append({"kind": target, "key": key, "p": spelling[key].most_common(1)[0][0], "n": n})
+        ln = by_lang.get(key, Counter())
+        langs = sorted(lang for lang, m in ln.items() if m >= max(HARVEST_MIN, LANG_SHARE * sum(ln.values())))
+        out.append({"kind": target, "key": key, "p": spelling[key].most_common(1)[0][0], "n": n, "langs": langs})
     return [h for h in out
             if not any(o["kind"] == h["kind"] and o["n"] > h["n"] and one_edit(o["key"], h["key"]) for o in out)]
 
@@ -164,7 +182,8 @@ def main() -> None:
         if r.get("typo"):
             continue
         kind, cid = r["c"].split(":", 1)
-        key = (r["c"], r["p"].casefold())
+        # per language: a phrase both languages use stays in both
+        key = (r["c"], r["p"].casefold(), r["lang"])
         if key in seen:
             continue
         seen.add(key)
@@ -180,14 +199,14 @@ def main() -> None:
     # span prior: per span text, how often it named each parameter class
     # (ctl.switch for a toggle) or target in training
     span_prior: Counter = Counter()
-    for text, target in train_targets(data / TRAIN):
+    for text, target, _, _ in train_targets(data / TRAIN):
         cls = target[6:] if target.startswith("param:") else "ctl.switch" if target == "toggle" else target
         span_prior[(" ".join(text.casefold().split()), cls)] += 1
-    gestures += [g for g in GENERIC if (g["source"], g["p"].casefold()) not in
-                 {(x["source"], x["p"].casefold()) for x in gestures}]
+    gestures += [g for g in GENERIC if (g["source"], g["p"].casefold(), g["lang"]) not in
+                 {(x["source"], x["p"].casefold(), x["lang"]) for x in gestures}]
     known = {t["p"].casefold() for t in targets}
     harvested = harvest_targets(data / TRAIN, known)
-    targets += [{"kind": h["kind"], "p": h["p"], "lang": "train"} for h in harvested]
+    targets += [{"kind": h["kind"], "p": h["p"], "lang": lang} for h in harvested for lang in h["langs"]]
 
     prior: Counter = Counter()
     params: dict[str, dict[int, dict]] = {}

@@ -10,11 +10,80 @@
 //! from meta.json and the zero blocks are skipped, about 80 ms for 2,600
 //! names, so sentence.rs runs it on its own thread. Parity with the Python
 //! model: tests/fixtures/paramsense_parity.json.
+//!
+//! Labels and param-sense together hold about 100 MB, so every instance
+//! shares one copy (shared()), loaded when a picked plugin first needs
+//! classes and dropped after IDLE without use (probes/plugin-settings, 5).
 
 use std::collections::HashMap;
-use std::path::Path;
+use std::path::{Path, PathBuf};
+use std::sync::Arc;
+use std::time::{Duration, Instant};
 
+use parking_lot::Mutex;
 use serde_json::Value;
+
+use crate::log::log;
+
+/// Unused this long, the shared classes are dropped.
+const IDLE: Duration = Duration::from_secs(180);
+const CHECK: Duration = Duration::from_secs(15);
+
+struct SharedState {
+    classes: Option<Arc<Classes>>,
+    loading: bool,
+    used: Option<Instant>,
+}
+
+static SHARED: Mutex<SharedState> = Mutex::new(SharedState { classes: None, loading: false, used: None });
+
+/// The shared classes of `dir` once loaded. The first call starts loading
+/// them on a thread and returns None: ask again on a later frame. Every
+/// call counts as a use; that thread drops them after IDLE without one.
+pub fn shared(dir: &Path) -> Option<Arc<Classes>> {
+    let mut s = SHARED.lock();
+    s.used = Some(Instant::now());
+    if let Some(c) = &s.classes {
+        return Some(c.clone());
+    }
+    if s.loading {
+        return None;
+    }
+    let dir: PathBuf = dir.to_path_buf();
+    let spawned = std::thread::Builder::new().name("synthexis-classes".into()).spawn(move || {
+        let t0 = Instant::now();
+        let (classes, notes) = Classes::load(&dir);
+        for n in notes {
+            log(&format!("completion: classes: {n}"));
+        }
+        log(&format!("completion: labels and param-sense loaded in {:.0} ms", t0.elapsed().as_secs_f64() * 1e3));
+        {
+            let mut s = SHARED.lock();
+            s.classes = Some(Arc::new(classes));
+            s.loading = false;
+        }
+        loop {
+            std::thread::sleep(CHECK);
+            let mut s = SHARED.lock();
+            if s.used.is_none_or(|t| t.elapsed() >= IDLE) {
+                s.classes = None;
+                log(&format!("completion: labels and param-sense dropped, unused for {} s", IDLE.as_secs()));
+                return;
+            }
+        }
+    });
+    match spawned {
+        Ok(_) => {
+            s.loading = true;
+            None
+        }
+        Err(e) => {
+            // without the thread the picker still works, with empty classes
+            log(&format!("completion: classes loader not started: {e}"));
+            Some(Arc::new(Classes::default()))
+        }
+    }
+}
 
 /// Python's str.casefold for the letters plugin names use.
 fn casefold(s: &str) -> String {
@@ -70,7 +139,10 @@ pub struct Sense {
     buckets: u32,
     dim: usize,
     hidden: usize,
-    emb: Vec<f32>,
+    /// The embedding table stays f16 (half the memory, 31 MB for ps-v2);
+    /// mean() widens the rows it reads through `wide`, every f16 as f32.
+    emb: Vec<u16>,
+    wide: Vec<f32>,
     hid_w: Vec<f32>,
     hid_b: Vec<f32>,
     cls_w: Vec<f32>,
@@ -86,7 +158,7 @@ impl Sense {
         let read = |f: &str| std::fs::read(dir.join(f)).map_err(|e| format!("{}: {e}", dir.join(f).display()));
         let meta: Value = serde_json::from_slice(&read("meta.json")?).map_err(|e| format!("meta.json: {e}"))?;
         let blob = read("weights.f16.bin")?;
-        let tensor = |name: &str| -> Result<(Vec<usize>, Vec<f32>), String> {
+        let raw = |name: &str| -> Result<(Vec<usize>, &[u8]), String> {
             let t = meta["tensors"]
                 .as_array()
                 .and_then(|ts| ts.iter().find(|t| t["name"] == name))
@@ -98,11 +170,16 @@ impl Sense {
             if shape.iter().product::<usize>() * 2 != n {
                 return Err(format!("meta.json: {name} shape does not match its bytes"));
             }
+            Ok((shape, bytes))
+        };
+        let tensor = |name: &str| -> Result<(Vec<usize>, Vec<f32>), String> {
+            let (shape, bytes) = raw(name)?;
             Ok((shape, bytes.as_chunks::<2>().0.iter().map(|c| f16_to_f32(*c)).collect()))
         };
         let classes: Vec<String> =
             meta["classes"].as_array().into_iter().flatten().filter_map(Value::as_str).map(str::to_string).collect();
-        let (es, emb) = tensor("emb.weight")?;
+        let (es, emb) = raw("emb.weight").map(|(s, b)| (s, b.as_chunks::<2>().0.iter().map(|c| u16::from_le_bytes(*c)).collect::<Vec<u16>>()))?;
+        let wide = (0..=u16::MAX).map(|h| f16_to_f32(h.to_le_bytes())).collect();
         let (hs, hid_w) = tensor("hid.weight")?;
         let (_, hid_b) = tensor("hid.bias")?;
         let (cs, cls_w) = tensor("cls.weight")?;
@@ -120,7 +197,7 @@ impl Sense {
                 }
             })
             .collect();
-        Ok(Sense { classes, buckets: buckets as u32, dim, hidden, emb, hid_w, hid_b, cls_w, cls_b, name_span })
+        Ok(Sense { classes, buckets: buckets as u32, dim, hidden, emb, wide, hid_w, hid_b, cls_w, cls_b, name_span })
     }
 
     fn bucket(&self, field: &str, gram: &str) -> usize {
@@ -179,7 +256,7 @@ impl Sense {
         out.iter_mut().for_each(|x| *x = 0.0);
         for &i in ids {
             let row = &self.emb[i * self.dim..(i + 1) * self.dim];
-            out.iter_mut().zip(row).for_each(|(o, r)| *o += r);
+            out.iter_mut().zip(row).for_each(|(o, r)| *o += self.wide[usize::from(*r)]);
         }
         if !ids.is_empty() {
             let n = ids.len() as f32;

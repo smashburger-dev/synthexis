@@ -307,3 +307,75 @@ fn keystroke_latency() {
     eprintln!("keystroke median {:.2} ms, p95 {p95:.2} ms", ms[ms.len() / 2]);
     assert!(p95 < 25.0, "p95 {p95:.2} ms");
 }
+
+/// The same items in both languages, tagged as export_completion.py tags
+/// them: "Cutoff" de and "cutoff" en are two items.
+fn bilingual() -> Engine {
+    let gestures = vec![g("hand.fist", "Faust schließen"), g("hand.fist", "close my fist"), g("hand.pinch", "Fingerkneifen"), g("hand.pinch", "pinch")];
+    let phrases = [("filter.cutoff", "Cutoff"), ("filter.cutoff", "cutoff"), ("filter.cutoff", "Filter aufmachen"), ("other", "Lücke")]
+        .iter()
+        .map(|(c, p)| (c.to_string(), p.to_string()))
+        .collect();
+    let targets = [("midi.chord", "Akkord spielen"), ("midi.chord", "play a chord"), ("midi.prop:arp.rate", "arp rate")];
+    let (de, en) = (Some(Lang::De), Some(Lang::En));
+    let mut e = Engine::new(gestures, phrases, &HashMap::new())
+        .with_targets(targets.iter().map(|(k, p)| (k.to_string(), p.to_string())).collect())
+        // the catch-all phrase is dropped by new(); its language still aligns
+        .with_langs(vec![de, en, de, en], vec![de, en, de, de], vec![de, en, None]);
+    e.set_plugin("Synth/Test", vec![p(0, "Filter 1 Freq", "filter.cutoff"), p(1, "Fingerprint", "other")]);
+    e
+}
+
+fn all(e: &Engine, text: &str) -> Vec<String> {
+    e.complete(text, text.len(), 0, 8).iter().map(|s| s.chip.label().to_string()).collect()
+}
+
+#[test]
+fn english_mode_shows_no_german_item() {
+    let mut e = bilingual();
+    e.set_lang(Some(Lang::En));
+    for t in ["Fau", "when I Fau", "Fing", "when I Fing", "Akk", "Filter auf", "the cut", "when I pin", "play a", "arp"] {
+        for label in all(&e, t) {
+            assert!(
+                !["Faust schließen", "Fingerkneifen", "Akkord spielen", "Cutoff", "arp rate"].contains(&label.as_str()),
+                "{t:?} offered {label:?} in English mode"
+            );
+        }
+    }
+    assert_eq!(all(&e, "when I clo"), ["close my fist"]);
+    assert_eq!(all(&e, "play a"), ["play a chord"]);
+}
+
+#[test]
+fn parameter_names_are_never_filtered() {
+    let mut e = bilingual();
+    for lang in Lang::ALL {
+        e.set_lang(Some(lang));
+        assert!(all(&e, "the Fing").contains(&"Fingerprint".to_string()), "{lang:?}");
+        assert!(all(&e, "the filt").contains(&"Filter 1 Freq".to_string()), "{lang:?}");
+    }
+    // a German class phrase finds the parameter in German mode only, and its
+    // English twin shows in English mode
+    e.set_lang(Some(Lang::En));
+    let s = e.complete("the cut", 7, 0, 8);
+    assert_eq!(s[0].via.as_deref(), Some("cutoff"));
+    assert!(e.complete("Filter auf", 10, 0, 8).iter().all(|s| s.via.as_deref() != Some("Filter aufmachen")));
+    e.set_lang(Some(Lang::De));
+    assert_eq!(e.complete("the cut", 7, 0, 8)[0].via.as_deref(), Some("Cutoff"), "German first on an equal match");
+    assert!(e.complete("Filter auf", 10, 0, 8).iter().any(|s| s.via.as_deref() == Some("Filter aufmachen")));
+}
+
+#[test]
+fn german_mode_shows_both_languages_german_first() {
+    let mut e = bilingual();
+    e.set_lang(Some(Lang::De));
+    assert_eq!(all(&e, "wenn ich Fau"), ["Faust schließen"]);
+    assert_eq!(all(&e, "when I clo"), ["close my fist"], "English items stay in German mode");
+    assert!(all(&e, "arp").contains(&"arp rate".to_string()), "an untagged item shows in German mode");
+    let pinch = all(&e, "when I pin");
+    assert_eq!(pinch, ["pinch"]);
+    // without a setting every item shows, as before
+    e.set_lang(None);
+    assert!(all(&e, "arp").contains(&"arp rate".to_string()));
+    assert_eq!(all(&e, "Akk"), ["Akkord spielen"]);
+}

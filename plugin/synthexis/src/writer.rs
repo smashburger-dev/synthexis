@@ -96,6 +96,16 @@ impl Writer {
             .collect()
     }
 
+    /// True when a route of `line` runs.
+    pub fn has_line(&self, line: u64) -> bool {
+        line != 0 && self.routes.lock().iter().any(|r| r.line == line)
+    }
+
+    /// (id, signal, target) of the routes of `line`.
+    pub fn line_routes(&self, line: u64) -> Vec<(u64, String, Target)> {
+        self.routes.lock().iter().filter(|r| line != 0 && r.line == line).map(|r| (r.id, r.signal.clone(), r.target.clone())).collect()
+    }
+
     /// Keeps pending routes for good.
     pub fn accept(&self, ids: &[u64]) {
         for r in self.routes.lock().iter_mut().filter(|r| ids.contains(&r.id)) {
@@ -197,7 +207,19 @@ impl Writer {
     }
 }
 
+/// What the enabled routes read; test routes count while Test signal is on.
+fn routes_need(routes: &[Route], test_on: bool) -> crate::engine::Demand {
+    routes
+        .iter()
+        .filter(|r| if r.test { test_on } else { r.enabled })
+        .fold(crate::engine::Demand::default(), |d, r| d.or(crate::engine::Demand::of_signal(&r.signal)))
+}
+
 impl SignalSubscriber for Writer {
+    fn needs(&self) -> crate::engine::Demand {
+        routes_need(&self.routes.lock(), self.params.test_signal.value())
+    }
+
     fn on_sample(&self, signal_id: &str, sample: &Sample) {
         let mut writes = Vec::new();
         let live = self.params.live.value();
@@ -251,5 +273,25 @@ impl SignalSubscriber for Writer {
         }
         self.submit_main();
         self.periodic_log();
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::engine::Demand;
+
+    #[test]
+    fn test_routes_need_camera_and_perception_only_while_test_signal_is_on() {
+        assert_eq!(routes_need(&default_routes(false), false), Demand::default());
+        assert_eq!(routes_need(&default_routes(true), true), Demand { camera: true, perception: true });
+        let mut only_triangle = default_routes(true);
+        only_triangle.retain(|r| r.signal == crate::signal::SIG_TRIANGLE);
+        assert_eq!(routes_need(&only_triangle, true), Demand::default());
+        // an assigned (non-test) route counts while enabled, whatever Test signal says
+        let mut assigned = vec![Route::new("cam0.hand.R.pinch", 0, 1.0)];
+        assert_eq!(routes_need(&assigned, false), Demand { camera: true, perception: true });
+        assigned[0].enabled = false;
+        assert_eq!(routes_need(&assigned, false), Demand::default());
     }
 }

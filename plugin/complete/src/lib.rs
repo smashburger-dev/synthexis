@@ -10,6 +10,11 @@
 //! item becomes a chip that carries an id; on submit the chips become
 //! pinned spans for the parser (synthexis_parser::pin).
 //!
+//! Every gesture, class and target phrase has a language (Lang); the
+//! plugin's language setting filters on it (set_lang): English shows
+//! English items only, German shows both with German ones first on an equal
+//! match. Parameter names of the picked plugin are never filtered.
+//!
 //! Rank = fuzzy match (fuzzy.rs) + class prior + span prior (which class
 //! the training sentences meant with words starting like the query) + the
 //! user's recent picks + the words before the cursor (switching words rank
@@ -51,11 +56,42 @@ const NOT_MAPPABLE: f32 = -0.2;
 pub const SPAN_PRIOR: f32 = 0.2;
 /// Target items rank below parameters of the same match.
 const TARGET_DOWN: f32 = -0.1;
+/// In German mode a German item ranks this much above an English one of
+/// the same match ("Cutoff" over "cutoff").
+const LANG_FIRST: f32 = 0.01;
 pub const SWITCH_CLASS: &str = "ctl.switch";
 /// Classes that gather unrelated parameters: their glossary phrases
 /// ("the gap before the reverb starts" in `other`) would offer every one of
 /// them, so these parameters complete by name only.
 const CATCH_ALL: [&str; 3] = ["other", "system", "unsafe"];
+
+/// Language of a completion item, and the plugin's interface language.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
+pub enum Lang {
+    #[default]
+    En,
+    De,
+}
+
+impl Lang {
+    pub const ALL: [Lang; 2] = [Lang::En, Lang::De];
+
+    /// "en" or "de", as vocab.json and the settings file write it.
+    pub fn code(self) -> &'static str {
+        match self {
+            Lang::En => "en",
+            Lang::De => "de",
+        }
+    }
+
+    pub fn from_code(s: &str) -> Option<Lang> {
+        match s.trim() {
+            "en" => Some(Lang::En),
+            "de" => Some(Lang::De),
+            _ => None,
+        }
+    }
+}
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Gesture {
@@ -221,6 +257,15 @@ pub struct Engine {
     pub span_weight: f32,
     /// Sources that take a hand side (ontology `side: true`).
     sided: std::collections::HashSet<String>,
+    /// Item languages, aligned with `gestures`, the phrases given to new()
+    /// and `targets`; None for an untagged item.
+    gesture_lang: Vec<Option<Lang>>,
+    phrase_lang: Vec<Option<Lang>>,
+    target_lang: Vec<Option<Lang>>,
+    /// Index into the phrases given to new() for every kept phrase.
+    phrase_src: Vec<usize>,
+    /// The language setting; None shows every item (tests, tools).
+    lang: Option<Lang>,
 }
 
 #[derive(Default)]
@@ -237,6 +282,7 @@ impl Engine {
         mut phrases: Vec<(String, String)>,
         prior: &HashMap<String, u64>,
     ) -> Self {
+        let phrase_src: Vec<usize> = (0..phrases.len()).filter(|&i| !CATCH_ALL.contains(&phrases[i].0.as_str())).collect();
         phrases.retain(|(c, _)| !CATCH_ALL.contains(&c.as_str()));
         let mut classes: Vec<String> = prior.keys().cloned().collect();
         classes.extend(phrases.iter().map(|(c, _)| c.clone()));
@@ -270,6 +316,44 @@ impl Engine {
             spans: Vec::new(),
             span_weight: SPAN_PRIOR,
             sided: Default::default(),
+            gesture_lang: Vec::new(),
+            phrase_lang: Vec::new(),
+            target_lang: Vec::new(),
+            phrase_src,
+            lang: None,
+        }
+    }
+
+    /// The language of every item: `gestures` and `targets` aligned with
+    /// what new() and with_targets() got, `phrases` with the phrases given
+    /// to new() (catch-all ones included). Call after with_targets().
+    pub fn with_langs(mut self, gestures: Vec<Option<Lang>>, phrases: Vec<Option<Lang>>, targets: Vec<Option<Lang>>) -> Self {
+        self.phrase_lang = self.phrase_src.iter().map(|&i| phrases.get(i).copied().flatten()).collect();
+        self.gesture_lang = gestures;
+        self.target_lang = targets;
+        self
+    }
+
+    /// The plugin's language setting: English shows English items only,
+    /// German every item with German ones first; None shows every item.
+    pub fn set_lang(&mut self, lang: Option<Lang>) {
+        self.lang = lang;
+    }
+
+    pub fn lang(&self) -> Option<Lang> {
+        self.lang
+    }
+
+    /// Rank bonus of an item in `of` under the language setting, None when
+    /// the setting hides it. An untagged item shows in German mode only.
+    fn lang_bonus(&self, of: &[Option<Lang>], i: usize) -> Option<f32> {
+        let item = of.get(i).copied().flatten();
+        match (self.lang, item) {
+            (None, _) => Some(0.0),
+            (Some(Lang::En), Some(Lang::En)) => Some(0.0),
+            (Some(Lang::En), _) => None,
+            (Some(Lang::De), Some(Lang::De)) => Some(LANG_FIRST),
+            (Some(Lang::De), _) => Some(0.0),
         }
     }
 
@@ -399,6 +483,7 @@ impl Engine {
                 let weak = pos == context::GesturePos::Weak;
                 self.gindex.with_word_prefix(&first, &mut sc.seen, &mut sc.ids);
                 for &i in &sc.ids {
+                    let Some(lb) = self.lang_bonus(&self.gesture_lang, i as usize) else { continue };
                     let k = &self.gindex.keys[i as usize];
                     let Some(m) = q.score(k).filter(|&m| m >= MIN_MATCH) else {
                         continue;
@@ -413,13 +498,14 @@ impl Engine {
                         side: None,
                     };
                     let key = format!("gesture:{}/{:?}/{}", g.source, g.shape, g.pol);
-                    let score = m + GESTURE_BONUS + wb + self.recency(&chip.id());
+                    let score = m + GESTURE_BONUS + wb + lb + self.recency(&chip.id());
                     let variants = self.gesture_variants(g, named);
                     keep(Suggestion { chip, score, replace: replace.clone(), via: None, prefix, weak, variants }, key);
                 }
             }
             self.tindex.with_word_prefix(&first, &mut sc.seen, &mut sc.ids);
             for &i in &sc.ids {
+                let Some(lb) = self.lang_bonus(&self.target_lang, i as usize) else { continue };
                 let k = &self.tindex.keys[i as usize];
                 let Some(m) = q.score(k).filter(|&m| m >= MIN_MATCH) else {
                     continue;
@@ -427,7 +513,7 @@ impl Engine {
                 let (kind, phrase) = &self.targets[i as usize];
                 let chip = Chip::Target { kind: kind.clone(), phrase: phrase.clone() };
                 let key = chip.id();
-                let score = m + TARGET_DOWN + wb + learned(kind) + self.recency(&key);
+                let score = m + TARGET_DOWN + wb + lb + learned(kind) + self.recency(&key);
                 // list only: short target words ("fire chords", "pad chords")
                 // start like parameter words and would take the ghost text
                 keep(Suggestion { chip, score, replace: replace.clone(), via: None, prefix: q.is_prefix(k), weak: true, variants: Variants::default() }, key);
@@ -452,7 +538,8 @@ impl Engine {
                 if !q.word_aligned(k) {
                     continue;
                 }
-                let Some(m) = q.score(k).filter(|&m| m >= MIN_MATCH) else {
+                let Some(lb) = self.lang_bonus(&self.phrase_lang, i as usize) else { continue };
+                let Some(m) = q.score(k).filter(|&m| m >= MIN_MATCH).map(|m| m + lb) else {
                     continue;
                 };
                 let c = self.phrase_class[i as usize];
