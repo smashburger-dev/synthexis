@@ -104,6 +104,8 @@ pub struct Percept {
     pub hands: [Option<(HandFeatures, f32)>; 2],
     pub face: Option<(FaceFeatures, f32)>,
     pub object: Option<([f32; 5], f32)>,
+    /// Bench only (SYNTHEXIS_BENCH_RAW): every hand candidate as JSON.
+    pub debug: Option<String>,
 }
 
 pub trait Backend {
@@ -315,9 +317,11 @@ pub struct Students {
     labels: Vec<u32>,
     lut: [u16; N_SEG],
     tracker: HandTracker,
+    sides: SideTracker,
     object_track: PointTrack,
     /// Hand crop and hand model time of the current frame, ms.
     hand_ms: [f64; 2],
+    raw: bool,
 }
 
 impl Students {
@@ -350,16 +354,19 @@ impl Students {
             labels: Vec::new(),
             lut,
             tracker: HandTracker::default(),
+            sides: SideTracker::default(),
             object_track: PointTrack::default(),
             hand_ms: [0.0; 2],
+            raw: std::env::var_os("SYNTHEXIS_BENCH_RAW").is_some(),
         })
     }
 
-    fn hand(&mut self, src: &Bgra, b: &Blob, side: Side, t_ns: u64) -> Option<(HandFeatures, f32)> {
+    /// Hand student on the 1.25x crop of `b`: 21 keypoints in frame pixels
+    /// and the five finger probabilities.
+    fn hand_points(&mut self, src: &Bgra, b: &Blob) -> Option<([[f32; 2]; 21], [f32; 5])> {
         let (fw, fh) = (src.w as f32, src.h as f32);
         let (bx, by, bw, bh) = blob_box(b, fw, fh);
         let (x0, y0, s) = square(bx, by, bw, bh, HAND_PAD);
-        let conf = lin(b.area as f32, MIN_HAND_AREA as f32, 4.0 * MIN_HAND_AREA as f32);
         let head = self.hand.as_ref()?;
         let t0 = Instant::now();
         self.crop_in.write(|d, ds| super::vimage::crop_square(src, x0, y0, s, d, ds, CROP));
@@ -386,9 +393,45 @@ impl Students {
         })?;
         self.hand_ms[0] += t1.duration_since(t0).as_secs_f64() * 1e3;
         self.hand_ms[1] += t1.elapsed().as_secs_f64() * 1e3;
+        Some((kp, ext))
+    }
+
+    /// JSON of all hand candidates (area >= 20) with keypoints and the
+    /// person pixels at their border, plus the face blob; seg pixels unless
+    /// noted. For offline work on the side rule.
+    fn raw_line(&mut self, src: &Bgra, face: Option<&Blob>) -> String {
+        let cands: Vec<Blob> = components(&self.mask, SEG_W, SEG_H, |c| c == C_HAND, &mut self.labels)
+            .into_iter()
+            .filter(|b| b.area >= 20)
+            .take(4)
+            .collect();
+        let mut parts = Vec::new();
+        for b in &cands {
+            let c = b.centre();
+            let (bd, nb) = border_centroid(&self.mask, SEG_W, SEG_H, b, C_HAND, 1);
+            let (bl, nl) = below_centroid(&self.mask, SEG_W, SEG_H, b, 1);
+            let pts = self.hand_points(src, b);
+            let kp = pts.map(|(k, _)| k.iter().flat_map(|p| [p[0], p[1]]).map(|v| format!("{v:.1}")).collect::<Vec<_>>().join(","));
+            let fg = pts.map(|(_, e)| e.iter().map(|v| format!("{v:.2}")).collect::<Vec<_>>().join(","));
+            parts.push(format!(
+                "{{\"a\":{},\"c\":[{:.1},{:.1}],\"bb\":[{},{},{},{}],\"bd\":[{:.1},{:.1},{nb}],\"bl\":[{:.1},{nl}],\"kp\":[{}],\"fg\":[{}]}}",
+                b.area, c[0], c[1], b.x0, b.y0, b.x1, b.y1, bd[0], bd[1], bl, kp.unwrap_or_default(), fg.unwrap_or_default()
+            ));
+        }
+        let face = face.map(|f| {
+            let c = f.centre();
+            format!(",\"face\":[{:.1},{:.1},{},{},{},{},{}]", c[0], c[1], f.area, f.x0, f.y0, f.x1, f.y1)
+        });
+        format!("{{\"cands\":[{}]{}}}", parts.join(","), face.unwrap_or_default())
+    }
+
+    fn hand(&mut self, src: &Bgra, b: &Blob, pts: ([[f32; 2]; 21], [f32; 5]), side: Side, t_ns: u64) -> (HandFeatures, f32) {
+        let (fw, fh) = (src.w as f32, src.h as f32);
+        let conf = lin(b.area as f32, MIN_HAND_AREA as f32, 4.0 * MIN_HAND_AREA as f32);
+        let (kp, ext) = pts;
         let mut f = hand_features(&kp, side, fw, fh, Some(ext));
         f.speed = self.tracker.update(side, f.palm, fh, t_ns);
-        Some((f, conf))
+        (f, conf)
     }
 
     /// Face from the face student on a 1.3x crop, else from the eye and
@@ -479,16 +522,24 @@ impl Backend for Students {
             stage(stages, "mask");
             let (fw, fh) = (w as f32, h as f32);
             let (kx, ky) = (fw / SEG_W as f32, fh / SEG_H as f32);
-            let centres: Vec<[f32; 2]> = hands.iter().map(|b| {
-                let c = b.centre();
-                [c[0] * kx, c[1] * ky]
-            }).collect();
-            let face_cx = face.as_ref().map(|f| f.centre()[0] * kx);
-            let sides = self.tracker.assign(&centres, face_cx, fw, t_ns);
-            let mut p = Percept::default();
             self.hand_ms = [0.0; 2];
-            for (b, side) in hands.iter().zip(sides) {
-                p.hands[side as usize] = self.hand(&src, b, side, t_ns);
+            let pts: Vec<_> = hands.iter().map(|b| self.hand_points(&src, b)).collect();
+            let cues: Vec<([f32; 2], f32)> = hands
+                .iter()
+                .zip(&pts)
+                .map(|(b, pt)| {
+                    let c = b.centre();
+                    let c = [c[0] * kx, c[1] * ky];
+                    (c, pt.as_ref().map_or(0.0, |(kp, _)| wrist_lean(kp, c)))
+                })
+                .collect();
+            let face_cx = face.as_ref().map(|f| f.centre()[0] * kx);
+            let sides = self.sides.assign(&cues, face_cx, fw, t_ns);
+            let mut p = Percept::default();
+            for ((b, pt), side) in hands.iter().zip(pts).zip(sides) {
+                if let Some(pt) = pt {
+                    p.hands[side as usize] = Some(self.hand(&src, b, pt, side, t_ns));
+                }
             }
             stage(stages, "hands");
             stages.push(("hand_crop", self.hand_ms[0]));
@@ -503,6 +554,9 @@ impl Backend for Students {
                 let speed = self.object_track.update(c, SEG_H as f32, t_ns);
                 let conf = lin(o.area as f32, MIN_OBJECT_AREA as f32, 4.0 * MIN_OBJECT_AREA as f32);
                 p.object = Some(([v[0], v[1], v[2], v[3], speed], conf));
+            }
+            if self.raw {
+                p.debug = Some(self.raw_line(&src, face.as_ref()));
             }
             Some(p)
         })

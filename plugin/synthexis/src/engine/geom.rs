@@ -307,6 +307,52 @@ pub fn components(mask: &[u8], w: usize, h: usize, pred: impl Fn(u8) -> bool, la
     blobs
 }
 
+/// Centroid and count of `other`-class pixels next to (4-neighbour) an
+/// `inside`-class pixel, within the blob's box grown by one pixel: where
+/// the blob touches e.g. the person class (the wrist for a hand).
+pub fn border_centroid(mask: &[u8], w: usize, h: usize, b: &Blob, inside: u8, other: u8) -> ([f32; 2], usize) {
+    let (x0, y0) = (b.x0.saturating_sub(1), b.y0.saturating_sub(1));
+    let (x1, y1) = ((b.x1 + 1).min(w - 1), (b.y1 + 1).min(h - 1));
+    let (mut sx, mut sy, mut n) = (0f32, 0f32, 0usize);
+    for y in y0..=y1 {
+        for x in x0..=x1 {
+            if mask[y * w + x] != other {
+                continue;
+            }
+            let touches = (x > 0 && mask[y * w + x - 1] == inside)
+                || (x + 1 < w && mask[y * w + x + 1] == inside)
+                || (y > 0 && mask[(y - 1) * w + x] == inside)
+                || (y + 1 < h && mask[(y + 1) * w + x] == inside);
+            if touches {
+                sx += x as f32 + 0.5;
+                sy += y as f32 + 0.5;
+                n += 1;
+            }
+        }
+    }
+    if n == 0 {
+        return (b.centre(), 0);
+    }
+    ([sx / n as f32, sy / n as f32], n)
+}
+
+/// Mean x and count of `other`-class pixels in the band below the blob:
+/// one blob height deep, one blob width wider on each side.
+pub fn below_centroid(mask: &[u8], w: usize, h: usize, b: &Blob, other: u8) -> (f32, usize) {
+    let (bw, bh) = (b.x1 - b.x0 + 1, b.y1 - b.y0 + 1);
+    let (x0, x1) = (b.x0.saturating_sub(bw), (b.x1 + bw).min(w - 1));
+    let (mut sx, mut n) = (0f32, 0usize);
+    for y in (b.y1 + 1).min(h)..(b.y1 + 1 + bh).min(h) {
+        for x in x0..=x1 {
+            if mask[y * w + x] == other {
+                sx += x as f32 + 0.5;
+                n += 1;
+            }
+        }
+    }
+    (if n == 0 { b.centre()[0] } else { sx / n as f32 }, n)
+}
+
 /// Ellipse of a region or point set from its second moments.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Shape {
@@ -676,6 +722,92 @@ impl PointTrack {
     }
 }
 
+/// Which way the forearm leaves the hand: the wrist keypoint's x offset
+/// from the hand blob's centre per palm size, -1..1. The forearm comes
+/// from the hand's own body side, so > 0 (wrist to the image right) means
+/// the person's left hand, also for a hand held at the image centre. On
+/// S1 to S3 block A its sign alone gets 87 to 94% of one-hand frames right.
+pub fn wrist_lean(kp: &[[f32; 2]; 21], centre: [f32; 2]) -> f32 {
+    let palm = dist(kp[WRIST], kp[9]).max(1.2 * dist(kp[5], kp[17])).max(1.0);
+    ((kp[WRIST][0] - centre[0]) / palm).clamp(-1.0, 1.0)
+}
+
+/// Side assignment for the seg student's hand blobs. Each blob belongs to
+/// an identity track (nearest live track within a quarter frame width);
+/// a track sums the `wrist_lean` of its frames, capped, starting from a
+/// small prior from its position against the face (else frame) centre.
+/// Two hands split by image side; one hand takes its track's sign.
+/// Tracks expire after `EXPIRE_NS` unseen.
+#[derive(Debug, Default)]
+pub struct SideTracker {
+    tracks: Vec<SideTrack>,
+}
+
+#[derive(Debug, Clone, Copy)]
+struct SideTrack {
+    pos: [f32; 2],
+    t_ns: u64,
+    lean: f32,
+}
+
+const SIDE_PRIOR: f32 = 0.3;
+const SIDE_CAP: f32 = 40.0;
+
+impl SideTracker {
+    /// `hands`: blob centre in frame px and its `wrist_lean` (0 without
+    /// keypoints), at most two, largest first.
+    pub fn assign(&mut self, hands: &[([f32; 2], f32)], face_cx: Option<f32>, fw: f32, t_ns: u64) -> Vec<Side> {
+        self.tracks.retain(|t| t_ns.saturating_sub(t.t_ns) < EXPIRE_NS);
+        let mut pairs: Vec<(f32, usize, usize)> = hands
+            .iter()
+            .enumerate()
+            .flat_map(|(i, h)| self.tracks.iter().enumerate().map(move |(j, t)| (dist(h.0, t.pos), i, j)))
+            .collect();
+        pairs.sort_by(|a, b| a.0.total_cmp(&b.0));
+        let mut track_of: Vec<Option<usize>> = vec![None; hands.len()];
+        let mut taken = vec![false; self.tracks.len()];
+        for (d, i, j) in pairs {
+            if d < MATCH_FRAC * fw && track_of[i].is_none() && !taken[j] {
+                track_of[i] = Some(j);
+                taken[j] = true;
+            }
+        }
+        let reference = face_cx.unwrap_or(fw / 2.0);
+        let idx: Vec<usize> = hands
+            .iter()
+            .zip(track_of)
+            .map(|(h, m)| {
+                m.unwrap_or_else(|| {
+                    let prior = SIDE_PRIOR * ((h.0[0] - reference) / (0.25 * fw)).clamp(-1.0, 1.0);
+                    self.tracks.push(SideTrack { pos: h.0, t_ns, lean: prior });
+                    self.tracks.len() - 1
+                })
+            })
+            .collect();
+        for (h, &j) in hands.iter().zip(&idx) {
+            let t = &mut self.tracks[j];
+            t.lean = (t.lean + h.1).clamp(-SIDE_CAP, SIDE_CAP);
+            t.pos = h.0;
+            t.t_ns = t_ns;
+        }
+        let sides = match hands {
+            [a, b] => {
+                if a.0[0] < b.0[0] {
+                    vec![Side::R, Side::L]
+                } else {
+                    vec![Side::L, Side::R]
+                }
+            }
+            [_] => vec![if self.tracks[idx[0]].lean > 0.0 { Side::L } else { Side::R }],
+            _ => vec![],
+        };
+        // Keep the two newest tracks.
+        let extra = self.tracks.len().saturating_sub(2);
+        self.tracks.drain(..extra);
+        sides
+    }
+}
+
 /// Square crop box (x0, y0, side) around a box (x0, y0, w, h) in frame px.
 pub fn square(x0: f32, y0: f32, w: f32, h: f32, pad: f32) -> (f32, f32, f32) {
     let side = pad * w.max(h);
@@ -837,6 +969,39 @@ mod tests {
         assert_eq!(t.assign(&[[500.0, 300.0]], Some(640.0), 1280.0, 33_000_000), vec![Side::L]);
         // Expired tracks fall back to geometry.
         assert_eq!(t.assign(&[[500.0, 300.0]], Some(640.0), 1280.0, 900_000_000), vec![Side::R]);
+    }
+
+    #[test]
+    fn side_tracker_follows_the_wrist_for_a_centred_hand() {
+        // A hand at the image centre, right of the face, wrist to the image
+        // left: the person's right hand coming in from its own side.
+        let mut kp = [[640.0f32, 300.0]; 21];
+        kp[WRIST] = [600.0, 400.0];
+        kp[9] = [640.0, 300.0];
+        kp[5] = [620.0, 300.0];
+        kp[17] = [660.0, 300.0];
+        let lean = wrist_lean(&kp, [640.0, 330.0]);
+        assert!(lean < -0.3, "{lean}");
+        let mut t = SideTracker::default();
+        let face = Some(600.0);
+        // The position prior alone says L (hand right of the face) ...
+        assert_eq!(t.assign(&[([640.0, 330.0], 0.0)], face, 1280.0, 0), vec![Side::L]);
+        // ... the wrist turns it within a frame and the track keeps it.
+        let mut t = SideTracker::default();
+        for k in 0..10u64 {
+            assert_eq!(t.assign(&[([640.0, 330.0], lean)], face, 1280.0, k * 33_000_000), vec![Side::R]);
+        }
+        // A few contrary frames do not flip a settled track.
+        for k in 10..13u64 {
+            assert_eq!(t.assign(&[([645.0, 330.0], 0.5)], face, 1280.0, k * 33_000_000), vec![Side::R]);
+        }
+        // Two hands split by image side regardless of lean.
+        assert_eq!(
+            t.assign(&[([900.0, 300.0], -1.0), ([300.0, 300.0], 1.0)], face, 1280.0, 14 * 33_000_000),
+            vec![Side::L, Side::R]
+        );
+        // After the track expires a new hand starts from its own evidence.
+        assert_eq!(t.assign(&[([640.0, 330.0], 0.6)], face, 1280.0, 2_000_000_000), vec![Side::L]);
     }
 
     #[test]

@@ -107,6 +107,9 @@ pub fn run(path: &str) -> i32 {
                 f.seen_mouth as u8
             );
         }
+        if let Some(raw) = &p.debug {
+            line += &format!(",\"raw\":{raw}");
+        }
         if let Some((v, c)) = &p.object {
             line += &format!(",\"object\":{},\"object_conf\":{c:.2}", json_floats(v));
         }
