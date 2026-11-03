@@ -114,6 +114,9 @@ pub fn run(path: &str) -> i32 {
                 f.seen_mouth as u8
             );
         }
+        if let Some((x, _)) = p.centre_x {
+            line += &format!(",\"centre_x\":{x:.3}");
+        }
         if let Some(raw) = &p.debug {
             line += &format!(",\"raw\":{raw}");
         }

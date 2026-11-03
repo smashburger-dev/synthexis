@@ -477,9 +477,21 @@ pub struct HandFeatures {
     pub palm: [f32; 2],
 }
 
+/// Openness above the knee is stretched so the top anchor reads 1.0: an
+/// open hand's finger mean sits at 0.88 (p25) to 0.92 (median) on block A
+/// of S1-S3, so a route on openness never reached its top (Noa, FL test
+/// 11-03). Below the knee, the fist end, nothing changes.
+const OPEN_KNEE: f32 = 0.6;
+const OPEN_TOP: f32 = 0.88;
+
 impl HandFeatures {
     pub fn openness(&self) -> f32 {
-        self.finger.iter().sum::<f32>() / 5.0
+        let o = self.finger.iter().sum::<f32>() / 5.0;
+        if o <= OPEN_KNEE {
+            o
+        } else {
+            (OPEN_KNEE + (o - OPEN_KNEE) * (1.0 - OPEN_KNEE) / (OPEN_TOP - OPEN_KNEE)).min(1.0)
+        }
     }
 
     pub fn values(&self) -> [f32; 20] {

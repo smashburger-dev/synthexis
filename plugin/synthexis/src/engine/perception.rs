@@ -23,7 +23,7 @@ use super::coreml::{F16Array, Frame, Input, Model, PixelBuf};
 use super::geom::*;
 use super::vision::{face_crop, FaceLandmarks, Seed, LM_CROP};
 use crate::log::log;
-use crate::signal::{Sample, FACE_IDS, HAND_L, HAND_R, OBJECT_IDS, SIG_HANDS_DISTANCE};
+use crate::signal::{Sample, FACE_IDS, HAND_L, HAND_R, OBJECT_IDS, SIG_BODY_X, SIG_HANDS_DISTANCE};
 
 const STATS_WINDOW: usize = 300;
 const LOG_EVERY: Duration = Duration::from_secs(5);
@@ -123,6 +123,8 @@ pub struct Percept {
     pub hands: [Option<(HandFeatures, f32)>; 2],
     pub face: Option<(FaceFeatures, f32)>,
     pub object: Option<([f32; 5], f32)>,
+    /// Face centre x, person's view (signal::SIG_BODY_X), with its confidence.
+    pub centre_x: Option<(f32, f32)>,
     /// Bench only (SYNTHEXIS_BENCH_RAW): every hand candidate as JSON.
     pub debug: Option<String>,
 }
@@ -307,6 +309,9 @@ impl Emitter {
             _ => None,
         };
         send(SIG_HANDS_DISTANCE, self.distance, both.unwrap_or(0.0), both.is_some());
+        if let Some((x, c)) = p.centre_x {
+            send(SIG_BODY_X, x, c, true);
+        }
         let obj = p.object.as_ref();
         if let Some((v, _)) = obj {
             self.object = *v;
@@ -689,7 +694,10 @@ impl Backend for Students {
                 .collect();
             let face_cx = face.as_ref().map(|f| f.centre()[0] * kx);
             let sides = self.sides.assign(&cues, face_cx, fw, t_ns);
-            let mut p = Percept::default();
+            let centre_x = face.as_ref().zip(face_cx).map(|(f, cx)| {
+                (1.0 - (cx / fw).clamp(0.0, 1.0), lin(f.area as f32, MIN_FACE_AREA as f32, 4.0 * MIN_FACE_AREA as f32))
+            });
+            let mut p = Percept { centre_x, ..Default::default() };
             for ((b, pt), side) in hands.iter().zip(pts).zip(sides) {
                 if let Some(pt) = pt {
                     p.hands[side as usize] = Some(self.hand(&src, b, pt, side, t_ns));

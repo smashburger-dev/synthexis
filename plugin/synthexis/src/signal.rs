@@ -43,6 +43,11 @@ sided!(HAND_FEATS, HAND_L, HAND_R, "hand", [
 
 pub const SIG_HANDS_DISTANCE: &str = "cam0.hands.distance";
 
+/// The person's centre on x (face centre, person's view, 0 = their left).
+/// Internal: no ontology source and not in `perception_ids`, so no
+/// sentence can route it; route.rs splits two hands' x at it.
+pub const SIG_BODY_X: &str = "cam0.body.x";
+
 // Order matters: `engine::geom::FaceFeatures::values` fills this order.
 pub const FACE_IDS: &[&str] = &[
     "cam0.mouth.open",

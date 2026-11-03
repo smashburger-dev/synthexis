@@ -15,6 +15,8 @@ How to change how perception values feel in the plugin without breaking what was
 |---|---|---|---|
 | finger values and hand openness, index to pinky: anchors | `FINGER_BEND`, `FINGER_REACH` | `plugin/synthexis/src/engine/geom.rs` | block A, 40th percentile of extended and 60th of folded frames, non-dev segments |
 | how fast the middle of a fist opening passes | `FINGER_DECILES` (`finger_curve`) | `geom.rs` | deciles of the linear finger value over the B_*_open ramps |
+| how high an open hand reads | `OPEN_KNEE`, `OPEN_TOP` (`HandFeatures::openness`) | `geom.rs` | block A, p25 of open-hand frames reads 1.0; below the knee unchanged |
+| where two hands' x split | `HAND_X_REACH`, `CENTRE_TAU_S` (`fit_hand_x`) | `plugin/synthexis/src/route.rs` | face centre (`cam0.body.x`); half a frame per hand |
 | thumb | formula in `hand_features` | `geom.rs` | unchanged since the stand-ins; re-anchoring it cost accuracy |
 | pinch | `lin(d / palm, 0.25, 0.93)` in `hand_features` | `geom.rs` | H_pinch_drag (S2, S3): touching tips 0.1 to 0.3 palm apart |
 | mouth open | `MOUTH_GAP` (0.06, 0.6) | `geom.rs`, used in `vision.rs` `face()` | block C: closed 0.02 to 0.04, wide 0.52 to 0.62 |

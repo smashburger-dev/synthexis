@@ -55,6 +55,7 @@ Hard dates: S3 and S4 recorded 10-30/10-31, training from 11-01 (new Modal credi
   - hand openness tops out near 0.85 with the hand fully open, while a closed fist reaches about 0.1; the upper third of the openness mapping is cut short (the fist calibration widened the middle, keep that), so a route on openness never reaches its top. Goal (Noa): a fully open hand reads at least 0.95
   - two hands on the x axis: when both hands have a route on hand x, each hand can only use its own half of the frame (the left hand cannot cross the right one); map each hand's x onto its half (left 0..0.5, right 0.5..1, each stretched to 0..1, mirrored for the person's own sides); y needs no such rule
   - latency feels fast; faster is welcome
+  - built 11-03 evening (branch claude/peaceful-hugle-02ba54, `probes/plugin-perception/RESULT.md`, section "Openness top and two hands on x"): openness above 0.6 is stretched so an open hand reads 1.0 (S1 to S3 open-hand p25 0.88 -> 1.00, fist unchanged); with both hands routed on x each hand gets its side of the person's face centre, not of the frame (Noa). Open: FL test with Noa
 
 ## Mapping assistant (own session; state in `docs/session-2026-10-30-mapping-train.md`)
 
