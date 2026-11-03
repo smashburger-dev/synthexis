@@ -13,6 +13,8 @@
 
 use std::collections::HashMap;
 
+use serde::{Deserialize, Serialize};
+
 use crate::align;
 use crate::pin::{Frame, Part};
 use crate::{Item, Tagged};
@@ -50,7 +52,7 @@ pub struct Candidate<'a> {
     pub class: &'a str,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Via {
     Chip,
     Alias,
@@ -58,7 +60,7 @@ pub enum Via {
     Class,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Bound {
     pub index: u32,
     pub name: String,
@@ -68,7 +70,7 @@ pub struct Bound {
     pub plugin: Option<String>,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Target {
     /// The frame's T: token.
     pub token: String,
@@ -78,7 +80,7 @@ pub struct Target {
     pub bound: Option<Bound>,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Route {
     /// Source id without "S:", "" when the frame has none.
     pub source: String,

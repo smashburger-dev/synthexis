@@ -121,6 +121,9 @@ pub struct SynthexisParams {
     /// Pinned plugin picker target (fl::Key id); empty follows FL focus.
     #[persist = "target-pin"]
     pub target_pin: Arc<RwLock<String>>,
+    /// Kept routes of the sentence field (saved.rs JSON).
+    #[persist = "routes"]
+    pub routes: Arc<RwLock<String>>,
 }
 
 impl SynthexisParams {
@@ -171,6 +174,7 @@ impl Default for SynthexisParams {
             editor_state: EguiState::from_size(700, 760),
             completion: Arc::new(AtomicBool::new(true)),
             target_pin: Arc::new(RwLock::new(String::new())),
+            routes: Arc::new(RwLock::new(String::new())),
         }
     }
 }

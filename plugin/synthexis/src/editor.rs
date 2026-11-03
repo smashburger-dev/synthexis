@@ -89,7 +89,10 @@ pub fn make_editor(
     let state = params.editor_state.clone();
     let inner = create_egui_editor(
         state,
-        UiState { params, shared, texture: None, sentence: Sentence::new(Some(crate::fl::bridge()), Some(writer)) },
+        {
+            let routes = params.routes.clone();
+            UiState { params, shared, texture: None, sentence: Sentence::new(Some(crate::fl::bridge()), Some(writer), Some(routes)) }
+        },
         // Runs on every open: the egui Context is new each time but UiState
         // persists, so drop the stale texture handle.
         |_, s| {

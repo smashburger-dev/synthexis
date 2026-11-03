@@ -15,6 +15,7 @@ mod fl;
 mod log;
 mod params;
 mod route;
+mod saved;
 mod sense;
 mod sentence;
 mod signal;
@@ -105,6 +106,7 @@ impl Plugin for Synthexis {
         // and opens the FL bridge, so focus is tracked with the editor closed.
         assistant::start();
         fl::bridge();
+        saved::run(&saved::load(&self.params.routes.read()), &self.writer);
         true
     }
 
