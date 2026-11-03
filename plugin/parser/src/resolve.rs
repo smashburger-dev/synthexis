@@ -388,6 +388,22 @@ pub fn resolve(
                 targets.push(Target { token, text: words.first().cloned().unwrap_or_default(), bound });
                 k += if merged { rest + 1 } else { 1 };
             }
+            // a target bound to a parameter another target of the route
+            // already drives is a misread of the same words (pin.rs keeps a
+            // slot that only inherited a chip's group); the chip's wins
+            let chip_of = |t: &Target| t.bound.as_ref().filter(|b| b.via == Via::Chip).map(|b| (b.index, b.plugin.clone()));
+            let chipped: Vec<(u32, Option<String>)> = targets.iter().filter_map(chip_of).collect();
+            let mut seen: Vec<(u32, Option<String>)> = Vec::new();
+            targets.retain(|t| match &t.bound {
+                Some(b) if b.via == Via::Chip => true,
+                Some(b) => {
+                    let k = (b.index, b.plugin.clone());
+                    let keep = !chipped.contains(&k) && !seen.contains(&k);
+                    seen.push(k);
+                    keep
+                }
+                None => true,
+            });
             let all: Vec<&Candidate> = params.iter().collect();
             for &g in &ra.extra {
                 if let Some((s, p)) = by_name(std::slice::from_ref(&texts[g]), &all, None) {
@@ -566,6 +582,22 @@ mod tests {
         let aliases = HashMap::from([("tone".to_string(), "Drive".to_string())]);
         let r = resolve(&pin(&it, &[]), text, &[tgt(text, "the tone")], "fx:0:0:Topos", &ps, &aliases);
         assert_eq!(r[0].targets[0].bound.as_ref().map(|b| (b.index, b.via)), Some((12, Via::Alias)));
+    }
+
+    /// The parser read one chipped name as two targets: the second binds
+    /// the chip's parameter by its words and goes.
+    #[test]
+    fn a_target_repeating_the_chip_goes() {
+        let text = "mouth opens pan mid env attack";
+        let it = items(&["I:map", "<route>", "S:mouth.open", "T:param:amp.pan", "T:param:env.attack", "</route>"], text);
+        let b = text.find("pan").unwrap_or(0);
+        let p = Pin { bytes: (b, text.len()), what: PinWhat::Param { id: "param:fx:0:0:SB#7".into(), class: "other".into(), switch: false } };
+        let spans = [tgt(text, "pan"), tgt(text, "mid env attack")];
+        let ps = cands(&[(7, "Pan Mid Env Attack", "env.attack"), (8, "Pan Mid Mix", "amp.pan")]);
+        let f = crate::pin::pin_spans(&it, text, &spans, &[p]);
+        let r = resolve(&f, text, &spans, "fx:0:0:SB", &ps, &HashMap::new());
+        let bound: Vec<_> = r[0].targets.iter().map(|t| t.bound.as_ref().map(|b| (b.index, b.via))).collect();
+        assert_eq!(bound, [Some((7, Via::Chip))]);
     }
 
     #[test]

@@ -61,11 +61,15 @@ pub fn targets(r: &resolve::Route, plugin: Option<&fl::Key>) -> Vec<Target> {
         .collect()
 }
 
-/// The gate signals for a route whose source signal is `sig`: a gate of a
-/// sided movement without its own side takes the route's hand (L or R in
-/// `sig`); Err when a gate cannot run, then the route must not run either.
+/// The gate signals for a route whose source signal is `sig`. A gate's
+/// side: its own, else the route's side when the gate is the same body part
+/// as the source ("left hand y while I pinch": the left hand pinches), else
+/// the sentence's side when the source has none ("with my right hand: mouth
+/// opens the mix while I pinch"); an eye never lends its side to a hand.
+/// Err when a gate cannot run, then the route must not run either.
 fn gate_signals(r: &resolve::Route, sig: &str) -> Result<Vec<String>, String> {
-    let hand = ["L", "R"].into_iter().find(|h| sig.split('.').nth(2) == Some(*h));
+    let parts: Vec<&str> = sig.split('.').collect();
+    let sided = parts.get(2).is_some_and(|h| *h == "L" || *h == "R");
     r.gates
         .iter()
         .map(|g| {
@@ -74,11 +78,14 @@ fn gate_signals(r: &resolve::Route, sig: &str) -> Result<Vec<String>, String> {
             if g.iter().any(|t| t.starts_with("shape:")) {
                 return Err(format!("gate {named} (a hand shape) not live yet"));
             }
-            let side = g.iter().find_map(|t| t.strip_prefix("side:")).or(match hand {
-                Some("L") => Some("left"),
-                Some("R") => Some("right"),
+            let lent = match (sided, parts.get(1), parts.get(2)) {
+                (true, Some(body), Some(h)) if src.split('.').next() == Some(*body) => {
+                    Some(if *h == "L" { "left" } else { "right" })
+                }
+                (false, ..) => r.side.as_deref(),
                 _ => None,
-            });
+            };
+            let side = g.iter().find_map(|t| t.strip_prefix("side:")).or(lent);
             match side {
                 // "both hands pinch": both must be open
                 Some("both") => signals(src, Some("both")).map_err(|e| format!("gate {named}: {e}")),
@@ -111,9 +118,6 @@ pub fn routes(r: &resolve::Route, plugin: Option<&fl::Key>) -> (Vec<Route>, Stri
     if !skipped.is_empty() {
         notes.push(format!("{} not live yet", skipped.join(" ")));
     }
-    // both hands on one target share it: their routes sum, so each gets
-    // its share of the amount and the sum stays inside lo..hi
-    let share = 1.0 / sigs.len() as f32;
     let mut out = Vec::new();
     for sig in &sigs {
         let gates = match gate_signals(r, sig) {
@@ -121,7 +125,8 @@ pub fn routes(r: &resolve::Route, plugin: Option<&fl::Key>) -> (Vec<Route>, Stri
             Err(e) => return (Vec::new(), e),
         };
         for t in &targets {
-            let mut route = Route::to(sig, t.clone(), get("amt:").unwrap_or(1.0) * share);
+            // both hands are one line: route.rs averages them
+            let mut route = Route::to(sig, t.clone(), get("amt:").unwrap_or(1.0));
             route.lo = get("lo:").unwrap_or(0.0);
             route.hi = get("hi:").unwrap_or(1.0);
             route.gates.clone_from(&gates);
@@ -183,8 +188,7 @@ mod tests {
         assert!(rs.is_empty() && note.contains("which hand"), "{note}");
         let (rs, _) = routes(&resolved("hand.y", Some("both"), &["hi:0.8"], vec![], true), Some(&fl::Key { at: fl::At::Gen { ch: 1 }, plugin: "Serum 2".into() }));
         assert_eq!(rs.iter().map(|r| r.signal.as_str()).collect::<Vec<_>>(), ["cam0.hand.L.y", "cam0.hand.R.y"]);
-        // both hands share the target: their sum stays inside 0..0.8
-        assert!(rs.iter().all(|r| (r.depth - 0.5).abs() < 1e-6 && (r.hi - 0.8).abs() < 1e-6));
+        assert!(rs.iter().all(|r| r.depth == 1.0 && (r.hi - 0.8).abs() < 1e-6));
         let (rs, note) = routes(&resolved("mouth.open", None, &["mode:step"], vec![], false), None);
         assert!(rs.is_empty() && note == "no parameter to drive", "{note}");
         let mut macro_route = resolved("mouth.open", None, &["mode:step"], vec![], false);
@@ -213,6 +217,13 @@ mod tests {
         assert_eq!(rs.iter().map(|r| r.gates[0].as_str()).collect::<Vec<_>>(), ["cam0.hand.L.pinch", "cam0.hand.R.pinch"]);
         // an unsided source has no hand to lend: no route, not an ungated one
         let (rs, note) = routes(&resolved("mouth.open", None, &[], gates, true), Some(&key));
+        assert!(rs.is_empty() && note.contains("which hand"), "{note}");
+        // the sentence's side for an unsided source; an eye lends no hand
+        let mut mouth = resolved("mouth.open", None, &[], vec![vec!["G:hand.pinch".to_string()]], true);
+        mouth.side = Some("right".into());
+        let (rs, _) = routes(&mouth, Some(&key));
+        assert_eq!(rs[0].gates, ["cam0.hand.R.pinch"]);
+        let (rs, note) = routes(&resolved("eye.open", Some("left"), &[], vec![vec!["G:hand.pinch".to_string()]], true), Some(&key));
         assert!(rs.is_empty() && note.contains("which hand"), "{note}");
         let shape = vec![vec!["G:hand.shape".to_string(), "shape:fist".to_string()]];
         let (rs, note) = routes(&resolved("mouth.open", None, &[], shape, true), Some(&key));

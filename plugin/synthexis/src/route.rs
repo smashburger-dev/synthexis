@@ -1,6 +1,8 @@
 //! Signal -> target routing. Many-to-many; each target (one of the 32
 //! Signal macros, or a parameter of a plugin in the FL project) sums its
-//! routes' conditioned values * depth and clamps to 0..1.
+//! lines and clamps to 0..1. A line is what one sentence made (Route::line);
+//! its routes on one target average ("both hands" is one line of two
+//! routes and stays inside its range), a route of line 0 counts alone.
 
 use std::collections::HashMap;
 
@@ -25,6 +27,8 @@ pub enum Target {
 pub struct Route {
     /// Set by the writer for assigned routes; 0 for the test routes.
     pub id: u64,
+    /// The line (sentence field row) the route belongs to; 0: none.
+    pub line: u64,
     pub signal: String,
     pub target: Target,
     /// -1..1; negative depths drive the target down.
@@ -58,6 +62,7 @@ impl Route {
     pub fn to(signal: &str, target: Target, depth: f32) -> Self {
         Self {
             id: 0,
+            line: 0,
             signal: signal.to_string(),
             target,
             depth,
@@ -154,15 +159,21 @@ pub fn apply_sample(
             touched.push(r.target.clone());
         }
     }
-    // Recompute touched targets as the clamped sum of all enabled routes.
+    // Recompute touched targets: the clamped sum of their lines, each line
+    // the mean of its enabled routes on the target.
     let mut changed = Vec::new();
     for t in touched {
-        let new: f32 = routes
-            .iter()
-            .filter(|r| r.enabled && r.target == t)
-            .map(Route::out)
-            .sum::<f32>()
-            .clamp(0.0, 1.0);
+        let mut lines: Vec<(u64, f32, u32)> = Vec::new();
+        for r in routes.iter().filter(|r| r.enabled && r.target == t) {
+            match lines.iter_mut().find(|l| l.0 == r.line && r.line != 0) {
+                Some(l) => {
+                    l.1 += r.out();
+                    l.2 += 1;
+                }
+                None => lines.push((r.line, r.out(), 1)),
+            }
+        }
+        let new: f32 = lines.iter().map(|l| l.1 / l.2 as f32).sum::<f32>().clamp(0.0, 1.0);
         let old = match &t {
             Target::Macro(i) => &mut current.macros[*i],
             Target::Param { .. } => current.params.entry(t.clone()).or_insert(f32::NAN),
@@ -277,6 +288,32 @@ mod tests {
             assert!(apply_sample(&mut routes, &mut cur, "x", &s(0.0), i as f64 / 30.0).is_empty());
         }
         assert!((cur.params[&target] - v).abs() < 1e-6);
+    }
+
+    #[test]
+    fn a_lines_routes_average_and_lines_sum() {
+        let key = fl::Key { at: fl::At::Fx { track: 0, slot: 0 }, plugin: "Topos".into() };
+        let t = Target::Param { plugin: key, index: 1 };
+        let mk = |sig: &str, line| {
+            let mut r = Route::to(sig, t.clone(), 1.0);
+            r.line = line;
+            r.hi = 0.8;
+            r
+        };
+        // both hands, one line: at 1.0 and 0.0 the line gives 0.4, never above 0.8
+        let mut routes = vec![mk("l", 7), mk("r", 7)];
+        let mut cur = Values::default();
+        for i in 0..90 {
+            apply_sample(&mut routes, &mut cur, "l", &s(1.0), i as f64 / 30.0);
+            apply_sample(&mut routes, &mut cur, "r", &s(0.0), i as f64 / 30.0);
+        }
+        assert!((cur.params[&t] - 0.4).abs() < 0.02, "{}", cur.params[&t]);
+        // one hand left of the line: it reaches the line's hi alone
+        routes.pop();
+        for i in 90..180 {
+            apply_sample(&mut routes, &mut cur, "l", &s(1.0), i as f64 / 30.0);
+        }
+        assert!((cur.params[&t] - 0.8).abs() < 0.02, "{}", cur.params[&t]);
     }
 
     #[test]

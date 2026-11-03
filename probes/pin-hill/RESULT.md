@@ -98,3 +98,10 @@ After a review of the branch (five reviewers, two skeptics per finding, 22 defec
 | V3 with the narrowed fold (shipped) | 0.83819 | 0.83585 |
 
 The narrowed fold removes V2's losses (challenge 0.8796 -> 0.8869, dev_s7 0.7862 -> 0.7906) and is above V0 and V1 in both conditions.
+
+A second review round of the fixes found that "fold the chip's whole group" still removed targets whose words the BIO head had missed ("Cutoff and resonance" with only "Cutoff" tagged: resonance inherited the group). The rule now folds only targets whose own words lie inside the chip; a target that only inherited the chip's group stays in the frame, and the resolver drops it when it binds the chip's parameter again (`resolve`, a target repeating a chip goes). Frame-level numbers, same rows:
+
+| variant | chip class = gold | chip class matches nothing |
+|---|---|---|
+| narrowed fold (4941eca) | 0.83819 | 0.83585 |
+| own words only (shipped) | 0.83824 | 0.83757 |

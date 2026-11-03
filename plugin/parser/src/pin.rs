@@ -150,18 +150,21 @@ impl Route {
         })
     }
 
+    /// The tokens right after the S: token at `i` that belong to it (side,
+    /// shape, object); a later gate's side: is the gate's.
+    fn attrs_of(&self, i: usize) -> impl Iterator<Item = usize> + '_ {
+        (i + 1..self.items.len())
+            .take_while(|&j| ["side:", "shape:", "object:"].iter().any(|p| tok(&self.items[j]).starts_with(p)))
+    }
+
     /// The side: token that belongs to the S: token at `i`.
     fn side_of(&self, i: usize) -> Option<usize> {
-        (i + 1..self.items.len())
-            .take_while(|&j| !tok(&self.items[j]).starts_with("S:"))
-            .find(|&j| tok(&self.items[j]).starts_with("side:"))
+        self.attrs_of(i).find(|&j| tok(&self.items[j]).starts_with("side:"))
     }
 
     /// The shape: token that belongs to the S: token at `i`.
     fn shape_of(&self, i: usize) -> Option<usize> {
-        (i + 1..self.items.len())
-            .take_while(|&j| !tok(&self.items[j]).starts_with("S:"))
-            .find(|&j| tok(&self.items[j]).starts_with("shape:"))
+        self.attrs_of(i).find(|&j| tok(&self.items[j]).starts_with("shape:"))
     }
 
     pub(crate) fn is_param_target(t: &str) -> bool {
@@ -426,11 +429,13 @@ pub fn pin_spans(items: &[Item], text: &str, spans: &[Tagged], pins: &[Pin]) -> 
     });
     let params: Vec<_> = params.collect();
     let mut placed = vec![false; params.len()];
-    // 1. the target the chip's words name: among the slots of the group
-    // its bytes overlap, a free one of its class, else the first free one;
-    // a chip that covers the whole group names one parameter, so the
-    // parser's other parameter targets of that group go (unless another
-    // chip covers part of it)
+    // 1. the target the chip's words name: among the free slots of the
+    // group its bytes overlap, one of its class, else a parameter or toggle
+    // slot, else any. Then the targets whose own words lie inside the chip
+    // go (another group it covers, a misread of its words), unless another
+    // chip touches them; a slot that only inherited the group (`shares`,
+    // the parser made more targets than the BIO head found words) stays,
+    // and the resolver drops it when it binds the chip's parameter again.
     if !spans.is_empty() {
         let al = align::align(&f, text, spans);
         let mut fold: Vec<(usize, usize)> = Vec::new();
@@ -440,25 +445,32 @@ pub fn pin_spans(items: &[Item], text: &str, spans: &[Tagged], pins: &[Pin]) -> 
             let mut routes = f.routes_mut();
             let free: Vec<(usize, usize)> =
                 al.slots_of(g).filter(|(r, s)| routes[*r].pinned[s.item].is_none()).map(|(r, s)| (r, s.item)).collect();
-            let of_class = |&&(r, i): &&(usize, usize)| {
-                let t = tok(&routes[r].items[i]);
-                if switch { t.starts_with("T:toggle:") } else { t.strip_prefix("T:param:") == Some(class) }
-            };
-            let Some(&(r, i)) = free.iter().find(of_class).or(free.first()) else { continue };
+            let token = |&(r, i): &(usize, usize)| tok(&routes[r].items[i]).to_string();
+            let pick = free
+                .iter()
+                .find(|x| {
+                    let t = token(x);
+                    if switch { t.starts_with("T:toggle:") } else { t.strip_prefix("T:param:") == Some(class) }
+                })
+                .or_else(|| free.iter().find(|x| Route::is_param_target(&token(x))))
+                .or(free.first())
+                .copied();
+            let Some((r, i)) = pick else { continue };
             routes[r].set_param(Some(i), id, class, switch, bytes);
             placed[k] = true;
-            let (gb, ge) = al.groups[g];
-            let alone = chips.iter().filter(|c| c.0 < ge && gb < c.1).count() == 1;
-            if bytes.0 <= gb && ge <= bytes.1 && alone {
-                fold.extend(al.slots_of(g).filter(|(fr, s)| (*fr, s.item) != (r, i)).map(|(fr, s)| (fr, s.item)));
+            for (g2, &(gb, ge)) in al.groups.iter().enumerate() {
+                let inside = bytes.0 <= gb && ge <= bytes.1;
+                let alone = chips.iter().filter(|c| c.0 < ge && gb < c.1).count() == 1;
+                if inside && alone {
+                    fold.extend(al.slots_of(g2).filter(|(fr, s)| !s.shares && (*fr, s.item) != (r, i)).map(|(fr, s)| (fr, s.item)));
+                }
             }
         }
         fold.sort_unstable_by(|a, b| b.cmp(a));
         fold.dedup();
         let mut routes = f.routes_mut();
         for (r, i) in fold {
-            let param = Route::is_param_target(tok(&routes[r].items[i]));
-            if param && routes[r].pinned[i].is_none() && !routes[r].tgt_pinned[i] {
+            if routes[r].pinned[i].is_none() && tok(&routes[r].items[i]).starts_with("T:") {
                 routes[r].remove(i);
             }
         }
@@ -701,15 +713,19 @@ mod tests {
         let spans = [Tagged { tag: "TGT", bytes: at(t, "pan") }, Tagged { tag: "TGT", bytes: at(t, "mid env attack") }];
         let pins = [param(t, "pan mid env attack", "p#7", "env.attack", false)];
         let out = pin_spans(&items(&fr, t), t, &spans, &pins).frame();
+        // the chip takes the inherited slot of its class; the slot with the
+        // words goes
         assert_eq!(out, ["I:map", "<route>", "S:mouth.open", "T:param:env.attack", "@p#7", "</route>"]);
-        // with a class that matches nothing the words still decide
+        // with a class that matches nothing the chip takes the first slot;
+        // the inherited one stays for the resolver to drop
         let pins = [param(t, "pan mid env attack", "p#7", "other", false)];
         let out = pin_spans(&items(&fr, t), t, &spans, &pins).frame();
-        assert_eq!(out, ["I:map", "<route>", "S:mouth.open", "T:param:other", "@p#7", "</route>"]);
+        assert_eq!(out, ["I:map", "<route>", "S:mouth.open", "T:param:other", "@p#7", "T:param:env.attack", "</route>"]);
     }
 
     /// Two chips in one joined group fold nothing and each takes its own
-    /// class's slot; a target chip in the group keeps its token.
+    /// class's slot; a target chip in the group keeps its token, in either
+    /// order; a gate's side is not the source's.
     #[test]
     fn partial_chips_and_target_chips_never_fold() {
         let t = "when I pinch Cutoff Resonance Drive go up";
@@ -734,6 +750,18 @@ mod tests {
         let pins = [param(t, "Cutoff", "p#1", "filter.cutoff", false), target(t, "Kick Pattern", "midi.pattern")];
         let out = pin_spans(&items(&fr, t), t, &spans, &pins).frame();
         assert!(out.contains(&"T:midi.pattern:kick pattern".to_string()), "{out:?}");
+        let t = "when I pinch Kick Pattern Cutoff";
+        let fr = ["I:map", "<route>", "S:hand.pinch", "T:midi.pattern:kick pattern", "T:param:filter.cutoff", "</route>"];
+        let spans = [Tagged { tag: "TGT", bytes: at(t, "Kick Pattern") }, Tagged { tag: "TGT", bytes: at(t, "Cutoff") }];
+        let pins = [param(t, "Cutoff", "p#1", "filter.freq", false), target(t, "Kick Pattern", "midi.pattern")];
+        let out = pin_spans(&items(&fr, t), t, &spans, &pins).frame();
+        assert!(out.contains(&"T:midi.pattern:kick pattern".to_string()), "{out:?}");
+        // a sided chip on "S:hand.y ... G:hand.fist side:right" sets the
+        // source's side and leaves the gate's
+        let t = "the more hand height the more pitch while I hold the right fist";
+        let fr = ["I:map", "<route>", "S:hand.y", "T:param:pitch", "G:hand.fist", "side:right", "</route>"];
+        let out = run(t, &fr, &[sided(t, "hand height", "hand.y", "left")]);
+        assert_eq!(out, ["I:map", "<route>", "S:hand.y", "side:left", "T:param:pitch", "G:hand.fist", "side:right", "</route>"]);
     }
 
     #[test]
