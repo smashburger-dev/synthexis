@@ -3381,6 +3381,7 @@ name = "synthexis"
 version = "0.1.0"
 dependencies = [
  "block2 0.6.2",
+ "coremidi",
  "crossbeam-channel",
  "dispatch2",
  "nih_plug",
@@ -3394,6 +3395,7 @@ dependencies = [
  "objc2-foundation 0.3.2",
  "objc2-vision",
  "parking_lot",
+ "serde_json",
  "synthexis-complete",
  "synthexis-parser",
 ]

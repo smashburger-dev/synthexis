@@ -47,7 +47,7 @@ Hard dates: S3 and S4 recorded 10-30/10-31, training from 11-01 (new Modal credi
 - [ ] `setParamValue` root cause (bridge only, not blocking)
 - [ ] UI in the glass language (last, after perception and routes are stable)
 - [x] Target picker: follow the plugin FL has focused, or pick mixer track then plugin; the assistant resolves only there (resolver top-1 0.676 with the plugin picked, 0.580 with 6 plugins, 0.538 with 30: `probes/open-vocab-mapping/picker.py`); FL side measured (`probes/fl-target-picker/RESULT.md`): with FL in front FL reports the focused plugin and its track and slot through OnRefresh, so follow-FL is the default; track-then-slot is the manual fallback (inventory 0.4 ms, names 7-20 ms per plugin). The picker UI in the plugin is still to build
-- [ ] Plugin picker in synthexis shows the live FL project and follows FL focus: today it lists 10 exported demo plugins, also ones that are not in the project. Needs a channel from the FL device script into the plugin (`probes/fl-target-picker/RESULT.md`, `docs/mapping-completion.md`)
+- [ ] Plugin picker in synthexis shows the live FL project and follows FL focus: built (`plugin/synthexis/src/fl.rs`, device script `plugin/fl/device_synthexis_bridge.py`, protocol 3), tested against a fake FL over CoreMIDI; test in FL open
 - [ ] UX structure (session plugin-ux, `docs/ux-plugin.md`): assigned-moves panel per hand, finger and movement class with icons; objects you add and name; profiles 1..n with routes and presets per hand and object, switchable live while the song plays, saved with the project
 - [ ] Assigned routes into the engine: only assigned routes may move a macro, so FL records only those (Noa). The built-in routes are test routes behind the "Test signal" parameter (commit 9d9b9ae); until the UX route table lands, the plugin moves no macro with Test signal off. Keep this when merging.
 
@@ -63,6 +63,7 @@ Hard dates: S3 and S4 recorded 10-30/10-31, training from 11-01 (new Modal credi
 - [ ] Noa reviews the derived rows and the plugin context (`data/mapping/eval/review.md`); label the 34 originals, derived labels by delta
 - [ ] Spec merge by the main session, proposal "demo requests": XY pad, pinch clutch, values in plugin units, step, ramp toggle, arp style, any finger mask
 - [x] param-sense v1 trained (top-1 0.728, macro F1 0.511 on unseen vendors); known-plugin table exported (63,625 rows)
+- [x] param-sense in the plugin: the picked plugin's parameters get the labels of the 887 mapped plugins (`known.tsv`), every other plugin gets ps-v1 classes in Rust (`plugin/synthexis/src/sense.rs`, equal to Python on 2,426 names, 16 ms for 2,600), no prompt needed
 - [x] Parser v1 (9.30M, span-pointer frame decoder) trained on the Mac; challenge set 548 sentences; route_edit 0.628 challenge, 0.697 dev; int8 blob 9.4 MB, 9 ms median on one CPU thread
 - [x] Filter ablation and learning curve: all sentences beat the round-trip filter by 11 points; +13-16 points per doubling of edits, so stage 2 goes ahead
 - [x] Stage 2 commands (8,374 edits weighted to multi-route, invert, modify, German, layperson; 12.74 $) and parser v2 with sentence concatenation: route_edit 0.712 challenge, 0.768 dev; exported `p-v2-cat-s0`

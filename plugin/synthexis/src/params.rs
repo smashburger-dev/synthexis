@@ -118,9 +118,9 @@ pub struct SynthexisParams {
     /// Settings: completion in the sentence field on or off.
     #[persist = "completion"]
     pub completion: Arc<AtomicBool>,
-    /// Plugin id whose parameters complete (until the FL target picker).
-    #[persist = "completion-plugin"]
-    pub completion_plugin: Arc<RwLock<String>>,
+    /// Pinned plugin picker target (fl::Key id); empty follows FL focus.
+    #[persist = "target-pin"]
+    pub target_pin: Arc<RwLock<String>>,
 }
 
 impl SynthexisParams {
@@ -170,7 +170,7 @@ impl Default for SynthexisParams {
             hand_role_right: EnumParam::new("Hand role right", HandRole::Parameter),
             editor_state: EguiState::from_size(700, 760),
             completion: Arc::new(AtomicBool::new(true)),
-            completion_plugin: Arc::new(RwLock::new(String::new())),
+            target_pin: Arc::new(RwLock::new(String::new())),
         }
     }
 }
