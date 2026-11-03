@@ -12,7 +12,7 @@
 //!   others go in sentence order to the free routes when their counts are
 //!   equal, else each to the free route nearest to it (by its spans and
 //!   pinned parameter); the route's S: token becomes the chip's source (and
-//!   shape:);
+//!   shape:, and side: when the panel picked one);
 //! - a target chip (MIDI note, chord, pattern, CC, generator property,
 //!   macro, XY pad) goes to the nearest route with a free target token, one
 //!   of its own kind first; that token becomes T:<kind>: (T:midi.prop:<prop>
@@ -29,7 +29,9 @@ pub enum PinWhat {
     /// A parameter of the picked plugin; a switch parameter is a toggle.
     Param { id: String, class: String, switch: bool },
     /// A gesture source, with a shape id when the source is hand.shape.
-    Gesture { source: String, shape: Option<String> },
+    /// `side`: left, right or both, picked in the variant panel; None keeps
+    /// the side the parser read from the sentence.
+    Gesture { source: String, shape: Option<String>, side: Option<String> },
     /// A target that is no plugin parameter: midi.note, midi.chord,
     /// midi.pattern, midi.cc, macro, xy, or midi.prop:<prop> with its
     /// property.
@@ -145,6 +147,13 @@ impl Route {
             tok(&self.items[i]).strip_prefix("S:").is_some_and(|s| fold(s).0 == src)
                 && shape.is_none_or(|sh| self.shape_of(i).is_some_and(|j| tok(&self.items[j]) == format!("shape:{sh}")))
         })
+    }
+
+    /// The side: token that belongs to the S: token at `i`.
+    fn side_of(&self, i: usize) -> Option<usize> {
+        (i + 1..self.items.len())
+            .take_while(|&j| !tok(&self.items[j]).starts_with("S:"))
+            .find(|&j| tok(&self.items[j]).starts_with("side:"))
     }
 
     /// The shape: token that belongs to the S: token at `i`.
@@ -267,7 +276,7 @@ impl Route {
     /// hand's openness inverted). INV flips with the fold when the chip
     /// replaces another movement; when the slot already names the same
     /// movement only its own fold counts.
-    fn set_source(&mut self, slot: Option<usize>, source: &str, shape: Option<&str>) {
+    fn set_source(&mut self, slot: Option<usize>, source: &str, shape: Option<&str>, side: Option<&str>) {
         let (src, chip_flip) = fold(source);
         let flip = match slot.map(|i| fold(&tok(&self.items[i])[2..])) {
             Some((c, own_flip)) if c == src => own_flip,
@@ -288,6 +297,14 @@ impl Route {
         if let Some(sh) = shape {
             let t = Item::Token(format!("shape:{sh}"));
             match self.shape_of(i) {
+                Some(j) => self.items[j] = t,
+                None => self.insert(i + 1, t),
+            }
+        }
+        // the side right after its S: token, as the parser writes it
+        if let Some(sd) = side {
+            let t = Item::Token(format!("side:{sd}"));
+            match self.side_of(i) {
                 Some(j) => self.items[j] = t,
                 None => self.insert(i + 1, t),
             }
@@ -472,19 +489,35 @@ pub fn pin(items: &[Item], pins: &[Pin]) -> Frame {
             }
         }
     }
-    let mut gestures: Vec<((usize, usize), &str, Option<&str>)> = pins
+    // a side token outside the routes holds for all of them ("my right
+    // thumb ..., index ..., middle ..."); a chip with that side adds none
+    let shared: Vec<String> = f
+        .parts
         .iter()
-        .filter_map(|p| match &p.what {
-            PinWhat::Gesture { source, shape } => Some((p.bytes, source.as_str(), shape.as_deref())),
+        .filter_map(|p| match p {
+            Part::Item(it) if tok(it).starts_with("side:") => Some(tok(it)[5..].to_string()),
             _ => None,
         })
         .collect();
-    // 1. the S: token that already names the movement
-    gestures.retain(|&(_, source, shape)| {
+    let mut gestures: Vec<((usize, usize), &str, Option<&str>, Option<&str>)> = pins
+        .iter()
+        .filter_map(|p| match &p.what {
+            PinWhat::Gesture { source, shape, side } => {
+                let side = side.as_deref().filter(|s| !shared.iter().any(|x| x == s));
+                Some((p.bytes, source.as_str(), shape.as_deref(), side))
+            }
+            _ => None,
+        })
+        .collect();
+    // 1. the S: token that already names the movement, in the nearest
+    // route that has one ("openness to Signal 19 and left fist": the fist
+    // folds to openness and belongs to the second route)
+    gestures.retain(|&(bytes, source, shape, side)| {
         let mut routes = f.routes_mut();
-        match routes.iter_mut().find_map(|r| r.own_source(source, shape).map(|i| (r, i))) {
+        let own = routes.iter_mut().filter_map(|r| r.own_source(source, shape).map(|i| (r, i)));
+        match own.min_by_key(|(r, _)| r.gap(bytes)) {
             Some((r, i)) => {
-                r.set_source(Some(i), source, shape);
+                r.set_source(Some(i), source, shape, side);
                 false
             }
             None => true,
@@ -503,12 +536,12 @@ pub fn pin(items: &[Item], pins: &[Pin]) -> Frame {
         // highest slot first inside a route, so earlier slots keep their index
         let mut pairs: Vec<_> = slots.into_iter().zip(&gestures).collect();
         pairs.sort_by(|a, b| a.0 .0.cmp(&b.0 .0).then(b.0 .1.cmp(&a.0 .1)));
-        for ((ri, k), &(_, source, shape)) in pairs {
+        for ((ri, k), &(_, source, shape, side)) in pairs {
             let slot = routes[ri].free_sources()[k];
-            routes[ri].set_source(slot, source, shape);
+            routes[ri].set_source(slot, source, shape, side);
         }
     } else {
-        for &(bytes, source, shape) in &gestures {
+        for &(bytes, source, shape, side) in &gestures {
             let near = routes
                 .iter_mut()
                 .filter(|r| !r.free_sources().is_empty())
@@ -516,16 +549,16 @@ pub fn pin(items: &[Item], pins: &[Pin]) -> Frame {
             match near {
                 Some(r) => {
                     let slot = r.free_sources()[0];
-                    r.set_source(slot, source, shape);
+                    r.set_source(slot, source, shape, side);
                 }
-                None => extra.push((bytes, source, shape)),
+                None => extra.push((bytes, source, shape, side)),
             }
         }
     }
     // 3. a route of its own
-    for (bytes, source, shape) in extra {
+    for (bytes, source, shape, side) in extra {
         let mut r = Route::default();
-        r.set_source(None, source, shape);
+        r.set_source(None, source, shape, side);
         r.widen(bytes);
         f.add_route(r);
     }
@@ -560,7 +593,11 @@ mod tests {
     }
 
     fn gesture(text: &str, chip: &str, source: &str) -> Pin {
-        Pin { bytes: at(text, chip), what: PinWhat::Gesture { source: source.into(), shape: None } }
+        Pin { bytes: at(text, chip), what: PinWhat::Gesture { source: source.into(), shape: None, side: None } }
+    }
+
+    fn sided(text: &str, chip: &str, source: &str, side: &str) -> Pin {
+        Pin { bytes: at(text, chip), what: PinWhat::Gesture { source: source.into(), shape: None, side: Some(side.into()) } }
     }
 
     fn run(text: &str, frame: &[&str], pins: &[Pin]) -> Vec<String> {
@@ -735,6 +772,52 @@ mod tests {
     }
 
     #[test]
+    fn side_chip_adds_its_side() {
+        let t = "when I make a fist the cutoff goes up";
+        let fr = ["I:map", "<route>", "S:hand.openness", "T:param:filter.cutoff", "INV", "</route>"];
+        let out = run(t, &fr, &[sided(t, "fist", "hand.fist", "left")]);
+        assert_eq!(out, ["I:map", "<route>", "S:hand.openness", "side:left", "T:param:filter.cutoff", "INV", "</route>"]);
+    }
+
+    #[test]
+    fn side_chip_replaces_the_parsers_side() {
+        let t = "my left hand pinches the cutoff";
+        let fr = ["I:map", "<route>", "S:hand.pinch", "side:left", "T:param:filter.cutoff", "</route>"];
+        let out = run(t, &fr, &[sided(t, "pinches", "hand.pinch", "right")]);
+        assert_eq!(out, ["I:map", "<route>", "S:hand.pinch", "side:right", "T:param:filter.cutoff", "</route>"]);
+    }
+
+    #[test]
+    fn side_goes_with_its_own_source_in_a_fan_in() {
+        let t = "smile and pinch to move the osc shape";
+        let fr = ["I:map", "<route>", "S:face.smile", "S:hand.pinch", "T:param:osc.shape", "</route>"];
+        let out = run(t, &fr, &[sided(t, "pinch", "hand.pinch", "both")]);
+        assert_eq!(out, ["I:map", "<route>", "S:face.smile", "S:hand.pinch", "side:both", "T:param:osc.shape", "</route>"]);
+    }
+
+    #[test]
+    fn side_shared_by_all_routes_is_not_repeated() {
+        let t = "when i lift my right thumb distortion, when i lift my index the volume";
+        let fr = [
+            "I:map", "<route>", "S:hand.finger.thumb", "T:param:fx.drive", "</route>",
+            "<route>", "S:hand.finger.index", "T:param:amp.gain", "</route>", "side:right",
+        ];
+        assert_eq!(run(t, &fr, &[sided(t, "thumb", "hand.finger.thumb", "right")]), fr);
+    }
+
+    #[test]
+    fn folded_chip_goes_to_the_nearest_route_with_its_source() {
+        let t = "map openness to the mix and left fist to reverb";
+        let fr = [
+            "I:map", "<route>", "S:hand.openness", "=openness", "T:param:fx.mix", "</route>",
+            "<route>", "S:hand.openness", "=fist", "INV", "T:toggle:reverb", "</route>",
+        ];
+        let out = run(t, &fr, &[sided(t, "fist", "hand.fist", "left")]);
+        assert_eq!(&out[..6], &fr[..6]);
+        assert_eq!(&out[6..9], ["<route>", "S:hand.openness", "side:left"]);
+    }
+
+    #[test]
     fn fan_in_pins_each_source() {
         let t = "when I smile and move my left hand sideways the osc shape moves";
         let fr = ["I:map", "<route>", "S:face.smile", "S:hand.y", "side:left", "T:param:osc.shape", "</route>"];
@@ -749,7 +832,7 @@ mod tests {
         let fr = ["I:map", "<route>", "S:hand.fist", "T:toggle:delay", "</route>"];
         let pins = [Pin {
             bytes: at(t, "peace sign"),
-            what: PinWhat::Gesture { source: "hand.shape".into(), shape: Some("peace".into()) },
+            what: PinWhat::Gesture { source: "hand.shape".into(), shape: Some("peace".into()), side: None },
         }];
         assert_eq!(run(t, &fr, &pins)[2..4], ["S:hand.shape", "shape:peace"]);
     }
