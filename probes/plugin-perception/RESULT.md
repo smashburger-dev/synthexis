@@ -200,6 +200,37 @@ Choices that looked at S4 before the dev rule, so the S4 figures in this file ar
 - Pair gate and eye warm-up: both problems were first seen on S4; both values were chosen on S1 to S3.
 - Hand openness range: the live note below compares it against S4.
 
+## Response curves and smoothing (2026-11-03)
+
+Noa's live feedback: a mouth about 70% open already read 0.95, and a half-closed fist read 0.7 to 0.8. Both signals ran from 0 to 1 over too short a stretch of the movement and jumped across the middle. All choices below were made on S1 to S3; S4 was scored once at the end.
+
+Mouth. The old cue, the inner-lip outline's minor/major ratio, jumps when the lips part: it goes from 0.05 to 0.56 within 4 frames at the start of every slow sweep, because the mouth gets narrower as it opens. It also reads open in a smile (ratio 0.66 to 0.71) and in head turns. The new cue is the inner-lip height across the eye line divided by the eye distance (`height_across`, `geom.rs`). It rises smoothly through the sweep. It maps to 0 to 1 over 0.06 to 0.6 (`MOUTH_GAP`): closed mouths sit at 0.02 to 0.04, mouth wide at 0.52 to 0.62 (medians per session). Both `vision` and `hybrid` use it. The old ratio remains only when an eye is missing.
+
+Hand. The four fingers' bend ran over 0.5 to 3.0 rad, but on block A of S1 to S3 folded fingers sit at 3.6 to 3.8 rad and extended ones at 0.5 to 0.7 (medians per finger, non-dev segments). A finger that curls towards the camera barely changes its bend angle in the image; its tip moves closer to the wrist instead. Each finger is now half bend, half tip-to-wrist reach per palm length, both anchored at those medians (`FINGER_BEND`, `FINGER_REACH`). The thumb keeps its formula: re-anchored, its accuracy dropped from 0.92 to 0.75 to 0.82.
+
+Smoothing. Holding a hand pose, the openness wanders with a standard deviation of about 0.05, and single frames jump by up to 0.2 (frame-to-frame step p99), from keypoint spikes. The One Euro filter takes out most spikes; no setting removed the slow wander without lag (min cutoff 0.2 to 1 Hz, beta 1 to 30, derivative cutoff 0.2 to 1, a dead band of 0.01 to 0.03). The conditioning chain now runs a median of the last 3 samples before the filter (`cond::Median3`): mean frame step on held poses 0.0077 -> 0.0064, p99 0.075 -> 0.063, a full step reaches 90% after 99 ms instead of 66 ms.
+
+| S1 to S3 | before | now |
+|---|---:|---:|
+| dev block A finger accuracy | 0.958 | **0.961** |
+| hand open ramps (B_*_open), time between 0.2 and 0.8 | 0.17 | **0.30** |
+| mouth sweep, time between 0.2 and 0.8 | 0.06 | **0.39** |
+| mouth sweep, time above 0.9 | 0.69 | **0.22** |
+| mouth in a smile (median) | 1.00 | **0.33** |
+| mouth in a head turn (yaw sweep, p90) | 0.97 | **0.26** |
+| mouth wide (median) | 1.00 | 0.99 |
+
+| S4, scored once | before | now |
+|---|---:|---:|
+| finger accuracy | 0.934 | 0.935 |
+| openness against extended fingers | 0.974 | 0.965 |
+| mouth sweep, time between 0.2 and 0.8 | 0.05 | **0.30** |
+| mouth sweep, time above 0.9 | 0.66 | **0.32** |
+| mouth in a smile / head turn p90 | 1.00 / 0.58 | **0.38 / 0.20** |
+| mouth neutral / wide | 0.00 / 1.00 | 0.00 / 0.96 |
+
+The middle of a hand ramp is still passed quickly: people hold the ends and move through the middle. Stretching the middle further would also stretch the noise at the ends. The anchors come from student keypoints; `vision` uses the same geometry, but its keypoints were not checked against them.
+
 ## FL Studio, live (2026-11-03)
 
 FL Studio with synthexis (VST3) on channel 1, backend `vision`, plugin window closed, Noa at the FaceTime camera. `fl_live.py` read the routed macros through the FL bridge at 20 Hz, 8 s per phase (run file `runs/1793662810-fl_live.json`).
@@ -274,6 +305,7 @@ Latency, 22 windows of 5 s:
 ## Open
 
 - Camera delay: 71 to 111 ms from frame timestamp to callback, the largest share of the live latency; not looked at yet.
+- New response curves and the median stage: not yet tried live in FL.
 - Face p95 swings between 9 and 17 ms with machine load; hands stay under 5 ms.
 - Winks while a hand overlaps the face fall back to the outline; the rule checks the whole face box, not the eye band.
 - S2 (glasses): closed eyes read 0.23 / 0.87.

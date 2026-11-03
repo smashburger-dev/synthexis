@@ -493,6 +493,14 @@ impl HandFeatures {
     }
 }
 
+/// Index to pinky, summed joint bend (rad) at extended and folded: the
+/// medians of block A finger states on S1-S3 (non-dev segments).
+const FINGER_BEND: [(f32, f32); 4] = [(0.54, 3.79), (0.52, 3.64), (0.51, 3.56), (0.70, 3.79)];
+/// Index to pinky, tip reach from the wrist per palm length at folded
+/// and extended, from the same frames. Reach shrinks when a finger curls
+/// towards the camera, where the bend angle in the image barely changes.
+const FINGER_REACH: [(f32, f32); 4] = [(0.93, 1.99), (0.72, 2.04), (0.59, 1.87), (0.54, 1.60)];
+
 /// Features from 21 keypoints in frame pixels. `fingers_ext` are the
 /// student's finger probabilities (thumb..pinky), when it has them.
 pub fn hand_features(kp: &[[f32; 2]; 21], side: Side, fw: f32, fh: f32, fingers_ext: Option<[f32; 5]>) -> HandFeatures {
@@ -512,7 +520,8 @@ pub fn hand_features(kp: &[[f32; 2]; 21], side: Side, fw: f32, fh: f32, fingers_
             // Thumb: little bend range, so also its tip's reach from the index base.
             0.5 * (1.0 - lin(bend, 0.2, 1.4)) + 0.5 * lin(dist(kp[4], index_mcp) / palm_len, 0.35, 0.9)
         } else {
-            1.0 - lin(bend, 0.5, 3.0)
+            let (b, r) = (FINGER_BEND[n - 1], FINGER_REACH[n - 1]);
+            0.5 * (1.0 - lin(bend, b.0, b.1)) + 0.5 * lin(dist(kp[ch[3]], wrist) / palm_len, r.0, r.1)
         };
         let dir = sub(kp[ch[3]], kp[if n == 0 { ch[1] } else { ch[0] }]);
         f.tilt[n] = 0.5 - 0.5 * dir[1] / len(dir).max(1e-3);
@@ -552,8 +561,9 @@ pub struct FaceFeatures {
     pub seen_mouth: bool,
     /// Pixel cues inside each eye outline [L, R] (`eye_pixels`).
     pub eye_px: [[f32; 3]; 2],
-    /// Mouth cues: outer-lip width / eye distance, corner lift.
-    pub mouth_px: [f32; 2],
+    /// Mouth cues: outer-lip width / eye distance, corner lift, outer and
+    /// inner lip height across the eye line / eye distance.
+    pub mouth_px: [f32; 4],
 }
 
 impl FaceFeatures {
@@ -721,6 +731,25 @@ pub const CAL_MASK: FaceCal = FaceCal { eye: (0.18, 0.45), mouth: (0.3, 0.75), s
 /// ratio neutral 0.30, closed 0.06; inner-lip ratio neutral 0.04, wide 0.57.
 /// Smile from landmarks uses `smile_from_lips`, not the width.
 pub const CAL_LANDMARKS: FaceCal = FaceCal { eye: (0.08, 0.28), mouth: (0.06, 0.5), smile: (0.32, 0.5) };
+
+/// Extent of a lip outline across the eye line, per eye distance: a
+/// height that does not shrink with the mouth's width, unlike minor/major.
+pub fn height_across(p: &[[f32; 2]], eye_a: [f32; 2], eye_b: [f32; 2]) -> f32 {
+    let d = dist(eye_a, eye_b).max(1.0);
+    let n = [(eye_a[1] - eye_b[1]) / d, (eye_b[0] - eye_a[0]) / d];
+    let (lo, hi) = p.iter().map(|q| q[0] * n[0] + q[1] * n[1]).fold((f32::MAX, f32::MIN), |(lo, hi), v| (lo.min(v), hi.max(v)));
+    (hi - lo).max(0.0) / d
+}
+
+/// Inner-lip gap (`height_across`) for mouth open 0 and 1, from S1-S3
+/// block C: closed 0.02 to 0.04, mouth wide 0.52 to 0.62. The inner-lip
+/// minor/major ratio it replaces jumps when the lips part and reads open
+/// in a smile or a head turn.
+pub const MOUTH_GAP: (f32, f32) = (0.06, 0.6);
+
+pub fn mouth_from_gap(gap: f32) -> f32 {
+    lin(gap, MOUTH_GAP.0, MOUTH_GAP.1)
+}
 
 /// Smile from the outer-lip outline: how far the two mouth corners sit
 /// above the lips' centre, per mouth width (image y down). Returns the raw
@@ -1013,7 +1042,8 @@ mod tests {
             let mut dir: f32 = if n == 0 { -2.3 } else { -PI / 2.0 };
             for (j, &joint) in ch.iter().enumerate() {
                 kp[joint] = p;
-                let step = if n == 0 { 30.0 } else { 28.0 - 4.0 * j as f32 };
+                // Fingers about one palm long (wrist to middle base, 105 px).
+                let step = if n == 0 { 30.0 } else { 44.0 - 6.0 * j as f32 };
                 dir += curl * 1.3;
                 p = [p[0] + step * dir.cos(), p[1] + step * dir.sin()];
             }
@@ -1196,7 +1226,7 @@ mod tests {
             f.seen_eye = [true, true];
             f.raw = [0.3, 0.3, 0.05, 0.0];
             f.eye_px = [[0.4, 0.1, 0.4], [0.4, 0.1, 0.4]];
-            f.mouth_px = [0.8, 0.0];
+            f.mouth_px = [0.8, 0.0, 0.0, 0.0];
         };
         // Nine seconds of open eyes set the open levels and the mouth width.
         for k in 0..270u64 {
@@ -1210,7 +1240,7 @@ mod tests {
         open(&mut f);
         f.raw = [0.14, 0.14, 0.05, 0.0];
         f.eye_px[0][0] = 0.25;
-        f.mouth_px = [0.96, 0.0];
+        f.mouth_px = [0.96, 0.0, 0.0, 0.0];
         a.apply(&mut f, 271 * 33_000_000, false);
         assert!(f.eye_open[0] < 0.1 && f.eye_open[1] > 0.9, "{:?}", f.eye_open);
         assert!(f.smile > 0.9, "{}", f.smile);

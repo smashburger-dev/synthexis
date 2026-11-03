@@ -128,8 +128,12 @@ fn face(obs: &VNFaceObservation, at: Place) -> Option<(FaceFeatures, f32)> {
             .flatten()
             .filter_map(|p| Shape::from_outline(&p))
             .collect();
-        let mouth = region(lm.innerLips(), at).and_then(|p| Shape::from_outline(&p));
+        let inner = region(lm.innerLips(), at);
+        let mouth = inner.as_deref().and_then(Shape::from_outline);
         let mut f = face_features(fbox, &eyes, mouth, CAL_LANDMARKS);
+        if let (Some(p), [a, b]) = (inner.as_deref(), eyes.as_slice()) {
+            f.mouth_open = mouth_from_gap(height_across(p, a.centre, b.centre));
+        }
         if let Some(lift) = region(lm.outerLips(), at).and_then(|p| lip_corner_lift(&p)) {
             f.raw[3] = lift;
             f.smile = (lift - SMILE_LIFT.0) / (SMILE_LIFT.1 - SMILE_LIFT.0);
@@ -246,7 +250,8 @@ impl FaceLandmarks {
                     let eye_d = ((a[0] - b[0]).powi(2) + (a[1] - b[1]).powi(2)).sqrt().max(1.0);
                     if let Some(outer) = region(lm.outerLips(), crop) {
                         let (lo, hi) = outer.iter().fold((f32::MAX, f32::MIN), |(lo, hi), q| (lo.min(q[0]), hi.max(q[0])));
-                        f.0.mouth_px = [(hi - lo) / eye_d, lip_corner_lift(&outer).unwrap_or(0.0)];
+                        let inner = region(lm.innerLips(), crop).map_or(0.0, |p| height_across(&p, a, b));
+                        f.0.mouth_px = [(hi - lo) / eye_d, lip_corner_lift(&outer).unwrap_or(0.0), height_across(&outer, a, b), inner];
                     }
                 }
             }
