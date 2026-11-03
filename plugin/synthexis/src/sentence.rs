@@ -973,15 +973,11 @@ mod tests {
         Event::Key { key: k, physical_key: None, pressed: true, repeat: false, modifiers: Modifiers::NONE }
     }
 
-    fn shift(k: Key) -> Event {
-        Event::Key { key: k, physical_key: None, pressed: true, repeat: false, modifiers: Modifiers::SHIFT }
-    }
-
-    /// Source and side of the first chip.
+    /// Source and side of the first chip; empty when it is no gesture.
     fn gesture_of(h: &Harness) -> (String, Option<String>) {
-        match &h.s.doc.chips[0].chip {
-            Chip::Gesture { source, side, .. } => (source.clone(), side.clone()),
-            c => panic!("not a gesture: {c:?}"),
+        match h.s.doc.chips.first().map(|c| &c.chip) {
+            Some(Chip::Gesture { source, side, .. }) => (source.clone(), side.clone()),
+            _ => (String::new(), None),
         }
     }
 
@@ -1227,9 +1223,8 @@ mod tests {
         assert!(h.s.panel_open());
         assert_eq!(h.s.side, None, "no default side");
         h.frame(vec![]);
-        let row = h.find("Faust").expect("row drawn");
-        let panel = h.find("right").expect("variant panel drawn");
-        assert!(panel.x > row.x, "panel sits right of the list");
+        let drawn = (h.find("Faust"), h.find("right"));
+        assert!(matches!(drawn, (Some(row), Some(panel)) if panel.x > row.x), "panel drawn right of the list: {drawn:?}");
         h.frame(vec![key(Key::ArrowRight)]);
         assert_eq!(h.s.cursor, "wenn ich die Fau".len(), "Right moved the cursor");
         assert_eq!(h.s.side, Some(1));
