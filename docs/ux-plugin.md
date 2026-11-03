@@ -233,7 +233,7 @@ Not planned: switching from the FL timeline, a MIDI pad or a gesture. If it is e
 
 ### 8. Assistant line (`ui.assistant`, new; UI of `map.agent` and `map.fallback`)
 
-An optional shortcut: everything it does can also be done by clicking. Collapsed by default to a small field over the bottom edge of the canvas; it opens on a click or a key. The placeholder reads in both languages. A scope chip at the right, "in: Serum 2 (Pad)", comes from the picker; a click changes it for this sentence only.
+An optional shortcut: everything it does can also be done by clicking. Collapsed by default to a small field over the bottom edge of the canvas; it opens on a click or a key. The placeholder reads in the chosen language (11-03; before, in both). A scope chip at the right, "in: Serum 2 (Pad)", comes from the picker; a click changes it for this sentence only.
 
 After Enter:
 - The sentence stays above the field. Every recognised term is underlined as a chip: source ("Faust"), target ("Filter"), plugin or track ("Pad"), modifiers (invert, range).
@@ -244,6 +244,8 @@ After Enter:
 - Pending rows stay pending until Enter or Esc; nothing is kept or dropped silently. Decided by Noa on 10-31: every result has to be checked by ear before it is kept.
 - Hand side: completion offered "open my fist" without saying which hand (Noa, 11-03). Decided the same day: a gesture with a side (hand, finger, eye, arm) never gets a default side and never "both hands"; if the sentence names no side, a panel right of the list asks for it. Left picks left, Right picks right, at any moment while the panel is open (the side never locks); Enter confirms. Tab or Enter without a side opens the panel and inserts nothing; the ghost text shows the open choice. A bare "finger" adds a second step in the same panel: Up/Down through thumb to pinky, Left/Right still switch the side. Esc leaves the panel, Up/Down then move through the other suggestions again. Moves without a side (both hands, orb, head, face, mouth, body) get no panel. The panel always opens to the right: the plugin window gets one fixed width in the UI design so list and panel always fit. Built 11-03 (commit 2896dfe); Noa tested it in FL: the navigation works well.
 - Side colours (Noa, 11-03, after the FL test): the "L"/"R" badge on a gesture chip is small and looks unclean. Instead, the highlight behind a chip's text takes the colour of its hand: one colour for left, one for right, the same hand colours as the skeletons and move rows (Layout, D8). Both colours keep the chip text readable (contrast against the chip text colour). Other chip kinds can get a colour of their own the same way (an object, a parameter or other target), and the node graph uses the same colours.
+- Language and settings (Noa, 11-03, for the demo and for judges who download the plugin): English is the default, German is the option. The language is a per-user setting (`settings.json` in Application Support), shared by every instance, so a project saved in German opens in English for someone else. It switches every string of the window (`plugin/synthexis/src/i18n.rs`; host-visible parameter names and FL's own terms "Master", "Track 3", "Channel 1" stay English) and filters the completion: English shows English items only, German shows both with German first on an equal match. Typing is never restricted and the parser stays bilingual. Settings open in a frosted overlay over the whole window ("⚙ Settings", top right; Esc, ✕ or a click outside closes it; the main view dims and the camera preview turns to a blur under it): language, suggestions on/off, and diagnostics (camera permission, fps, frames received and dropped, frame delay, the last 40 log lines). Main view: Live, Test signal, hand roles, camera preview with its status in words ("Camera on · 30 fps", or what to do when access is missing), plugin picker, sentence field, the 32 signal sliders. The "frames" counter of the old status line counted every camera frame since the process started; nothing recorded. It moved to diagnostics, and the always empty "diag" went.
+- Idle work (Noa, 11-03, later): what is only needed now and then holds no memory and no CPU while he plays with set routes. The parser loads when the sentence field is used and drops after 3 minutes unused; labels and param-sense load when a picked plugin needs classes, one copy for all instances, dropped after 3 minutes. Camera and perception run while a plugin window is open or an enabled route reads a camera signal; perception pauses at once (models stay loaded), the camera session stops after 10 s (light off) and restarts in about 1.3 s. Numbers: `probes/plugin-settings/RESULT.md`, section 5.
 - Unsure terms (score below the calibrated threshold, or a small margin to the second candidate; `map.resolver`, P) open their chip with the top 3 and a search. Noa picks one, and the pick is stored as an alias (`map.aliases`, P), so the same phrase binds directly next time.
 - A sentence the parser marks `none` gets "not a command". A `query` gets an answer line and highlights the rows it means.
 - Voice: push-to-talk on the mic (`map.voice`, online, off by default; Noa decides). Later.
@@ -404,6 +406,12 @@ Decided by Noa on 10-31:
 Decided by Noa on 11-01:
 - Clicking is the main mapping path and has to work every time; typing or speaking is an optional shortcut.
 - Menus offer only what the camera can detect.
+
+Decided by Noa on 11-03 (settings session):
+- English by default, German as an option; German mode suggests German and English, German first.
+- The language is per user, not per project.
+- The "frames" counter becomes a camera status in words; its numbers move to the diagnostics in the settings.
+- Settings overlay: language, suggestions on/off, diagnostics with the log; the 32 signal sliders stay in the main view for now.
 
 Nothing open from Noa's side.
 

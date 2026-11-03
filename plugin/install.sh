@@ -75,6 +75,12 @@ pick() { # name, stand-in file
     [ -z "$m" ] && [ -n "$2" ] && [ -d "$DATA/preflight/$2" ] && m="$DATA/preflight/$2"
     echo "$m"
 }
+# CoreML caches what it prepares for the Neural Engine per app and model
+# path; a recompiled model at the same path (even an identical one) makes
+# FL's next load cold, seconds per model (probes/plugin-settings). So a
+# compiled model whose source did not change is kept, by a fingerprint of
+# the source (coremlcompiler output differs on every run).
+fingerprint() { (cd "$1" && find . -type f -print0 | LC_ALL=C sort -z | xargs -0 shasum -a 256) | shasum -a 256 | cut -d' ' -f1; }
 for spec in "seg:seg_mnv4s_384x216_pm.mlpackage" "hand:hand_mnv4s_128.mlpackage" "face:"; do
     name=${spec%%:*}
     src=$(pick "$name" "${spec#*:}")
@@ -82,10 +88,16 @@ for spec in "seg:seg_mnv4s_384x216_pm.mlpackage" "hand:hand_mnv4s_128.mlpackage"
         echo "perception: no $name model"
         continue
     fi
-    rm -rf "${MODELS:?}/${name:?}.mlmodelc" "${MODELS:?}/${name:?}.mlpackage"
+    fp=$(fingerprint "$src")
+    if [ -d "$MODELS/$name.mlmodelc" ] && [ "$(cat "$MODELS/$name.source-sha256" 2>/dev/null)" = "$fp" ]; then
+        echo "perception: $name unchanged, kept"
+        continue
+    fi
+    rm -rf "${MODELS:?}/${name:?}.mlmodelc" "${MODELS:?}/${name:?}.mlpackage" "${MODELS:?}/${name:?}.source-sha256"
     tmp=$(mktemp -d)
     if xcrun coremlcompiler compile "$src" "$tmp" >/dev/null 2>&1; then
         mv "$tmp"/*.mlmodelc "$MODELS/$name.mlmodelc"
+        echo "$fp" > "$MODELS/$name.source-sha256"
         echo "perception: $name <- $src"
     else
         # The plugin compiles an .mlpackage itself each time it loads (a few s).

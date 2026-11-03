@@ -28,6 +28,11 @@ pub struct Model {
     pub outputs: Vec<(String, usize)>,
 }
 
+// SAFETY: a Model is loaded on a loader thread (perception.rs load_all) and
+// then handed to the perception thread, which alone uses it; no MLModel is
+// ever used by two threads at the same time.
+unsafe impl Send for Model {}
+
 impl Model {
     /// Loads `.mlmodelc`, or compiles an `.mlpackage` / `.mlmodel` first.
     pub fn load(path: &Path) -> Result<Self, String> {

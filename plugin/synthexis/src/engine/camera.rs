@@ -44,10 +44,17 @@ const MOTION_H: usize = 36;
 const MOTION_GAIN: f32 = 8.0;
 const STATS_WINDOW: usize = 300;
 const LOG_EVERY: Duration = Duration::from_secs(5);
+/// How often the camera thread checks what is needed (engine::demand).
+const POLL: Duration = Duration::from_millis(250);
+/// Nothing needed the camera this long: the session stops (the light goes
+/// off); a window or a route that needs it starts it again in about 1.3 s.
+const IDLE_STOP: Duration = Duration::from_secs(10);
 
 /// Everything the editor and the latency log read.
 pub struct EngineShared {
     pub frame_count: AtomicUsize,
+    /// Frames go to the perception thread only while something needs it.
+    pub perceive: std::sync::atomic::AtomicBool,
     pub running: std::sync::atomic::AtomicBool,
     pub drop_count: AtomicUsize,
     pub auth_status: parking_lot::Mutex<String>,
@@ -68,6 +75,7 @@ impl EngineShared {
     fn new() -> Self {
         Self {
             frame_count: AtomicUsize::new(0),
+            perceive: false.into(),
             running: false.into(),
             drop_count: AtomicUsize::new(0),
             auth_status: parking_lot::Mutex::new("unknown".into()),
@@ -250,16 +258,21 @@ fn handle_frame(shared: Arc<EngineShared>, sample_buffer: &CMSampleBuffer) {
                             .clamp(0.0, 1.0);
                 }
                 PREV = Some(Box::new(small));
-                *shared.preview.lock() = Some(preview_bgra(base, stride, w, h));
+                // the preview only for an open window
+                if crate::editor::OPEN_EDITORS.load(Ordering::Acquire) > 0 {
+                    *shared.preview.lock() = Some(preview_bgra(base, stride, w, h));
+                }
             }
             let _ = CVPixelBufferUnlockBaseAddress(&image, CVPixelBufferLockFlags::ReadOnly);
         }
         // The camera frame is unmirrored (only the preview is mirrored).
-        crate::engine::perception::submit(
-            crate::engine::coreml::Frame::new(image),
-            (pts_host_s.max(0.0) * 1e9) as u64,
-            cb,
-        );
+        if shared.perceive.load(Ordering::Acquire) {
+            crate::engine::perception::submit(
+                crate::engine::coreml::Frame::new(image),
+                (pts_host_s.max(0.0) * 1e9) as u64,
+                cb,
+            );
+        }
     }
     let feat_done = Instant::now();
     push(&mut shared.cb_to_feat_ms.lock(),
@@ -312,6 +325,11 @@ fn auth_status_string() -> String {
 }
 
 fn run_session(shared: Arc<EngineShared>) {
+    // Nothing happens (no permission prompt either, e.g. during a plugin
+    // scan) until a window or a route needs the camera.
+    while !crate::engine::engine().demand().camera {
+        std::thread::sleep(POLL);
+    }
     // Permission gate, same as the probe.
     if auth_status_string() == "notDetermined" {
         if let Some(media) = unsafe { AVMediaTypeVideo } {
@@ -398,26 +416,48 @@ fn run_session(shared: Arc<EngineShared>) {
         if session.canAddInput(&input) { session.addInput(&input); }
         if session.canAddOutput(&output) { session.addOutput(&output); }
         session.commitConfiguration();
-        session.startRunning();
-        log::log("capture session running");
 
-        match session.synchronizationClock() {
-            Some(sync) => {
-                let host = CMClock::host_time_clock();
-                let off = (sync.time().seconds() - host.time().seconds()) * 1000.0;
-                log::log(&format!(
-                    "synchronization_clock is_host={} offset_ms={off:.3}",
-                    *sync == *host
-                ));
-                *shared.sync_clock.lock() = Some(sync);
+        // Runs while something needs it: perception follows the demand at
+        // once (its models stay loaded), the session stops after IDLE_STOP
+        // without any need. The thread owns session, delegate and queue for
+        // the life of the process.
+        let mut running = false;
+        let mut idle_since: Option<Instant> = None;
+        loop {
+            let need = crate::engine::engine().demand();
+            shared.perceive.store(need.perception, Ordering::Release);
+            if need.camera {
+                idle_since = None;
+                if !running {
+                    session.startRunning();
+                    running = true;
+                    log::log("capture session running");
+                    if shared.sync_clock.lock().is_none() {
+                        match session.synchronizationClock() {
+                            Some(sync) => {
+                                let host = CMClock::host_time_clock();
+                                let off = (sync.time().seconds() - host.time().seconds()) * 1000.0;
+                                log::log(&format!(
+                                    "synchronization_clock is_host={} offset_ms={off:.3}",
+                                    *sync == *host
+                                ));
+                                *shared.sync_clock.lock() = Some(sync);
+                            }
+                            None => log::log("synchronization_clock = none"),
+                        }
+                    }
+                }
+            } else if running && idle_since.get_or_insert_with(Instant::now).elapsed() >= IDLE_STOP {
+                session.stopRunning();
+                running = false;
+                // the window shows "starting" and no stale picture next time
+                *shared.last_cb.lock() = None;
+                *shared.preview.lock() = None;
+                shared.running.store(false, Ordering::Relaxed);
+                log::log(&format!("capture session stopped, nothing needed it for {} s", IDLE_STOP.as_secs()));
             }
-            None => log::log("synchronization_clock = none"),
+            std::thread::sleep(POLL);
         }
-
-        std::mem::forget(session);
-        std::mem::forget(delegate);
-        std::mem::forget(queue);
-        std::thread::park();
     }
 }
 
