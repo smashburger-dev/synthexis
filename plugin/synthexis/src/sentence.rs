@@ -102,7 +102,8 @@ fn hint(s: &Suggestion) -> String {
             "midi.pattern" => "MIDI pattern".into(),
             "midi.cc" => "MIDI CC".into(),
             "macro" => "macro".into(),
-            k => k.to_string(),
+            "xy" => "XY pad".into(),
+            k => k.strip_prefix("midi.prop:").map_or_else(|| k.to_string(), |p| format!("MIDI {p}")),
         },
     }
 }

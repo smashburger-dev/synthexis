@@ -118,6 +118,15 @@ fn target_item_leaves_the_ghost_row() {
 }
 
 #[test]
+fn span_prior_ranks_the_class_training_meant() {
+    let e = engine();
+    assert_eq!(top(&e, "the filter")[0].chip.label(), "Filter 1 Freq");
+    let rows = vec![("Filter".to_string(), "ctl.switch".to_string(), 9), ("filter cutoff".to_string(), "filter.cutoff".to_string(), 1)];
+    let e = engine().with_span_prior(rows);
+    assert_eq!(top(&e, "the filter")[0].chip.label(), "Filter 1 On");
+}
+
+#[test]
 fn german_phrase_over_two_words() {
     let e = engine();
     let t = "mit der Faust Filter auf";

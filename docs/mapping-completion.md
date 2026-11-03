@@ -15,7 +15,7 @@ Three kinds of items:
 
 1. Parameters of the picked plugin, matched by their name and through the glossary phrases of their param-sense class: "cut" offers "Filter 1 Freq" through "Cutoff", "Filter auf" through "Filter aufmachen". A ctl.switch parameter becomes a toggle target, any other a param target.
 2. Gestures from the glossary phrases of the ontology sources and hand shapes ("spr" offers "spread amount", "Fau" offers "Faust"). Only where a gesture is named. Strong positions (list and ghost text): sentence start, or after "when I", "if I", "wenn ich", "sobald ich", "with", "mit", "by", "follow" and similar, articles and side words skipped ("wenn ich die linke Fau"). Weak positions (list only, never ghost text): after a possessive ("i want my mou") and after "and", "und", "then", "dann", "indem ich", "dass ich" ("pinch und dre"). Query spans never start with an article, a side word or a trigger word, so "the res" at sentence start is the query "res" and offers parameters, not gestures.
-3. Targets that are no plugin parameter (11-03): MIDI note, chord, pattern, CC and the macros, from the glossary's target phrases of up to 3 words (171 phrases: "Akk" offers "Akkord spielen", "the pat" offers "Pattern Slot", "CC" offers "CC 21"). One row per kind, in the list only, never as ghost text, 0.1 below their match; when one would sit in the first row while a later item could be ghost text, that item moves up, so the ghost text is the same as without targets. MIDI generator properties (`midi.prop`: arp rate, velocity, chord size) and the XY pad have no glossary phrases yet and get no items.
+3. Targets that are no plugin parameter (11-03): MIDI note, chord, pattern, CC and the macros, from the glossary's target phrases of up to 3 words (171 phrases: "Akk" offers "Akkord spielen", "the pat" offers "Pattern Slot", "CC" offers "CC 21"). One row per kind, in the list only, never as ghost text, 0.1 below their match; when one would sit in the first row while a later item could be ghost text, that item moves up, so the ghost text is the same as without targets. MIDI generator properties (`midi.prop`, pinned with their property: `T:midi.prop:arp.rate`) and the XY pad get 44 phrases harvested from the training spans of ds-v11c (seen at least 3 times, at least 80 % on that target, up to 3 words, no ids, no one-letter typo variants), 11-03.
 
 Parameters of the catch-all classes `other`, `system` and `unsafe` complete by name only (11-03): their glossary phrases ("the gap before the reverb starts" in `other`) used to offer every parameter of the class, so "res" on Serum 2 listed Swing and A Phase. Measured in `probes/completion-targets/RESULT.md`.
 
@@ -35,8 +35,10 @@ The plugin reads the data from `$SYNTHEXIS_COMPLETION_DIR`, else `~/Library/Appl
 - Index: every word start of every key (phrase or parameter name), folded (lowercase, ß as ss, punctuation as space) and sorted. Words that share a prefix form one range, found by binary search; this is a trie flattened into an array. A keystroke scores only the keys that have a word starting with the query's first letter.
 - Score, after VS Code's fuzzyScore: the query's letters in order, the first one at a word start. Bonuses for the key start (8), a word start (5) and a letter right after the previous match (5); a jump over skipped letters costs 3. Divided by the query's score against itself, so a prefix match is 1.0, plus up to 0.05 for short keys.
 - The query is the last 1, 2 or 3 words before the cursor inside the clause and after the last chip; the best span wins ("Filter au" as two words).
+- Phrase keys of parameter classes match word by word: each typed word inside one phrase word from its start, in order ("res" no longer reaches "Bend Regler vom Synth"); parameter names keep the full fuzzy match.
+- Span prior: for the typed query, the share of the ds-v11c training spans starting with it that named each class (or target); an item gains 0.2 times its class's share. 5,192 (text, class, count) rows in vocab.json; a lookup is a binary search over the sorted texts.
 - Rank = match + class prior (up to 0.05, log of the label count over all harvested plugins) + recent picks (up to 0.1, last 32 picks) + context: a switching word in the clause ("schalte", "toggle", "an", "aus", "bypass") lifts switch parameters by 0.15, else they lose 0.05; system and unsafe parameters lose 0.2; a gesture in gesture position gains 0.05; a glossary-phrase match counts 0.85 of a name match.
-- Speed (release build, M1 Pro, Serum 2 with 2,622 parameters, 2,682 gesture phrases, 2,079 class phrases): data load 10 to 13 ms on its own thread, keystroke 1.7 ms median, 2.9 ms p95, 3.2 ms max over 103 keystrokes. The unit test at the same sizes asserts p95 under 25 ms unoptimised. It runs on the GUI thread, never on the audio thread, and never calls the neural parser.
+- Speed (release build, M1 Pro, Serum 2 with 2,622 parameters, 2,682 gesture phrases, 2,079 class phrases): data load 10 to 13 ms on its own thread, keystroke 1.7 ms median, 2.9 ms p95, 3.2 ms max over 103 keystrokes; since the word-aligned phrases (11-03) 0.36 ms median, 0.89 ms p95 over 36 keystrokes. The unit test at the same sizes asserts p95 under 25 ms unoptimised. It runs on the GUI thread, never on the audio thread, and never calls the neural parser.
 
 ## Pinning
 
@@ -57,8 +59,8 @@ Checked with the shipped v9 ensemble on four synthetic sentences (`plugin/parser
 
 ## Tests
 
-- `plugin/complete`: 36 tests on synthetic vocabularies and sentences (never the real sets in `data/mapping/eval/`): fuzzy score, prefix index, query spans, gesture positions, switching words, ranking, recent picks, chip text edits, latency, catch-all classes, target items.
-- `plugin/parser/src/pin.rs`: 21 tests on hand-built frames (fan-out, fan-in, fold, side kept, target chips).
+- `plugin/complete`: 38 tests on synthetic vocabularies and sentences (never the real sets in `data/mapping/eval/`): fuzzy score, prefix index, query spans, gesture positions, switching words, ranking, recent picks, chip text edits, latency, catch-all classes, target items, word-aligned phrases, span prior.
+- `plugin/parser/src/pin.rs`: 22 tests on hand-built frames (fan-out, fan-in, fold, side kept, target chips).
 - `plugin/synthexis/src/sentence.rs`: 7 headless egui tests that send key events through the field: Tab accepts and keeps the focus, arrows and Enter pick from the list, the list opens while typing and Enter without an arrow key still sends, the list scrolls past five rows, Esc dismisses, space never accepts, Tab with nothing to accept inserts nothing, chips become pins.
 - Checked by hand in the standalone build: plugin picker, ghost text, the list, chips. Esc and the second Tab fix were checked only by the headless tests: the window sat on another Space for the second round.
 
@@ -73,7 +75,7 @@ Checked with the shipped v9 ensemble on four synthetic sentences (`plugin/parser
 - Phrases with negative polarity ("Finger zusammen", "Hand öffnen") pin their source without setting INV; the parser still reads the words and decides.
 - A gesture chip that is meant as a gate ("only while I make a fist") is pinned as the route's source.
 - Values and tracks get no completion yet (VALUE, TRACK, PLUGIN spans).
-- Fuzzy matches spread across the words of a class phrase still bring in other classes: "res" offers A WT Pos through "Bend Regler vom Synth" (r, e in "Regler", s in "Synth"). Matching phrases only from word prefixes would drop that; the list has no measure of irrelevant rows yet, so it is not tried.
-- MIDI generator properties (`midi.prop`) and the XY pad need glossary phrases before they can complete.
+- Fuzzy matches inside one word of a class phrase still bring in other classes ("res" offers Env Release through "Release"): 12 % of the shown rows while typing a parameter are such rows of another class (21 % before 11-03).
+- The span prior is learned from synthetic training sentences; how much it helps with Noa's own wording is not measured.
 - Ghost text shows only when the cursor is at the end of the line; mid-line edits use the list.
 - Visuals are plain egui: chip background from the selection colour, ghost text in the weak text colour. The final look comes from Figma.

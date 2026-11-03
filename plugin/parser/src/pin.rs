@@ -13,10 +13,10 @@
 //!   equal, else each to the free route nearest to it (by its spans and
 //!   pinned parameter); the route's S: token becomes the chip's source (and
 //!   shape:);
-//! - a target chip (MIDI note, chord, pattern, CC, macro) goes to the
-//!   nearest route with a free target token, one of its own kind first;
-//!   that token becomes T:<kind>: and keeps its value when the kind was
-//!   already right;
+//! - a target chip (MIDI note, chord, pattern, CC, generator property,
+//!   macro, XY pad) goes to the nearest route with a free target token, one
+//!   of its own kind first; that token becomes T:<kind>: (T:midi.prop:<prop>
+//!   for a property) and keeps its value when the kind was already right;
 //! - a chip no route takes gets a route of its own.
 //!
 //! Runs after decoding, never inside the grammar: the parser still reads
@@ -30,8 +30,9 @@ pub enum PinWhat {
     Param { id: String, class: String, switch: bool },
     /// A gesture source, with a shape id when the source is hand.shape.
     Gesture { source: String, shape: Option<String> },
-    /// A target kind that is no plugin parameter: midi.note, midi.chord,
-    /// midi.pattern, midi.cc or macro.
+    /// A target that is no plugin parameter: midi.note, midi.chord,
+    /// midi.pattern, midi.cc, macro, xy, or midi.prop:<prop> with its
+    /// property.
     Target { kind: String },
 }
 
@@ -203,22 +204,23 @@ impl Route {
         let free: Vec<usize> = (0..self.items.len())
             .filter(|&i| self.pinned[i].is_none() && !self.tgt_pinned[i] && tok(&self.items[i]).starts_with("T:"))
             .collect();
-        let same = free.iter().find(|&&i| target_kind(tok(&self.items[i])) == kind);
+        let same = free.iter().find(|&&i| same_target(tok(&self.items[i]), kind));
         same.map(|&i| (i, true)).or_else(|| free.first().map(|&i| (i, false)))
     }
 
     /// Pins the target token at `at` (None: a new one after the sources) to
     /// the chip's kind.
     fn set_target(&mut self, at: Option<usize>, kind: &str, bytes: (usize, usize)) {
+        let token = if kind.contains(':') { format!("T:{kind}") } else { format!("T:{kind}:") };
         let i = match at {
-            Some(i) if target_kind(tok(&self.items[i])) == kind => i,
+            Some(i) if same_target(tok(&self.items[i]), kind) => i,
             Some(i) => {
-                self.items[i] = Item::Token(format!("T:{kind}:"));
+                self.items[i] = Item::Token(token);
                 i
             }
             None => {
                 let i = self.after_source();
-                self.insert(i, Item::Token(format!("T:{kind}:")));
+                self.insert(i, Item::Token(token));
                 i
             }
         };
@@ -303,6 +305,16 @@ impl Route {
 /// "T:midi.cc:74" -> "midi.cc".
 fn target_kind(t: &str) -> &str {
     t.strip_prefix("T:").and_then(|r| r.split(':').next()).unwrap_or("")
+}
+
+/// The token already is the chip's target: the same kind, and for a kind
+/// with a value (midi.prop:velocity) the same value.
+fn same_target(t: &str, kind: &str) -> bool {
+    if kind.contains(':') {
+        t.strip_prefix("T:") == Some(kind)
+    } else {
+        target_kind(t) == kind
+    }
 }
 
 /// conventions.FOLD: (folded source, whether INV flips).
@@ -572,6 +584,14 @@ mod tests {
         let fr = ["I:map", "<route>", "S:hand.fist", "T:param:other", "</route>"];
         let out = run(t, &fr, &[target(t, "Akkord spielen", "midi.chord")]);
         assert_eq!(out, ["I:map", "<route>", "S:hand.fist", "T:midi.chord:", "</route>"]);
+    }
+
+    #[test]
+    fn property_chip_sets_its_property() {
+        let t = "pinch changes the arp rate";
+        let fr = ["I:map", "<route>", "S:hand.pinch", "T:midi.prop:velocity", "</route>"];
+        let out = run(t, &fr, &[target(t, "arp rate", "midi.prop:arp.rate")]);
+        assert_eq!(out, ["I:map", "<route>", "S:hand.pinch", "T:midi.prop:arp.rate", "</route>"]);
     }
 
     #[test]

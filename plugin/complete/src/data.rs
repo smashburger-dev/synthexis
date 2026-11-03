@@ -17,6 +17,9 @@ struct VocabFile {
     param_phrases: Vec<PhraseRow>,
     #[serde(default)]
     targets: Vec<TargetRow>,
+    /// [span text, class or target, count] from the training spans
+    #[serde(default)]
+    span_prior: Vec<(String, String, u32)>,
     class_prior: HashMap<String, u64>,
     plugins: Vec<PluginInfo>,
 }
@@ -77,7 +80,8 @@ pub fn load(dir: &Path) -> Result<(Engine, Vec<PluginInfo>), String> {
         .collect();
     let phrases = v.param_phrases.into_iter().map(|r| (r.class, r.p)).collect();
     let targets = v.targets.into_iter().map(|r| (r.kind, r.p)).collect();
-    Ok((Engine::new(gestures, phrases, &v.class_prior).with_targets(targets), v.plugins))
+    let engine = Engine::new(gestures, phrases, &v.class_prior).with_targets(targets).with_span_prior(v.span_prior);
+    Ok((engine, v.plugins))
 }
 
 pub fn load_plugin(dir: &Path, info: &PluginInfo) -> Result<Vec<Param>, String> {

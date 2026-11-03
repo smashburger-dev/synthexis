@@ -71,3 +71,55 @@ The R3 loss does not come from gesture positions: target items reach the merged 
 - `targets.py`: gold TGT spans with their target kind, from the dev sets.
 - `plugin/complete/examples/sim_targets.rs`: the simulated user and the measures above.
 - Run: `uv run probes/completion-targets/targets.py --data <main data/mapping> > targets.jsonl`, then `plugin/target/release/examples/sim_targets <completion dir> < targets.jsonl`. Pinning: `probes/completion-v11/score.py` (reads `tk` spans and reports pin_GPT and T8).
+
+# Round 2: phrases from training spans, word-aligned phrases, a learned class prior (2026-11-03)
+
+Noa, 11-03: the two open points (fuzzy phrase matches across words bring in other classes; MIDI generator properties and the XY pad have no phrases) should be solved cleanly and measured. Source for both: the TGT spans of ds-v11c `train_all` (130,237 spans with a known target). They share no edit and no sentence with the nine dev sets (checked: 0 edit ids, 0 texts in common), so phrases and counts come from train and every measure from dev.
+
+## Measures added (written before any run)
+
+- `R8_MP`, `R8_XY`: list recall for MIDI generator property spans (gold `T:midi.prop:<prop>`, a hit needs the same property) and XY pad spans.
+- `N`: share of the shown rows, while typing P spans, that came in through a glossary phrase the typed text is no prefix of (a fuzzy phrase match) and whose class is not the gold class.
+- `MRR_P`: per P span, the mean over its keystrokes with an open list of 1 / rank of the first gold row (0 when none shows); averaged over spans.
+
+## Steps and rules (written before any run)
+
+- H1: phrases for `midi.prop` (with the property as value: the chip pins `T:midi.prop:arp.rate`) and `xy`, harvested from the train spans: a span text (case-folded) seen at least 3 times, at least 80 % of its train occurrences on that exact target, at most 3 words, not already a glossary target phrase; the chip shows the most frequent spelling. Added after looking at the harvested list, before measuring: texts with a "." (ids such as "arp.style") are dropped, and so is a text one edit (insert, delete, substitute) away from a more frequent harvested text of the same target ("velocty" next to "velocity"); the training set carries deliberate typos. Kept when `R8_MP` and `R8_XY` each rise by at least 10 points and `R8_P`, `R1_P`, `R8_M` fall by at most 0.5 points each.
+- H2: a parameter-class phrase matches only word by word: each typed word sits inside one phrase word, starting at its start, and the typed words take the phrase words in order ("res" no longer matches "Bend Regler vom Synth"; "Filter au" still matches "Filter aufmachen"). Parameter names keep the full fuzzy match. Kept when `N` falls and `R8_P` and `MRR_P` fall by at most 0.5 points each.
+- H3: a class prior from the train spans: for the typed query q, P(class | q) is the share of train spans whose folded text starts with q that have that class (parameter class, `ctl.switch` for toggles, the target kind); an item gains λ · P. λ is picked from {0.05, 0.1, 0.2} by the mean `MRR_P` over dev and challenge only; it is kept when on dev_s2 to dev_s8 (not used for the pick) `MRR_P` rises by at least 1 point and `R8_P`, `R1_P` fall by at most 0.5 points.
+- Guard after all kept steps: on the dumped v11 frames route_edit with all chips (`pin_GPT`) falls by at most 0.002 and gesture recall in the 8-row list by at most 0.5 points against d2f4ab8.
+- Steps run in this order; a rejected step is reverted before the next.
+
+## Runs (round 2)
+
+Means over the dev sets that have spans of the measure's group (MIDI property and XY spans occur in 5 of the 9 sets: 174 and 72 spans). The first version of the harness counted a set without such spans as 0 % in the mean (R8_MP 0.52 and R8_XY 0.56 for H1); fixed before the decisions were written down, the decisions are the same with either.
+
+| step | R8_P | R1_P | MRR_P | N | K_P | R8_M | R8_MP | R8_XY | decision |
+|---|---|---|---|---|---|---|---|---|---|
+| R0 (d2f4ab8) | 0.9319 | 0.7138 | 0.6011 | 0.2060 | 2.77 | 0.9671 | 0 | 0 | |
+| H1 phrases from train spans | 0.9317 | 0.7138 | 0.6002 | 0.2017 | 2.81 | 0.9671 | 0.9424 | 1.0 | kept |
+| H2 word-aligned phrases | 0.9347 | 0.7138 | 0.5984 | 0.1288 | 2.83 | 0.9671 | 0.9424 | 1.0 | kept |
+| H3 span prior, λ 0.2 | 0.9597 | 0.8435 | 0.7724 | 0.1226 | 1.89 | 0.9729 | 0.9424 | 1.0 | kept |
+
+H1 harvested 44 phrases: 41 for the 7 MIDI properties ("arp rate", "Arp-Geschwindigkeit", "Notenlänge", "chord size", "velocity" ...) and 3 for the XY pad ("xy pad", "two-axis pad", "pad").
+
+H3, λ picked on dev and challenge (mean MRR_P), confirmed on dev_s2 to dev_s8:
+
+| λ | pick MRR_P | confirm MRR_P | confirm R8_P | confirm R1_P | confirm N |
+|---|---|---|---|---|---|
+| 0 | 0.5898 | 0.6009 | 0.9327 | 0.7086 | 0.1306 |
+| 0.05 | 0.7072 | 0.7196 | 0.9498 | 0.7950 | 0.1297 |
+| 0.1 | 0.7298 | 0.7391 | 0.9517 | 0.8086 | 0.1285 |
+| 0.2 | 0.7634 | 0.7749 | 0.9592 | 0.8423 | 0.1246 |
+
+0.2 is the edge of the grid; larger weights were not tried, because the prior would then outweigh the match itself.
+
+Guard (dumped v11 frames, against d2f4ab8): pin_GPT 0.8024 either way (top 3) and 0.8035 either way (8 rows); gesture recall in the 8-row list 0.6215 -> 0.6211 (-0.04 points). Passes.
+
+Speed: Serum 2, release, 36 keystrokes: 0.36 ms median, 0.89 ms p95 (1.9 ms median before); H2 drops most phrase keys before they are scored.
+
+## What round 2 says
+
+- The largest gain comes from the span prior, not from a matching rule: which class the training sentences meant with words starting like the query lifts the ghost text from 71 % to 84 % of the parameter spans and the mean reciprocal rank of the right row from 0.60 to 0.77; the user types 1.9 characters instead of 2.8 before the right parameter shows.
+- Word-aligned phrases remove a third of the foreign fuzzy rows at no cost. What is left are matches inside one word ("res" in "Release").
+- Limits: the dev sentences come from the same generator as the training sentences, so the prior knows their wording; on Noa's own sentences the gain is likely smaller. The harvested XY phrase "pad" also matches the track word "pad"; it shows in the list only, never as ghost text.

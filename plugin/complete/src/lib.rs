@@ -10,8 +10,10 @@
 //! item becomes a chip that carries an id; on submit the chips become
 //! pinned spans for the parser (synthexis_parser::pin).
 //!
-//! Rank = fuzzy match (fuzzy.rs) + class prior + the user's recent picks +
-//! the words before the cursor (switching words rank switch parameters up).
+//! Rank = fuzzy match (fuzzy.rs) + class prior + span prior (which class
+//! the training sentences meant with words starting like the query) + the
+//! user's recent picks + the words before the cursor (switching words rank
+//! switch parameters up).
 //! A keystroke costs a prefix lookup and a fuzzy pass over the keys that
 //! share the query's first letter at a word start, well under a
 //! millisecond for a plugin of 2,600 parameters. Runs on the GUI thread;
@@ -45,6 +47,8 @@ const RECENT_CAP: usize = 32;
 const SWITCH_UP: f32 = 0.15;
 const SWITCH_DOWN: f32 = -0.05;
 const NOT_MAPPABLE: f32 = -0.2;
+/// Weight of P(class | typed query) from the training spans.
+pub const SPAN_PRIOR: f32 = 0.2;
 /// Target items rank below parameters of the same match.
 const TARGET_DOWN: f32 = -0.1;
 pub const SWITCH_CLASS: &str = "ctl.switch";
@@ -164,6 +168,9 @@ pub struct Engine {
     /// (kind, phrase) of the non-parameter targets.
     targets: Vec<(String, String)>,
     tindex: Index,
+    /// Folded training span texts, sorted, with their class and count.
+    spans: Vec<(Vec<char>, String, u32)>,
+    pub span_weight: f32,
 }
 
 #[derive(Default)]
@@ -210,7 +217,33 @@ impl Engine {
             recent: Vec::new(),
             targets: Vec::new(),
             tindex: Index::new(std::iter::empty()),
+            spans: Vec::new(),
+            span_weight: SPAN_PRIOR,
         }
+    }
+
+    /// Training span texts with the class (or target) they named and how
+    /// often: the span prior.
+    pub fn with_span_prior(mut self, rows: Vec<(String, String, u32)>) -> Self {
+        self.spans = rows.into_iter().map(|(t, c, n)| (fuzzy::fold(&t), c, n)).collect();
+        self.spans.sort_by(|a, b| a.0.cmp(&b.0));
+        self
+    }
+
+    /// P(class | the training span starts with the query), per class.
+    fn span_prior(&self, q: &Query) -> HashMap<&str, f32> {
+        let mut out: HashMap<&str, f32> = HashMap::new();
+        if self.span_weight == 0.0 || q.chars.is_empty() {
+            return out;
+        }
+        let lo = self.spans.partition_point(|s| s.0.as_slice() < q.chars.as_slice());
+        let mut total = 0.0;
+        for (_, c, n) in self.spans[lo..].iter().take_while(|s| s.0.starts_with(&q.chars)) {
+            *out.entry(c.as_str()).or_default() += *n as f32;
+            total += *n as f32;
+        }
+        out.values_mut().for_each(|v| *v /= total);
+        out
     }
 
     /// Targets that are no plugin parameter, as (kind, phrase).
@@ -293,6 +326,8 @@ impl Engine {
             let first = first.to_string();
             let replace = span.start..cursor;
             let wb = WORD_BONUS * (span.words - 1) as f32;
+            let sp = self.span_prior(&q);
+            let learned = |c: &str| self.span_weight * sp.get(c).copied().unwrap_or(0.0);
             let pos = context::gesture_position(&text[..span.start]);
             if pos != context::GesturePos::No {
                 let weak = pos == context::GesturePos::Weak;
@@ -324,7 +359,7 @@ impl Engine {
                 let (kind, phrase) = &self.targets[i as usize];
                 let chip = Chip::Target { kind: kind.clone(), phrase: phrase.clone() };
                 let key = chip.id();
-                let score = m + TARGET_DOWN + wb + self.recency(&key);
+                let score = m + TARGET_DOWN + wb + learned(kind) + self.recency(&key);
                 // list only: short target words ("fire chords", "pad chords")
                 // start like parameter words and would take the ghost text
                 keep(Suggestion { chip, score, replace: replace.clone(), via: None, prefix: q.is_prefix(k), weak: true }, key);
@@ -344,6 +379,11 @@ impl Engine {
             self.pindex.with_word_prefix(&first, &mut sc.seen, &mut sc.ids);
             for &i in &sc.ids {
                 let k = &self.pindex.keys[i as usize];
+                // a phrase brings in a whole class, so it has to match word
+                // by word; parameter names keep the full fuzzy match
+                if !q.word_aligned(k) {
+                    continue;
+                }
                 let Some(m) = q.score(k).filter(|&m| m >= MIN_MATCH) else {
                     continue;
                 };
@@ -365,7 +405,7 @@ impl Engine {
                     name: par.name.clone(),
                     class: par.class.clone(),
                 };
-                let score = m + wb + self.class_adjust(p.class[i as usize], switchy) + self.recency(&chip.id());
+                let score = m + wb + self.class_adjust(p.class[i as usize], switchy) + learned(&par.class) + self.recency(&chip.id());
                 let key = chip.id();
                 keep(Suggestion { chip, score, replace: replace.clone(), via, prefix, weak: false }, key);
             }

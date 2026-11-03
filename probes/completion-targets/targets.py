@@ -17,10 +17,11 @@ SPLITS = "dev,challenge,dev_s2,dev_s3,dev_s4,dev_s5,dev_s6,dev_s7,dev_s8"
 
 def kind(t: str) -> str:
     """T:param:filter.cutoff -> param:filter.cutoff, T:toggle:reverb ->
-    toggle, T:midi.cc:74 -> midi.cc, T:macro:4 -> macro."""
+    toggle, T:midi.cc:74 -> midi.cc, T:macro:4 -> macro,
+    T:midi.prop:arp.rate -> midi.prop:arp.rate."""
     k = t[2:].split(":", 1)
-    if k[0] == "param":
-        return "param:" + k[1]
+    if k[0] in ("param", "midi.prop"):
+        return f"{k[0]}:{k[1]}"
     return k[0]
 
 
