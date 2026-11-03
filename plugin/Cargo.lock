@@ -3357,7 +3357,16 @@ dependencies = [
  "objc2-core-video",
  "objc2-foundation 0.3.2",
  "parking_lot",
+ "synthexis-complete",
  "synthexis-parser",
+]
+
+[[package]]
+name = "synthexis-complete"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

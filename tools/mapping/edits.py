@@ -25,6 +25,15 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
 HERE = Path(__file__).resolve().parent
+# sources with a direction: 0 end and 1 end (stage-7 direction phrasing)
+MOVING = {
+    "hand.openness", "hand.fist", "hand.spread", "hand.x", "hand.y",
+    "hand.depth", "hand.roll", "hand.pitch", "hands.distance",
+    "hand.finger.thumb.tilt", "hand.finger.index.tilt",
+    "hand.finger.middle.tilt", "hand.finger.ring.tilt",
+    "hand.finger.pinky.tilt", "head.roll", "head.pitch", "head.yaw",
+    "mouth.open",
+}
 EVENT_SOURCES = {
     "motion.throw", "motion.swipe", "motion.hold",
     "motion.grab", "motion.release", "motion.clap",
@@ -251,7 +260,7 @@ class Ctx:
         kmap = {"source": "source", "target": "target",
                 "track": "track"}
         cands = [sid for sid, sl in self.slots.items()
-                 if sl["kind"] == kmap[want]]
+                 if sl["kind"] == kmap[want] and not sl.get("name")]
         if not cands:
             return
         of = self.rng.choice(cands)
@@ -271,6 +280,12 @@ class Ctx:
     # --- intent bodies -------------------------------------------------
 
     def gen_map(self) -> list:
+        if self.cfg.get("fan_out") and \
+                self.rng.random() < self.cfg["fan_out"]:
+            return self.gen_fan_out()
+        if self.cfg.get("finger_values") and \
+                self.rng.random() < self.cfg["finger_values"]:
+            return self.gen_finger_values()
         if self.cfg.get("finger_set") and \
                 self.rng.random() < self.cfg["finger_set"]:
             return self.gen_finger_set()
@@ -291,6 +306,7 @@ class Ctx:
             for _ in range(self.wc(self.cfg["targets_per_route"])):
                 kind = self.draw_target_kind(srcs)
                 tgts.append(self.add_target(kind, used_params, mods))
+            self.name_only(tgts, scope)
             if self.cfg.get("trigger_params"):
                 self.trigger_param(values, tgts, mods)
             time_boost = (
@@ -436,6 +452,81 @@ class Ctx:
                            "scope": [k] if k else [], "mods": mods})
         return routes
 
+    def gen_fan_out(self) -> list:
+        """One movement drives 2 to 4 parameters, each its own route, some
+        inverted ('tilt left: A up, B down, C up'); one plugin for all,
+        sometimes held by a pinch."""
+        cfg, rng = self.cfg, self.rng
+        s = self.add("s", self.source_slot(self.wc(cfg["fan_out_sources"])))
+        scope = []
+        if rng.random() < 0.7:
+            scope.append(self.add("p", {"kind": "plugin",
+                                        "value": self.draw_plugin()}))
+        gate = []
+        if self.slots[s]["value"] in MOVE_SOURCES and \
+                rng.random() < cfg.get("pinch_hold", 0):
+            gate.append(self.add("g", {"kind": "gate", "value": "hand.pinch",
+                                       "shape": None,
+                                       "side": self.slots[s]["side"]}))
+        used: set = set()
+        n = self.wc(cfg["fan_out_sizes"])
+        inv = [rng.random() < 0.5 for _ in range(n)]
+        if all(inv) or not any(inv):         # opposing directions are the point
+            inv[rng.randrange(n)] = not inv[0]
+        routes = []
+        for k in range(n):
+            mods = list(gate)
+            t = self.add_target("param", used, mods)
+            if inv[k]:
+                mods.append(self.add("i", {"kind": "invert", "value": True}))
+            sc = list(scope)
+            self.name_only([t], sc)
+            routes.append({"src": [s], "tgt": [t], "scope": sc,
+                           "mods": mods})
+        return routes
+
+    def name_only(self, tgts: list, scope: list) -> None:
+        """Stage 8: the route's first parameter target is said only by its
+        name as the plugin prints it ("Macro 5 goes down", "LFO 3 Rate
+        up"): T:param:macro or T:param:other plus the PNAME pointer."""
+        p = self.cfg.get("name_only", 0)
+        params = [t for t in tgts if self.slots[t].get("target") == "param"]
+        if not p or not params or self.rng.random() >= p:
+            return
+        name = self.rng.choice(self.cfg["name_only_names"])
+        n = self.add("n", {"kind": "param_name", "value": name})
+        t = self.slots[params[0]]
+        t["value"] = "macro" if name.startswith("Macro") else "other"
+        t["name"], t["say"] = n, None
+        scope.append(n)
+
+    def gen_finger_values(self) -> list:
+        """Each finger sets one parameter to its own value; the parameter is
+        named once and later clauses leave it out ('thumb is position one,
+        index four, middle eight')."""
+        cfg, rng = self.cfg, self.rng
+        if rng.random() < 0.5:
+            self.add("h", {"kind": "side",
+                           "value": rng.choice(["left", "right"])})
+        fingers = sorted(rng.sample(FINGERS, self.wc(cfg["finger_set_sizes"])),
+                         key=FINGERS.index)
+        mods0: list = []
+        t = self.add_target("param", set(), mods0)
+        scope = []
+        if rng.random() < 0.5:
+            scope.append(self.add("p", {"kind": "plugin",
+                                        "value": self.draw_plugin()}))
+        vals = rng.sample(cfg["param_values"], len(fingers))
+        routes = []
+        for f, v in zip(fingers, vals):
+            s = self.add("s", {"kind": "source", "value": f"hand.finger.{f}",
+                               "side": None, "object": None, "shape": None,
+                               "say": None})
+            mods = [self.add("v", {"kind": "value", "value": v})]
+            routes.append({"src": [s], "tgt": [t], "scope": scope,
+                           "mods": mods})
+        return routes
+
     def _ref(self) -> tuple[list, list]:
         """One route ref: src+tgt 50 %, src 30 %, tgt 20 %."""
         r = self.rng.random()
@@ -558,6 +649,67 @@ class Ctx:
             return {"scope": scope}
         return {}
 
+    # --- direction (stage 7) ---------------------------------------------
+
+    def same_effect(self, routes: list) -> None:
+        """Second route's first parameter becomes another control of the
+        first route's effect ('the reverb gets bigger when I open my hand
+        and longer when I spread my fingers')."""
+        if len(routes) < 2 or self.rng.random() >= self.cfg.get(
+                "same_effect", 0):
+            return
+        t0 = [t for t in routes[0].get("tgt", [])
+              if self.slots[t].get("target") == "param"
+              and not self.slots[t].get("name")]
+        t1 = [t for t in routes[1].get("tgt", [])
+              if self.slots[t].get("target") == "param"
+              and not self.slots[t].get("name")]
+        if not t0 or not t1:
+            return
+        fam = self.slots[t0[0]]["value"].rsplit(".", 1)[0]
+        sibs = [p for p in self.cfg["params"]
+                if p.rsplit(".", 1)[0] == fam
+                and p != self.slots[t0[0]]["value"]]
+        if sibs:
+            self.slots[t1[0]]["value"] = self.rng.choice(sibs)
+
+    def apply_direction(self, lang: str, routes: list) -> None:
+        """A moving source is said toward its 0 end ('lowering my hand',
+        'closing my fist') or with both directions in one phrase ('opening
+        and closing'); the parameter targets of its routes are told which
+        way they move, so the invert label stays the product of the two:
+        lowering the hand while the cutoff falls is not inverted."""
+        p_low = self.cfg.get("low_dir", 0)
+        p_both = self.cfg.get("both_dir", 0)
+        fan_dir = self.cfg.get("fan_out_dir", False)
+        for sid, s in self.slots.items():
+            if s["kind"] != "source" or s["value"] not in MOVING:
+                continue
+            rs = [r for r in routes if sid in r.get("src", [])]
+            if not rs or any(self.slots[m]["kind"] == "bipolar"
+                             for r in rs for m in r["mods"]):
+                continue
+            params = [(r, t) for r in rs for t in r["tgt"]
+                      if self.slots[t].get("target") == "param"]
+            if not params:
+                continue
+            # stage 8: every target of a fan-out is told its direction
+            fan = fan_dir and len(rs) > 1
+            x = self.rng.random()
+            low = x < p_low
+            if low:
+                s["dir"] = "low"
+                s["say"] = self.say_phrase(lang, f"source:{s['value']}", -1)
+            elif x < p_low + p_both and not fan:
+                s["dir"] = "both"
+                s["say"] = None
+            if low or fan:
+                for r, t in params:
+                    inv = any(self.slots[m]["kind"] == "invert"
+                              for m in r["mods"])
+                    self.slots[t]["dir"] = "rises" if inv == low else "falls"
+                    self.slots[t]["say"] = None
+
     # --- say ------------------------------------------------------------
 
     def say_phrase(self, lang: str, concept: str, pol: int):
@@ -604,6 +756,8 @@ class Ctx:
             concept = pol = None
             if kind == "source":
                 concept, pol = f"source:{s['value']}", 1
+            elif kind == "target" and s.get("name"):
+                continue                # said only by its name
             elif kind == "target" and s.get("target") == "param":
                 pol = 1
                 if tgt_route.get(sid) in inv_routes \
@@ -699,6 +853,9 @@ def build_edit(n: int, ctx: Ctx, lang: str, prefix: str = "e") -> dict:
         for _ in range(ctx.cfg["variants_per_edit"])]
     ctx.maybe_correction()
     ctx.apply_say(lang, routes)
+    if intent == "map":
+        ctx.same_effect(routes)
+        ctx.apply_direction(lang, routes)
     return {
         "id": f"{prefix}{n:06d}", "lang": lang, "variants": variants,
         "intent": intent, "slots": ctx.slots, "routes": routes,
@@ -753,7 +910,7 @@ def main() -> None:
                     sid = rng.choice(cands)
                     sl = twin["slots"][sid]
                     sl["value"] = rng.choice(nb[sl["value"]])
-                    if glossary and \
+                    if glossary and not sl.get("dir") and \
                             rng.random() < cfg["say_probability"]:
                         c = (f"source:{sl['value']}"
                              if sl["kind"] == "source"

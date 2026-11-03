@@ -1,0 +1,36 @@
+# Stage-6 overrides (parser v9; edits.py --override edits-s4.yaml,edits-s5.yaml,edits-s6.yaml).
+# Written 2026-11-01 from Noa's label conventions (docs/parser-v9-plan.md): a pinch next to a
+# hand movement is a hold, never pinch strength; parameters that move in different directions
+# are separate routes; several fingers shown at the same time are one finger state; switching
+# words mean a switch. Also from training-data counts: 38 sentences with switching words, 73
+# routes with a finger combination, no route set where one movement drives parameters in
+# opposite directions. Never written from the wording of Noa's sentences.
+
+languages: {en: 60, de: 40}
+
+intents: {map: 94, modify: 2, unmap: 2, none: 2}
+
+routes_per_edit: {1: 35, 2: 45, 3: 20}
+
+fan_out: 0.22                  # one movement, 2 to 4 parameters, opposite directions
+fan_out_sizes: {2: 50, 3: 30, 4: 20}
+fan_out_sources: {hand.roll: 24, hand.y: 20, hand.x: 14, hand.spread: 12, hand.openness: 10, hand.depth: 8, hand.pitch: 6, hand.fist: 6}
+
+finger_values: 0.10            # fingers set one parameter to their own values, target named once
+
+pinch_hold: 0.5
+shape_mask: 0.7
+
+sources:
+  hand.shape: 9
+  hand.pinch: 1
+  hand.spread: 8
+  hand.roll: 10
+  hand.y: 10
+  hand.x: 8
+  hand.finger.index: 4
+  hand.finger.middle: 3
+  hand.finger.thumb: 3
+
+targets: {param: 64, toggle: 22, midi.prop: 5, midi.chord: 3, midi.note: 2, midi.pattern: 2, macro: 2}
+shape_targets: {toggle: 40, param: 30, midi.chord: 12, midi.pattern: 8, midi.note: 5, macro: 5}

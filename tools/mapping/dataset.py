@@ -6,7 +6,9 @@
 
   uv run tools/mapping/dataset.py [--out ds-v1] [--seed 13]
       [--stage2 cmd-s2,kw-s2] [--stage3 cmd-s3,kw-s3] [--stage4 cmd-s4b]
-      [--stage5 cmd-s5] [--cat 0.25] [--exclude cmd-s4b,cmd-s5]
+      [--stage5 cmd-s5] [--stage6 cmd-s6] [--stage7 cmd-s7]
+      [--stage8 cmd-s8,cmd-s6r,cmd-s7r] [--cat 0.25]
+      [--exclude cmd-s4b,cmd-s5,cmd-s6,cmd-s7,cmd-s8,cmd-s6r,cmd-s7r]
 
 Reads cmd-s1 sentences, the rt-s1-all round-trip, kw-s1 keyword sentences,
 gloss-v1 and the ch-s1 challenge set from data/mapping/. Writes
@@ -15,7 +17,7 @@ challenge}.jsonl and counts.json. Deterministic for a given seed.
 --stage2 adds sentence runs without a round-trip: their dev edits go to
 dev_s2.jsonl, so dev.jsonl stays the stage-1 dev set; --stage3 does the
 same with dev_s3.jsonl and leaves dev_s2 unchanged; --stage4 and
---stage5 likewise with dev_s4.jsonl and dev_s5.jsonl. --exclude drops the sentence ids listed in
+--stage5, --stage6, --stage7 and --stage8 likewise with dev_s4.jsonl to dev_s8.jsonl. --exclude drops the sentence ids listed in
 commands/<run>/leak_drop.json (near-copies of the real-sentence set,
 probes/real-eval/leak.py). train_cat is
 train_all plus --cat x len(train_all) concatenations of two map sentences
@@ -116,8 +118,9 @@ def build(text: str, spans: list, e: dict):
     slots = e["slots"]
     kinds = list(BIO_TAG)
 
-    def key(sid):
-        return (first.get(sid, (INF,))[0], kinds.index(slots[sid]["kind"]))
+    def key(sid):       # a target said only by its name sits at the name
+        pos = first.get(sid) or first.get(slots[sid].get("name"), (INF,))
+        return (pos[0], kinds.index(slots[sid]["kind"]))
 
     def items(sids):
         out = []
@@ -294,6 +297,9 @@ def main() -> None:
     ap.add_argument("--stage3", default="")
     ap.add_argument("--stage4", default="")
     ap.add_argument("--stage5", default="")
+    ap.add_argument("--stage6", default="")
+    ap.add_argument("--stage7", default="")
+    ap.add_argument("--stage8", default="")
     ap.add_argument("--exclude", default="")
     ap.add_argument("--cat", type=float, default=0.25)
     args = ap.parse_args()
@@ -317,8 +323,20 @@ def main() -> None:
     s5 = [r for run in filter(None, args.stage5.split(","))
           for r in load_jsonl(DATA / "commands" / run / "sentences.jsonl")]
     s5_ids = {r["id"] for r in s5}
+    s6 = [r for run in filter(None, args.stage6.split(","))
+          for r in load_jsonl(DATA / "commands" / run / "sentences.jsonl")]
+    s6_ids = {r["id"] for r in s6}
+    s7 = [r for run in filter(None, args.stage7.split(","))
+          for r in load_jsonl(DATA / "commands" / run / "sentences.jsonl")]
+    s7_ids = {r["id"] for r in s7}
+    s8 = [r for run in filter(None, args.stage8.split(","))
+          for r in load_jsonl(DATA / "commands" / run / "sentences.jsonl")]
+    s8_ids = {r["id"] for r in s8}
     s4 = [r for r in s4 if r["id"] not in leak]
     s5 = [r for r in s5 if r["id"] not in leak]
+    s6 = [r for r in s6 if r["id"] not in leak]
+    s7 = [r for r in s7 if r["id"] not in leak]
+    s8 = [r for r in s8 if r["id"] not in leak]
     rt = {r["id"]: r["mismatch"] for r in load_jsonl(
         DATA / "roundtrip" / "rt-s1-all" / "roundtrip.jsonl")}
 
@@ -331,7 +349,7 @@ def main() -> None:
     counts, drops = Counter(), Counter()
     sets = defaultdict(list)
     pool = defaultdict(list)            # concat candidates per language
-    for r in cmd + kw + s2 + s3 + s4 + s5:   # later stages last: earlier sets unchanged
+    for r in cmd + kw + s2 + s3 + s4 + s5 + s6 + s7 + s8:   # later stages last: earlier sets unchanged
         kwd = r["register"] == "keyword"
         dev = is_dev(r["edit_id"], args.seed)
         ok = kwd or clean(r)
@@ -343,6 +361,12 @@ def main() -> None:
             names = ["dev_s4"] if dev else ["train_all"]
         elif r["id"] in s5_ids:
             names = ["dev_s5"] if dev else ["train_all"]
+        elif r["id"] in s6_ids:
+            names = ["dev_s6"] if dev else ["train_all"]
+        elif r["id"] in s7_ids:
+            names = ["dev_s7"] if dev else ["train_all"]
+        elif r["id"] in s8_ids:
+            names = ["dev_s8"] if dev else ["train_all"]
         else:
             names = (["dev"] if ok else []) if dev else \
                 (["train_all", "train_filtered"] if ok else ["train_all"])

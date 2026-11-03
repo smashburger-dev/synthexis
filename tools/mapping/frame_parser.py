@@ -210,12 +210,12 @@ def collate(batch: list, fv: int, device):
 class Parser(nn.Module):
     def __init__(self, vocab: int, fv: int, d=256, heads=4, ff=1024,
                  enc_layers=6, dec_layers=2, drop=0.1, whash=0, hf="",
-                 pretrained=True):
+                 pretrained=True, hf_layers=0):
         super().__init__()
         self.fv, self.d, self.whash, self.hf_name = fv, d, whash, hf
         self.cfg = dict(vocab=vocab, fv=fv, d=d, heads=heads, ff=ff,
                         enc_layers=enc_layers, dec_layers=dec_layers,
-                        drop=drop, whash=whash, hf=hf)
+                        drop=drop, whash=whash, hf=hf, hf_layers=hf_layers)
         if whash:
             self.wh = nn.Embedding(WH_BUCKETS + 1, WH_DIM, padding_idx=0)
             self.wh_proj = nn.Linear(WH_DIM, d)
@@ -225,6 +225,9 @@ class Parser(nn.Module):
             self.hf = AutoModel.from_pretrained(path) if pretrained else \
                 AutoModel.from_config(AutoConfig.from_pretrained(path))
             assert self.hf.config.hidden_size == d, "d must be the backbone width"
+            if hf_layers:               # keep the lowest hf_layers layers
+                self.hf.layers = self.hf.layers[:hf_layers]
+                self.hf.config.num_hidden_layers = hf_layers
         else:
             self.src = nn.Embedding(vocab, d)
             self.spos = nn.Embedding(MAX_SRC, d)
@@ -648,6 +651,7 @@ def load_run(run: Path, device="cpu"):
                            / meta["tokenizer"]))
     model = Parser(cfg["vocab"], cfg["fv"], cfg["d"], cfg["heads"], cfg["ff"],
                    cfg["enc_layers"], cfg["dec_layers"], 0.0,
-                   cfg.get("whash", 0), cfg.get("hf", ""), pretrained=False)
+                   cfg.get("whash", 0), cfg.get("hf", ""), pretrained=False,
+                   hf_layers=cfg.get("hf_layers", 0))
     model.load_state_dict(torch.load(run / "model.pt", map_location=device))
     return model.to(device), sp, meta["frame_vocab"]

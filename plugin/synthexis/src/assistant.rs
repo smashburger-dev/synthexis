@@ -1,7 +1,8 @@
 //! Mapping assistant entry, minimal: one process-wide worker thread loads
 //! the frame parser in the background and parses submitted sentences; the
-//! frames go to the log. No text field, resolver or route changes yet
-//! (docs/parser-runtime-plan.md).
+//! chips of the sentence field are enforced on the frame as pinned spans
+//! (synthexis_parser::pin) and the frames go to the log. No resolver or
+//! route changes yet (docs/parser-runtime-plan.md).
 //!
 //! Model dir: $SYNTHEXIS_PARSER_DIR, else
 //! ~/Library/Application Support/synthexis/parser, laid out as
@@ -15,17 +16,19 @@ use std::sync::OnceLock;
 use std::time::Instant;
 
 use crossbeam_channel::{unbounded, Receiver, Sender};
-use synthexis_parser::{Options, Parser};
+use synthexis_parser::{pin, Options, Parser, Pin};
 
 use crate::log::log;
 
 const DEFAULT_RUNS: &str = "p-v11-s0,p-v11-s1,p-v11-s2,p-v11-s3";
 
-static WORKER: OnceLock<Sender<String>> = OnceLock::new();
+type Job = (String, Vec<Pin>);
+
+static WORKER: OnceLock<Sender<Job>> = OnceLock::new();
 
 /// Starts the worker once per process; loading begins immediately on it.
 /// Never call from the audio thread (the first call spawns a thread).
-pub fn start() -> &'static Sender<String> {
+pub fn start() -> &'static Sender<Job> {
     WORKER.get_or_init(|| {
         let (tx, rx) = unbounded();
         if let Err(e) = std::thread::Builder::new()
@@ -38,10 +41,9 @@ pub fn start() -> &'static Sender<String> {
     })
 }
 
-/// Queues a typed sentence; the frame shows up in the log.
-#[allow(dead_code)] // the editor's text field will call this
-pub fn submit(text: &str) {
-    if start().send(text.to_string()).is_err() {
+/// Queues a typed sentence with its chips; the frame shows up in the log.
+pub fn submit(text: &str, pins: Vec<Pin>) {
+    if start().send((text.to_string(), pins)).is_err() {
         log("assistant: parser unavailable, sentence dropped");
     }
 }
@@ -54,7 +56,7 @@ fn model_dir() -> PathBuf {
     PathBuf::from(home).join("Library/Application Support/synthexis/parser")
 }
 
-fn run(rx: &Receiver<String>) {
+fn run(rx: &Receiver<Job>) {
     let dir = model_dir();
     let runs = std::env::var("SYNTHEXIS_PARSER_RUNS").unwrap_or_else(|_| DEFAULT_RUNS.into());
     let names: Vec<&str> = runs.split(',').map(str::trim).collect();
@@ -71,21 +73,29 @@ fn run(rx: &Receiver<String>) {
         t0.elapsed().as_secs_f64() * 1e3
     ));
     if let Ok(text) = std::env::var("SYNTHEXIS_PARSE") {
-        parse(&parser, &text);
+        parse(&parser, &text, &[]);
     }
-    for text in rx {
-        parse(&parser, &text);
+    for (text, pins) in rx {
+        parse(&parser, &text, &pins);
     }
 }
 
-fn parse(parser: &Parser, text: &str) {
+fn parse(parser: &Parser, text: &str, pins: &[Pin]) {
     let t0 = Instant::now();
     match parser.parse(text) {
-        Ok(p) => log(&format!(
+        Ok(p) if pins.is_empty() => log(&format!(
             "assistant: {:.3} {:.0} ms \"{text}\" -> {}",
             f64::from(p.logp).exp(),
             t0.elapsed().as_secs_f64() * 1e3,
             p.frame().join(" ")
+        )),
+        Ok(p) => log(&format!(
+            "assistant: {:.3} {:.0} ms \"{text}\" -> {} | pinned {} -> {}",
+            f64::from(p.logp).exp(),
+            t0.elapsed().as_secs_f64() * 1e3,
+            p.frame().join(" "),
+            pins.len(),
+            pin(&p.items, pins).frame().join(" ")
         )),
         Err(e) => log(&format!("assistant: parse failed for \"{text}\": {e:#}")),
     }
