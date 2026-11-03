@@ -1,0 +1,7 @@
+# Pinned parser runtime, written by pack.sh; read by install.sh.
+REPO=smashburger-dev/synthexis
+TAG=assistant-parser-v11
+ASSET=synthexis-parser-v11.tar.gz
+SHA256=4c7964ad2e56a51c768394779090b716f48439e25dd62dea084d7a76856258bc
+BYTES=446428986
+RUNS="p-v11-s0 p-v11-s1 p-v11-s2 p-v11-s3"

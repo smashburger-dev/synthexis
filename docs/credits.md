@@ -22,7 +22,7 @@ Use: Muse Glimmer 30B on Fireworks serverless inference as the second labeler ne
 
 ## Attributions and licence notices
 
-Required by the licences of the models and services synthexis uses. Source and reasoning for every line: `probes/licence-check/RESULT.md`. Written 2026-11-02 after Noa's decisions recorded there. The plugin's About panel and the README carry the first line; the licence texts are in `LICENSES/` at the repository root. The perception student weights are in `plugin/models/` (notice per model: `plugin/models/README.md`). Their labels came from SAM 3.1, SAM 3D Body, MediaPipe and the recording script; none was written or filtered by Muse Spark Open (the Spark QA exclusion list was dropped before training, `probes/train-packer/RESULT.md`).
+Required by the licences of the models and services synthexis uses. Source and reasoning for every line: `probes/licence-check/RESULT.md`. Written 2026-11-02 after Noa's decisions recorded there. The plugin's About panel and the README carry the first line; the licence texts are in `LICENSES/` at the repository root. The perception student weights are in `plugin/models/` (notice per model: `plugin/models/README.md`). The mapping parser weights ship as a GitHub release asset that `plugin/assistant/install.sh` downloads; the archive carries `NOTICE.txt` and the Muse and mmBERT licence texts (`plugin/assistant/README.md`). Their labels came from SAM 3.1, SAM 3D Body, MediaPipe and the recording script; none was written or filtered by Muse Spark Open (the Spark QA exclusion list was dropped before training, `probes/train-packer/RESULT.md`).
 
 ### Muse Spark Open
 
