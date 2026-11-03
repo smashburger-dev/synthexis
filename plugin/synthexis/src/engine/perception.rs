@@ -617,11 +617,7 @@ impl Backend for Students {
             drop(out);
             let lut = self.lut;
             self.prev.write(|p| p.iter_mut().zip(self.mask.iter()).for_each(|(p, &c)| *p = lut[c as usize]));
-            let hands: Vec<Blob> = components(&self.mask, SEG_W, SEG_H, |c| c == C_HAND, &mut self.labels)
-                .into_iter()
-                .filter(|b| b.area >= MIN_HAND_AREA)
-                .take(2)
-                .collect();
+            let hands = hand_blobs(components(&self.mask, SEG_W, SEG_H, |c| c == C_HAND, &mut self.labels));
             let face = components(&self.mask, SEG_W, SEG_H, |c| c == C_FACE || c == C_EYE || c == C_MOUTH, &mut self.labels)
                 .into_iter()
                 .find(|b| b.area >= MIN_FACE_AREA);

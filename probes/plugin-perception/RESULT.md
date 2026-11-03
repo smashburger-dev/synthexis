@@ -1,4 +1,4 @@
-# Perception in the plugin (2026-11-02, side fix and hybrid 2026-11-03)
+# Perception in the plugin (2026-11-02, side fix, hybrid and dev rule 2026-11-03)
 
 The plugin's engine now runs perception on its own thread and emits the `feat.*` signals of `spec/synthexis.yaml` section 5 under the source names of `tools/mapping/ontology.yaml`. Three backends share one geometry module:
 
@@ -6,9 +6,9 @@ The plugin's engine now runs perception on its own thread and emits the `feat.*`
 - `hybrid` (the `install.sh` default since 2026-11-03): `students` for seg and hands, plus Apple Vision face landmarks seeded with the seg face box, so Vision skips its own face detection.
 - `vision`: Apple Vision hand pose (2 hands x 21 joints) and face landmarks in one handler call.
 
-Runtime use of Vision is allowed (`probes/licence-check`); nothing trains on it. The trained students come from `probes/train-students` (branch `claude/train-students-1137e2`: seg-a-s0, face-a-s1, and hand-final with the finger thresholds folded into the logits).
+Runtime use of Vision is allowed (`probes/licence-check`); nothing trains on it. The trained students come from `probes/train-students` (branch `claude/train-students-1137e2`: seg-a-s0, face-a-s1, and hand-chir with the finger thresholds folded into the logits plus a handedness logit; hand-final before 2026-11-03).
 
-On S4, the held-out session, `hybrid` emits hands after 2.9 / 4.2 ms (median / p95) and the face after 8.0 ms median, against 21 to 31 ms for `vision` offline and 40 to 58 ms median in FL. Hands land on the labelled side in 98.6% of block A frames and on the wrong side in 0.3% (Vision 99.0% / 0.0%). The landmarks run on their own thread beside the hands; they take about 6 ms on any device Vision offers. `students` alone is faster, but its face student does not separate open from closed eyes.
+On S4, the held-out session, `hybrid` emits hands after 2.9 / 4.2 ms (median / p95) and the face after 8.0 ms median, against 21 to 31 ms for `vision` offline and 40 to 58 ms median in FL. Hands land on the labelled side in 98.7% of block A frames and on the wrong side in 0.2% (Vision 99.0% / 0.0%). Several choices looked at S4 before the dev-only rule, so S4 is partly a selection set (list in the section on the dev rule). The landmarks run on their own thread beside the hands; they take about 6 ms on any device Vision offers. `students` alone is faster, but its face student does not separate open from closed eyes.
 
 ## Commands
 
@@ -151,6 +151,55 @@ S4. The first S4 run of `FaceAdapt` read the right eye as half shut in neutral (
 
 With a hand on the face, winks fall back to what the outline alone gives. Mouth open (neutral 0.005, wide 1.0), yaw and roll (span 1.0) are unchanged.
 
+## Second hand blob, eye warm-up, dev-only rule (2026-11-03)
+
+From here on every choice is made on S1 to S3, and S4 is scored once on the frozen config (Noa's rule). Hand choices use only the packer's dev segments (`data/packed/manifest.json`, `dev_segments`): the students trained on the rest of S1 to S3. Block A has 14 dev segments with 2,720 labelled hand frames. The face numbers use all of block C, because the face values come from Vision landmarks and the seg box only places the crop.
+
+seg-v3l against seg-a-s0. train-students delivered seg-v3l (MobileNetV3-Large). On S4 it raised finger errors, and the cause was small hand-class specks (median 89 seg pixels, 2% of the real hand) that took the second hand slot. On dev the specks do not show up in one-hand segments, and seg-a-s0 still wins:
+
+| dev block A, students backend, hand-chir | present | wrong side | finger accuracy | count error | present x finger |
+|---|---|---|---|---|---|
+| seg-a-s0 | 0.981 | 0.000 | 0.954 | 0.166 | 0.936 |
+| seg-a-s0, pair gate 0.1 (installed) | 0.979 | 0.000 | 0.958 | 0.148 | **0.938** |
+| seg-v3l | 0.975 | 0.0007 | 0.943 | 0.224 | 0.920 |
+| seg-v3l, pair gate 0.1 | 0.965 | 0.0007 | 0.953 | 0.177 | 0.920 |
+
+seg-a-s0 stays in `data/models/seg.mlpackage`; train-students agreed on these numbers, seg-v3l sits in `data/models/archive/`.
+
+Pair gate (`hand_blobs`, `geom.rs`). The second hand blob is dropped when its area is under 0.1 of the first. Real second hands sit at a median 0.58 of the first on S1 to S3 (5th percentile 0.2 to 0.31). Swept over 0, 0.05, 0.1, 0.15 and 0.2 on dev; 0.1 has the most correct finger bits per labelled hand frame. The gain sits in the two-hand segments: tiny second hands lose their slot (present 0.992 -> 0.987) and carried wrong fingers (0.962 -> 0.967).
+
+Eye warm-up (`FaceAdapt`). After a cold start, or after a hand covered the face for longer than the 10 s window, each eye's open level starts from a near-empty window, whose low decile is its widest spread so far. The noisier eye then reads as closing. On S4 this showed right after block A, where the eyes had been in outline-only mode: with seg-v3l the right eye read 0.18 in neutral. The pixel difference now ramps in over the first 8 s of the window. Swept 0 to 8 s on S1 to S3 block C, starting the bench cold at C_neutral and with a 60 s lead-in. The gain rose up to 8 s, the largest value inside the window; later segments did not change.
+
+| eye error, S1 / S2 / S3 | cold start | 60 s lead-in |
+|---|---|---|
+| no warm-up | 0.118 / 0.278 / 0.027 | 0.119 / 0.277 / 0.028 |
+| 8 s warm-up (installed) | **0.113 / 0.257 / 0.019** | 0.119 / 0.271 / 0.028 |
+
+S2 neutral from a cold start: 0.74 / 0.91 -> 0.88 / 0.95.
+
+S4, frozen config, scored once (`hybrid`, seg-a-s0, hand-chir, pair gate, warm-up):
+
+| S4 | before (76ee3db) | now |
+|---|---|---|
+| block A labelled side / wrong side | 0.986 / 0.003 | **0.987 / 0.002** |
+| finger accuracy | 0.925 | **0.934** |
+| finger count error | 0.14 | **0.10** |
+| openness against extended fingers | 0.975 | 0.974 |
+| eye error, block C | 0.211 | 0.211 |
+| eye L / R neutral | 1.00 / 0.85 | 1.00 / 0.88 |
+
+Latency from that run is not comparable: the machine ran at load 9, landmarks p95 22.8 ms; hands came out after 2.91 / 4.39 ms.
+
+Choices that looked at S4 before the dev rule, so the S4 figures in this file are partly selection numbers:
+
+- `CAL_LANDMARKS` and `SMILE_LIFT` (the `vision` backend's face calibration): fitted and scored on S4 block C.
+- `hybrid` as the default backend: picked on S4 latency and face values.
+- `SideTracker`: tuned on S1 to S3, scored on S4 once; the handedness vote came after that score, so S4 was looked at twice for the side.
+- `FaceAdapt` hand-on-face rule: added after the first S4 run (section above).
+- seg-v3l rollback: train-students first rolled back on the S4 A/B; the dev table above confirms it.
+- Pair gate and eye warm-up: both problems were first seen on S4; both values were chosen on S1 to S3.
+- Hand openness range: the live note below compares it against S4.
+
 ## FL Studio, live (2026-11-03)
 
 FL Studio with synthexis (VST3) on channel 1, backend `vision`, plugin window closed, Noa at the FaceTime camera. `fl_live.py` read the routed macros through the FL bridge at 20 Hz, 8 s per phase (run file `runs/1793662810-fl_live.json`).
@@ -196,5 +245,5 @@ Latency in FL, from `~/Library/Logs/synthexis.log`, 5 s windows over the run (al
 - Face p95 swings between 9 and 17 ms with machine load; hands stay under 5 ms.
 - Winks while a hand overlaps the face fall back to the outline; the rule checks the whole face box, not the eye band.
 - S2 (glasses): closed eyes read 0.23 / 0.87.
-- Side errors left: 0.3% on S4.
+- Side errors left: 0.2% on S4.
 - Default routes (Signal 3 to 10, `route.rs`) stand in until the assistant writes routes. With Live on they all move, and FL records every moving macro as automation; Noa's rule is that recording one parameter records only that one.

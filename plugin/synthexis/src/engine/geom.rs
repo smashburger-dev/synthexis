@@ -32,6 +32,21 @@ pub const F_MOUTH: u8 = 2;
 pub const MIN_HAND_AREA: usize = 60;
 pub const MIN_FACE_AREA: usize = 150;
 pub const MIN_OBJECT_AREA: usize = 40;
+/// A second hand blob under this share of the first is dropped: real
+/// second hands sit at a median 0.58 of the first on S1-S3, and the small
+/// ones carry wrong fingers. Picked on the packer's dev segments of S1-S3
+/// (present x finger accuracy 0.936 -> 0.938).
+pub const HAND_PAIR_MIN: f32 = 0.1;
+
+/// The hand blobs of a frame from `components` (largest first): at most
+/// two, the second only when it is not a speck beside the first.
+pub fn hand_blobs(blobs: Vec<Blob>) -> Vec<Blob> {
+    let mut hands: Vec<Blob> = blobs.into_iter().filter(|b| b.area >= MIN_HAND_AREA).take(2).collect();
+    if hands.len() == 2 && (hands[1].area as f32) < HAND_PAIR_MIN * hands[0].area as f32 {
+        hands.truncate(1);
+    }
+    hands
+}
 
 /// Borrowed BGRA image.
 #[derive(Clone, Copy)]
@@ -610,6 +625,14 @@ impl RollingQuantile {
         let (_, kth, _) = self.scratch.select_nth_unstable_by(k, |a, b| a.total_cmp(b));
         *kth
     }
+
+    /// Seconds the window holds, oldest to newest sample.
+    pub fn span_s(&self) -> f32 {
+        match (self.buf.front(), self.buf.back()) {
+            (Some(a), Some(b)) => (b.0 - a.0) as f32 / 1e9,
+            _ => 0.0,
+        }
+    }
 }
 
 /// Eye geometry range (outline minor/major) for closed..open.
@@ -618,6 +641,11 @@ const EYE_GEO: (f32, f32) = (0.08, 0.2);
 /// below which it may no longer open an eye (both eyes shut).
 const EYE_PX_GAIN: f32 = 8.0;
 const EYE_PX_GATE: f32 = 0.2;
+/// Seconds of open levels before the pixel difference counts in full: a
+/// near-empty window's low decile is its minimum, and the noisier eye
+/// then reads as closed (after a cold start, or a hand held over the face
+/// for longer than the window). Swept on S1-S3 block C from a cold start.
+const EYE_PX_WARM: f32 = 8.0;
 /// Mouth width over its running median for smile 0 and 1.
 const SMILE_WIDTH: (f32, f32) = (1.05, 1.2);
 
@@ -664,8 +692,10 @@ impl FaceAdapt {
             // > 0: this eye looks more open than the other.
             let d = [p[1] - p[0], p[0] - p[1]];
             let gate = ((g[0] + g[1]) / 2.0 / EYE_PX_GATE).min(1.0);
+            let span = self.closure_open[0].span_s().min(self.closure_open[1].span_s());
+            let gain = EYE_PX_GAIN * (span / EYE_PX_WARM).min(1.0);
             for e in 0..2 {
-                let shift = if d[e] < 0.0 { EYE_PX_GAIN * d[e] } else { EYE_PX_GAIN * d[e] * gate };
+                let shift = if d[e] < 0.0 { gain * d[e] } else { gain * d[e] * gate };
                 f.eye_open[e] = (g[e] + shift).clamp(0.0, 1.0);
             }
         }
@@ -1168,8 +1198,8 @@ mod tests {
             f.eye_px = [[0.4, 0.1, 0.4], [0.4, 0.1, 0.4]];
             f.mouth_px = [0.8, 0.0];
         };
-        // Two seconds of open eyes set the open levels and the mouth width.
-        for k in 0..60u64 {
+        // Nine seconds of open eyes set the open levels and the mouth width.
+        for k in 0..270u64 {
             let mut f = FaceFeatures::default();
             open(&mut f);
             a.apply(&mut f, k * 33_000_000, false);
@@ -1181,7 +1211,7 @@ mod tests {
         f.raw = [0.14, 0.14, 0.05, 0.0];
         f.eye_px[0][0] = 0.25;
         f.mouth_px = [0.96, 0.0];
-        a.apply(&mut f, 61 * 33_000_000, false);
+        a.apply(&mut f, 271 * 33_000_000, false);
         assert!(f.eye_open[0] < 0.1 && f.eye_open[1] > 0.9, "{:?}", f.eye_open);
         assert!(f.smile > 0.9, "{}", f.smile);
         // Both shut: the pixel difference may not reopen an eye.
@@ -1189,14 +1219,37 @@ mod tests {
         open(&mut f);
         f.raw = [0.06, 0.06, 0.05, 0.0];
         f.eye_px[0][0] = 0.3;
-        a.apply(&mut f, 62 * 33_000_000, false);
+        a.apply(&mut f, 272 * 33_000_000, false);
         assert!(f.eye_open[0] < 0.01 && f.eye_open[1] < 0.01, "{:?}", f.eye_open);
         // A hand on the face: outline only, even with lopsided pixels.
         let mut f = FaceFeatures::default();
         open(&mut f);
         f.eye_px[1][0] = 0.1;
-        a.apply(&mut f, 63 * 33_000_000, true);
+        a.apply(&mut f, 273 * 33_000_000, true);
         assert!(f.eye_open[0] > 0.99 && f.eye_open[1] > 0.99, "{:?}", f.eye_open);
+    }
+
+    #[test]
+    fn face_adapt_warms_up_before_trusting_pixels() {
+        // A cold start with one noisy eye: its low decile is its widest
+        // spread, so the other frames would read as closing.
+        let mut a = FaceAdapt::default();
+        for k in 0..30u64 {
+            let mut f = FaceFeatures { seen_eye: [true, true], raw: [0.3, 0.3, 0.05, 0.0], ..Default::default() };
+            f.eye_px = [[if k % 3 == 0 { 0.55 } else { 0.4 }, 0.1, 0.4], [0.4, 0.1, 0.4]];
+            a.apply(&mut f, k * 33_000_000, false);
+            assert!(f.eye_open[0] > 0.6 && f.eye_open[1] > 0.6, "{k}: {:?}", f.eye_open);
+        }
+    }
+
+    #[test]
+    fn hand_blobs_drop_a_speck_beside_a_hand() {
+        let blob = |area| Blob { area, ..Default::default() };
+        let areas = |v: Vec<Blob>| v.iter().map(|b| b.area).collect::<Vec<_>>();
+        assert_eq!(areas(hand_blobs(vec![blob(5000), blob(90), blob(70)])), vec![5000]);
+        assert_eq!(areas(hand_blobs(vec![blob(5000), blob(2000), blob(900)])), vec![5000, 2000]);
+        assert_eq!(areas(hand_blobs(vec![blob(400), blob(61)])), vec![400, 61]);
+        assert_eq!(areas(hand_blobs(vec![blob(59)])), Vec::<usize>::new());
     }
 
     #[test]
