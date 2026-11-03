@@ -134,3 +134,22 @@ What holds memory (footprint added by loading, probe, M1 Pro):
 - Release of dropped memory: this macOS's malloc keeps freed memory (after dropping parser and labels: 251 MB "Malloc Small" and 184 MB "Malloc Large", dirty, not reclaimable, per `footprint`) and hands it back only now and then; `malloc_zone_pressure_relief` returned 0 bytes, and neither waiting 8 s nor small, medium or large allocations returned it. It is reused: 10 load/drop cycles moved the high-water mark from 500 to 556 MB instead of adding 440 MB per cycle, and in two runs the footprint later fell to 16-22 MB with the perception backend loaded. So dropping does not lower Activity Monitor's number at once; the rule's 80 % is not met in the probe. Whether FL's footprint falls after the 3 minutes is measured in FL below.
 - Leaks: none found. After 10 cycles everything came back (21 MB with perception loaded). FL with the plugin, 15 s samples: window open 1328 -> 1366 MB over 7 minutes, then 1287-1317 MB for 5 minutes after the window closed; no steady growth.
 - Camera and perception (`engine/camera.rs`, `engine/mod.rs` Demand, `writer.rs`): the camera thread checks every 250 ms what is needed. Everything runs while a plugin window is open; else only what the enabled routes read (`cam0.frame.*` needs the camera, other `cam0.*` perception too; test routes count while Test signal is on). Frames go to perception only while it is needed; the session stops after 10 s without need (camera light off) and starts again when needed; the preview is computed only for an open window; no permission prompt and no camera during a plugin scan. Before, with the window closed and Test signal off, FL ran at a median of 21.7 % CPU (20 samples) and a 3 s `sample` showed the perception thread busy in 434 of 734 samples and the capture queue in 124: work for no route.
+
+### Result in FL (build b1f9706, 11-03, 17:12 to 17:26)
+
+Noa's steps: window open about a minute, a sentence typed and sent, Serum 2 picked, window closed for over 4 minutes with Test signal off, reopened briefly, closed again. From the log and 15 s samples of FL:
+
+| what | when | FL footprint |
+|---|---|---|
+| instance created, window open | 17:12:18 | 1348-1811 MB while the project loaded |
+| perception ready (models in parallel: face 598, seg 1102, hand 2052 ms), first frame | +2.2 s | |
+| parser loaded on the first click into the field, 292 ms; sentence parsed 136 ms | 17:12:50 | |
+| labels and param-sense loaded when Serum 2 was picked, 41 ms (541 labelled) | 17:13:26 | |
+| window closed; camera session stopped 10 s later | 17:14:19 | 1805 -> 1691 MB |
+| labels and param-sense dropped after 180 s | 17:16:26 | 1691 MB (no visible change) |
+| parser dropped after 180 s | 17:17:03 | 1691 -> 1431 -> 1174 MB within 45 s (-517 MB) |
+| window reopened, camera running again; closed, camera stopped after 10 s | 17:21:13 / 17:21:29 | 1373 -> 1262 MB |
+
+- In FL the dropped parser's memory came back to the system within 45 s, unlike in the probe.
+- synthexis's own work with the window closed, from a 3 s `sample` of FL: before 499 busy samples (perception thread 375, capture queue 124, about two thirds of a core); now 0 (no capture queue, the perception thread idle, no parser thread). FL's total `ps %cpu` is no clean measure here: FL's own share moves between 18 and 36 % with the window closed in both sessions.
+- The models loaded in 0.6 to 2.1 s although install.sh kept them; in the probe a kept model loads warm (48 ms). Not settled: either the CoreML cache also depends on the plugin binary, which every build changes, or the parallel loads compete with FL's own project load. Perception is still ready 2.2 s after the instance (11.7 s before this session). The next FL start without a new build tells which.
