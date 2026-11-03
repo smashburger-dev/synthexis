@@ -21,7 +21,7 @@ Hard dates: S3 and S4 recorded 10-30/10-31, training from 11-01 (new Modal credi
 - [x] S3: iPhone via Continuity, landscape, 20-30 degrees to the side and a bit higher, studio or demo light, no glasses, full protocol (Noa, recorded 11-01)
 - [x] S4: other shirt and cap, FaceTime camera, short protocol, held out (Noa, recorded 11-01, same day as S3)
 - [x] Label S3 and S4 in image mode (S3 1.22 $, S4 0.78 $), contact sheets checked
-- [ ] Decide: ignore S2 eye class in the loss (glasses)
+- [x] Decide: ignore S2 eye class in the loss (glasses): ignored (Noa, 2026-11-02)
 - [x] Hand keypoints offline on S1-S4 as targets for `perc.hand`: MediaPipe Hand Landmarker (Apache-2.0, 0 $) on all frames, SAM 3D Body (Modal A10G, 5.36 $) on every second SAM-hand frame, merged into `keypoints_teacher.jsonl`; Apple Vision dropped (Apple terms) ([result](../probes/hand-keypoints/RESULT.md))
 - [x] SAM 3D Body hand keypoints as second teacher (Noa approved 11-02): fills fists, occluded and object-holding hands MediaPipe misses; chirality 99.7-100 %
 - [x] Spark Open freestyle timelines and segment QA (`motion.labels`, Baseten, 5.63 $; [result](../probes/motion-labels/RESULT.md))
