@@ -53,7 +53,7 @@ Chips pin tokens, not routes: since v11 one route can drive several targets (fan
 - Sources are folded like v11's `conventions.py`: a hand.fist chip sets `S:hand.openness`, eye.closed sets `S:eye.open`. INV flips with the fold when the chip replaces another movement and stays as the parser set it when the token already names the same movement.
 - `side:` tokens stay as the parser wrote them; pin.rs does not carry sides over (v11 does that itself, and carrying in pin.rs scored worse).
 - A target chip takes the nearest route with a free `T:` token, one of its own kind first; that token becomes `T:<kind>:` and keeps its value (the CC number, the pattern name) when the parser already chose that kind.
-- A chip nothing takes gets a route of its own; `I:none` then becomes `I:map`.
+- A parameter chip nothing takes joins the nearest route that has a source as one more target (11-03, `probes/pin-hill`); a route of its own would have nothing to drive it. Without such a route, and for any other chip nothing takes, the chip gets a route of its own; `I:none` then becomes `I:map`.
 
 Measured on parser v11 (four seeds, Q8_0, `rules.py conv,pronoun`) over the nine synthetic dev sets of ds-v11c with a simulated user (`probes/completion-v11/RESULT.md`): route_edit 0.776 without chips, 0.683 with the first pin.rs, 0.802 now; above the unpinned frame on every dev set. The gesture list finds 60 % of the gold gesture spans while they are typed (22 % before), with false gesture ghosts on 7.1 % of the other words.
 
