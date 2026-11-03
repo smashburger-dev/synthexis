@@ -22,6 +22,31 @@ use crate::signal::{Sample, SIG_TRIANGLE};
 /// Receives signal frames on the engine's capture/timer threads.
 pub trait SignalSubscriber: Send + Sync {
     fn on_sample(&self, signal_id: &str, sample: &Sample);
+    /// What this subscriber needs running now (its enabled routes).
+    fn needs(&self) -> Demand {
+        Demand::default()
+    }
+}
+
+/// What has to run: the camera (frames, brightness, motion, the preview)
+/// and perception (the models on those frames). Perception implies the
+/// camera.
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+pub struct Demand {
+    pub camera: bool,
+    pub perception: bool,
+}
+
+impl Demand {
+    /// What a route reading `signal` needs.
+    pub fn of_signal(signal: &str) -> Demand {
+        let camera = signal.starts_with("cam0.");
+        Demand { camera, perception: camera && !signal.starts_with("cam0.frame.") }
+    }
+
+    pub fn or(self, o: Demand) -> Demand {
+        Demand { camera: self.camera || o.camera, perception: self.perception || o.perception }
+    }
 }
 
 static ENGINE: OnceLock<Engine> = OnceLock::new();
@@ -38,6 +63,16 @@ impl Engine {
         let e = engine();
         e.subscribers.lock().push(Arc::downgrade(sub));
         e
+    }
+
+    /// What has to run: everything while a plugin window is open, else
+    /// what the enabled routes of the live instances read.
+    pub fn demand(&self) -> Demand {
+        if crate::editor::OPEN_EDITORS.load(std::sync::atomic::Ordering::Acquire) > 0 {
+            return Demand { camera: true, perception: true };
+        }
+        let subs: Vec<_> = self.subscribers.lock().iter().filter_map(Weak::upgrade).collect();
+        subs.iter().fold(Demand::default(), |d, s| d.or(s.needs()))
     }
 
     /// Fan a sample out to every live subscriber.
@@ -113,5 +148,23 @@ pub fn host_time_ns() -> u64 {
     unsafe {
         (objc2_core_media::CMClock::host_time_clock().time().seconds() * 1e9)
             .max(0.0) as u64
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::Demand;
+
+    #[test]
+    fn a_route_needs_what_its_signal_comes_from() {
+        let (none, cam, both) = (
+            Demand::default(),
+            Demand { camera: true, perception: false },
+            Demand { camera: true, perception: true },
+        );
+        assert_eq!(Demand::of_signal("test.triangle"), none);
+        assert_eq!(Demand::of_signal("cam0.frame.brightness"), cam);
+        assert_eq!(Demand::of_signal("cam0.hand.R.openness"), both);
+        assert_eq!(cam.or(Demand::of_signal("cam0.mouth.open")), both);
     }
 }

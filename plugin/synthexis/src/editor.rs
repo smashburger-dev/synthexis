@@ -9,7 +9,7 @@
 //! v0.2.1 fix).
 
 use std::any::Any;
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -24,7 +24,9 @@ use crate::params::{HandRole, SynthexisParams};
 use crate::sentence::Sentence;
 use crate::settings;
 
-pub static EDITOR_OPEN: AtomicBool = AtomicBool::new(false);
+/// Open plugin windows over all instances; the camera and perception run
+/// while one is open (engine::demand).
+pub static OPEN_EDITORS: AtomicUsize = AtomicUsize::new(0);
 
 const PREVIEW: [usize; 2] = [320, 180];
 /// The frosted preview: one pixel per FROST x FROST block, drawn back at
@@ -50,7 +52,7 @@ struct EditorHandle {
 
 impl Drop for EditorHandle {
     fn drop(&mut self) {
-        EDITOR_OPEN.store(false, Ordering::Release);
+        OPEN_EDITORS.fetch_sub(1, Ordering::AcqRel);
     }
 }
 
@@ -60,7 +62,7 @@ struct Wrap {
 
 impl Editor for Wrap {
     fn spawn(&self, p: ParentWindowHandle, c: Arc<dyn GuiContext>) -> Box<dyn Any + Send> {
-        EDITOR_OPEN.store(true, Ordering::Release);
+        OPEN_EDITORS.fetch_add(1, Ordering::AcqRel);
         Box::new(EditorHandle { _inner: self.inner.spawn(p, c) })
     }
     fn size(&self) -> (u32, u32) { self.inner.size() }

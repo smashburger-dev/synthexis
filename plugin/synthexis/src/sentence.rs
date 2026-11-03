@@ -33,9 +33,11 @@
 //!
 //! Completion data: $SYNTHEXIS_COMPLETION_DIR, else
 //! ~/Library/Application Support/synthexis/completion, as
-//! tools/mapping/export_completion.py writes it. Loaded on its own thread,
-//! the vocabulary first (typing needs only it, about 10 ms), then the
-//! labels and param-sense the picker classifies with (about 110 ms);
+//! tools/mapping/export_completion.py writes it. The vocabulary loads on
+//! its own thread (about 10 ms); the labels and param-sense the picker
+//! classifies with are shared by all instances and load on first need
+//! (sense::shared). Using the field keeps the parser loaded
+//! (assistant::warm);
 //! queries run on the GUI thread (about 2 ms per keystroke for a plugin of
 //! 2,600 parameters), never on the audio thread.
 
@@ -69,11 +71,19 @@ const ROW_H: f32 = 22.0;
 const PICK_ROW_H: f32 = 26.0;
 const PICKER_H: f32 = 420.0;
 
-/// What the loader thread sends, in this order.
-enum Loaded {
-    Vocab(Result<(Engine, Vec<PluginInfo>), String>),
-    /// Labels of the mapped plugins and param-sense, with notes on what is missing.
-    Labels(sense::Classes, Vec<String>),
+type Loaded = Result<(Engine, Vec<PluginInfo>), String>;
+
+/// While the field has the focus, the parser is asked to stay loaded this
+/// often (assistant.rs drops it after 3 minutes unused).
+const WARM_EVERY: std::time::Duration = std::time::Duration::from_secs(30);
+
+/// Where the picker's classes come from.
+enum Labels {
+    /// sense::shared, loaded on first need.
+    Shared,
+    /// Fixed classes (tests).
+    #[cfg(test)]
+    Fixed(std::sync::Arc<sense::Classes>),
 }
 
 pub struct Sentence {
@@ -83,10 +93,12 @@ pub struct Sentence {
     exported: Vec<PluginInfo>,
     classes: HashMap<String, HashMap<String, String>>,
     /// Labels of the mapped plugins and param-sense, and their result per target.
-    labels: sense::Classes,
+    labels: Labels,
     classified: HashMap<fl::Key, Vec<Param>>,
-    /// Open until the labels arrived; no target is classified before.
     loader: Option<Receiver<Loaded>>,
+    /// Ask the parser to load while the field is used (off in tests).
+    warm_parser: bool,
+    last_warm: Option<std::time::Instant>,
     status: Status,
     bridge: Option<&'static fl::Bridge>,
     seen: u64,
@@ -180,14 +192,14 @@ fn link_text(link: &Link, t: &Text) -> Option<String> {
 
 /// The completion vocabulary as the loader thread reads it (also the
 /// load-time probe's completion part).
-pub fn load_vocab() -> Result<(Engine, Vec<PluginInfo>), String> {
+pub fn load_vocab() -> Loaded {
     let t0 = std::time::Instant::now();
     let res = data::load(&data_dir());
     log(&format!("completion: vocab loaded in {:.0} ms", t0.elapsed().as_secs_f64() * 1e3));
     res
 }
 
-/// Labels and param-sense as the loader thread reads them (also the probe's).
+/// Labels and param-sense as sense::shared reads them, for the probes.
 pub fn load_labels() -> (sense::Classes, Vec<String>) {
     let t0 = std::time::Instant::now();
     let out = sense::Classes::load(&data_dir());
@@ -311,14 +323,11 @@ fn hint(s: &Suggestion, t: &Text) -> String {
 impl Sentence {
     /// `bridge`: None runs without FL (tests).
     pub fn new(bridge: Option<&'static fl::Bridge>) -> Self {
-        let (tx, rx) = bounded(2);
+        let (tx, rx) = bounded(1);
         let spawned = std::thread::Builder::new()
             .name("synthexis-completion".into())
             .spawn(move || {
-                if tx.send(Loaded::Vocab(load_vocab())).is_ok() {
-                    let (labels, notes) = load_labels();
-                    let _ = tx.send(Loaded::Labels(labels, notes));
-                }
+                let _ = tx.send(load_vocab());
             });
         let status = match spawned {
             Ok(_) => Status::Loading,
@@ -329,9 +338,11 @@ impl Sentence {
             engine: None,
             exported: Vec::new(),
             classes: HashMap::new(),
-            labels: sense::Classes::default(),
+            labels: Labels::Shared,
             classified: HashMap::new(),
             loader: Some(rx),
+            warm_parser: bridge.is_some(),
+            last_warm: None,
             status,
             bridge,
             seen: u64::MAX,
@@ -359,27 +370,32 @@ impl Sentence {
     }
 
     fn poll_loader(&mut self) {
-        while let Some(rx) = &self.loader {
-            match rx.try_recv() {
-                Ok(Loaded::Vocab(Ok((engine, plugins)))) => {
-                    self.engine = Some(engine);
-                    self.exported = plugins;
-                    self.status = Status::Ready;
-                }
-                Ok(Loaded::Vocab(Err(e))) => {
-                    log(&format!("completion: {e}"));
-                    self.status = Status::NoData(e);
-                }
-                Ok(Loaded::Labels(labels, notes)) => {
-                    self.labels = labels;
-                    for n in notes {
-                        log(&format!("completion: classes: {n}"));
-                    }
-                    self.loader = None;
-                }
-                Err(crossbeam_channel::TryRecvError::Empty) => return,
-                Err(crossbeam_channel::TryRecvError::Disconnected) => self.loader = None,
+        let Some(rx) = &self.loader else { return };
+        let res = match rx.try_recv() {
+            Ok(res) => res,
+            Err(crossbeam_channel::TryRecvError::Empty) => return,
+            Err(crossbeam_channel::TryRecvError::Disconnected) => Err("completion loader stopped".into()),
+        };
+        self.loader = None;
+        match res {
+            Ok((engine, plugins)) => {
+                self.engine = Some(engine);
+                self.exported = plugins;
+                self.status = Status::Ready;
             }
+            Err(e) => {
+                log(&format!("completion: {e}"));
+                self.status = Status::NoData(e);
+            }
+        }
+    }
+
+    /// The picker's classes, None while the shared ones still load.
+    fn labels(&self) -> Option<std::sync::Arc<sense::Classes>> {
+        match &self.labels {
+            Labels::Shared => sense::shared(&data_dir()),
+            #[cfg(test)]
+            Labels::Fixed(c) => Some(c.clone()),
         }
     }
 
@@ -433,8 +449,7 @@ impl Sentence {
             }
         }
         let Some(want) = self.want.clone() else { return };
-        // classes need the labels, which arrive after the vocabulary
-        if self.applied.as_ref() == Some(&want) || self.engine.is_none() || self.loader.is_some() {
+        if self.applied.as_ref() == Some(&want) || self.engine.is_none() {
             return;
         }
         let Some((k, res)) = self.got.clone() else { return };
@@ -444,10 +459,12 @@ impl Sentence {
         match res {
             Ok(names) => {
                 if !self.classified.contains_key(&want) {
+                    // the shared labels load on first need: try again next frame
+                    let Some(labels) = self.labels() else { return };
                     let exported = self.classes_of(&want.plugin).clone();
                     let t0 = std::time::Instant::now();
                     let list: Vec<String> = names.iter().map(|(_, n)| n.clone()).collect();
-                    let (classes, src) = self.labels.of(&want.plugin, &list, &exported);
+                    let (classes, src) = labels.of(&want.plugin, &list, &exported);
                     log(&format!(
                         "picker: classes for {}: {} labelled, {} by param-sense, {:.1} ms",
                         want.label(),
@@ -721,6 +738,10 @@ impl Sentence {
         self.picker(ui, pin, t);
 
         let has_focus = ui.memory(|m| m.has_focus(id));
+        if has_focus && self.warm_parser && self.last_warm.is_none_or(|t| t.elapsed() >= WARM_EVERY) {
+            assistant::warm();
+            self.last_warm = Some(std::time::Instant::now());
+        }
         let active = enabled && has_focus && !self.sugg.is_empty();
         let at_end = self.cursor == self.doc.text.len();
         let ghost = active
@@ -1117,6 +1138,7 @@ mod tests {
             let mut s = Sentence::new(None);
             s.loader = None;
             s.engine = Some(engine());
+            s.labels = Labels::Fixed(std::sync::Arc::new(sense::Classes::default()));
             let mut h = Self { ctx: egui::Context::default(), s, picked: RwLock::new(String::new()), lang, out: None };
             h.frame(vec![]);
             let id = h.s.id;

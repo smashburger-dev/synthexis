@@ -66,6 +66,73 @@ pub fn load_probe() -> i32 {
     i32::from(!parts.iter().all(|(_, (ok, _))| *ok))
 }
 
+/// This process's physical footprint in MB, what Activity Monitor shows
+/// as its memory (mem_probe).
+#[allow(unsafe_code)]
+fn footprint_mb() -> f64 {
+    /// struct rusage_info_v0 of <sys/resource.h>.
+    #[repr(C)]
+    struct RusageInfoV0 {
+        uuid: [u8; 16],
+        user_time: u64,
+        system_time: u64,
+        pkg_idle_wkups: u64,
+        interrupt_wkups: u64,
+        pageins: u64,
+        wired_size: u64,
+        resident_size: u64,
+        phys_footprint: u64,
+        proc_start_abstime: u64,
+        proc_exit_abstime: u64,
+    }
+    extern "C" {
+        fn proc_pid_rusage(pid: i32, flavor: i32, buffer: *mut RusageInfoV0) -> i32;
+    }
+    let mut info = std::mem::MaybeUninit::<RusageInfoV0>::zeroed();
+    // SAFETY: flavor 0 (RUSAGE_INFO_V0) writes exactly one rusage_info_v0
+    // into the buffer; on failure it stays zeroed.
+    let info = unsafe {
+        proc_pid_rusage(std::process::id() as i32, 0, info.as_mut_ptr());
+        info.assume_init()
+    };
+    info.phys_footprint as f64 / 1_048_576.0
+}
+
+/// Memory probe (probes/plugin-settings, section 5): the footprint before,
+/// with and after each on-demand part, for `cycles` load/drop cycles, one
+/// JSON line per cycle; then the perception backend once.
+pub fn mem_probe(cycles: usize) -> i32 {
+    // the allocator hands freed memory back to the system only now and
+    // then (RESULT.md, section 5): optionally wait before each reading
+    let settle = std::env::var("SYNTHEXIS_MEMPROBE_SETTLE_MS").ok().and_then(|v| v.parse().ok()).unwrap_or(0);
+    let mb = || {
+        std::thread::sleep(std::time::Duration::from_millis(settle));
+        (footprint_mb() * 10.0).round() / 10.0
+    };
+    println!("{}", serde_json::json!({"base_mb": mb()}));
+    for cycle in 1..=cycles {
+        let t0 = std::time::Instant::now();
+        let parser = assistant::load();
+        let parser_ms = t0.elapsed().as_millis();
+        let with_parser = mb();
+        drop(parser);
+        let no_parser = mb();
+        let t0 = std::time::Instant::now();
+        let labels = sentence::load_labels();
+        let labels_ms = t0.elapsed().as_millis();
+        let with_labels = mb();
+        drop(labels);
+        println!(
+            "{}",
+            serde_json::json!({"cycle": cycle, "parser_ms": parser_ms, "with_parser_mb": with_parser, "after_parser_mb": no_parser,
+                "labels_ms": labels_ms, "with_labels_mb": with_labels, "after_labels_mb": mb()})
+        );
+    }
+    let backend = engine::perception::load_backend();
+    println!("{}", serde_json::json!({"with_perception_mb": mb()}));
+    i32::from(backend.is_none())
+}
+
 pub struct Synthexis {
     params: Arc<SynthexisParams>,
     writer: Arc<Writer>,
@@ -132,11 +199,11 @@ impl Plugin for Synthexis {
         _buffer_config: &BufferConfig,
         _context: &mut impl InitContext<Self>,
     ) -> bool {
-        // Not called during plugin scans; loads the parser and the
-        // perception models in the background (the models no longer wait
-        // for the first camera frame) and opens the FL bridge, so focus is
-        // tracked with the editor closed.
-        assistant::start();
+        // Not called during plugin scans; loads the perception models in
+        // the background (about 15 MB, kept so perception resumes at once;
+        // they no longer wait for the first camera frame) and opens the FL
+        // bridge, so focus is tracked with the editor closed. The parser
+        // loads when the sentence field is used (assistant.rs).
         engine::perception::start();
         fl::bridge();
         true

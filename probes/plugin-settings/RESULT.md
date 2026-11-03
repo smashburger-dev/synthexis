@@ -104,3 +104,33 @@ FL, before (log of build 3e40316, instance at 0 s): first camera frame 1.6 s, mo
 ## 4. The "frames" counter
 
 `EngineShared::frame_count` (`engine/camera.rs`) counts every frame the camera delegate receives, process-wide, about 30 a second, since the first synthexis instance started the camera; the 5-second engine log line prints it too. Nothing records: the frames go to brightness/motion, the preview and the perception thread and are dropped. `diag` was never written. Now: the main view says "Camera on · 30 fps", "Camera starting", "Waiting for camera permission", "No camera access. Allow it in …" or "The camera sends no picture (in use by another app?)" (no frame for 2 s); the overlay's diagnostics show permission, fps, frames received and dropped, and the capture-to-callback delay.
+
+FL, after (first FL session with this build, models cold because install.sh compiled them once more with their fingerprint): face, seg and hand loaded in parallel in 563, 976 and 2357 ms; backend ready 2.4 s after the instance was created, the first frame went through the models right after it (`wait=0.31 ms`; the first Apple Vision face result took 1.76 s more). Before: 11.7 s.
+
+## 5. Memory and idle work (Noa, 11-03, later)
+
+Noa: what is only needed now and then (the parser, param-sense) should not hold memory while the routes are set and he only plays, switches profiles or tweaks; work the open window needs should stop while it is closed; everything that is needed must still be ready in time ("warm"); and memory leaks fixed where they can happen.
+
+### Rule (written before the run)
+
+Memory per part: the probe process's `phys_footprint` (proc_pid_rusage) before loading, after loading and after dropping each part, in a fresh process (`SYNTHEXIS_MEMPROBE`). A part is released when dropping it returns at least 80 % of what loading added.
+
+- Parser: loads when the sentence field is used (focus or first keystroke), drops after 3 minutes without use. Kept when (a) the idle plugin holds no parser, (b) a sentence sent before the parser finished loading is parsed, not lost (test), and (c) from the first keystroke the parser is ready within the time it takes to type a short sentence: loading median under 1 s in the probe.
+- Labels and param-sense: load when a picked plugin needs classes, shared by all instances, dropped after 3 minutes without use; the same three conditions, (c) within 1 s.
+- Camera and perception: perception only runs on frames while something needs it (an open plugin window, or an enabled route reading a camera signal), with the models kept loaded; the camera session stops after 10 s without any need and starts again when needed. Kept when FL's CPU with the window closed and Test signal off drops (median of 20 samples of `ps %cpu` at 15 s, before and after) and a reopened window shows the camera again.
+- Leaks: loading and dropping the parser and the labels 10 times in one process may not grow the footprint by more than 5 % over the first cycle; FL's footprint, sampled every 15 s for 10 minutes with the window open and closed, may not grow steadily.
+
+### Result (probe; FL after the install below)
+
+What holds memory (footprint added by loading, probe, M1 Pro):
+
+| part | memory | load | before | now |
+|---|---|---|---|---|
+| parser (4 runs, Q8_0) | 370-380 MB | 170-290 ms | loaded at `initialize()`, kept for the process | loads when the sentence field gets the focus (and every 30 s while it has it), dropped after 3 min without use; a sentence sent while it loads waits and is parsed (test) |
+| labels + param-sense | 98 MB, loaded per instance | 120 ms | per instance, kept | one copy for all instances, loaded when a picked plugin needs classes, dropped after 3 min unused; embedding table kept as f16 through a lookup table: 68 MB, 24-34 ms; classifying 2,600 names 19 ms (f32: 17-21 ms) |
+| completion vocabulary | a few MB | 7 ms | per instance | unchanged |
+| perception models | about 15 MB | 42 ms warm | kept | kept, so perception resumes at once |
+
+- Release of dropped memory: this macOS's malloc keeps freed memory (after dropping parser and labels: 251 MB "Malloc Small" and 184 MB "Malloc Large", dirty, not reclaimable, per `footprint`) and hands it back only now and then; `malloc_zone_pressure_relief` returned 0 bytes, and neither waiting 8 s nor small, medium or large allocations returned it. It is reused: 10 load/drop cycles moved the high-water mark from 500 to 556 MB instead of adding 440 MB per cycle, and in two runs the footprint later fell to 16-22 MB with the perception backend loaded. So dropping does not lower Activity Monitor's number at once; the rule's 80 % is not met in the probe. Whether FL's footprint falls after the 3 minutes is measured in FL below.
+- Leaks: none found. After 10 cycles everything came back (21 MB with perception loaded). FL with the plugin, 15 s samples: window open 1328 -> 1366 MB over 7 minutes, then 1287-1317 MB for 5 minutes after the window closed; no steady growth.
+- Camera and perception (`engine/camera.rs`, `engine/mod.rs` Demand, `writer.rs`): the camera thread checks every 250 ms what is needed. Everything runs while a plugin window is open; else only what the enabled routes read (`cam0.frame.*` needs the camera, other `cam0.*` perception too; test routes count while Test signal is on). Frames go to perception only while it is needed; the session stops after 10 s without need (camera light off) and starts again when needed; the preview is computed only for an open window; no permission prompt and no camera during a plugin scan. Before, with the window closed and Test signal off, FL ran at a median of 21.7 % CPU (20 samples) and a 3 s `sample` showed the perception thread busy in 434 of 734 samples and the capture queue in 124: work for no route.
