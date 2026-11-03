@@ -127,6 +127,20 @@ impl Query {
     pub fn is_prefix(&self, key: &Key) -> bool {
         key.chars.starts_with(&self.chars)
     }
+
+    /// Every typed word sits inside one word of the key, starting at its
+    /// start, and the typed words take the key's words in order: "Filter
+    /// au" fits "Filter aufmachen", "res" does not fit "Bend Regler vom
+    /// Synth" (r, e in one word, s in another).
+    pub fn word_aligned(&self, key: &Key) -> bool {
+        let mut words = key.chars.split(|&c| c == ' ');
+        self.chars.split(|&c| c == ' ').all(|q| {
+            words.any(|w| w.first() == q.first() && {
+                let mut rest = w.iter();
+                q.iter().all(|c| rest.any(|x| x == c))
+            })
+        })
+    }
 }
 
 #[cfg(test)]
@@ -173,6 +187,16 @@ mod tests {
         let b = s("Filter au", "Filter 1 Freq");
         assert!(a >= 1.0);
         assert_eq!(b, None);
+    }
+
+    #[test]
+    fn word_aligned_keeps_typed_words_inside_key_words() {
+        let a = |q: &str, k: &str| Query::new(q).word_aligned(&Key::new(k));
+        assert!(a("Filter au", "Filter aufmachen"));
+        assert!(a("frq", "Freq Filter"));
+        assert!(a("cut", "the Cutoff"));
+        assert!(!a("res", "Bend Regler vom Synth"));
+        assert!(!a("au Filter", "Filter aufmachen"));
     }
 
     #[test]

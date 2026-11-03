@@ -5,15 +5,19 @@ Noa's idea from 2026-11-01: while the user types a mapping sentence, the field c
 ## What it does
 
 - Ghost text after the cursor shows the best item. Tab accepts it. It only appears from 2 typed characters, when the typed text is a prefix of the label or of the glossary phrase that led to it, and when the score is at least 0.8. A fuzzy match ("frq") never shows as ghost text, only in the list.
-- Arrow down opens the top 3 by score; arrows move, Enter or Tab picks, Esc closes. The list opens in 150 ms with a cubic ease-out. Space never accepts.
-- An accepted item becomes a chip: its label goes into the text with a background, and the chip carries an id (`param:<plugin id>#<index>` or `gesture:<source>[/<shape>]`). Typing inside a chip turns it back into text; a backspace into a chip removes the whole chip.
-- Enter with the list closed sends the sentence and its chips to the parser worker. The log shows the parser's frame and the pinned frame.
+- From 2 typed characters, when there are at least two items, a list of up to 8 opens below the field on its own (Noa, 11-03: show lower-scored alternatives too). Its first row is the ghost item. Five rows are visible and the list scrolls, with a thin bar for the position. Arrows move, Tab picks the selected row, Esc closes, arrow down reopens it. Enter picks only after an arrow key; without one Enter sends the sentence, so a finished sentence never turns into a chip. The list opens in 150 ms with a cubic ease-out; the selection and the scroll glide in 80 ms. Space never accepts.
+- At most 3 rows of one kind (a parameter class or a gesture source) come before the other kinds; the rest follow in score order. On Serum 2 "the vol" listed seven send levels before; now it lists Amp and two sends, then Filter Wet and Env Sustain. A top 3 never changes, so the measured ghost and list numbers below still hold for the first three rows.
+- An accepted item becomes a chip: its label goes into the text with a background, and the chip carries an id (`param:<plugin id>#<index>`, `gesture:<source>[/<shape>]` or `target:<kind>`). Typing inside a chip turns it back into text; a backspace into a chip removes the whole chip.
+- Enter with no row chosen by an arrow key sends the sentence and its chips to the parser worker. The log shows the parser's frame and the pinned frame.
 - Settings > "Completion in the sentence field" switches it off; the choice is saved with the plugin state, as is the picked plugin.
 
-Two kinds of items:
+Three kinds of items:
 
 1. Parameters of the picked plugin, matched by their name and through the glossary phrases of their param-sense class: "cut" offers "Filter 1 Freq" through "Cutoff", "Filter auf" through "Filter aufmachen". A ctl.switch parameter becomes a toggle target, any other a param target.
-2. Gestures from the glossary phrases of the ontology sources and hand shapes ("spr" offers "spread amount", "Fau" offers "Faust"). Only where a gesture is named: sentence start, or after "when I", "if I", "wenn ich", "sobald ich", "with", "mit", "by", "follow" and similar, articles skipped ("wenn ich die Fau"). Query spans never start with an article or a trigger word, so "the res" at sentence start is the query "res" and offers parameters, not gestures.
+2. Gestures from the glossary phrases of the ontology sources and hand shapes ("spr" offers "spread amount", "Fau" offers "Faust"). Only where a gesture is named. Strong positions (list and ghost text): sentence start, or after "when I", "if I", "wenn ich", "sobald ich", "with", "mit", "by", "follow" and similar, articles and side words skipped ("wenn ich die linke Fau"). Weak positions (list only, never ghost text): after a possessive ("i want my mou") and after "and", "und", "then", "dann", "indem ich", "dass ich" ("pinch und dre"). Query spans never start with an article, a side word or a trigger word, so "the res" at sentence start is the query "res" and offers parameters, not gestures.
+3. Targets that are no plugin parameter (11-03): MIDI note, chord, pattern, CC and the macros, from the glossary's target phrases of up to 3 words (171 phrases: "Akk" offers "Akkord spielen", "the pat" offers "Pattern Slot", "CC" offers "CC 21"). One row per kind, in the list only, never as ghost text, 0.1 below their match; when one would sit in the first row while a later item could be ghost text, that item moves up, so the ghost text is the same as without targets. MIDI generator properties (`midi.prop`, pinned with their property: `T:midi.prop:arp.rate`) and the XY pad get 44 phrases harvested from the training spans of ds-v11c (seen at least 3 times, at least 80 % on that target, up to 3 words, no ids, no one-letter typo variants), 11-03.
+
+Parameters of the catch-all classes `other`, `system` and `unsafe` complete by name only (11-03): their glossary phrases ("the gap before the reverb starts" in `other`) used to offer every parameter of the class, so "res" on Serum 2 listed Swing and A Phase. Measured in `probes/completion-targets/RESULT.md`.
 
 ## Where the code is
 
@@ -24,34 +28,46 @@ Two kinds of items:
 | Field | `plugin/synthexis/src/sentence.rs`, placed in `editor.rs`; settings in `params.rs` |
 | Pinning | `plugin/parser/src/pin.rs`, called in `plugin/synthexis/src/assistant.rs` after decoding |
 
-The plugin reads the data from `$SYNTHEXIS_COMPLETION_DIR`, else `~/Library/Application Support/synthexis/completion` (copy `data/mapping/completion/` there; install.sh does not do it yet, same as for the parser runs). Without data the field still works as a plain sentence line.
+The plugin reads the data from `$SYNTHEXIS_COMPLETION_DIR`, else `~/Library/Application Support/synthexis/completion` (`plugin/install.sh` ends with `plugin/assistant/install.sh`, which links `data/mapping/completion/` and the parser runs in `data/mapping/runtime/` there in a checkout with `data/`, else copies the tracked completion data and downloads the parser release; `SYNTHEXIS_DATA` points it at another `data/`). Without data the field still works as a plain sentence line.
 
 ## Engine
 
 - Index: every word start of every key (phrase or parameter name), folded (lowercase, ß as ss, punctuation as space) and sorted. Words that share a prefix form one range, found by binary search; this is a trie flattened into an array. A keystroke scores only the keys that have a word starting with the query's first letter.
 - Score, after VS Code's fuzzyScore: the query's letters in order, the first one at a word start. Bonuses for the key start (8), a word start (5) and a letter right after the previous match (5); a jump over skipped letters costs 3. Divided by the query's score against itself, so a prefix match is 1.0, plus up to 0.05 for short keys.
 - The query is the last 1, 2 or 3 words before the cursor inside the clause and after the last chip; the best span wins ("Filter au" as two words).
+- Phrase keys of parameter classes match word by word: each typed word inside one phrase word from its start, in order ("res" no longer reaches "Bend Regler vom Synth"); parameter names keep the full fuzzy match.
+- Span prior: for the typed query, the share of the ds-v11c training spans starting with it that named each class (or target); an item gains 0.2 times its class's share. 5,192 (text, class, count) rows in vocab.json; a lookup is a binary search over the sorted texts.
 - Rank = match + class prior (up to 0.05, log of the label count over all harvested plugins) + recent picks (up to 0.1, last 32 picks) + context: a switching word in the clause ("schalte", "toggle", "an", "aus", "bypass") lifts switch parameters by 0.15, else they lose 0.05; system and unsafe parameters lose 0.2; a gesture in gesture position gains 0.05; a glossary-phrase match counts 0.85 of a name match.
-- Speed (release build, M1 Pro, Serum 2 with 2,622 parameters, 2,682 gesture phrases, 2,079 class phrases): data load 10 to 13 ms on its own thread, keystroke 1.7 ms median, 2.9 ms p95, 3.2 ms max over 103 keystrokes. The unit test at the same sizes asserts p95 under 25 ms unoptimised. It runs on the GUI thread, never on the audio thread, and never calls the neural parser.
+- Speed (release build, M1 Pro, Serum 2 with 2,622 parameters, 2,682 gesture phrases, 2,079 class phrases): data load 10 to 13 ms on its own thread, keystroke 1.7 ms median, 2.9 ms p95, 3.2 ms max over 103 keystrokes; since the word-aligned phrases (11-03) 0.36 ms median, 0.89 ms p95 over 36 keystrokes. The unit test at the same sizes asserts p95 under 25 ms unoptimised. It runs on the GUI thread, never on the audio thread, and never calls the neural parser.
 
 ## Pinning
 
 `synthexis_parser::pin(items, pins)` takes the decoded frame and the chips as byte ranges of the submitted sentence:
 
-- A parameter chip goes to the route whose PNAME span overlaps it, else to the route whose target has the chip's class, else to the only route with a param or toggle target when one chip is left. That route's target becomes `T:param:<class>` (`T:toggle:` for a switch, keeping the parser's effect family if it chose a toggle) and the route carries the parameter id, printed as `@<id>` after the target.
-- A gesture chip goes to the route that already has its source; the rest go in sentence order when there are as many free routes as gesture chips, else each to the free route nearest to it (by its spans and pinned parameter). The route's `S:` becomes the chip's source; a shape chip also sets `shape:`.
-- A chip no route takes gets a route of its own; `I:none` then becomes `I:map`.
+Chips pin tokens, not routes: since v11 one route can drive several targets (fan-out, "resonance and cutoff") and listen to several sources (fan-in, "smile and move my left hand").
+
+- A parameter chip takes the free target next to the PNAME span that overlaps it, else a free target of its class (any toggle for a switch), else the only free param or toggle target when one chip is left. That target becomes `T:param:<class>` (`T:toggle:` for a switch, keeping the parser's effect family if it chose a toggle) and carries the parameter id, printed as `@<id>` after it. A lone parameter name (v11's `T:param:macro` or `T:param:other` with `PNAME`) goes by the PNAME rule.
+- A gesture chip takes the free `S:` token that already names its movement; the rest go in sentence order when there are as many free `S:` tokens as chips, else each to the nearest route with a free `S:` token (a route without any `S:` has one slot). The token becomes the chip's source; a shape chip also sets the `shape:` of that token.
+- Sources are folded like v11's `conventions.py`: a hand.fist chip sets `S:hand.openness`, eye.closed sets `S:eye.open`. INV flips with the fold when the chip replaces another movement and stays as the parser set it when the token already names the same movement.
+- `side:` tokens stay as the parser wrote them; pin.rs does not carry sides over (v11 does that itself, and carrying in pin.rs scored worse).
+- A target chip takes the nearest route with a free `T:` token, one of its own kind first; that token becomes `T:<kind>:` and keeps its value (the CC number, the pattern name) when the parser already chose that kind.
+- A chip nothing takes gets a route of its own; `I:none` then becomes `I:map`.
+
+Measured on parser v11 (four seeds, Q8_0, `rules.py conv,pronoun`) over the nine synthetic dev sets of ds-v11c with a simulated user (`probes/completion-v11/RESULT.md`): route_edit 0.776 without chips, 0.683 with the first pin.rs, 0.802 now; above the unpinned frame on every dev set. The gesture list finds 60 % of the gold gesture spans while they are typed (22 % before), with false gesture ghosts on 7.1 % of the other words.
 
 Checked with the shipped v9 ensemble on four synthetic sentences (`plugin/parser/tests/pin_live.rs`, runs when `SYNTHEXIS_PARSER_DIR` is set): every parameter chip lands in a route, including where the parser chose the wrong class (`fx.eq.freq` for "Filter 1 Freq") or left the target out (only `PNAME =filter 1`).
 
 ## Tests
 
-- `plugin/complete`: 31 tests on synthetic vocabularies and sentences (never the real sets in `data/mapping/eval/`): fuzzy score, prefix index, query spans, gesture positions, switching words, ranking, recent picks, chip text edits, latency.
-- `plugin/parser/src/pin.rs`: 13 tests on hand-built frames.
-- `plugin/synthexis/src/sentence.rs`: 5 headless egui tests that send key events through the field: Tab accepts and keeps the focus, arrows and Enter pick from the list, Esc dismisses, space never accepts, Tab with nothing to accept inserts nothing, chips become pins.
+- `plugin/complete`: 38 tests on synthetic vocabularies and sentences (never the real sets in `data/mapping/eval/`): fuzzy score, prefix index, query spans, gesture positions, switching words, ranking, recent picks, chip text edits, latency, catch-all classes, target items, word-aligned phrases, span prior.
+- `plugin/parser/src/pin.rs`: 22 tests on hand-built frames (fan-out, fan-in, fold, side kept, target chips).
+- `plugin/synthexis/src/sentence.rs`: 7 headless egui tests that send key events through the field: Tab accepts and keeps the focus, arrows and Enter pick from the list, the list opens while typing and Enter without an arrow key still sends, the list scrolls past five rows, Esc dismisses, space never accepts, Tab with nothing to accept inserts nothing, chips become pins.
 - Checked by hand in the standalone build: plugin picker, ghost text, the list, chips. Esc and the second Tab fix were checked only by the headless tests: the window sat on another Space for the second round.
 
 ## Open
+
+- Done 2026-11-02: the Rust runtime runs the v11 four-seed ensemble in Q8_0 with `conv,pronoun` (session parser-runtime, merged here). pin.rs runs on the frame after these rules, so chips and rules agree; live check on four synthetic sentences in `plugin/parser/tests/pin_live.rs`.
+- Gesture ghost text finds only 4.4 % of the gesture spans on the dev sets: the glossary phrases rarely start with the words the sentences use ("nach links drehen" against "Hand drehen"). Phrases indexed from the middle, or ghost text on fuzzy matches, would raise it; both need a measurement first.
 
 - Learning from picks: recent picks only add a fixed bonus that decays by position. A per-user count of (typed prefix, picked id), saved with the plugin state, would let "cut" rank "Filter 1 Freq" over "Cutoff Rand" after a few picks. Weights are hand-set on synthetic sentences; nothing is tuned on Noa's sentences.
 - Plugin picker: lists the plugins of the open FL project ("Portal, Master slot 1", "Serum 2, Channel 1"), follows the plugin window last clicked in FL, keeps the last plugin when a mixer or channel rack window takes the focus, never lists or follows synthexis, and pins on a pick or "Pin" (`plugin/synthexis/src/fl.rs`, `sentence.rs`). The plugin opens the virtual MIDI ports of the probe bridge itself and talks to `plugin/fl/device_synthexis_bridge.py` (protocol 3); parameter names come from FL when a target is picked, classes from the exported plugin of the same name, else from the labels of the 887 mapped plugins (`known.tsv`), else from param-sense in Rust (`plugin/synthexis/src/sense.rs`, ps-v1, top-1 0.728 on unseen vendors), so "cutoff" finds "Filter 1 Freq" in every plugin, not only the 10 exported ones. A mixer track with two or more plugins folds into a group (Sound above FX). Tested end to end over CoreMIDI against the real script with fake FL modules (`plugin/fl/test/`), with headless click tests of the list, and in FL with Noa (follow, pin, 7 plugins).
@@ -59,5 +75,7 @@ Checked with the shipped v9 ensemble on four synthetic sentences (`plugin/parser
 - Phrases with negative polarity ("Finger zusammen", "Hand öffnen") pin their source without setting INV; the parser still reads the words and decides.
 - A gesture chip that is meant as a gate ("only while I make a fist") is pinned as the route's source.
 - Values and tracks get no completion yet (VALUE, TRACK, PLUGIN spans).
+- Fuzzy matches inside one word of a class phrase still bring in other classes ("res" offers Env Release through "Release"): 12 % of the shown rows while typing a parameter are such rows of another class (21 % before 11-03).
+- The span prior is learned from synthetic training sentences; how much it helps with Noa's own wording is not measured.
 - Ghost text shows only when the cursor is at the end of the line; mid-line edits use the list.
 - Visuals are plain egui: chip background from the selection colour, ghost text in the weak text colour. The final look comes from Figma.

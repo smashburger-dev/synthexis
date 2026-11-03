@@ -14,6 +14,15 @@ const ARTICLES: &[&str] = &[
     "the", "a", "my", "both", "die", "der", "den", "das", "dem", "mein", "meine", "meiner",
     "meinem", "meinen", "beide", "beiden",
 ];
+/// Weaker signs of a gesture: a possessive before the word ("i want my
+/// head ..."), a list or a manner ("pinch und drehen", "indem ich").
+const POSSESSIVES: &[&str] = &["my", "mein", "meine", "meiner", "meinem", "meinen"];
+const WEAK_AFTER: &[&str] = &["and", "und", "then", "dann", "indem ich", "dass ich"];
+/// Side words, skipped like articles ("wenn ich die linke Faust").
+const SIDES: &[&str] = &[
+    "left", "right", "linke", "linken", "linker", "linkes", "rechte", "rechten", "rechter",
+    "rechtes",
+];
 const SWITCH_WORDS: &[&str] = &[
     "on", "off", "toggle", "toggles", "switch", "switches", "enable", "enables", "disable",
     "bypass", "mute", "unmute", "activate", "deactivate", "an", "aus", "einschalten",
@@ -65,7 +74,7 @@ pub fn queries(text: &str, cursor: usize, floor: usize) -> Vec<QuerySpan> {
 
 fn starts_with_filler(s: &str) -> bool {
     let w = s.split_whitespace().next().unwrap_or("").to_lowercase();
-    ARTICLES.contains(&w.as_str()) || FILLER.contains(&w.as_str())
+    ARTICLES.contains(&w.as_str()) || FILLER.contains(&w.as_str()) || SIDES.contains(&w.as_str())
 }
 
 fn words_lower(s: &str) -> Vec<String> {
@@ -75,22 +84,44 @@ fn words_lower(s: &str) -> Vec<String> {
         .collect()
 }
 
-/// True when `before` (the text up to the query) ends where a gesture is
-/// named: the sentence start or one of GESTURE_AFTER, articles skipped.
-pub fn gesture_position(before: &str) -> bool {
-    let b = before.trim_end();
-    if b.is_empty() || b.ends_with(['.', '!', '?', ';', ':']) {
-        return true;
-    }
-    let mut w = words_lower(b);
-    while w.last().is_some_and(|l| ARTICLES.contains(&l.as_str())) {
-        w.pop();
-    }
+/// Where a gesture may be named.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum GesturePos {
+    No,
+    /// Offered in the list only, never as ghost text.
+    Weak,
+    Strong,
+}
+
+fn ends_with_any(w: &[String], triggers: &[&str]) -> bool {
     let n = w.len();
-    GESTURE_AFTER.iter().any(|t| {
+    triggers.iter().any(|t| {
         let k = t.split(' ').count();
         n >= k && w[n - k..].join(" ") == *t
     })
+}
+
+/// Whether `before` (the text up to the query) ends where a gesture is
+/// named. Strong: the sentence start or one of GESTURE_AFTER, articles and
+/// side words skipped. Weak: a possessive or one of WEAK_AFTER.
+pub fn gesture_position(before: &str) -> GesturePos {
+    let b = before.trim_end();
+    if b.is_empty() || b.ends_with(['.', '!', '?', ';', ':']) {
+        return GesturePos::Strong;
+    }
+    let mut w = words_lower(b);
+    let mut possessive = false;
+    while w.last().is_some_and(|l| ARTICLES.contains(&l.as_str()) || SIDES.contains(&l.as_str())) {
+        possessive |= w.last().is_some_and(|l| POSSESSIVES.contains(&l.as_str()));
+        w.pop();
+    }
+    if ends_with_any(&w, GESTURE_AFTER) {
+        GesturePos::Strong
+    } else if possessive || ends_with_any(&w, WEAK_AFTER) {
+        GesturePos::Weak
+    } else {
+        GesturePos::No
+    }
 }
 
 /// True when the clause names switching ("schalte ... an", "toggle the").
@@ -127,15 +158,19 @@ mod tests {
 
     #[test]
     fn gesture_positions() {
-        assert!(gesture_position(""));
-        assert!(gesture_position("when I "));
-        assert!(gesture_position("Cutoff hoch, wenn ich die "));
-        assert!(gesture_position("open the filter with my "));
-        assert!(gesture_position("Mach das. "));
-        assert!(gesture_position("make the reverb follow my "));
-        assert!(!gesture_position("the "));
-        assert!(!gesture_position("when I spread my fingers the "));
-        assert!(!gesture_position("withdraw "));
+        assert_eq!(gesture_position(""), GesturePos::Strong);
+        assert_eq!(gesture_position("when I "), GesturePos::Strong);
+        assert_eq!(gesture_position("Cutoff hoch, wenn ich die "), GesturePos::Strong);
+        assert_eq!(gesture_position("open the filter with my "), GesturePos::Strong);
+        assert_eq!(gesture_position("Mach das. "), GesturePos::Strong);
+        assert_eq!(gesture_position("make the reverb follow my "), GesturePos::Strong);
+        assert_eq!(gesture_position("the "), GesturePos::No);
+        assert_eq!(gesture_position("when I spread my fingers the "), GesturePos::No);
+        assert_eq!(gesture_position("withdraw "), GesturePos::No);
+        assert_eq!(gesture_position("Cutoff hoch, wenn ich die linke "), GesturePos::Strong);
+        assert_eq!(gesture_position("i want my "), GesturePos::Weak);
+        assert_eq!(gesture_position("pinch und "), GesturePos::Weak);
+        assert_eq!(gesture_position("Filter auf, indem ich den "), GesturePos::Weak);
     }
 
     #[test]

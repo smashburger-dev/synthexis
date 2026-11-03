@@ -74,6 +74,59 @@ fn cut_offers_filter_freq() {
 }
 
 #[test]
+fn three_rows_per_kind_then_other_kinds() {
+    let mut e = engine();
+    let filters = (0..6).map(|i| p(i, &format!("Filter {i} Freq"), "filter.cutoff"));
+    e.set_plugin("Synth/Test", filters.chain([p(9, "Filter Drive", "fx.drive")]).collect());
+    let s = e.complete("the fil", 7, 0, 5);
+    assert!(s[..3].iter().all(|s| kind(&s.chip) == "filter.cutoff"));
+    assert_eq!(s[3].chip.label(), "Filter Drive");
+    assert_eq!(s[4].chip.label(), "Filter 3 Freq");
+}
+
+#[test]
+fn catch_all_phrases_offer_nothing() {
+    let phrases = vec![("other".to_string(), "the gap before the reverb starts".to_string())];
+    let mut e = Engine::new(Vec::new(), phrases, &HashMap::new());
+    e.set_plugin("Synth/Test", vec![p(0, "Swing", "other"), p(1, "Filter 1 Res", "filter.resonance")]);
+    assert_eq!(labels(&top(&e, "the res")), ["Filter 1 Res"]);
+    assert_eq!(labels(&top(&e, "the swi")), ["Swing"]);
+}
+
+fn with_targets(e: Engine) -> Engine {
+    let t = [("midi.chord", "Akkord spielen"), ("midi.chord", "play a chord"), ("midi.pattern", "fire pattern")];
+    e.with_targets(t.iter().map(|(k, p)| (k.to_string(), p.to_string())).collect())
+}
+
+#[test]
+fn target_items_in_the_list_only() {
+    let e = with_targets(engine());
+    let s = e.complete("then Akk", 8, 0, 8);
+    assert_eq!(s[0].chip, Chip::Target { kind: "midi.chord".into(), phrase: "Akkord spielen".into() });
+    assert_eq!(s[0].chip.id(), "target:midi.chord");
+    assert!(!s[0].ghost_worthy("then Akk"));
+}
+
+#[test]
+fn target_item_leaves_the_ghost_row() {
+    // "fi" starts "fire pattern" and "Filter 1 Freq"; the parameter keeps row 0
+    let e = with_targets(engine());
+    let s = e.complete("the fi", 6, 0, 8);
+    assert!(s[0].ghost_worthy("the fi"));
+    assert!(matches!(s[0].chip, Chip::Param { .. }));
+    assert!(s.iter().any(|x| matches!(x.chip, Chip::Target { .. })));
+}
+
+#[test]
+fn span_prior_ranks_the_class_training_meant() {
+    let e = engine();
+    assert_eq!(top(&e, "the filter")[0].chip.label(), "Filter 1 Freq");
+    let rows = vec![("Filter".to_string(), "ctl.switch".to_string(), 9), ("filter cutoff".to_string(), "filter.cutoff".to_string(), 1)];
+    let e = engine().with_span_prior(rows);
+    assert_eq!(top(&e, "the filter")[0].chip.label(), "Filter 1 On");
+}
+
+#[test]
 fn german_phrase_over_two_words() {
     let e = engine();
     let t = "mit der Faust Filter auf";
@@ -97,6 +150,20 @@ fn gesture_german_after_wenn_ich_die() {
     let e = engine();
     let s = top(&e, "Cutoff hoch, wenn ich die Fau");
     assert_eq!(s[0].chip.label(), "Faust schließen");
+}
+
+#[test]
+fn weak_position_lists_gesture_without_ghost() {
+    let e = engine();
+    let t = "i want my mou";
+    let s = top(&e, t);
+    assert_eq!(s[0].chip.id(), "gesture:mouth.open");
+    assert!(s[0].weak);
+    assert!(!s[0].ghost_worthy(t));
+    let t = "cutoff hoch wenn ich die linke Fau";
+    let s = top(&e, t);
+    assert_eq!(s[0].chip.label(), "Faust schließen");
+    assert!(s[0].ghost_worthy(t));
 }
 
 #[test]

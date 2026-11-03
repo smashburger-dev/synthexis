@@ -40,3 +40,12 @@ DeepSeek 0.77 $ (pilot and stage 8). Modal four runs on L4s, about 1.5 $ in cred
 - MIDI patterns read with a value (group 10): look at which stage-8 rows put VALUE next to a pattern.
 - The four-seed ensemble costs 4 x 121 MB; the session parser-v10-lean has the v11 run names for the same compression it applies to v10.
 - The Rust runtime still loads v9 and does not apply conv or the fold.
+
+## Board, Nov 3
+
+FigJam board WJIE59w34hCSTXuq3XpKGH, story area, for the demo video:
+- New section "One sentence, before and after" (53:1638). It shows sentence 32 as read by the v10 and v11 four-seed ensembles (preds `g2-ens-v10-4-convpro`, `g2-ens-v11-4-convpro`): v10 got 0 of 2 routes right with frame probability 0.21, v11 got 2 of 2 with 0.996. Targets are labelled by knob family, since the parser emits the class `fx.reverb.decay` for "reverb size"; scoring does not check the class.
+- "What moved it", "What it would take" and the stickies of "Parser learning" rebuilt as cards in the style another session introduced in "Plan changes". New cards: v11 (56 to 66 of 102), v11 in 8 bits (277 MB, 66 of 102), and "a fresh set you dictate" (all of the gain sits in the 23 targeted rows).
+- "Real sentences": header corrected (99 rows up to v8, 102 from v9, mean of seeds 0 and 1), callout added (15 % to 63 % exact, 51 % to 83 % one fix away, v3 to v11).
+- "Open": gold note updated to the side rule; one note that covered another was moved. The side rule went into "Plan changes", which that other session has since rebuilt as cards.
+- Layout: the rows below "Real sentences" moved down, and "Completion" moved out of its overlap with "Students".
