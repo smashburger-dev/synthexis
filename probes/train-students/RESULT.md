@@ -190,11 +190,33 @@ The plugin (probes/plugin-perception) kept Apple Vision as default because a sin
 
 `hand-chir`: the hand-final recipe plus one handedness logit, trained on the teacher chirality (87 % of crops; a mirrored crop flips its label, checked: labels flip exactly on the 31 of 64 mirrored samples), weight 0.5, 20 epochs, seed 0, Modal 0.14 $. Dev: fingers 0.887 (hand-final 0.887), keypoints 10.8 px, handedness 0.931 over all crops and 0.983 for the single hand in block A. S4, gated once: handedness 0.941, block A single hand 0.982; finger states 0.890 (per finger 0.931 / 0.985 / 0.990 / 0.982 / 0.959), keypoints 9.1 / 6.7 px. ANE 0.400 / 0.657 ms per crop. Shipped as `hand.mlpackage`; outputs keypoints 1x21x2, finger logits 1x5, handedness 1x1 (> 0 = right), picked by element count, so a plugin that ignores the new output keeps working.
 
+## Overnight Mac runs (2026-11-03, 0 $)
+
+`tools/train/overnight.sh` and `overnight2.sh` on MPS, 00:49 to 06:33, every run finished on its first attempt.
+
+`seg-v3l`: MobileNetV3-Large backbone (3.22M params, budget 4M) plus self-prev 0.5, 10 epochs, seed 0, train only. Two changes at once, so this decides what ships and does not say which lever helped. Dev with its own prev in time order:
+
+| | person | face | hand | eye | mouth | mean person/face/hand | hand frame recall |
+|---|---|---|---|---|---|---|---|
+| seg-a-s0 | 0.886 | 0.870 | 0.729 | 0.454 | 0.646 | 0.828 | 0.968 |
+| seg-v3l | 0.897 | 0.884 | 0.751 | 0.496 | 0.636 | 0.844 | 0.968 |
+
++1.6 points on the mean, above the 1-point rule (seg-a against seg-b, same recipe: 0.4 points), so seg-v3l was gated once on S4. Own prev in time order: person 0.792, face 0.830, hand 0.813, mouth 0.645, eye 0.163 (seg-a-s0: 0.766, 0.798, 0.797, 0.659, 0.137); zero prev: 0.804, 0.830, 0.808 (0.780, 0.794, 0.791); hand frame recall 0.991. Gate 0.85 still missed. With SAM masks as prev it is about equal (0.838 / 0.836 / 0.836 against 0.851 / 0.833 / 0.844), but the plugin never has SAM masks. Shipped as `seg.mlpackage` (epoch 6, argmax agreement 0.9999); seg-a-s0 kept in `data/models/archive/`. ANE 0.775 / 0.862 ms (median / p95; budget 3). The output name changed (`var_312`); the plugin picks outputs by element count.
+
+Hand seeds, dev finger state accuracy at the best epoch (seed 0 ran on Modal, seeds 1 and 2 on the Mac):
+
+| recipe | seed 0 | seed 1 | seed 2 | mean |
+|---|---|---|---|---|
+| hand-final (no handedness) | 0.887 | 0.908 | 0.872 | 0.889 |
+| hand-chir (handedness output) | 0.887 | 0.880 | 0.844 | 0.870 |
+
+Seeds of one recipe differ by up to 4 points, and the per-epoch dev curve jumps by 3 to 8 points between neighbouring epochs (1,266 labelled finger crops). The 1-point finger gap the plugin measured on S4 between hand-chir and hand-final (0.925 against 0.935) is inside that noise. hand-chir seed 0 stays shipped: it is the best seed with the handedness output, and hand-final-s1 has no handedness output. Handedness of the new seeds: 0.915 / 0.914 over all dev crops (seed 0: 0.931). None of them was gated.
+
 ## Shipped state (2026-11-03)
 
 | student | run | S4 | gate | ANE median / p95 ms |
 |---------|-----|----|------|---------------------|
-| seg | seg-a-s0, BN recalibrated | person 0.766, face 0.798, hand 0.797 (own prev, time order); mouth 0.659 | 0.85: no | 0.547 / 0.649 |
+| seg | seg-v3l, MobileNetV3-Large, self-prev | person 0.792, face 0.830, hand 0.813 (own prev, time order); mouth 0.645 | 0.85: no | 0.775 / 0.862 |
 | hand | hand-chir, MobileNetV3-Small, pseudo finger labels, handedness output | states 0.890; per finger 0.931 / 0.985 / 0.990 / 0.982 / 0.959; keypoints 9.1 / 6.7 px; handedness 0.941 (single hand, block A: 0.982) | 0.95: no | 0.400 / 0.657 |
 | face | face-a-s1 | mouth 0.705, eye 0.243 | 0.70: mouth yes, eye no | 0.339 / 0.500 |
 
@@ -202,7 +224,8 @@ Hand logits now carry the dev-calibrated thresholds: extended = logit > 0. CoreM
 
 ## Not done, next
 
-- Seg: the prev channel buys nothing live (own prev = zero prev on dev and S4); self-prev did not change that (seg-b). Next candidates, each needing a clean LOSO run: a larger backbone trained with self-prev (MobileNetV3-Large gained with SAM prev in the crippled round), or no prev channel at all.
+- Seg: the prev channel still buys nothing live (seg-v3l: zero prev 0.804 / 0.830 / 0.808 against own prev 0.792 / 0.830 / 0.813 on S4). The larger backbone gave the gain. Next: seg-v3l without the prev channel, and more seeds before any further S4 read.
+- Hand: finger dev accuracy moves 3 to 8 points between epochs; checkpoint averaging or EMA over the last epochs, and more labelled finger crops, before another finger lever is judged.
 - Thumb: label check of the A-block thumb-tucked segments with Noa, then a finger-only fine-tune or more weight on the thumb bit.
 - Eye: the face student misses S4 eyes; Apple Vision face landmarks (runtime use allowed) can carry the eye signals until a fix. D9 proxy stays deferred: it learns from the same SAM masks and would not see the S4 look either.
 - Student-derived crops: the gate uses SAM boxes; the plugin cuts crops from the seg student's masks. The perception session's bench on S4 measures that path.
