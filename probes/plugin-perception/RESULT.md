@@ -352,13 +352,32 @@ Above the knee the slope is 1.43, so a held open hand's wander grows by that fac
 
 Two hands on x. In block A the left hand's x has its median at 0.33 to 0.49 per session and the right hand's at 0.69 to 0.74 (x from the person's view), so each hand works on its own side. The split follows the person instead of the frame (Noa): the face centre, sent as the internal signal `cam0.body.x` (not an ontology source, so no sentence can route it), smoothed with a 1 s time constant in `route::Values`, 0.5 until a face is seen. Its median is 0.52 to 0.53 on S1, S2 and S4 and 0.41 on S3, where the person stood off the middle. Hand frames on their own side of the split: face centre 0.886 / 0.806 / 0.737 / 0.795 on S1 to S4, frame middle 0.839 / 0.788 / 0.717 / 0.778. While both `cam0.hand.L.x` and `cam0.hand.R.x` have an enabled route, the left hand's input range is centre - 0.5 .. centre and the right hand's centre .. centre + 0.5, cut at the frame edges (`fit_hand_x`, route.rs); with one hand routed it keeps the whole frame. y has no such rule.
 
+### Fist curve and two hands on x, second FL test (2026-11-03, night)
+
+Noa, FL test of the build above: half-open hands pull towards 0.5 and there is no fine control (0.3 to 0.5, 0.5 to 0.7, then it jumps out); a fist never quite reads 0 and an open hand reaches 1 only in some poses; with the knuckles towards the camera the value jumps between 0.3 and 0.7. With left hand openness and right hand x routed, the right hand read 0.5 right next to the left hand at the centre instead of 0.
+
+Fist. `FINGER_DECILES` came from the B_*_open ramps. Frame by frame these are not slow ramps: the hand opens in about 0.4 s and holds (S2 B_R_open). The decile map therefore squeezed linear finger values 0.31 to 0.58 into 0.5 to 0.6, which is the pull Noa felt, and lifted a closed fist to 0.14 to 0.2. Rule written before the run (Python copy of geom.rs on the raw keypoints, equal to the bench within 0.0003): C0 current; C1 linear finger values with the current anchors; C2 linear with anchors re-fit at the medians; for C1 and C2 openness = lin(finger mean, fist p75, open p25). Gates: open p25 >= 0.95, fist p75 <= 0.05, dev finger accuracy at least C0 - 0.01; among those passing, the lower median frame-to-frame step on held mixed-finger poses. Both passed; C1 has the smaller step (0.0115 against 0.0124) and ships: no decile map, `OPEN_LO` 0.079, `OPEN_HI` 0.910.
+
+| S1 to S3, block A | C0 (build above) | C1 (now) |
+|---|---|---|
+| open hand p10 / p25 / p50 | 0.91 / 1.00 / 1.00 | 0.91 / 1.00 / 1.00 |
+| fist p50 / p75 / p90 | 0.08 / 0.16 / 0.23 | 0.00 / 0.00 / 0.09 |
+| dev finger accuracy, fingers 1 to 4 | 0.963 | 0.965 |
+| held mixed poses, median frame step | 0.0151 | 0.0115 |
+| ramp frames between 0.4 and 0.6 | 0.10 | 0.05 |
+| ramps 20% to 80% (median) | 617 ms | 200 ms |
+
+S4, scored once with the release build: open hand 0.98 / 1.00 / 1.00 (p10 / p25 / p50; C0 1.00 throughout), fist 0.00 / 0.05 / 0.18 (p50 / p75 / p90; C0 0.16 / 0.22 / 0.34), held mixed poses 0.0114 (C0 0.0138). On the ramps the value now passes the middle in 200 ms, because the recorded hands moved that fast; how a slow live opening feels is Noa's call. No recording has knuckles towards the camera, so that case is not measured: the 2D keypoints of fingers curled towards the camera barely change in bend, and the reach term carries the change alone.
+
+Two hands on x. The rule asked for both hands on x, so with only the right hand on x it kept the whole frame. It now splits as soon as the other hand has any enabled assigned route, as source or gate, in any plugin instance (`route::hands_used`, a process-wide table in writer.rs, `Values::hands_used`); test routes do not count. Each side also ends `HAND_X_GAP` = 0.08 short of the face centre, so a hand right next to the other one reads its inner end: palm centres of hands held close sit 0.03 to 0.11 apart (G_free_hands, S2 to S4), and the face is not always above the point where they meet (S3 H_clap: both hands right of the face). Stretched arms reach 0.4 to 0.55 from the face centre (H_stretch), which `HAND_X_REACH` 0.5 keeps.
+
 ## Signal contract
 
 - Ids: `cam0.` + ontology source id, side after the first segment for sided sources: `cam0.hand.R.openness`, `cam0.hand.L.finger.index.tilt`, `cam0.eye.L.open`, `cam0.mouth.open`, `cam0.face.smile`, `cam0.head.yaw`, `cam0.hands.distance`, `cam0.object.x`. `S:hand.openness side:right` maps to `cam0.hand.R.openness`. The spec's example `cam0.face.mouth.open` (sig.contract) differs from the ontology's `mouth.open`; the code follows the ontology.
 - 51 ids: 20 per hand (openness, fist, five finger extensions, spread, x, y, depth, pinch, speed, roll, five finger tilts, finger_count), hands.distance, 9 face (mouth.open, face.smile, eye.L/R.open, eye.L/R.closed, head.yaw/pitch/roll), 5 object (x, y, size, angle, speed; one slot, the largest object, students only).
 - Every frame emits every id. A source not seen this frame repeats its last value with `present = false` and confidence 0, so `cond.occlusion` holds and glides. Confidence: mask area for student hands and faces, mean joint confidence for Vision hands, landmark confidence for Vision faces.
 - Side: two hands split by image side (image-left is the person's right; camera frames are unmirrored, only the preview in the plugin window is mirrored). One hand: `students` and `hybrid` take the sign of its `SideTracker` track (wrist lean, section above); `vision` keeps the side of a live track within a quarter frame width (tracks expire after 0.5 s), else the face centre decides, else the frame centre.
-- Internal: `cam0.body.x`, the face centre on x, splits two hands' x routes (route.rs); not routable.
+- Internal: `cam0.body.x`, the face centre on x, splits a hand's x route at the person's centre while the other hand has a route (route.rs); not routable.
 - Not emitted yet: `hand.pitch` (no 2D estimate), `hand.shape` (needs the shapes table), `arm.*`, `body.*`, `orb.*`, `motion.*`. `hand.roll` measures rotation around the forearm from the knuckle line; its direction is unchecked.
 
 ## Open

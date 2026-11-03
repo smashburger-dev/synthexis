@@ -94,6 +94,9 @@ pub struct Values {
     /// The person's centre on x (SIG_BODY_X, smoothed) and when it was
     /// last seen; None until a face was seen, then the frame's middle is used.
     pub centre: Option<(f32, f64)>,
+    /// Hands [L, R] the routes of the other plugin instances use (writer.rs
+    /// fills it before a hand x sample); `fit_hand_x` adds this table's own.
+    pub hands_used: [bool; 2],
 }
 
 impl Values {
@@ -150,29 +153,53 @@ pub fn default_routes(test_signal_on: bool) -> Vec<Route> {
     routes
 }
 
-/// Hand x signals and the side of the person each moves on while both
-/// are routed on x: -1 left of the centre, 1 right of it. x is from the
-/// person's view (geom.rs: 0 = their left).
-const HAND_X: [(&str, f32); 2] = [("cam0.hand.L.x", -1.0), ("cam0.hand.R.x", 1.0)];
+/// Hand x signals, [L, R]. x is from the person's view (geom.rs: 0 =
+/// their left).
+const HAND_X: [&str; 2] = ["cam0.hand.L.x", "cam0.hand.R.x"];
 /// How far each hand's range reaches from the person's centre, in frame
-/// widths: half the frame, so a person in the middle splits it at 0.5.
+/// widths: half the frame, so a person in the middle splits it at 0.5
+/// (stretched arms reach 0.4 to 0.55 from the face centre in H_stretch, S2
+/// to S4).
 pub const HAND_X_REACH: f32 = 0.5;
+/// Dead band on each side of the centre, in frame widths: a hand held right
+/// next to the other one at the centre reads its inner end (palm centres
+/// of hands close together sit 0.03 to 0.11 apart in G_free_hands, S2 to
+/// S4, and the face is not always above the point where they meet).
+pub const HAND_X_GAP: f32 = 0.08;
 /// Time constant of the centre's smoothing (s): head moves while playing
 /// shift the split slowly instead of shaking both x routes.
 const CENTRE_TAU_S: f64 = 1.0;
 
-/// Input range of the routes on `signal` when it is a hand x: while both
-/// hands' x have an enabled route (Noa, FL test 11-03), each hand gets its
-/// own side of the person's centre, from the centre out to HAND_X_REACH,
-/// cut at the frame edge, so one hand cannot cross the other; else the
-/// whole frame. y has no such rule.
-fn fit_hand_x(routes: &mut [Route], centre: f32, signal: &str) {
-    let Some(&(_, dir)) = HAND_X.iter().find(|h| h.0 == signal) else { return };
-    let both = HAND_X.iter().all(|h| routes.iter().any(|r| r.enabled && r.signal == h.0));
-    let (lo, hi) = match (both, dir < 0.0) {
+/// Hands [L, R] the enabled assigned routes use, as source or gate. Test
+/// routes do not count.
+pub fn hands_used(routes: &[Route]) -> [bool; 2] {
+    let mut used = [false; 2];
+    for r in routes.iter().filter(|r| r.enabled && !r.test) {
+        for s in std::iter::once(&r.signal).chain(&r.gates) {
+            used[0] |= s.starts_with("cam0.hand.L.");
+            used[1] |= s.starts_with("cam0.hand.R.");
+        }
+    }
+    used
+}
+
+/// Input range of the routes on `signal` when it is a hand x. While the
+/// other hand also has a route (here or in another instance), the hands
+/// cannot cross (Noa, FL tests 11-03), so each hand's x runs on its own
+/// side of the person's centre: from the frame edge side (HAND_X_REACH out,
+/// cut at the edge) to HAND_X_GAP short of the centre, the left hand from
+/// 0 far left to 1 at the centre, the right hand from 0 at the centre to 1
+/// far right. One hand alone keeps the whole frame. y has no such rule.
+fn fit_hand_x(routes: &mut [Route], current: &Values, signal: &str) {
+    let Some(hand) = HAND_X.iter().position(|h| *h == signal) else { return };
+    let other = 1 - hand;
+    let split = hands_used(routes)[other] || current.hands_used[other];
+    let c = current.centre_x();
+    let (lo, hi) = match (split, hand) {
         (false, _) => (0.0, 1.0),
-        (true, true) => ((centre - HAND_X_REACH).max(0.0), centre),
-        (true, false) => (centre, (centre + HAND_X_REACH).min(1.0)),
+        // a face at the frame edge still leaves the hand a range to move in
+        (true, 0) => ((c - HAND_X_REACH).max(0.0), (c - HAND_X_GAP).max(HAND_X_GAP)),
+        (true, _) => ((c + HAND_X_GAP).min(1.0 - HAND_X_GAP), (c + HAND_X_REACH).min(1.0)),
     };
     for r in routes.iter_mut().filter(|r| r.signal == signal) {
         r.cond.range.in_min = lo;
@@ -193,7 +220,7 @@ pub fn apply_sample(
         current.see_centre(sample, t_s);
         return Vec::new();
     }
-    fit_hand_x(routes, current.centre_x(), signal);
+    fit_hand_x(routes, current, signal);
     let seen = if sample.present && sample.confidence >= GATE_MIN_CONF { sample.value } else { 0.0 };
     match current.last.get_mut(signal) {
         Some(v) => *v = seen,
@@ -371,33 +398,76 @@ mod tests {
         assert!((cur.params[&t] - 0.8).abs() < 0.02, "{}", cur.params[&t]);
     }
 
+    /// Feeds `vals` [(signal, value)] for 3 s from `t0` (s).
+    fn feed(routes: &mut [Route], cur: &mut Values, t0: f64, vals: &[(&str, f32)]) {
+        for i in 0..90 {
+            for (sig, v) in vals {
+                apply_sample(routes, cur, sig, &s(*v), t0 + i as f64 / 30.0);
+            }
+        }
+    }
+
     #[test]
-    fn two_hands_on_x_each_get_their_half() {
+    fn two_hands_on_x_each_get_their_side_of_the_centre() {
         let (l, r) = ("cam0.hand.L.x", "cam0.hand.R.x");
         let mut routes = vec![Route::new(l, 0, 1.0), Route::new(r, 1, 1.0), Route::new("cam0.hand.L.y", 2, 1.0)];
         let mut cur = Values::default();
-        let feed = |routes: &mut Vec<Route>, cur: &mut Values, t0: usize, vl: f32, vr: f32| {
-            for i in t0..t0 + 90 {
-                let t = i as f64 / 30.0;
-                apply_sample(routes, cur, l, &s(vl), t);
-                apply_sample(routes, cur, r, &s(vr), t);
-                apply_sample(routes, cur, "cam0.hand.L.y", &s(0.25), t);
-            }
-        };
-        // left hand at the centre and right hand at the frame edge: both at their top;
-        // a hand a quarter in from its outer edge sits at the middle of its route
-        feed(&mut routes, &mut cur, 0, 0.5, 1.0);
+        // no face yet: the centre is 0.5, left 0..0.42, right 0.58..1
+        feed(&mut routes, &mut cur, 0.0, &[(l, 0.42), (r, 1.0), ("cam0.hand.L.y", 0.25)]);
         assert!(cur.macros[0] > 0.98 && cur.macros[1] > 0.98, "{:?}", &cur.macros[..2]);
-        feed(&mut routes, &mut cur, 90, 0.25, 0.75);
+        feed(&mut routes, &mut cur, 3.0, &[(l, 0.21), (r, 0.79)]);
         assert!((cur.macros[0] - 0.5).abs() < 0.02 && (cur.macros[1] - 0.5).abs() < 0.02, "{:?}", &cur.macros[..2]);
-        // a hand on the other side holds at its inner end; y keeps the whole frame
-        feed(&mut routes, &mut cur, 180, 0.7, 0.3);
+        // the right hand right next to the left one at the centre reads 0;
+        // the left hand there reads 1; y keeps the whole frame
+        feed(&mut routes, &mut cur, 6.0, &[(l, 0.45), (r, 0.55)]);
         assert!(cur.macros[0] > 0.98 && cur.macros[1] < 0.02, "{:?}", &cur.macros[..2]);
         assert!((cur.macros[2] - 0.25).abs() < 0.02, "y {}", cur.macros[2]);
-        // the right hand's route goes off: the left hand has the whole frame again
-        routes[1].enabled = false;
-        feed(&mut routes, &mut cur, 270, 0.25, 0.75);
-        assert!((cur.macros[0] - 0.25).abs() < 0.02, "{}", cur.macros[0]);
+    }
+
+    #[test]
+    fn any_route_on_the_other_hand_splits_x() {
+        // Noa's FL test: left hand openness and right hand x
+        let r = "cam0.hand.R.x";
+        let mut routes = vec![Route::new("cam0.hand.L.openness", 0, 1.0), Route::new(r, 1, 1.0)];
+        let mut cur = Values::default();
+        feed(&mut routes, &mut cur, 0.0, &[(r, 0.56)]);
+        assert!(cur.macros[1] < 0.02, "{}", cur.macros[1]);
+        feed(&mut routes, &mut cur, 3.0, &[(r, 1.0)]);
+        assert!(cur.macros[1] > 0.98, "{}", cur.macros[1]);
+        // the left hand's route goes off: the right hand has the whole frame again
+        routes[0].enabled = false;
+        feed(&mut routes, &mut cur, 6.0, &[(r, 0.3)]);
+        assert!((cur.macros[1] - 0.3).abs() < 0.02, "{}", cur.macros[1]);
+        // a left-hand gate counts as using the left hand
+        let mut gated = Route::new(r, 1, 1.0);
+        gated.gates = vec!["cam0.hand.L.pinch".into()];
+        let mut routes = vec![gated];
+        let mut cur = Values::default();
+        feed(&mut routes, &mut cur, 0.0, &[("cam0.hand.L.pinch", 1.0), (r, 0.79)]);
+        assert!((cur.macros[1] - 0.5).abs() < 0.02, "{}", cur.macros[1]);
+    }
+
+    #[test]
+    fn another_instances_hand_splits_x_and_test_routes_do_not() {
+        let r = "cam0.hand.R.x";
+        let mut routes = vec![Route::new(r, 0, 1.0)];
+        let mut cur = Values { hands_used: [true, false], ..Values::default() };
+        feed(&mut routes, &mut cur, 0.0, &[(r, 0.79)]);
+        assert!((cur.macros[0] - 0.5).abs() < 0.02, "{}", cur.macros[0]);
+        // Test signal on: its left openness route leaves its right x whole
+        let mut routes = default_routes(true);
+        let mut cur = Values::default();
+        feed(&mut routes, &mut cur, 0.0, &[(r, 0.3)]);
+        assert!((cur.macros[6] - 0.3).abs() < 0.02, "{}", cur.macros[6]);
+    }
+
+    #[test]
+    fn one_hand_alone_keeps_the_whole_frame() {
+        let r = "cam0.hand.R.x";
+        let mut routes = vec![Route::new(r, 0, 1.0), Route::new("cam0.hand.R.y", 1, 1.0)];
+        let mut cur = Values::default();
+        feed(&mut routes, &mut cur, 0.0, &[(r, 0.3)]);
+        assert!((cur.macros[0] - 0.3).abs() < 0.02, "{}", cur.macros[0]);
     }
 
     #[test]
@@ -405,11 +475,11 @@ mod tests {
         let (l, r) = ("cam0.hand.L.x", "cam0.hand.R.x");
         let mut routes = vec![Route::new(l, 0, 1.0), Route::new(r, 1, 1.0)];
         let mut cur = Values::default();
-        // the person stands at 0.3: left hand 0..0.3, right hand 0.3..0.8
+        // the person stands at 0.3: left hand 0..0.22, right hand 0.38..0.8
         for i in 0..300 {
             let t = i as f64 / 30.0;
             apply_sample(&mut routes, &mut cur, SIG_BODY_X, &s(0.3), t);
-            apply_sample(&mut routes, &mut cur, l, &s(0.15), t);
+            apply_sample(&mut routes, &mut cur, l, &s(0.11), t);
             apply_sample(&mut routes, &mut cur, r, &s(0.8), t);
         }
         assert!((cur.centre_x() - 0.3).abs() < 1e-3, "{}", cur.centre_x());
@@ -422,16 +492,15 @@ mod tests {
         let unsure = Sample { confidence: 0.1, ..s(0.9) };
         apply_sample(&mut routes, &mut cur, SIG_BODY_X, &unsure, 11.0);
         assert!((cur.centre_x() - 0.3).abs() < 1e-3);
-    }
-
-    #[test]
-    fn one_hand_on_x_keeps_the_whole_frame() {
-        let mut routes = vec![Route::new("cam0.hand.R.x", 0, 1.0), Route::new("cam0.hand.L.y", 1, 1.0)];
-        let mut cur = Values::default();
-        for i in 0..90 {
-            apply_sample(&mut routes, &mut cur, "cam0.hand.R.x", &s(0.3), i as f64 / 30.0);
-        }
-        assert!((cur.macros[0] - 0.3).abs() < 0.02, "{}", cur.macros[0]);
+        // a face at the frame edge still leaves the left hand a range
+        let mut cur3 = Values { centre: Some((0.02, 0.0)), ..Values::default() };
+        fit_hand_x(&mut routes, &cur3, l);
+        let rg = routes[0].cond.range;
+        assert!(rg.in_max - rg.in_min > 0.05, "{rg:?}");
+        cur3.centre = Some((0.98, 0.0));
+        fit_hand_x(&mut routes, &cur3, r);
+        let rg = routes[1].cond.range;
+        assert!(rg.in_max - rg.in_min > 0.05, "{rg:?}");
     }
 
     #[test]
