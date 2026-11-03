@@ -15,13 +15,15 @@ use serde_json::json;
 use synthexis_complete::{data, Chip, Engine, SIDES};
 use synthexis_parser::{pin, Item, Pin, PinWhat};
 
+/// [byte start, byte end, source, shape, side] of a gold SRC span.
+type SrcSpan = (usize, usize, String, Option<String>, Option<String>);
+
 #[derive(Deserialize)]
 struct Row {
     text: String,
     pred: Vec<String>,
     pred_bytes: Vec<Option<(usize, usize)>>,
-    /// [byte start, byte end, source, shape, side]
-    src: Vec<(usize, usize, String, Option<String>, Option<String>)>,
+    src: Vec<SrcSpan>,
     /// [byte start, byte end, class, switch]
     tgt: Vec<(usize, usize, String, bool)>,
     /// [byte start, byte end, target kind] of MIDI and macro spans

@@ -36,13 +36,13 @@ const MAX_WORDS: usize = 3;
 /// hand" -> left, "die rechte" -> right, "beide Hände" -> both.
 pub fn named_side(text: &str) -> Option<&'static str> {
     text.split(|c: char| !c.is_alphanumeric())
-        .filter_map(|w| match w.to_lowercase().as_str() {
+        .rev()
+        .find_map(|w| match w.to_lowercase().as_str() {
             "left" | "links" | "linke" | "linken" | "linker" | "linkes" => Some("left"),
             "right" | "rechts" | "rechte" | "rechten" | "rechter" | "rechtes" => Some("right"),
             "both" | "beide" | "beiden" | "beidhändig" => Some("both"),
             _ => None,
         })
-        .last()
 }
 
 /// The side named right before a gesture ("die linke Fau", "my left

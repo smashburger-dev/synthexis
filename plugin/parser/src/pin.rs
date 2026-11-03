@@ -421,6 +421,9 @@ impl Frame {
     }
 }
 
+/// A gesture chip while it is placed: bytes, source, shape, side.
+type GesturePin<'a> = ((usize, usize), &'a str, Option<&'a str>, Option<&'a str>);
+
 /// Enforces `pins` on the decoded `items` (see the module doc).
 pub fn pin(items: &[Item], pins: &[Pin]) -> Frame {
     let mut f = Frame::from_items(items);
@@ -499,7 +502,7 @@ pub fn pin(items: &[Item], pins: &[Pin]) -> Frame {
             _ => None,
         })
         .collect();
-    let mut gestures: Vec<((usize, usize), &str, Option<&str>, Option<&str>)> = pins
+    let mut gestures: Vec<GesturePin> = pins
         .iter()
         .filter_map(|p| match &p.what {
             PinWhat::Gesture { source, shape, side } => {

@@ -110,20 +110,28 @@ fn type_span<'a>(e: &Engine, text: &str, b: usize, end: usize, kind: &'a str) ->
     s
 }
 
+/// Prints the error and stops: a probe tool, no recovery.
+fn or_exit<T, E: std::fmt::Display>(r: Result<T, E>) -> T {
+    r.unwrap_or_else(|e| {
+        eprintln!("{e}");
+        std::process::exit(1)
+    })
+}
+
 fn main() {
     let dir = std::env::args().nth(1).unwrap_or_default();
     let dir = Path::new(&dir);
-    let (_, plugins) = data::load(dir).unwrap_or_else(|e| panic!("{e}"));
+    let (_, plugins) = or_exit(data::load(dir));
     // one engine per demo plugin, with the classes it has
     let engines: Vec<(Engine, Vec<String>)> = plugins
         .iter()
         .map(|p| {
-            let (mut e, _) = data::load(dir).unwrap_or_else(|e| panic!("{e}"));
+            let (mut e, _) = or_exit(data::load(dir));
             // SPAN_WEIGHT overrides the span prior's weight (probe sweeps)
             if let Some(w) = std::env::var("SPAN_WEIGHT").ok().and_then(|w| w.parse().ok()) {
                 e.span_weight = w;
             }
-            let params = data::load_plugin(dir, p).unwrap_or_else(|e| panic!("{e}"));
+            let params = or_exit(data::load_plugin(dir, p));
             let classes = params.iter().map(|q| q.class.clone()).collect();
             e.set_plugin(&p.plugin_id, params);
             (e, classes)
@@ -132,7 +140,7 @@ fn main() {
     let mut turn: BTreeMap<String, usize> = BTreeMap::new();
     let mut acc: BTreeMap<String, Acc> = BTreeMap::new();
     for line in std::io::stdin().lock().lines().map_while(Result::ok) {
-        let r: Row = serde_json::from_str(&line).unwrap_or_else(|e| panic!("bad row: {e}"));
+        let r: Row = or_exit(serde_json::from_str(&line));
         let a = acc.entry(r.split.clone()).or_default();
         for (b, end, kind) in &r.tgt {
             let Some(g) = group(kind) else { continue };
