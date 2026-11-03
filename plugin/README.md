@@ -58,25 +58,30 @@ docs/mapping-completion.md.
 
 The picker above the sentence field lists the plugins of the open FL
 project and follows the plugin window last clicked in FL
-(`synthexis/src/fl.rs`). The plugin opens the CoreMIDI virtual ports
-"synthexis bridge" and "synthexis bridge return" itself (names and unique
-IDs of the probe daemon `probes/fl-target-picker/flbridged.swift`, which
-must not run at the same time) and talks to the device script
-`fl/device_synthexis_bridge.py`, protocol 3: inventory, focus and parameter
-names on request, focus and inventory changes pushed. Pages are 16 KB at
-most; the script refuses frames above 60,000 bytes (a 65,536-byte frame
-froze FL 26.1.7).
+(`synthexis/src/fl.rs`). The plugin opens a CoreMIDI virtual source and
+destination, both named "synthexis", and talks to the device script
+`fl/device_synthexis_bridge.py`, protocol 4: inventory, focus and parameter
+names on request, focus and inventory changes pushed, parameter writes.
+Pages are 16 KB at most; the script refuses frames above 60,000 bytes (a
+65,536-byte frame froze FL 26.1.7).
 
-Install the script once:
+No MIDI settings. `install.sh` copies the script into
+`~/Documents/Image-Line/FL Studio/Settings/Hardware/synthexis bridge/`.
+When FL first sees the "synthexis" ports it sends a device inquiry; the
+plugin answers with the ID the script lists in `# supportedHardwareIds=`,
+and FL enables the input, links the output and loads the script itself
+(7 s after the ports appeared in the first FL test, 4 s on later starts;
+until 20 s the plugin shows "waiting for FL"). FL reads scripts only at
+start, and a
+port name it once saw without a matching script keeps none, so restart FL
+after the first install before inserting synthexis
+(`probes/fl-midi-autolink/RESULT.md`).
 
-```
-cp fl/device_synthexis_bridge.py "$HOME/Documents/Image-Line/FL Studio/Settings/Hardware/synthexis bridge/"
-```
-
-FL setup as for the probe: MIDI input "synthexis bridge" with controller
-type "synthexis bridge", output "synthexis bridge return", same port
-number. The probe tools (`probes/fl-target-picker/*.py`) need the
-protocol-2 probe script back in that folder.
+If FL still does not answer: Options > MIDI settings, input "synthexis"
+with controller type "synthexis bridge", output "synthexis" on the same
+port number. The probe tools (`probes/fl-target-picker/*.py`, daemon
+`flbridged` with the old port names "synthexis bridge" / "synthexis bridge
+return") need the protocol-2 probe script back in that folder.
 
 ## Perception
 
