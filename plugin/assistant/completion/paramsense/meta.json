@@ -1,0 +1,128 @@
+{
+ "classes": [
+  "amp.gain",
+  "amp.pan",
+  "ctl.select",
+  "ctl.switch",
+  "env.attack",
+  "env.decay",
+  "env.release",
+  "env.sustain",
+  "filter.cutoff",
+  "filter.env_amount",
+  "filter.resonance",
+  "fx.comp.amount",
+  "fx.delay.feedback",
+  "fx.delay.mix",
+  "fx.delay.time",
+  "fx.drive",
+  "fx.eq.freq",
+  "fx.eq.gain",
+  "fx.eq.q",
+  "fx.gate",
+  "fx.mix",
+  "fx.mod.depth",
+  "fx.mod.mix",
+  "fx.mod.rate",
+  "fx.pitch",
+  "fx.reverb.decay",
+  "fx.reverb.mix",
+  "fx.tone",
+  "lfo.amount",
+  "lfo.rate",
+  "macro",
+  "mod.amount",
+  "osc.fine",
+  "osc.fm",
+  "osc.level",
+  "osc.pitch",
+  "osc.shape",
+  "other",
+  "sample.position",
+  "stereo.width",
+  "system",
+  "unison.detune",
+  "unsafe",
+  "voice.glide"
+ ],
+ "buckets": 16384,
+ "dim": 48,
+ "hash": "fnv1a32(utf8(field + '|' + gram)) % buckets",
+ "fields": {
+  "n": "char 3-5 grams of '<' + casefold(name) + '>' and 'w:' + word",
+  "c": "'p:' + plugin-name word and top-64 words of the plugin's parameter names",
+  "v": "char 3-grams of '<' + casefold(value) + '>'"
+ },
+ "words": "regex [^\\W_]+ over casefold",
+ "bag": "mean",
+ "layers": "concat(n,c,v) -> hid(144->96) gelu -> cls(44), dir(2: -1,+1)",
+ "tensors": [
+  {
+   "name": "emb.weight",
+   "shape": [
+    16384,
+    48
+   ],
+   "dtype": "f16",
+   "offset": 0,
+   "nbytes": 1572864
+  },
+  {
+   "name": "hid.weight",
+   "shape": [
+    96,
+    144
+   ],
+   "dtype": "f16",
+   "offset": 1572864,
+   "nbytes": 27648
+  },
+  {
+   "name": "hid.bias",
+   "shape": [
+    96
+   ],
+   "dtype": "f16",
+   "offset": 1600512,
+   "nbytes": 192
+  },
+  {
+   "name": "cls.weight",
+   "shape": [
+    44,
+    96
+   ],
+   "dtype": "f16",
+   "offset": 1600704,
+   "nbytes": 8448
+  },
+  {
+   "name": "cls.bias",
+   "shape": [
+    44
+   ],
+   "dtype": "f16",
+   "offset": 1609152,
+   "nbytes": 88
+  },
+  {
+   "name": "dir.weight",
+   "shape": [
+    2,
+    96
+   ],
+   "dtype": "f16",
+   "offset": 1609240,
+   "nbytes": 384
+  },
+  {
+   "name": "dir.bias",
+   "shape": [
+    2
+   ],
+   "dtype": "f16",
+   "offset": 1609624,
+   "nbytes": 4
+  }
+ ]
+}

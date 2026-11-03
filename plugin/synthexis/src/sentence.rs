@@ -8,11 +8,12 @@
 //! Plugin picker: lists the plugins of the open FL project (fl.rs) as
 //! "Portal, Master slot 1" and by default follows the plugin window last
 //! clicked in FL. A mixer track with more than one plugin folds into its
-//! own group, Sound (generators routed to it) above FX (its slots); picking an entry or "Pin" freezes the target until
-//! "Follow FL" or "Unpin". The pin persists as a fl::Key id and is dropped
-//! when its slot holds another plugin. Parameter names come from FL when a
-//! target is picked; classes come from the exported plugin of the same
-//! name, if there is one.
+//! own group, Sound (generators routed to it) above FX (its slots).
+//! Picking an entry or "Pin" freezes the target until "Follow FL" or
+//! "Unpin". The pin persists as a fl::Key id and is dropped when its slot
+//! holds another plugin. Parameter names come from FL when a target is
+//! picked; their classes from the exported plugin of the same name, else
+//! the labels of a mapped plugin, else param-sense (sense.rs).
 //!
 //! Completion data: $SYNTHEXIS_COMPLETION_DIR, else
 //! ~/Library/Application Support/synthexis/completion, as
@@ -38,6 +39,7 @@ use synthexis_parser::{Pin, PinWhat};
 use crate::assistant;
 use crate::fl::{self, Link};
 use crate::log::log;
+use crate::sense;
 
 const TOP: usize = 3;
 const OPEN_SECS: f32 = 0.15;
@@ -46,7 +48,7 @@ const ROW_H: f32 = 22.0;
 const PICK_ROW_H: f32 = 26.0;
 const PICKER_H: f32 = 420.0;
 
-type Loaded = Result<(Engine, Vec<PluginInfo>), String>;
+type Loaded = (Result<(Engine, Vec<PluginInfo>), String>, sense::Classes, Vec<String>);
 
 pub struct Sentence {
     doc: ChipText,
@@ -54,6 +56,9 @@ pub struct Sentence {
     /// Plugins with exported completion data, for parameter classes.
     exported: Vec<PluginInfo>,
     classes: HashMap<String, HashMap<String, String>>,
+    /// Labels of the mapped plugins and param-sense, and their result per target.
+    labels: sense::Classes,
+    classified: HashMap<fl::Key, Vec<Param>>,
     loader: Option<Receiver<Loaded>>,
     status: String,
     bridge: Option<&'static fl::Bridge>,
@@ -152,7 +157,9 @@ impl Sentence {
         let spawned = std::thread::Builder::new()
             .name("synthexis-completion".into())
             .spawn(move || {
-                let _ = tx.send(data::load(&data_dir()));
+                let dir = data_dir();
+                let (labels, notes) = sense::Classes::load(&dir);
+                let _ = tx.send((data::load(&dir), labels, notes));
             });
         let status = match spawned {
             Ok(_) => "loading completion".to_string(),
@@ -163,6 +170,8 @@ impl Sentence {
             engine: None,
             exported: Vec::new(),
             classes: HashMap::new(),
+            labels: sense::Classes::default(),
+            classified: HashMap::new(),
             loader: Some(rx),
             status,
             bridge,
@@ -186,8 +195,12 @@ impl Sentence {
 
     fn poll_loader(&mut self) {
         let Some(rx) = &self.loader else { return };
-        let Ok(res) = rx.try_recv() else { return };
+        let Ok((res, labels, notes)) = rx.try_recv() else { return };
         self.loader = None;
+        self.labels = labels;
+        for n in notes {
+            log(&format!("completion: classes: {n}"));
+        }
         match res {
             Ok((engine, plugins)) => {
                 self.engine = Some(engine);
@@ -260,14 +273,26 @@ impl Sentence {
         }
         match res {
             Ok(names) => {
-                let classes = self.classes_of(&want.plugin).clone();
-                let params: Vec<Param> = names
-                    .into_iter()
-                    .map(|(index, name)| {
-                        let class = classes.get(&name).cloned().unwrap_or_default();
-                        Param { index, name, class }
-                    })
-                    .collect();
+                if !self.classified.contains_key(&want) {
+                    let exported = self.classes_of(&want.plugin).clone();
+                    let t0 = std::time::Instant::now();
+                    let list: Vec<String> = names.iter().map(|(_, n)| n.clone()).collect();
+                    let (classes, src) = self.labels.of(&want.plugin, &list, &exported);
+                    log(&format!(
+                        "picker: classes for {}: {} labelled, {} by param-sense, {:.1} ms",
+                        want.label(),
+                        src.labelled,
+                        src.sensed,
+                        t0.elapsed().as_secs_f64() * 1e3
+                    ));
+                    let params = names
+                        .into_iter()
+                        .zip(classes)
+                        .map(|((index, name), class)| Param { index, name, class })
+                        .collect();
+                    self.classified.insert(want.clone(), params);
+                }
+                let params = self.classified.get(&want).cloned().unwrap_or_default();
                 self.pick_note = format!("{} parameters", params.len());
                 if let Some(e) = self.engine.as_mut() {
                     e.set_plugin(&want.id(), params);
