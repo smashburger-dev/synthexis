@@ -18,7 +18,7 @@ Sources read: `spec/synthexis.yaml` (map.parser, map.resolver, map.fallback, map
 | BIO head output | target text for the resolver = first to last TGT piece | Python only | open (head weights are exported, not run) |
 | Resolver | frame + live parameter list -> concrete plugin parameters: alias > name match on the named plugin > param-sense class > chips | Python probe (`probes/open-vocab-mapping/resolve.py`); spec amend proposed | open |
 | param-sense | parameter name -> taxonomy class, hashed n-grams, < 1M params | trained in Python; Rust port `plugin/synthexis/src/sense.rs` (2,426 of 2,426 classes equal to Python, 16 ms for 2,600 names), labels of the 887 mapped plugins in `known.tsv` first | done for the picker; resolver open |
-| Live inventory | plugin and parameter names of the project from the FL bridge | target picker in session fl-target-picker | open |
+| Live inventory | plugin and parameter names of the project from the FL bridge | plugin picker (`sentence.rs`, `fl.rs`) lists the project's plugins; FL sends the picked plugin's parameter names | done for the picked plugin |
 | Route diff UI | show proposed routes in the route matrix, accept, edit, undo | missing | open |
 | Chips fallback | sentence with recognised terms as chips, click lists options | missing (glossary exists) | open |
 | Frame -> `route.rs` | turn a resolved frame into `Route` structs with modifiers (invert, range, curve, gate) | `route.rs` has routes, no builder from frames | open |
@@ -113,16 +113,16 @@ cd plugin && ./guarded-cargo.sh test -p synthexis-parser --release -- --include-
 plugin/target/release/synthexis-parse --dir data/mapping/runtime "mouth opens the bass filter"
 ```
 
-Plugin: `SYNTHEXIS_PARSER_DIR` (default `~/Library/Application Support/synthexis/parser`), `SYNTHEXIS_PARSER_RUNS` (default `p-v11-s0,p-v11-s1,p-v11-s2,p-v11-s3`; weights and rules come from each run's `parser.json`), `SYNTHEXIS_PARSE="sentence"` for a headless check. `assistant::submit(text)` is the call the editor's text field will use.
+Plugin: `SYNTHEXIS_PARSER_DIR` (default `~/Library/Application Support/synthexis/parser`), `SYNTHEXIS_PARSER_RUNS` (default `p-v11-s0,p-v11-s1,p-v11-s2,p-v11-s3`; weights and rules come from each run's `parser.json`), `SYNTHEXIS_PARSE="sentence"` for a headless check. The sentence field (`sentence.rs`) calls `assistant::submit(text, pins)`.
 
 ## Still open for the mapping assistant
 
-In the order the demo needs them:
+State on 2026-11-03, in the order the demo needs them:
 
-1. Model files on Noa's machine: FL started from the Dock sees no env vars, so `install.sh` or a first-run step has to put the export into `~/Library/Application Support/synthexis/parser` (460 MB of f16 safetensors for four runs, quantised at load; not in git).
-2. Text field in the editor plus the parse result shown next to it; the worker already runs off the audio and UI threads.
-3. Resolver in Rust: frame + live plugin and parameter names -> parameter ids, in the order of the proposed map.resolver amend (alias, name match on the named plugin, param-sense class, chips). Needs the BIO head output for the target text (weights are exported, the head is not run yet) and the live inventory from the FL bridge (session fl-target-picker).
-4. param-sense in Rust (hashed n-grams, < 1M params) for meaning-only targets.
-5. Frame -> `route.rs`: build routes with modifiers (invert, range, curve, gates, ramp) from resolved frames.
-6. Route diff UI: accept, edit, undo.
-7. Chips fallback (map.fallback) and the confidence threshold that triggers it, calibrated on Noa's calibration sentences, not on synthetic ones.
+1. Done by other sessions: model files (`plugin/assistant/install.sh` links `data/mapping/runtime` in a dev checkout, else downloads the pinned release into `~/Library/Application Support/synthexis/parser`), the sentence field (`plugin/synthexis/src/sentence.rs`, completion chips go to the parser as pinned spans) and param-sense in Rust for the picked plugin (`plugin/synthexis/src/sense.rs`).
+2. Parse result shown next to the sentence field; the frame still goes only to the log.
+3. Resolver in Rust: frame + the picked plugin's parameter names -> parameter ids, in the order of the proposed map.resolver amend (alias, name match on the named plugin, param-sense class, chips). Needs the BIO head output for the target text (weights are exported, the head is not run yet).
+4. Frame -> `route.rs`: build routes with modifiers (invert, range, curve, gates, ramp) from resolved frames.
+5. Route diff UI: accept, edit, undo.
+6. Chips fallback (map.fallback) and the confidence threshold that triggers it, calibrated on Noa's calibration sentences, not on synthetic ones.
+7. Latency of the v11 Q8_0 ensemble on an idle Mac, Q8_0 against f16 (see above).
