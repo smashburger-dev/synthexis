@@ -1,0 +1,308 @@
+{
+ "steps": [
+  {
+   "step": "baseline",
+   "code": null,
+   "error": null,
+   "focus": {
+    "formID": -1,
+    "plugin": "",
+    "caption": "",
+    "activeFx": null,
+    "selCh": 0,
+    "track": 0,
+    "wid": []
+   },
+   "focus_ms": 0.03341599949635565,
+   "refresh_flags": [],
+   "focus_events": [],
+   "other": []
+  },
+  {
+   "step": "mixer.focusEditor(0,4) ShaperBox",
+   "code": "mixer.focusEditor(0, 4)",
+   "error": null,
+   "focus": {
+    "formID": -1,
+    "plugin": "",
+    "caption": "",
+    "activeFx": null,
+    "selCh": 0,
+    "track": 0,
+    "wid": []
+   },
+   "focus_ms": 0.016291000065393746,
+   "refresh_flags": [],
+   "focus_events": [],
+   "other": []
+  },
+  {
+   "step": "mixer.focusEditor(0,1) Portal",
+   "code": "mixer.focusEditor(0, 1)",
+   "error": null,
+   "focus": {
+    "formID": -1,
+    "plugin": "",
+    "caption": "",
+    "activeFx": null,
+    "selCh": 0,
+    "track": 0,
+    "wid": []
+   },
+   "focus_ms": 0.018332997569814324,
+   "refresh_flags": [],
+   "focus_events": [],
+   "other": []
+  },
+  {
+   "step": "channels.showEditor(1,1) Serum 2",
+   "code": "channels.showEditor(1, 1)",
+   "error": null,
+   "focus": {
+    "formID": -1,
+    "plugin": "",
+    "caption": "",
+    "activeFx": null,
+    "selCh": 1,
+    "track": 0,
+    "wid": []
+   },
+   "focus_ms": 0.024124994524754584,
+   "refresh_flags": [],
+   "focus_events": [],
+   "other": [
+    [
+     "channel",
+     [
+      1,
+      4
+     ]
+    ],
+    [
+     "mixer",
+     -1
+    ]
+   ]
+  },
+  {
+   "step": "channels.selectOneChannel(0)",
+   "code": "channels.selectOneChannel(0)",
+   "error": null,
+   "focus": {
+    "formID": -1,
+    "plugin": "",
+    "caption": "",
+    "activeFx": null,
+    "selCh": 0,
+    "track": 0,
+    "wid": []
+   },
+   "focus_ms": 0.014417004422284663,
+   "refresh_flags": [
+    65831
+   ],
+   "focus_events": [
+    "refresh"
+   ],
+   "other": [
+    [
+     "channel",
+     [
+      0,
+      4
+     ]
+    ]
+   ]
+  },
+  {
+   "step": "mixer.setTrackNumber(2)",
+   "code": "mixer.setTrackNumber(2)",
+   "error": null,
+   "focus": {
+    "formID": -1,
+    "plugin": "",
+    "caption": "",
+    "activeFx": null,
+    "selCh": 0,
+    "track": 2,
+    "wid": []
+   },
+   "focus_ms": 0.0145840022014454,
+   "refresh_flags": [
+    263
+   ],
+   "focus_events": [],
+   "other": [
+    [
+     "mixer",
+     -1
+    ]
+   ]
+  },
+  {
+   "step": "focus mixer window",
+   "code": "ui.showWindow(midi.widMixer) or ui.setFocused(midi.widMixer)",
+   "error": null,
+   "focus": {
+    "formID": 0,
+    "plugin": "",
+    "caption": "Mixer - Insert 2",
+    "activeFx": null,
+    "selCh": 0,
+    "track": 2,
+    "wid": [
+     0
+    ]
+   },
+   "focus_ms": 0.3659579961095005,
+   "refresh_flags": [],
+   "focus_events": [],
+   "other": []
+  },
+  {
+   "step": "focus channel rack",
+   "code": "ui.showWindow(midi.widChannelRack) or ui.setFocused(midi.widChannelRack)",
+   "error": null,
+   "focus": {
+    "formID": 1,
+    "plugin": "",
+    "caption": "Channel rack",
+    "activeFx": null,
+    "selCh": 0,
+    "track": 2,
+    "wid": [
+     1
+    ]
+   },
+   "focus_ms": 0.034374999813735485,
+   "refresh_flags": [
+    256
+   ],
+   "focus_events": [],
+   "other": []
+  },
+  {
+   "step": "channels.showEditor(1,0)",
+   "code": "channels.showEditor(1, 0)",
+   "error": null,
+   "focus": {
+    "formID": 1,
+    "plugin": "",
+    "caption": "Channel rack",
+    "activeFx": null,
+    "selCh": 0,
+    "track": 2,
+    "wid": [
+     1
+    ]
+   },
+   "focus_ms": 0.026875000912696123,
+   "refresh_flags": [
+    256
+   ],
+   "focus_events": [],
+   "other": []
+  },
+  {
+   "step": "restore selected channel",
+   "code": "channels.selectOneChannel(0)",
+   "error": null,
+   "focus": {
+    "formID": 1,
+    "plugin": "",
+    "caption": "Channel rack",
+    "activeFx": null,
+    "selCh": 0,
+    "track": 2,
+    "wid": [
+     1
+    ]
+   },
+   "focus_ms": 0.029874994652345777,
+   "refresh_flags": [
+    32
+   ],
+   "focus_events": [
+    "refresh"
+   ],
+   "other": []
+  },
+  {
+   "step": "restore mixer track",
+   "code": "mixer.setTrackNumber(0)",
+   "error": null,
+   "focus": {
+    "formID": 1,
+    "plugin": "",
+    "caption": "Channel rack",
+    "activeFx": null,
+    "selCh": 0,
+    "track": 0,
+    "wid": [
+     1
+    ]
+   },
+   "focus_ms": 0.029916991479694843,
+   "refresh_flags": [
+    263
+   ],
+   "focus_events": [],
+   "other": [
+    [
+     "mixer",
+     -1
+    ]
+   ]
+  }
+ ],
+ "getParamName_side_effect": {
+  "refresh_flags": [],
+  "focus_events": 0
+ },
+ "idle": {
+  "calls": 42,
+  "secs": 10.077946901321411,
+  "hz": 4.167515507994292,
+  "gap_max_s": 6.914322137832642
+ },
+ "poll": {
+  "n": 42,
+  "mean_ms": 0.04149211911551122,
+  "max_ms": 0.08758300100453198,
+  "changes": 1
+ },
+ "threads": {
+  "sysex": {
+   "id": 258,
+   "now": 6164885504,
+   "seen": {
+    "OnRefresh": 8381857664,
+    "OnIdle": 8381857664,
+    "OnSysEx": 6164885504
+   },
+   "queue_ms": 156.1785000085365
+  },
+  "queued": {
+   "id": 259,
+   "now": 8381857664,
+   "seen": {
+    "OnRefresh": 8381857664,
+    "OnIdle": 8381857664,
+    "OnSysEx": 6164885504
+   },
+   "queue_ms": 118.55366699455772
+  }
+ },
+ "ping_ms": {
+  "direct": {
+   "median": 0.25679099780973047,
+   "p95": 0.3966670046793297,
+   "max": 0.8489169995300472
+  },
+  "queued": {
+   "median": 203.18372899782844,
+   "p95": 283.67929099476896,
+   "max": 294.1519579908345
+  }
+ }
+}

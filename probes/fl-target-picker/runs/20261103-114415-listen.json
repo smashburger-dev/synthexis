@@ -1,0 +1,172 @@
+{
+ "log": [
+  [
+   0.03589510917663574,
+   "Portal",
+   "MACRO 1",
+   0.0
+  ],
+  [
+   3.0468170642852783,
+   "Portal",
+   "MACRO 1",
+   1.0
+  ],
+  [
+   6.054350137710571,
+   "Portal",
+   "MACRO 1",
+   0.0
+  ],
+  [
+   9.06343388557434,
+   "Portal",
+   "MACRO 1",
+   1.0
+  ],
+  [
+   12.379179000854492,
+   "Portal",
+   "MACRO 2",
+   0.0
+  ],
+  [
+   15.393885135650635,
+   "Portal",
+   "MACRO 2",
+   1.0
+  ],
+  [
+   18.41473889350891,
+   "Portal",
+   "MACRO 2",
+   0.0
+  ],
+  [
+   21.421173095703125,
+   "Portal",
+   "MACRO 2",
+   1.0
+  ],
+  [
+   24.7534499168396,
+   "Portal",
+   "MASTER DRY/WET",
+   0.0
+  ],
+  [
+   27.765350103378296,
+   "Portal",
+   "MASTER DRY/WET",
+   1.0
+  ],
+  [
+   30.768019914627075,
+   "Portal",
+   "MASTER DRY/WET",
+   0.0
+  ],
+  [
+   33.78436017036438,
+   "Portal",
+   "MASTER DRY/WET",
+   1.0
+  ],
+  [
+   37.11772012710571,
+   "ShaperBox",
+   "CrushShaper On",
+   0.0
+  ],
+  [
+   40.13111400604248,
+   "ShaperBox",
+   "CrushShaper On",
+   1.0
+  ],
+  [
+   43.13454508781433,
+   "ShaperBox",
+   "CrushShaper On",
+   0.0
+  ],
+  [
+   46.145851135253906,
+   "ShaperBox",
+   "CrushShaper On",
+   1.0
+  ],
+  [
+   49.46806812286377,
+   "ShaperBox",
+   "Crush Mid Mix",
+   0.0
+  ],
+  [
+   52.48604202270508,
+   "ShaperBox",
+   "Crush Mid Mix",
+   1.0
+  ],
+  [
+   55.4995539188385,
+   "ShaperBox",
+   "Crush Mid Mix",
+   0.0
+  ],
+  [
+   58.505699157714844,
+   "ShaperBox",
+   "Crush Mid Mix",
+   1.0
+  ],
+  [
+   61.85868310928345,
+   "ShaperBox",
+   "Crush Mid Bits Push",
+   0.0
+  ],
+  [
+   64.86491012573242,
+   "ShaperBox",
+   "Crush Mid Bits Push",
+   1.0
+  ],
+  [
+   67.87092089653015,
+   "ShaperBox",
+   "Crush Mid Bits Push",
+   0.0
+  ],
+  [
+   70.88446402549744,
+   "ShaperBox",
+   "Crush Mid Bits Push",
+   1.0
+  ],
+  [
+   74.22047305107117,
+   "ShaperBox",
+   "Crush Mid Treble",
+   0.0
+  ],
+  [
+   77.22315311431885,
+   "ShaperBox",
+   "Crush Mid Treble",
+   1.0
+  ],
+  [
+   80.23193120956421,
+   "ShaperBox",
+   "Crush Mid Treble",
+   0.0
+  ],
+  [
+   83.24145412445068,
+   "ShaperBox",
+   "Crush Mid Treble",
+   1.0
+  ]
+ ]
+}

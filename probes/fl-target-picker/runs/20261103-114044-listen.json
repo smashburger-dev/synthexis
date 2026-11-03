@@ -1,0 +1,148 @@
+{
+ "log": [
+  [
+   0.006289958953857422,
+   "Portal",
+   "MASTER DRY/WET",
+   0.0
+  ],
+  [
+   3.0134949684143066,
+   "Portal",
+   "MASTER DRY/WET",
+   1.0
+  ],
+  [
+   6.017086982727051,
+   "Portal",
+   "MASTER DRY/WET",
+   0.0
+  ],
+  [
+   9.025875806808472,
+   "Portal",
+   "MASTER DRY/WET",
+   1.0
+  ],
+  [
+   12.357663869857788,
+   "Portal",
+   "MACRO 1",
+   0.0
+  ],
+  [
+   15.36506986618042,
+   "Portal",
+   "MACRO 1",
+   1.0
+  ],
+  [
+   18.38220500946045,
+   "Portal",
+   "MACRO 1",
+   0.0
+  ],
+  [
+   21.390362977981567,
+   "Portal",
+   "MACRO 1",
+   1.0
+  ],
+  [
+   24.733701944351196,
+   "Portal",
+   "MACRO 2",
+   0.0
+  ],
+  [
+   27.739001989364624,
+   "Portal",
+   "MACRO 2",
+   1.0
+  ],
+  [
+   30.75481414794922,
+   "Portal",
+   "MACRO 2",
+   0.0
+  ],
+  [
+   33.76086115837097,
+   "Portal",
+   "MACRO 2",
+   1.0
+  ],
+  [
+   37.10019397735596,
+   "ShaperBox",
+   "Master Mix",
+   0.0
+  ],
+  [
+   40.106213092803955,
+   "ShaperBox",
+   "Master Mix",
+   1.0
+  ],
+  [
+   43.11083698272705,
+   "ShaperBox",
+   "Master Mix",
+   0.0
+  ],
+  [
+   46.11499309539795,
+   "ShaperBox",
+   "Master Mix",
+   1.0
+  ],
+  [
+   49.43359994888306,
+   "ShaperBox",
+   "DriveShaper On",
+   0.0
+  ],
+  [
+   52.436936140060425,
+   "ShaperBox",
+   "DriveShaper On",
+   1.0
+  ],
+  [
+   55.45017194747925,
+   "ShaperBox",
+   "DriveShaper On",
+   0.0
+  ],
+  [
+   58.46070909500122,
+   "ShaperBox",
+   "DriveShaper On",
+   1.0
+  ],
+  [
+   61.781261920928955,
+   "ShaperBox",
+   "Drive Low Mix",
+   0.0
+  ],
+  [
+   64.79503393173218,
+   "ShaperBox",
+   "Drive Low Mix",
+   1.0
+  ],
+  [
+   67.80443787574768,
+   "ShaperBox",
+   "Drive Low Mix",
+   0.0
+  ],
+  [
+   70.81415009498596,
+   "ShaperBox",
+   "Drive Low Mix",
+   1.0
+  ]
+ ]
+}

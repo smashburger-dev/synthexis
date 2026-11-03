@@ -1,0 +1,286 @@
+{
+ "steps": [],
+ "manual": [
+  {
+   "t": 1793706333.039593,
+   "by": "poll",
+   "focus": {
+    "formID": -1,
+    "plugin": "",
+    "caption": "",
+    "activeFx": null,
+    "selCh": 0,
+    "track": 0,
+    "wid": []
+   }
+  },
+  {
+   "t": 1793706374.0413282,
+   "by": "refresh",
+   "focus": {
+    "formID": 2,
+    "plugin": "",
+    "caption": "Playlist -",
+    "activeFx": null,
+    "selCh": 0,
+    "track": 0,
+    "wid": [
+     2
+    ]
+   }
+  },
+  {
+   "t": 1793706375.92884,
+   "by": "refresh",
+   "focus": {
+    "formID": 3,
+    "plugin": "",
+    "caption": "Piano roll -",
+    "activeFx": null,
+    "selCh": 0,
+    "track": 0,
+    "wid": [
+     3
+    ]
+   }
+  },
+  {
+   "t": 1793706376.527667,
+   "by": "poll",
+   "focus": {
+    "formID": 2,
+    "plugin": "",
+    "caption": "Playlist -",
+    "activeFx": null,
+    "selCh": 0,
+    "track": 0,
+    "wid": [
+     2
+    ]
+   }
+  },
+  {
+   "t": 1793706377.102017,
+   "by": "poll",
+   "focus": {
+    "formID": 1,
+    "plugin": "",
+    "caption": "Channel rack",
+    "activeFx": null,
+    "selCh": 0,
+    "track": 0,
+    "wid": [
+     1
+    ]
+   }
+  },
+  {
+   "t": 1793706377.5570729,
+   "by": "poll",
+   "focus": {
+    "formID": 0,
+    "plugin": "",
+    "caption": "Mixer - Master",
+    "activeFx": null,
+    "selCh": 0,
+    "track": 0,
+    "wid": [
+     0
+    ]
+   }
+  },
+  {
+   "t": 1793706391.904904,
+   "by": "refresh",
+   "focus": {
+    "formID": 65536,
+    "plugin": "Portal",
+    "caption": "Portal\ue5a0 (Master)\ue5ff",
+    "activeFx": [
+     0,
+     1
+    ],
+    "selCh": 0,
+    "track": 0,
+    "wid": [
+     5,
+     6
+    ]
+   }
+  },
+  {
+   "t": 1793706396.545204,
+   "by": "refresh",
+   "focus": {
+    "formID": 262144,
+    "plugin": "ShaperBox 3",
+    "caption": "ShaperBox 3\ue5a0 (Master)\ue5ff",
+    "activeFx": [
+     0,
+     4
+    ],
+    "selCh": 0,
+    "track": 0,
+    "wid": [
+     5,
+     6
+    ]
+   }
+  },
+  {
+   "t": 1793706399.759833,
+   "by": "refresh",
+   "focus": {
+    "formID": 196608,
+    "plugin": "Archetype John Mayer X",
+    "caption": "Archetype John Mayer X\ue5a0 (Master)\ue5ff",
+    "activeFx": [
+     0,
+     3
+    ],
+    "selCh": 0,
+    "track": 0,
+    "wid": [
+     5,
+     6
+    ]
+   }
+  },
+  {
+   "t": 1793706403.498636,
+   "by": "refresh",
+   "focus": {
+    "formID": 0,
+    "plugin": "",
+    "caption": "Mixer - Master",
+    "activeFx": null,
+    "selCh": 0,
+    "track": 0,
+    "wid": [
+     0
+    ]
+   }
+  },
+  {
+   "t": 1793706404.6009321,
+   "by": "refresh",
+   "focus": {
+    "formID": 3,
+    "plugin": "",
+    "caption": "Piano roll -",
+    "activeFx": null,
+    "selCh": 0,
+    "track": 0,
+    "wid": [
+     3
+    ]
+   }
+  },
+  {
+   "t": 1793706405.250141,
+   "by": "poll",
+   "focus": {
+    "formID": 0,
+    "plugin": "",
+    "caption": "Mixer - Master",
+    "activeFx": null,
+    "selCh": 0,
+    "track": 0,
+    "wid": [
+     0
+    ]
+   }
+  },
+  {
+   "t": 1793706405.696586,
+   "by": "poll",
+   "focus": {
+    "formID": 1,
+    "plugin": "",
+    "caption": "Channel rack",
+    "activeFx": null,
+    "selCh": 0,
+    "track": 0,
+    "wid": [
+     1
+    ]
+   }
+  },
+  {
+   "t": 1793706409.285912,
+   "by": "refresh",
+   "focus": {
+    "formID": 1,
+    "plugin": "Serum 2",
+    "caption": "Serum 2\ue5a0 (Master)\ue5ff",
+    "activeFx": null,
+    "selCh": 1,
+    "track": 0,
+    "wid": [
+     5,
+     7
+    ]
+   }
+  },
+  {
+   "t": 1793706416.741173,
+   "by": "refresh",
+   "focus": {
+    "formID": 1,
+    "plugin": "",
+    "caption": "Channel rack",
+    "activeFx": null,
+    "selCh": 1,
+    "track": 0,
+    "wid": [
+     1
+    ]
+   }
+  },
+  {
+   "t": 1793706417.788394,
+   "by": "poll",
+   "focus": {
+    "formID": 0,
+    "plugin": "",
+    "caption": "Mixer - Insert 1",
+    "activeFx": null,
+    "selCh": 1,
+    "track": 1,
+    "wid": [
+     0
+    ]
+   }
+  },
+  {
+   "t": 1793706418.4250839,
+   "by": "poll",
+   "focus": {
+    "formID": 0,
+    "plugin": "",
+    "caption": "Mixer - Insert 2",
+    "activeFx": null,
+    "selCh": 1,
+    "track": 2,
+    "wid": [
+     0
+    ]
+   }
+  },
+  {
+   "t": 1793706420.309851,
+   "by": "poll",
+   "focus": {
+    "formID": 0,
+    "plugin": "",
+    "caption": "Mixer - Insert 4",
+    "activeFx": null,
+    "selCh": 1,
+    "track": 4,
+    "wid": [
+     0
+    ]
+   }
+  }
+ ]
+}

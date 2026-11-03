@@ -20,7 +20,7 @@ Sources: Noa's voice note of 10-31 (paraphrased below), spec nodes `ui.canvas`, 
 - The camera students are closed-set segmenters with one generic `object` class (`perc.seg`: background, person, face, eye, mouth, hand, object). A typed name cannot teach them a new kind of object at runtime.
 - The plugin today emits brightness, motion and a test triangle (`plugin/synthexis/src/signal.rs`). Hand and face signals arrive with the students (training from 11-01) or with the Apple Vision fallback at 10 to 15 fps (`docs/plan.md`, risks). Every move below needs one of the two.
 - FL gives scripts plugin and parameter names, but no units and no groups; value strings only for some plugins (SPEC_PROPOSAL, `map.param_sense`).
-- Writes into a third-party plugin go through the FL script (`bridge.fl_script`, record-event path). A live write into a commercial plugin through FL is not tested yet (roadmap). Without the script, synthexis drives only its own 32 macros, which the user links in FL.
+- Writes into a third-party plugin go through the FL script (`bridge.fl_script`, record-event path). Live writes into Portal and ShaperBox 3 in mixer slots work while the song plays and FL records them (11-03, `probes/fl-target-picker/RESULT.md`); Thermal does not load in FL. Without the script, synthexis drives only its own 32 macros, which the user links in FL.
 - The parser takes 9 ms per sentence on one CPU thread, so the diff can appear while the user still looks at the field.
 
 ## Main path: assign by clicking
@@ -347,7 +347,7 @@ For the line that owns `plugin/`. Each step lands with its tests and leaves the 
 6. FL parameter targets through the bridge, after the third-party write test in FL passes.
 7. Assistant: parser and resolver output turned into commands, shown as pending rows. Optional.
 
-For the freeze on 11-02: steps 1 to 5 are the demo core, the click path end to end on macros. Step 6 joins if the FL write test passes; step 7 can follow after the freeze. The hand menus fill as soon as the students deliver hand signals; until then the same code runs on the signals that exist.
+For the freeze on 11-02: steps 1 to 5 are the demo core, the click path end to end on macros. Step 6 joins if the FL write test passes (passed 11-03 for Portal and ShaperBox); step 7 can follow after the freeze. The hand menus fill as soon as the students deliver hand signals; until then the same code runs on the signals that exist.
 
 ## Scope: demo by 11-02 against later
 
@@ -417,6 +417,8 @@ For the main session to merge into `spec/synthexis.yaml`. Statements without a c
 "Per hand a tag with side and role in the hand's colour, the motion readout next to the hand, object names with track ids. Hovering or editing a move row lights the body part it reads and shows its raw value; a lost source shows 'hold' while cond.occlusion holds. A click on a hand opens its group in ui.moves; in pick mode a click on an object mask adds it to ui.objects. Corner menu: camera, mirror, masks."
 
 ### ui.target_picker (new)
+
+Merged into `spec/synthexis.yaml` (section `plugin`, node `ui.target_picker`) on 11-03 together with the FL measurements; the spec entry is current.
 
 "Breadcrumb mixer track > plugin in the top bar. Opens a tree of the project (mixer tracks by number and name; under each, the generators routed to it and its effect slots), a search field, and two entries: 'Follow FL focus' (the last plugin window focused in FL other than synthexis; pin freezes it) and 'Whole project'. The picked plugin scopes the resolver of ui.assistant, the parameter list of new rows and the target of presets; existing rows keep their targets. Instances are named by track ('Serum 2 . Pad (Mixer 3)'), plus slot when two share a track. Picking a plugin for the first time reads its parameters (map.live_inventory) and labels them with param-sense." Measured: resolver top-1 0.676 against the picked plugin, 0.580 against 6 plugins, 0.538 against 30 (probes/open-vocab-mapping/picker.py). How FL reports focus to a script: probes/fl-target-picker/.
 

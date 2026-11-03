@@ -4,9 +4,9 @@ Measured 2026-10-31 in FL Studio Producer Edition 26.1.7 [build 5421] on
 macOS, through the protocol-2 bridge in this folder. Project: 18 mixer
 tracks; Master slots 0-5 hold ValhallaSupermassive, Portal, Pro-Q 3,
 Archetype John Mayer X, ShaperBox 3, ValhallaFutureVerb; channels Sampler
-and Serum 2. Raw runs: `runs/20261031-155838-inventory.json`,
-`runs/20261031-155942-focus.json`, `runs/20261031-160400-write.json`
-(gitignored, local only).
+and Serum 2. Raw runs in `runs/`: `20261031-155838-inventory-slim.json`
+(name lists once per plugin; the 2.2 MB full run stays local and
+gitignored), `20261031-155942-focus.json`, `20261031-160400-write.json`.
 
 The listening test ran on 2026-11-03 with Noa at FL (section 4, runs
 `20261103-114044-listen.json`, `20261103-114415-listen.json`) and the
@@ -181,6 +181,8 @@ throughout, so the script cannot trust it to know the record state.
 Pattern 80 now holds test notes and recorded automation; delete it.
 
 ## Spec proposal
+
+Merged into `spec/synthexis.yaml` on 2026-11-03: `bridge.fl_script` (mixer_slots, inventory, focus, limits, shipped), `ui.target_picker` and probe P7. The text below is the proposal as written.
 
 ### Picker modes
 
