@@ -1,6 +1,6 @@
 # Roadmap
 
-Status on 2026-11-02 morning, after merging all session branches into `main` (`docs/merge-2026-11-02.md`). `spec/synthexis.yaml` stays the source of truth for features and decisions; this file tracks what is done and what is left, by workstream. Update it at the end of every session.
+Status on 2026-11-03 afternoon: every open item checked against `main` (3e56457), the code and the probe results by the parser-runtime session, with Noa's calls of that day. Earlier base: the merge of 2026-11-02 (`docs/merge-2026-11-02.md`). `spec/synthexis.yaml` stays the source of truth for features and decisions; this file tracks what is done and what is left, by workstream. Update it at the end of every session.
 
 Hard dates: S3 and S4 recorded 10-30/10-31, training from 11-01 (new Modal credit), feature freeze 11-02, demo video and public repo 11-03, submission 11-04 21:00 ET (11-05 03:00 CET).
 
@@ -30,26 +30,27 @@ Hard dates: S3 and S4 recorded 10-30/10-31, training from 11-01 (new Modal credi
 
 - [x] Packer: tar shards, 384x216 frames, 128 px hand and face crops, segment-level dev split (`train.setup`; 47,367 frames, 5.2 GB, 354 s; hand keypoints from the MediaPipe + SAM 3D Body teacher file on 38,004 of 43,753 crops, no Apple Vision data; [result](../probes/train-packer/RESULT.md))
 - [x] Mac preflight: 64 samples, 20 steps, CoreML export (all 20 checks pass on MPS, both students export; [result](../probes/train-packer/RESULT.md))
-- [ ] Licence check of every pretrained weight file (`probes/licence-check/RESULT.md`, 2026-11-02): 16 of 19 rows have a verdict; Apple Vision is blocked as the `perc.hand` teacher; Noa chose the best licence-clean alternative (2026-11-02). Missing: Meta Model API terms (SAM 3.1 API, Muse Image) and torchvision's weight terms for LR-ASPP MobileNetV3-Large
+- [x] Licence check of every pretrained weight file (`probes/licence-check/RESULT.md`, 2026-11-02): every weight file and teacher we use has a verdict and its duties (licence texts ship with the students and the parser release, "Built with Muse Spark Open", plain DeepSeek credit); Apple Vision is blocked as the `perc.hand` teacher and MediaPipe plus SAM 3D Body replaced it. The three rows without a verdict are not used: no code calls the Meta Model API (SAM 3.1 API, Muse Image), and the LR-ASPP probe was built with `weights=None`. They matter only if `snap.segment` or `train.synthetic` get built. Left from its risk list: pin the SAM 3.1 revision in `tools/labels/sam_label.py` (risk 3, not pinned on 11-03)
 - [x] Decide D9 (proxy teacher), D10 (crops), D11 (temporal prior), D12 (backbone): D10 to D12 as packed (Noa yes, 11-02); D9 deferred, runs only if S4 misses and a proxy could fix the miss (it would not fix the misses found, [result](../probes/train-students/RESULT.md))
 - [x] Students seg, hand and face on Modal (13.92 $ over two rounds), gated once per candidate on S4 against `budget.quality`: mouth passes (0.705); seg person/face/hand 0.77/0.80/0.80 live-like (gate 0.85), finger states 0.892 with pseudo finger labels (0.95; per finger 0.95 to 0.99, Apple Vision 0.962), face eye 0.24 (0.70). Models in `data/models/` ([result](../probes/train-students/RESULT.md))
 - [x] Student hill-climb round 2 (leave-one-session-out validation, 11 levers): pseudo finger labels kept; seg levers void after a CUDA autocast bug, re-run self-prev equal to the control; no face lever helped
-- [ ] Student hill-climb 3: seg without or with a stronger prev channel on clean LOSO runs, thumb and pinky labels, eye masks consistent across sessions (Apple Vision face landmarks as runtime eye source meanwhile)
+- [x] Student hill-climb 3 (overnight Mac runs 11-03, 0 $; `probes/train-students/RESULT.md`): seg-v3l (larger backbone plus self-prev, +1.6 points on dev) was shipped and rolled back on the plugin's end-to-end dev bench, so seg-a-s0 stays; two more hand seeds spread up to 4 points, hand-chir seed 0 stays. No further student training (Noa, 11-03); the thumb label check stays on the result's "Not done" list, eyes come from Apple Vision face landmarks at runtime
+- [ ] Still training (Noa, 11-03): completion and param-sense v2 (their sessions run), maybe a calibration of the students' output values in the plugin
 - [x] H3: ANE latency of the trained students: seg 0.55 / 0.65 ms, hand 0.34 / 0.52 ms per crop, face 0.34 / 0.50 ms (median / p95); end-to-end frame bench in the perception session ([result](../probes/train-students/RESULT.md))
 
 ## Plugin (hill-climb line owns `plugin/`)
 
 - [x] Students in the plugin (CoreML from Rust), derived features (`feat.*`): backend `hybrid`, numbers, tuning handoff in `probes/plugin-perception/` (RESULT.md, TUNING.md)
-- [ ] Motion primitives, presets Pong and Orb, motifs
-- [ ] Gestures and MIDI: finger states, chords, patterns, scale, transport
+- [ ] Motion primitives, presets Pong and Orb, motifs (Pong and Orb are needed for the demo, Noa 11-03)
+- [ ] Gestures and MIDI: finger states, chords, patterns, scale, transport. Checked 11-03: finger states and finger count are signals (`signal.rs`) and the plugin declares a MIDI output, but it sends no note yet; chords, patterns, scale and transport are not built. MIDI out (formerly probe P6) belongs here
 - [ ] Recording latency compensation (`rec.latency_comp`)
-- [ ] Hardware probes P4 headphone motion, P5 heart rate, P6 MIDI out
-- [ ] `setParamValue` root cause (bridge only, not blocking)
+- Dropped (Noa, 11-03): P4 headphone motion and P5 heart rate; their probe kits in `probes/headphone-motion` and `probes/heart-rate-ble` were never run
+- [x] `setParamValue`: not pursued further. The bridge writes through REC events, and the FL target picker probe found `plugins.setParamValue` works for third-party plugins in mixer slots as a fallback (`probes/fl-target-picker/RESULT.md`). Why FL ignores it for synthexis itself stays unknown; the hypotheses tested were rejected (commit 784fd63)
 - [ ] UI in the glass language (last, after perception and routes are stable)
-- [x] Target picker: follow the plugin FL has focused, or pick mixer track then plugin; the assistant resolves only there (resolver top-1 0.676 with the plugin picked, 0.580 with 6 plugins, 0.538 with 30: `probes/open-vocab-mapping/picker.py`); FL side measured (`probes/fl-target-picker/RESULT.md`): with FL in front FL reports the focused plugin and its track and slot through OnRefresh, so follow-FL is the default; track-then-slot is the manual fallback (inventory 0.4 ms, names 7-20 ms per plugin). The picker UI in the plugin is still to build
-- [ ] Plugin picker in synthexis shows the live FL project and follows FL focus: built (`plugin/synthexis/src/fl.rs`, device script `plugin/fl/device_synthexis_bridge.py`, protocol 3), tested against a fake FL over CoreMIDI; test in FL open
-- [ ] UX structure (session plugin-ux, `docs/ux-plugin.md`): assigned-moves panel per hand, finger and movement class with icons; objects you add and name; profiles 1..n with routes and presets per hand and object, switchable live while the song plays, saved with the project
-- [ ] Assigned routes into the engine: only assigned routes may move a macro, so FL records only those (Noa). The built-in routes are test routes behind the "Test signal" parameter (commit 9d9b9ae); until the UX route table lands, the plugin moves no macro with Test signal off. Keep this when merging.
+- [x] Target picker: follow the plugin FL has focused, or pick mixer track then plugin; the assistant resolves only there (resolver top-1 0.676 with the plugin picked, 0.580 with 6 plugins, 0.538 with 30: `probes/open-vocab-mapping/picker.py`); FL side measured (`probes/fl-target-picker/RESULT.md`): with FL in front FL reports the focused plugin and its track and slot through OnRefresh, so follow-FL is the default; track-then-slot is the manual fallback (inventory 0.4 ms, names 7-20 ms per plugin)
+- [x] Plugin picker in synthexis shows the live FL project and follows FL focus (`plugin/synthexis/src/fl.rs`, device script `plugin/fl/device_synthexis_bridge.py`, protocol 3); tested in FL with Noa on 11-03 (`docs/ux-plugin.md`, "Built so far"; commit aaef5f4)
+- [ ] UX structure (session plugin-ux, `docs/ux-plugin.md`): built are the plugin picker and the sentence field with completion; open are the assigned-moves panel per hand, finger and movement class with icons, objects you add and name, profiles 1..n with routes and presets per hand and object, switchable live while the song plays, saved with the project
+- [ ] Assigned routes into the engine: only assigned routes may move a macro, so FL records only those (Noa). Checked 11-03: `route.rs` still holds only the built-in test routes behind the "Test signal" parameter (commit 9d9b9ae), and nothing in the UI or the assistant writes a route yet, so with Test signal off no macro moves. Needed for the demo. Keep the rule when merging.
 
 ## Mapping assistant (own session; state in `docs/session-2026-10-30-mapping-train.md`)
 
@@ -60,8 +61,8 @@ Hard dates: S3 and S4 recorded 10-30/10-31, training from 11-01 (new Modal credi
 - [x] Glossary EN/DE (11,333 phrases, 416 concepts)
 - [x] Synthetic commands generator v3 with validators and round-trip check; stage 1 (8,000 edits) generated
 - [x] Real-sentence set: Noa's 34 sentences plus 116 derived (translations, slot swaps, his request forms), grouped split 51 calibration / 99 eval, never trained (`probes/real-eval/RESULT.md`)
-- [ ] Noa reviews the derived rows and the plugin context (`data/mapping/eval/review.md`); label the 34 originals, derived labels by delta
-- [ ] Spec merge by the main session, proposal "demo requests": XY pad, pinch clutch, values in plugin units, step, ramp toggle, arp style, any finger mask
+- [ ] Noa reviews the derived rows and the plugin context (`data/mapping/eval/review.md`); derived labels by delta. The 34 originals are done (gold-route review of 11-01, item below)
+- [ ] Spec merge by the main session, proposal "demo requests": XY pad, pinch clutch, values in plugin units, step, ramp toggle, arp style, any finger mask (not in `spec/synthexis.yaml` on 11-03)
 - [x] param-sense v1 trained (top-1 0.728, macro F1 0.511 on unseen vendors); known-plugin table exported (63,625 rows)
 - [x] param-sense in the plugin: the picked plugin's parameters get the labels of the 887 mapped plugins (`known.tsv`), every other plugin gets ps-v1 classes in Rust (`plugin/synthexis/src/sense.rs`, equal to Python on 2,426 names, 16 ms for 2,600), no prompt needed
 - [x] Parser v1 (9.30M, span-pointer frame decoder) trained on the Mac; challenge set 548 sentences; route_edit 0.628 challenge, 0.697 dev; int8 blob 9.4 MB, 9 ms median on one CPU thread
@@ -71,11 +72,12 @@ Hard dates: S3 and S4 recorded 10-30/10-31, training from 11-01 (new Modal credi
 - [x] Targeted stage-3 batch (3,749 sentences, 6.91 $) and parser v3: dev 0.796, challenge 0.748; exported `p-v3-c50-s0`. Runs are now chosen on dev sets only
 - [x] Real-sentence eval (calibration 51, eval 99 rows): v3 and v5 both get 14 to 18 of 51 calibration and 14 to 16 of 99 eval rows exactly right, while dev route_edit is 0.83 (`probes/real-eval/RESULT.md`, section "Parser runs")
 - [ ] Threshold for the chip fallback calibrated on the 51 calibration rows
-- [ ] Resolver and chip fallback in the plugin, "Built with Muse Spark Open" credit
+- [ ] Resolver and chip fallback in the plugin, "Built with Muse Spark Open" credit. Checked 11-03: the parser runs in the plugin, but its frame goes only to the log; the result is not shown next to the sentence field yet (found in Noa's FL test)
+- [x] Completion in the sentence field: crate `plugin/complete`, ghost text plus a list of up to 8 items, accepted items become chips that reach the parser as pinned spans; rounds 1 and 2 measured on the ds-v11c dev sets (`probes/completion-targets/RESULT.md`); further rounds in the completion session
 - [x] Open-vocabulary probe: target text against live parameter names beats the class-only binding on unseen names (held-out top-1 0.68 / 0.81 against 0.13 / 0.12); live writes audible in Portal, Timeless, Galaxy Tape Echo (`probes/open-vocab-mapping/RESULT.md`, spec proposal "open-vocabulary parameters")
 - [x] FL bridge write test with third-party plugins while the song plays: REC writes reach Portal and ShaperBox in mixer slots, GUIs follow, Portal audible, FL records them as automation; ShaperBox keeps its curve amounts internal, Thermal does not load (`probes/fl-target-picker/RESULT.md`)
 - [x] Full state lists for stepped parameters (session plugin-states, `probes/plugin-states/RESULT.md`): VST3 8,422 parameters in 403 plugins (107,112 states), AU 16,601 in 730 (159,483), plus dense scans of continuous parameters with stepped text. Formerly "992 parameters in 100 plugins have more states than the 11 harvested samples": the harvest already kept every step up to 64 steps; 334 VST3 and 799 AU parameters were truly incomplete, all but one per format complete now
-- [ ] Serum 2 arp patterns: no parameter switches them; slots switch through `channels.midiNoteOn` with trigger note 0-11 on Serum's channel (decided 11-01, session plugin-states); the FL test has to pass before the demo
+- [ ] Serum 2 arp patterns: no parameter switches them; slots switch through `channels.midiNoteOn` with trigger note 0-11 on Serum's channel (decided 11-01, session plugin-states); the FL test has to pass before the demo (no result recorded on 11-03)
 - [x] Parser error analysis (`probes/parser-errors/RESULT.md`): ß missing from the tokenizer vocabulary; 29 % of object labels, 75 % of momentary labels and 6-8 % of invert labels are not expressed by their sentence; text-supported scoring +4.8 points en, +4.9 de
 - [x] Bundled retrain A/B/C (tok-v2, projected labels, word hash embedding): no step beyond seed noise, B kept, word hash dropped (`probes/parser-errors/RESULT.md` section 7)
 - [x] Stage 4 commands (8,691 sentences, 6.71 $, 59 near-copies of the real set dropped) and parser v5: dev 0.837, challenge 0.781, dev_s4 0.736; +1.1 points against v3 on projected labels (p 0.018, no slice drops); exported `p-v5-s0`, int8 9.4 MB, 10 ms median (section 8)
@@ -94,10 +96,10 @@ Hard dates: S3 and S4 recorded 10-30/10-31, training from 11-01 (new Modal credi
 ## Demo and submission
 
 - [x] FigJam updated for non-experts (10-31): status notes on the 8 planning diagrams, build plan coloured by status, new area "What six days taught us" (`docs/figjam-update-2026-10-31.md`)
-- [ ] FigJam: update again after Noa's sentences, the retrain and the FL test
+- [x] FigJam updated again on 11-02 and 11-03 by the sessions: students, FL write test and target picker, parser v11 ("One sentence, before and after"), parser runtime numbers
 - [ ] Demo project in FL, 3-minute video with presets and behind the scenes (11-03)
 - [ ] README with real request counts, repo public (11-03)
-- [ ] Install from source for others: `plugin/install.sh` offers Apple's Command Line Tools and the official rustup installer when missing (commit 4778556); its last step runs `plugin/assistant/install.sh` (branch claude/assistant-runtime-release: completion data tracked, parser as GitHub release `assistant-parser-v11`, sha256 pinned; the release has to be published)
+- [ ] Install from source for others: `plugin/install.sh` offers Apple's Command Line Tools and the official rustup installer when missing (commit 4778556); its last step runs `plugin/assistant/install.sh` (branch claude/assistant-runtime-release: completion data tracked, parser as GitHub release `assistant-parser-v11`, sha256 pinned; the release is published since 11-03 11:32)
 - [ ] Download release (Noa, 11-03): signed synthexis.vst3 and .clap with the three models as a GitHub release, installed by copying only, without Rust or the Command Line Tools; publishing needs Noa's OK
 - [ ] Final install test once everything is merged and before the demo: fresh clone without `data/`, `./install.sh` with its prompts, FL loads the plugin, one assigned route moves and is recorded alone, `fl_live.py`; then the release zip on a clean user account
 - [ ] Submission (11-04)
