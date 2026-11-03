@@ -20,6 +20,9 @@ struct VocabFile {
     /// [span text, class or target, count] from the training spans
     #[serde(default)]
     span_prior: Vec<(String, String, u32)>,
+    /// Sources that take a hand side (ontology `side: true`).
+    #[serde(default)]
+    sided: Vec<String>,
     class_prior: HashMap<String, u64>,
     plugins: Vec<PluginInfo>,
 }
@@ -80,7 +83,7 @@ pub fn load(dir: &Path) -> Result<(Engine, Vec<PluginInfo>), String> {
         .collect();
     let phrases = v.param_phrases.into_iter().map(|r| (r.class, r.p)).collect();
     let targets = v.targets.into_iter().map(|r| (r.kind, r.p)).collect();
-    let engine = Engine::new(gestures, phrases, &v.class_prior).with_targets(targets).with_span_prior(v.span_prior);
+    let engine = Engine::new(gestures, phrases, &v.class_prior).with_targets(targets).with_span_prior(v.span_prior).with_sided(v.sided);
     Ok((engine, v.plugins))
 }
 

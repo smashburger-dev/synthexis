@@ -20,7 +20,7 @@ fn param(text: &str, chip: &str, id: &str, class: &str, switch: bool) -> Pin {
 }
 
 fn gesture(text: &str, chip: &str, source: &str) -> Pin {
-    Pin { bytes: span(text, chip), what: PinWhat::Gesture { source: source.into(), shape: None } }
+    Pin { bytes: span(text, chip), what: PinWhat::Gesture { source: source.into(), shape: None, side: None } }
 }
 
 #[test]

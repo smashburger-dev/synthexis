@@ -78,7 +78,9 @@ pub struct Param {
 #[derive(Clone, Debug, PartialEq)]
 pub enum Chip {
     Param { plugin: String, index: u32, name: String, class: String },
-    Gesture { source: String, shape: Option<String>, phrase: String, pol: i8 },
+    /// `side`: the hand side picked in the variant panel (left, right,
+    /// both); None leaves the side to the sentence.
+    Gesture { source: String, shape: Option<String>, phrase: String, pol: i8, side: Option<String> },
     /// A target kind of the ontology that is no plugin parameter:
     /// midi.note, midi.chord, midi.pattern, midi.cc or macro.
     Target { kind: String, phrase: String },
@@ -121,6 +123,52 @@ pub struct Suggestion {
     pub prefix: bool,
     /// Offered from a weak gesture position: list only, no ghost text.
     pub weak: bool,
+    pub variants: Variants,
+}
+
+/// Hand sides a gesture can be pinned to, in panel order (Left key, Right
+/// key). Never a default and never both hands (Noa, 11-03).
+pub const SIDES: [&str; 2] = ["left", "right"];
+/// Fingers, in panel order: the source is hand.finger.<finger>.
+pub const FINGERS: [&str; 5] = ["thumb", "index", "middle", "ring", "pinky"];
+
+/// What the variant panel asks for an item.
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+pub struct Variants {
+    /// The move is per hand (ontology `side: true`): a side must be picked.
+    pub sided: bool,
+    /// The side the sentence names right before the item ("die linke
+    /// Fau"), an index into SIDES; the panel starts there.
+    pub side: Option<usize>,
+    /// A bare "finger": which finger is picked in a second step.
+    pub finger: bool,
+}
+
+impl Variants {
+    pub fn any(&self) -> bool {
+        self.sided || self.finger
+    }
+}
+
+/// A finger phrase that names no finger at all ("Finger"): which finger is
+/// picked in the panel. "pointing finger" or "Daumen" keep their own.
+pub fn finger_open(source: &str, phrase: &str) -> bool {
+    source.starts_with("hand.finger.") && phrase.trim().eq_ignore_ascii_case("finger")
+}
+
+impl Chip {
+    /// The chip with the panel's choice: a finger replaces the source, the
+    /// side (an index into SIDES) is kept for the pin.
+    pub fn with_variant(&self, side: Option<usize>, finger: Option<usize>) -> Chip {
+        let mut c = self.clone();
+        if let Chip::Gesture { source, side: s, .. } = &mut c {
+            if let Some(f) = finger.and_then(|f| FINGERS.get(f)) {
+                *source = format!("hand.finger.{f}");
+            }
+            *s = side.and_then(|i| SIDES.get(i)).map(|x| x.to_string());
+        }
+        c
+    }
 }
 
 impl Suggestion {
@@ -171,6 +219,8 @@ pub struct Engine {
     /// Folded training span texts, sorted, with their class and count.
     spans: Vec<(Vec<char>, String, u32)>,
     pub span_weight: f32,
+    /// Sources that take a hand side (ontology `side: true`).
+    sided: std::collections::HashSet<String>,
 }
 
 #[derive(Default)]
@@ -219,7 +269,22 @@ impl Engine {
             tindex: Index::new(std::iter::empty()),
             spans: Vec::new(),
             span_weight: SPAN_PRIOR,
+            sided: Default::default(),
         }
+    }
+
+    /// Sources that take a hand side: their items get the side axis.
+    pub fn with_sided(mut self, sources: Vec<String>) -> Self {
+        self.sided = sources.into_iter().collect();
+        self
+    }
+
+    /// What the panel asks for a gesture item; it starts at the side named
+    /// right before the item ("die linke Fau"), else at none.
+    fn gesture_variants(&self, g: &Gesture, named: Option<&str>) -> Variants {
+        let sided = self.sided.contains(&g.source);
+        let side = named.filter(|_| sided).and_then(|n| SIDES.iter().position(|s| *s == n));
+        Variants { sided, side, finger: finger_open(&g.source, &g.phrase) }
     }
 
     /// Training span texts with the class (or target) they named and how
@@ -329,6 +394,7 @@ impl Engine {
             let sp = self.span_prior(&q);
             let learned = |c: &str| self.span_weight * sp.get(c).copied().unwrap_or(0.0);
             let pos = context::gesture_position(&text[..span.start]);
+            let named = context::side_before(&text[clause..span.start]);
             if pos != context::GesturePos::No {
                 let weak = pos == context::GesturePos::Weak;
                 self.gindex.with_word_prefix(&first, &mut sc.seen, &mut sc.ids);
@@ -344,10 +410,12 @@ impl Engine {
                         shape: g.shape.clone(),
                         phrase: g.phrase.clone(),
                         pol: g.pol,
+                        side: None,
                     };
                     let key = format!("gesture:{}/{:?}/{}", g.source, g.shape, g.pol);
                     let score = m + GESTURE_BONUS + wb + self.recency(&chip.id());
-                    keep(Suggestion { chip, score, replace: replace.clone(), via: None, prefix, weak }, key);
+                    let variants = self.gesture_variants(g, named);
+                    keep(Suggestion { chip, score, replace: replace.clone(), via: None, prefix, weak, variants }, key);
                 }
             }
             self.tindex.with_word_prefix(&first, &mut sc.seen, &mut sc.ids);
@@ -362,7 +430,7 @@ impl Engine {
                 let score = m + TARGET_DOWN + wb + learned(kind) + self.recency(&key);
                 // list only: short target words ("fire chords", "pad chords")
                 // start like parameter words and would take the ghost text
-                keep(Suggestion { chip, score, replace: replace.clone(), via: None, prefix: q.is_prefix(k), weak: true }, key);
+                keep(Suggestion { chip, score, replace: replace.clone(), via: None, prefix: q.is_prefix(k), weak: true, variants: Variants::default() }, key);
             }
             let Some(p) = &self.plugin else { continue };
             // (param, match, via phrase, prefix)
@@ -407,7 +475,7 @@ impl Engine {
                 };
                 let score = m + wb + self.class_adjust(p.class[i as usize], switchy) + learned(&par.class) + self.recency(&chip.id());
                 let key = chip.id();
-                keep(Suggestion { chip, score, replace: replace.clone(), via, prefix, weak: false }, key);
+                keep(Suggestion { chip, score, replace: replace.clone(), via, prefix, weak: false, variants: Variants::default() }, key);
             }
         }
         let mut out: Vec<Suggestion> = best.into_values().collect();

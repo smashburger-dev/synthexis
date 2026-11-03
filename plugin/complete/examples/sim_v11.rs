@@ -12,7 +12,7 @@ use std::path::Path;
 
 use serde::Deserialize;
 use serde_json::json;
-use synthexis_complete::{data, Chip, Engine};
+use synthexis_complete::{data, Chip, Engine, SIDES};
 use synthexis_parser::{pin, Item, Pin, PinWhat};
 
 #[derive(Deserialize)]
@@ -20,8 +20,8 @@ struct Row {
     text: String,
     pred: Vec<String>,
     pred_bytes: Vec<Option<(usize, usize)>>,
-    /// [byte start, byte end, source, shape]
-    src: Vec<(usize, usize, String, Option<String>)>,
+    /// [byte start, byte end, source, shape, side]
+    src: Vec<(usize, usize, String, Option<String>, Option<String>)>,
     /// [byte start, byte end, class, switch]
     tgt: Vec<(usize, usize, String, bool)>,
     /// [byte start, byte end, target kind] of MIDI and macro spans
@@ -51,8 +51,13 @@ fn items(r: &Row) -> Vec<Item> {
 }
 
 /// Types text[b..e] char by char after text[..b]; the first chip of the
-/// gold source in the top 3, and whether it was also the ghost text.
-fn type_span(e: &Engine, text: &str, b: usize, end: usize, src: &str, shape: Option<&str>) -> Option<(Chip, bool)> {
+/// gold source in the top 3, and whether it was also the ghost text. The
+/// side (probes/completion-side): SIM_SIDES=gold picks the gold side when
+/// it is left or right, else the side the sentence names; SIM_SIDES=forced
+/// as gold, but left where neither gives one (the field always asks);
+/// SIM_SIDES=named only the side the sentence names; unset none.
+fn type_span(e: &Engine, text: &str, b: usize, end: usize, src: &str, shape: Option<&str>, side: Option<&str>) -> Option<(Chip, bool)> {
+    let mode = std::env::var("SIM_SIDES").unwrap_or_default();
     let ends = text[b..end].char_indices().map(|(i, c)| b + i + c.len_utf8());
     for c in ends {
         let typed = &text[..c];
@@ -60,7 +65,15 @@ fn type_span(e: &Engine, text: &str, b: usize, end: usize, src: &str, shape: Opt
         for (k, s) in sugg.iter().enumerate() {
             if let Chip::Gesture { source, shape: sh, .. } = &s.chip {
                 if fold(source) == src && (shape.is_none() || sh.as_deref() == shape) {
-                    return Some((s.chip.clone(), k == 0 && s.ghost_worthy(typed)));
+                    let gold = side.and_then(|x| SIDES.iter().position(|y| *y == x));
+                    let v = s.variants;
+                    let pick = match mode.as_str() {
+                        "gold" if v.sided => gold.or(v.side),
+                        "forced" if v.sided => gold.or(v.side).or(Some(0)),
+                        "named" if v.sided => v.side,
+                        _ => None,
+                    };
+                    return Some((s.chip.with_variant(pick, None), k == 0 && s.ghost_worthy(typed)));
                 }
             }
         }
@@ -103,12 +116,12 @@ fn main() {
         };
         let its = items(&r);
         let (mut gpins, mut hits, mut ghost) = (Vec::new(), 0, 0);
-        for (b, e, src, shape) in &r.src {
-            if let Some((chip, g)) = type_span(&engine, &r.text, *b, *e, src, shape.as_deref()) {
+        for (b, e, src, shape, side) in &r.src {
+            if let Some((chip, g)) = type_span(&engine, &r.text, *b, *e, src, shape.as_deref(), side.as_deref()) {
                 hits += 1;
                 ghost += usize::from(g);
-                if let Chip::Gesture { source, shape, .. } = chip {
-                    gpins.push(Pin { bytes: (*b, *e), what: PinWhat::Gesture { source, shape } });
+                if let Chip::Gesture { source, shape, side, .. } = chip {
+                    gpins.push(Pin { bytes: (*b, *e), what: PinWhat::Gesture { source, shape, side } });
                 }
             }
         }

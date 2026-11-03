@@ -116,12 +116,12 @@ mod tests {
     use super::*;
 
     fn gesture(phrase: &str) -> Chip {
-        Chip::Gesture { source: "hand.fist".into(), shape: None, phrase: phrase.into(), pol: 1 }
+        Chip::Gesture { source: "hand.fist".into(), shape: None, phrase: phrase.into(), pol: 1, side: None }
     }
 
     fn accept(d: &mut ChipText, typed: &str, phrase: &str) -> usize {
         let start = d.text.rfind(typed).unwrap_or(d.text.len());
-        let s = Suggestion { chip: gesture(phrase), score: 1.0, replace: start..start + typed.len(), via: None, prefix: true, weak: false };
+        let s = Suggestion { chip: gesture(phrase), score: 1.0, replace: start..start + typed.len(), via: None, prefix: true, weak: false, variants: Default::default() };
         d.accept(&s)
     }
 
