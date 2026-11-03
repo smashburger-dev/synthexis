@@ -311,6 +311,24 @@ Same script after the response curves and the median stage (run file `runs/17937
 
 Automation replay: 0.01 to 0.89, verdict `recorded`. The open hand now tops out at 0.87 to 0.92: the extended anchors are the median of extended fingers, so a hand reads 1 only when it is opened at least as far as the typical recorded one. Camera to parameter over 25 windows: median 55 to 145 ms (mid 58), p95 76 to 155 ms (mid 80). The camera's frame-to-callback delay swung between 49 and 134 ms; callback to hands emitted took 3 to 8 ms median.
 
+### Fist curve and pinch after the second live test (2026-11-03, later)
+
+Noa, live: the mouth and the pinch control feel right, but opening the fist still jumps from about 0.18 to 0.87 over a few centimetres of finger travel, and a closed pinch tops out at 0.84.
+
+Fist. The raw cues are slower than the mapped value: over the open ramps, bend and reach take 630 and 580 ms (median) from 20% to 80% of their own range, the mapped openness 330 ms. In the ramps the linear finger value spends half of its in-range frames below 0.31 and only a tenth between 0.31 and 0.58. The four fingers now pass a decile map of those ramp frames (`FINGER_DECILES`, `finger_curve`), so the cue's fast middle is flattened and a half-open hand can rest near 0.5. The anchors moved to the 40th percentile of extended and the 60th of folded frames. Variants on S1 to S3 (anchor quantiles 0.5 to 0.9, map weight 0 to 1): firmer anchors alone made the middle faster (267 ms); the full map with median anchors gave the slowest middle (600 ms) but let fists read 0.16 at p75. The hand-blob shape from the seg mask (box or area per palm) grows steadily with the number of extended fingers but is too noisy for this (standard deviation 0.2 to 0.4 against a 0.8 span).
+
+Pinch. Touching thumb and index tips sit 0.1 to 0.3 palm lengths apart in the H_pinch_drag segments of S2 and S3, open hands at 0.9 to 1.3. The window moved from 0.12..0.8 to 0.25..0.93, so its slope (the fine control) stays the same.
+
+| S1 to S3 | 814c0ec | now |
+|---|---:|---:|
+| hand open ramps, time between 0.2 and 0.8 | 0.29 | **0.40** |
+| hand open ramps, 20% to 80% (median) | 400 ms | **584 ms** |
+| closed pinch reading 0.95 or more, S2 / S3 | 0.42 / 0.34 | **0.82 / 0.69** |
+| dev block A finger accuracy | 0.961 | 0.955 |
+| open hand median / fist p75 | 0.93 / 0.10 | 0.92 / 0.16 |
+
+S4, scored once, block A: finger accuracy 0.929 (814c0ec: 0.935), openness against extended fingers 0.956 (0.965), side unchanged (0.987 / 0.002). The ramps were recorded at the protocol's pace, which moves fast through the middle; how a slow live opening feels is for Noa to judge.
+
 ## Signal contract
 
 - Ids: `cam0.` + ontology source id, side after the first segment for sided sources: `cam0.hand.R.openness`, `cam0.hand.L.finger.index.tilt`, `cam0.eye.L.open`, `cam0.mouth.open`, `cam0.face.smile`, `cam0.head.yaw`, `cam0.hands.distance`, `cam0.object.x`. `S:hand.openness side:right` maps to `cam0.hand.R.openness`. The spec's example `cam0.face.mouth.open` (sig.contract) differs from the ontology's `mouth.open`; the code follows the ontology.

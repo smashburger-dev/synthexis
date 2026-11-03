@@ -494,12 +494,25 @@ impl HandFeatures {
 }
 
 /// Index to pinky, summed joint bend (rad) at extended and folded: the
-/// medians of block A finger states on S1-S3 (non-dev segments).
-const FINGER_BEND: [(f32, f32); 4] = [(0.54, 3.79), (0.52, 3.64), (0.51, 3.56), (0.70, 3.79)];
+/// 40th percentile of extended and the 60th of folded block A frames on
+/// S1-S3 (non-dev segments).
+const FINGER_BEND: [(f32, f32); 4] = [(0.61, 3.68), (0.60, 3.53), (0.62, 3.45), (0.79, 3.56)];
 /// Index to pinky, tip reach from the wrist per palm length at folded
 /// and extended, from the same frames. Reach shrinks when a finger curls
 /// towards the camera, where the bend angle in the image barely changes.
-const FINGER_REACH: [(f32, f32); 4] = [(0.93, 1.99), (0.72, 2.04), (0.59, 1.87), (0.54, 1.60)];
+const FINGER_REACH: [(f32, f32); 4] = [(0.96, 1.95), (0.77, 2.00), (0.67, 1.83), (0.60, 1.57)];
+/// Deciles of the linear finger value over the open-close ramps of S1-S3
+/// (B_*_open): the cue moves fast through its middle (0.31 to 0.58 holds
+/// a tenth of the frames), so mapping these to 0, 0.1, .., 1 flattens the
+/// middle and lets a half-open hand rest near 0.5.
+const FINGER_DECILES: [f32; 11] = [0.0, 0.042, 0.079, 0.124, 0.190, 0.306, 0.583, 0.764, 0.879, 0.955, 1.0];
+
+fn finger_curve(u: f32) -> f32 {
+    let u = u.clamp(0.0, 1.0);
+    let k = FINGER_DECILES.iter().rposition(|&x| x <= u).unwrap_or(0).min(9);
+    let (x0, x1) = (FINGER_DECILES[k], FINGER_DECILES[k + 1]);
+    (k as f32 + (u - x0) / (x1 - x0).max(1e-6)) / 10.0
+}
 
 /// Features from 21 keypoints in frame pixels. `fingers_ext` are the
 /// student's finger probabilities (thumb..pinky), when it has them.
@@ -521,7 +534,7 @@ pub fn hand_features(kp: &[[f32; 2]; 21], side: Side, fw: f32, fh: f32, fingers_
             0.5 * (1.0 - lin(bend, 0.2, 1.4)) + 0.5 * lin(dist(kp[4], index_mcp) / palm_len, 0.35, 0.9)
         } else {
             let (b, r) = (FINGER_BEND[n - 1], FINGER_REACH[n - 1]);
-            0.5 * (1.0 - lin(bend, b.0, b.1)) + 0.5 * lin(dist(kp[ch[3]], wrist) / palm_len, r.0, r.1)
+            finger_curve(0.5 * (1.0 - lin(bend, b.0, b.1)) + 0.5 * lin(dist(kp[ch[3]], wrist) / palm_len, r.0, r.1))
         };
         let dir = sub(kp[ch[3]], kp[if n == 0 { ch[1] } else { ch[0] }]);
         f.tilt[n] = 0.5 - 0.5 * dir[1] / len(dir).max(1e-3);
@@ -531,7 +544,8 @@ pub fn hand_features(kp: &[[f32; 2]; 21], side: Side, fw: f32, fh: f32, fingers_
     f.x = 1.0 - (palm[0] / fw).clamp(0.0, 1.0);
     f.y = 1.0 - (palm[1] / fh).clamp(0.0, 1.0);
     f.depth = lin(palm_len / fh, 0.06, 0.35);
-    f.pinch = 1.0 - lin(dist(kp[4], kp[8]) / palm_len, 0.12, 0.8);
+    // Touching tips sit 0.1 to 0.3 palm apart (H_pinch_drag, S2 and S3).
+    f.pinch = 1.0 - lin(dist(kp[4], kp[8]) / palm_len, 0.25, 0.93);
     // Roll around the forearm: the knuckle line's extent across the
     // wrist->middle axis, signed so the thumb side decides the direction.
     let up = sub(middle_mcp, wrist);
@@ -1058,7 +1072,9 @@ mod tests {
         assert!(open.openness() > 0.8, "open {}", open.openness());
         assert!(fist.openness() < 0.35, "fist {}", fist.openness());
         for n in 1..5 {
-            assert!(open.finger[n] > 0.9 && fist.finger[n] < 0.3, "finger {n}: {} {}", open.finger[n], fist.finger[n]);
+            // The synthetic curl stays in the image plane, so the tips end
+            // about a palm from the wrist (real fists: 0.6); folded, not 0.
+            assert!(open.finger[n] > 0.9 && fist.finger[n] < 0.5, "finger {n}: {} {}", open.finger[n], fist.finger[n]);
             assert!(open.tilt[n] > 0.9, "fingers point up");
         }
         assert_eq!(open.finger_count, 1.0);
@@ -1269,6 +1285,19 @@ mod tests {
             f.eye_px = [[if k % 3 == 0 { 0.55 } else { 0.4 }, 0.1, 0.4], [0.4, 0.1, 0.4]];
             a.apply(&mut f, k * 33_000_000, false);
             assert!(f.eye_open[0] > 0.6 && f.eye_open[1] > 0.6, "{k}: {:?}", f.eye_open);
+        }
+    }
+
+    #[test]
+    fn finger_curve_is_monotone_and_spans_0_to_1() {
+        assert_eq!(finger_curve(0.0), 0.0);
+        assert!((finger_curve(1.0) - 1.0).abs() < 1e-6);
+        assert!((finger_curve(0.306) - 0.5).abs() < 1e-3);
+        let mut prev = -1.0;
+        for i in 0..=100 {
+            let v = finger_curve(i as f32 / 100.0);
+            assert!(v >= prev, "{i}");
+            prev = v;
         }
     }
 
