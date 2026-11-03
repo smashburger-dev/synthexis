@@ -16,11 +16,27 @@ use nih_plug::prelude::*;
 
 use crate::engine::SignalSubscriber;
 use crate::log;
-use crate::route::{apply_sample, default_routes, Route, Target, Values, NUM_MACROS};
+use crate::route::{apply_sample, default_routes, hands_used, Route, Target, Values, NUM_MACROS};
 use crate::signal::Sample;
 
 const WRITE_EPS: f32 = 1.0 / 1024.0;
 const LOG_EVERY_S: u64 = 5;
+
+/// Hands [L, R] each live instance's routes use, by instance number: an
+/// instance's hand x routes split when another instance routes the other
+/// hand (route::fit_hand_x). A leaf lock: nothing else is taken under it.
+static HANDS_USED: Mutex<Vec<(u64, [bool; 2])>> = Mutex::new(Vec::new());
+static NEXT_INSTANCE: AtomicU64 = AtomicU64::new(1);
+
+/// Records the hands instance `me` uses; returns those the others use.
+fn share_hands(me: u64, used: [bool; 2]) -> [bool; 2] {
+    let mut all = HANDS_USED.lock();
+    match all.iter_mut().find(|e| e.0 == me) {
+        Some(e) => e.1 = used,
+        None => all.push((me, used)),
+    }
+    all.iter().filter(|e| e.0 != me).fold([false; 2], |a, e| [a[0] || e.1[0], a[1] || e.1[1]])
+}
 
 /// Per-instance writer state. Registers with the engine as a subscriber.
 pub struct Writer {
@@ -50,6 +66,8 @@ pub struct Writer {
     writes: AtomicU64,
     cam_to_param_ms: Mutex<std::collections::VecDeque<f64>>,
     last_log: Mutex<Option<Instant>>,
+    /// Key in HANDS_USED.
+    instance: u64,
 }
 
 impl Writer {
@@ -70,6 +88,7 @@ impl Writer {
             writes: AtomicU64::new(0),
             cam_to_param_ms: Mutex::new(std::collections::VecDeque::new()),
             last_log: Mutex::new(None),
+            instance: NEXT_INSTANCE.fetch_add(1, Ordering::Relaxed),
         });
         *w.me.lock() = Arc::downgrade(&w);
         w
@@ -230,6 +249,9 @@ impl SignalSubscriber for Writer {
                 r.enabled = test_on;
             }
             let mut current = self.values.lock();
+            if signal_id.starts_with("cam0.hand.") && signal_id.ends_with(".x") {
+                current.hands_used = share_hands(self.instance, hands_used(&routes));
+            }
             current.macros = *self.written.lock();
             let t_s = sample.t_capture_ns as f64 / 1e9;
             let changed = apply_sample(&mut routes, &mut current, signal_id, sample, t_s);
@@ -276,10 +298,28 @@ impl SignalSubscriber for Writer {
     }
 }
 
+impl Drop for Writer {
+    fn drop(&mut self) {
+        HANDS_USED.lock().retain(|e| e.0 != self.instance);
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::engine::Demand;
+
+    #[test]
+    fn instances_share_the_hands_their_routes_use() {
+        // instance numbers far from NEXT_INSTANCE's, so live writers do not mix in
+        let (a, b) = (u64::MAX - 1, u64::MAX - 2);
+        assert_eq!(share_hands(a, [true, false]), [false, false]);
+        assert_eq!(share_hands(b, [false, true]), [true, false]);
+        assert_eq!(share_hands(a, [true, false]), [false, true]);
+        HANDS_USED.lock().retain(|e| e.0 != b);
+        assert_eq!(share_hands(a, [true, false]), [false, false]);
+        HANDS_USED.lock().retain(|e| e.0 != a);
+    }
 
     #[test]
     fn test_routes_need_camera_and_perception_only_while_test_signal_is_on() {

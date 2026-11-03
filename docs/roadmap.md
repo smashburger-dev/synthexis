@@ -57,6 +57,7 @@ Hard dates: S3 and S4 recorded 10-30/10-31, training from 11-01 (new Modal credi
   - two hands on the x axis: when both hands have a route on hand x, each hand can only use its own half of the frame (the left hand cannot cross the right one); map each hand's x onto its half (left 0..0.5, right 0.5..1, each stretched to 0..1, mirrored for the person's own sides); y needs no such rule
   - latency feels fast; faster is welcome
   - built 11-03 evening (branch claude/peaceful-hugle-02ba54, `probes/plugin-perception/RESULT.md`, section "Openness top and two hands on x"): openness above 0.6 is stretched so an open hand reads 1.0 (S1 to S3 open-hand p25 0.88 -> 1.00, fist unchanged); with both hands routed on x each hand gets its side of the person's face centre, not of the frame (Noa). Open: FL test with Noa
+  - second FL test 11-03 night (Noa): pull towards 0.5, fist never 0, right hand at 0.5 next to the left one. Fixed: decile map dropped, openness linear from fist p75 to open p25 (S1 to S3 fist p75 0.16 -> 0.00, open p25 1.00); x splits as soon as the other hand has any route, in any instance, with a 0.08 dead band at the face centre. Noa's FL test of it: the x split works; the fist is more abrupt (a small curl takes 0.8 to 0.4), left as is for now. Open: a slow live recording to choose the middle of the curve (`probes/plugin-perception/TUNING.md`); knuckles towards the camera are not measured
 
 ## Mapping assistant (own session; state in `docs/session-2026-10-30-mapping-train.md`)
 

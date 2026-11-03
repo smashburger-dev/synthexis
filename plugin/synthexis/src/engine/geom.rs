@@ -477,21 +477,16 @@ pub struct HandFeatures {
     pub palm: [f32; 2],
 }
 
-/// Openness above the knee is stretched so the top anchor reads 1.0: an
-/// open hand's finger mean sits at 0.88 (p25) to 0.92 (median) on block A
-/// of S1-S3, so a route on openness never reached its top (Noa, FL test
-/// 11-03). Below the knee, the fist end, nothing changes.
-const OPEN_KNEE: f32 = 0.6;
-const OPEN_TOP: f32 = 0.88;
+/// Finger mean that reads 0 and 1 as openness: the p75 of fist frames and
+/// the p25 of open-hand frames (block A, one labelled hand, S1-S3), so a
+/// fist reaches 0 and an open hand 1 (Noa, FL tests 11-03), with one slope
+/// in between.
+const OPEN_LO: f32 = 0.079;
+const OPEN_HI: f32 = 0.910;
 
 impl HandFeatures {
     pub fn openness(&self) -> f32 {
-        let o = self.finger.iter().sum::<f32>() / 5.0;
-        if o <= OPEN_KNEE {
-            o
-        } else {
-            (OPEN_KNEE + (o - OPEN_KNEE) * (1.0 - OPEN_KNEE) / (OPEN_TOP - OPEN_KNEE)).min(1.0)
-        }
+        lin(self.finger.iter().sum::<f32>() / 5.0, OPEN_LO, OPEN_HI)
     }
 
     pub fn values(&self) -> [f32; 20] {
@@ -513,18 +508,6 @@ const FINGER_BEND: [(f32, f32); 4] = [(0.61, 3.68), (0.60, 3.53), (0.62, 3.45), 
 /// and extended, from the same frames. Reach shrinks when a finger curls
 /// towards the camera, where the bend angle in the image barely changes.
 const FINGER_REACH: [(f32, f32); 4] = [(0.96, 1.95), (0.77, 2.00), (0.67, 1.83), (0.60, 1.57)];
-/// Deciles of the linear finger value over the open-close ramps of S1-S3
-/// (B_*_open): the cue moves fast through its middle (0.31 to 0.58 holds
-/// a tenth of the frames), so mapping these to 0, 0.1, .., 1 flattens the
-/// middle and lets a half-open hand rest near 0.5.
-const FINGER_DECILES: [f32; 11] = [0.0, 0.042, 0.079, 0.124, 0.190, 0.306, 0.583, 0.764, 0.879, 0.955, 1.0];
-
-fn finger_curve(u: f32) -> f32 {
-    let u = u.clamp(0.0, 1.0);
-    let k = FINGER_DECILES.iter().rposition(|&x| x <= u).unwrap_or(0).min(9);
-    let (x0, x1) = (FINGER_DECILES[k], FINGER_DECILES[k + 1]);
-    (k as f32 + (u - x0) / (x1 - x0).max(1e-6)) / 10.0
-}
 
 /// Features from 21 keypoints in frame pixels. `fingers_ext` are the
 /// student's finger probabilities (thumb..pinky), when it has them.
@@ -546,7 +529,10 @@ pub fn hand_features(kp: &[[f32; 2]; 21], side: Side, fw: f32, fh: f32, fingers_
             0.5 * (1.0 - lin(bend, 0.2, 1.4)) + 0.5 * lin(dist(kp[4], index_mcp) / palm_len, 0.35, 0.9)
         } else {
             let (b, r) = (FINGER_BEND[n - 1], FINGER_REACH[n - 1]);
-            finger_curve(0.5 * (1.0 - lin(bend, b.0, b.1)) + 0.5 * lin(dist(kp[ch[3]], wrist) / palm_len, r.0, r.1))
+            // Linear in the cues: a decile map fitted on the B ramps (fast
+            // open-and-hold moves) held half-curled fingers at 0.5 to 0.6 and
+            // kept fists off 0 (Noa, FL test 11-03).
+            0.5 * (1.0 - lin(bend, b.0, b.1)) + 0.5 * lin(dist(kp[ch[3]], wrist) / palm_len, r.0, r.1)
         };
         let dir = sub(kp[ch[3]], kp[if n == 0 { ch[1] } else { ch[0] }]);
         f.tilt[n] = 0.5 - 0.5 * dir[1] / len(dir).max(1e-3);
@@ -1301,16 +1287,15 @@ mod tests {
     }
 
     #[test]
-    fn finger_curve_is_monotone_and_spans_0_to_1() {
-        assert_eq!(finger_curve(0.0), 0.0);
-        assert!((finger_curve(1.0) - 1.0).abs() < 1e-6);
-        assert!((finger_curve(0.306) - 0.5).abs() < 1e-3);
-        let mut prev = -1.0;
-        for i in 0..=100 {
-            let v = finger_curve(i as f32 / 100.0);
-            assert!(v >= prev, "{i}");
-            prev = v;
-        }
+    fn openness_has_one_slope_from_fist_to_open() {
+        let at = |m: f32| HandFeatures { finger: [m; 5], ..Default::default() }.openness();
+        assert_eq!(at(OPEN_LO), 0.0);
+        assert_eq!(at(0.0), 0.0);
+        assert!((at(OPEN_HI) - 1.0).abs() < 1e-6);
+        assert!((at((OPEN_LO + OPEN_HI) / 2.0) - 0.5).abs() < 1e-5);
+        // equal finger travel, equal change, anywhere in the range
+        let steps: Vec<f32> = (0..8).map(|i| at(0.1 + 0.1 * (i + 1) as f32) - at(0.1 + 0.1 * i as f32)).collect();
+        assert!(steps.iter().all(|d| (d - steps[0]).abs() < 1e-5), "{steps:?}");
     }
 
     #[test]
