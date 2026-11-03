@@ -129,18 +129,18 @@ Deadline context: demo video and public repo were scheduled for 11-03, submissio
 
 ## Files to read first
 
-- /Users/no8/Desktop/life/Lifemaxxing/synthexis/.claude/worktrees/zen-mendel-39ae7e/docs/ux-plugin.md: Noa's UX decisions; moves list, MIDI target entry (160), hands cards with key/scale/channel (178-184), profiles and note-offs (208-232), architecture with Midi(..) target and MIDI writer (310-341).
-- /Users/no8/Desktop/life/Lifemaxxing/synthexis/.claude/worktrees/zen-mendel-39ae7e/spec/synthexis.yaml: features F18-F33, F40-F43 (36-61), cond.hysteresis/quantize (142-143), targets and bridge.midi_out (150-159), rec.* (173-176), gest.* and midi.* (181-193), motion and preset.pong/orb (198-228), ui.pattern_editor (304), P6 (341).
-- /Users/no8/Desktop/life/Lifemaxxing/synthexis/.claude/worktrees/zen-mendel-39ae7e/docs/roadmap.md: status lines 41-59 (Pong/Orb needed, MIDI not built, assigned routes, calibration) and 86 (Serum arp via midiNoteOn).
-- /Users/no8/Desktop/life/Lifemaxxing/synthexis/.claude/worktrees/zen-mendel-39ae7e/plugin/synthexis/src/lib.rs: MIDI config (177-179) and the empty process() where note output has to go (217-229).
-- /Users/no8/Desktop/life/Lifemaxxing/synthexis/.claude/worktrees/zen-mendel-39ae7e/plugin/synthexis/src/route.rs: Target enum, gates, apply_sample; where a MIDI target and edge events join the table.
-- /Users/no8/Desktop/life/Lifemaxxing/synthexis/.claude/worktrees/zen-mendel-39ae7e/plugin/synthexis/src/writer.rs: engine-thread routing, pending/accept/remove API, Live gate, audio snapshot; the seam for a note queue.
-- /Users/no8/Desktop/life/Lifemaxxing/synthexis/.claude/worktrees/zen-mendel-39ae7e/plugin/synthexis/src/assign.rs: resolved route to engine route; where MIDI targets and shape sources are dropped today.
-- /Users/no8/Desktop/life/Lifemaxxing/synthexis/.claude/worktrees/zen-mendel-39ae7e/plugin/synthexis/src/signal.rs and engine/geom.rs (462-570): every trigger signal the engine has, finger_count from the student probabilities, no shape mask.
-- /Users/no8/Desktop/life/Lifemaxxing/synthexis/.claude/worktrees/zen-mendel-39ae7e/plugin/synthexis/src/cond.rs: the per-route chain and the missing hysteresis/quantize.
-- /Users/no8/Desktop/life/Lifemaxxing/synthexis/.claude/worktrees/zen-mendel-39ae7e/plugin/synthexis/src/saved.rs and params.rs: what persists with the project and the inert hand-role params.
-- /Users/no8/Desktop/life/Lifemaxxing/synthexis/.claude/worktrees/zen-mendel-39ae7e/plugin/synthexis/src/sentence.rs (1-45, 290-352, 960-1083, 1159-1230): pending/Keep/Discard flow and intent handling the MIDI features must plug into.
-- /Users/no8/Desktop/life/Lifemaxxing/synthexis/.claude/worktrees/zen-mendel-39ae7e/tools/mapping/ontology.yaml (160-303): sources, shapes, MIDI targets, midi_props, modifiers, intents, presets; the vocabulary the parser and completion speak.
-- /Users/no8/Desktop/life/Lifemaxxing/synthexis/.claude/worktrees/zen-mendel-39ae7e/plugin/parser/src/resolve.rs (83-100, 255-275, 418-430, 536-560) and pin.rs (15-45): what a sentence delivers to the plugin and what it drops.
-- /Users/no8/Desktop/life/Lifemaxxing/synthexis/.claude/worktrees/zen-mendel-39ae7e/probes/fl-camera-plugin/plugin/src/lib.rs (245-317): working transport-synced NoteOn/NoteOff pattern in nih-plug from the P6 probe (same repo, reimplement).
-- /Users/no8/Desktop/life/Lifemaxxing/synthexis/.claude/worktrees/zen-mendel-39ae7e/plugin/fl/device_synthexis_bridge.py (1-60, 159-254) with probes/plugin-states/RESULT.md (98-131): bridge protocol for a possible note command and the channels.midiNoteOn decision.
+- docs/ux-plugin.md: Noa's UX decisions; moves list, MIDI target entry (160), hands cards with key/scale/channel (178-184), profiles and note-offs (208-232), architecture with Midi(..) target and MIDI writer (310-341).
+- spec/synthexis.yaml: features F18-F33, F40-F43 (36-61), cond.hysteresis/quantize (142-143), targets and bridge.midi_out (150-159), rec.* (173-176), gest.* and midi.* (181-193), motion and preset.pong/orb (198-228), ui.pattern_editor (304), P6 (341).
+- docs/roadmap.md: status lines 41-59 (Pong/Orb needed, MIDI not built, assigned routes, calibration) and 86 (Serum arp via midiNoteOn).
+- plugin/synthexis/src/lib.rs: MIDI config (177-179) and the empty process() where note output has to go (217-229).
+- plugin/synthexis/src/route.rs: Target enum, gates, apply_sample; where a MIDI target and edge events join the table.
+- plugin/synthexis/src/writer.rs: engine-thread routing, pending/accept/remove API, Live gate, audio snapshot; the seam for a note queue.
+- plugin/synthexis/src/assign.rs: resolved route to engine route; where MIDI targets and shape sources are dropped today.
+- plugin/synthexis/src/signal.rs and engine/geom.rs (462-570): every trigger signal the engine has, finger_count from the student probabilities, no shape mask.
+- plugin/synthexis/src/cond.rs: the per-route chain and the missing hysteresis/quantize.
+- plugin/synthexis/src/saved.rs and params.rs: what persists with the project and the inert hand-role params.
+- plugin/synthexis/src/sentence.rs (1-45, 290-352, 960-1083, 1159-1230): pending/Keep/Discard flow and intent handling the MIDI features must plug into.
+- tools/mapping/ontology.yaml (160-303): sources, shapes, MIDI targets, midi_props, modifiers, intents, presets; the vocabulary the parser and completion speak.
+- plugin/parser/src/resolve.rs (83-100, 255-275, 418-430, 536-560) and pin.rs (15-45): what a sentence delivers to the plugin and what it drops.
+- probes/fl-camera-plugin/plugin/src/lib.rs (245-317): working transport-synced NoteOn/NoteOff pattern in nih-plug from the P6 probe (same repo, reimplement).
+- plugin/fl/device_synthexis_bridge.py (1-60, 159-254) with probes/plugin-states/RESULT.md (98-131): bridge protocol for a possible note command and the channels.midiNoteOn decision.
