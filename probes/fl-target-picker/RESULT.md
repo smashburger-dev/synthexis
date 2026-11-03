@@ -8,9 +8,11 @@ and Serum 2. Raw runs: `runs/20261031-155838-inventory.json`,
 `runs/20261031-155942-focus.json`, `runs/20261031-160400-write.json`
 (gitignored, local only).
 
-Open, needs Noa at FL: the listening test (`listen.py --pattern 80`) and
+The listening test ran on 2026-11-03 with Noa at FL (section 4, runs
+`20261103-114044-listen.json`, `20261103-114415-listen.json`). Still open:
 the focus test with FL in front (`focus_probe.py --manual 40
---skip-scripted`). Everything below was measured with FL in the background.
+--skip-scripted`); until then follow-FL mode is unverified. Sections 1 to 3
+were measured with FL in the background.
 
 ## 1. SysEx size limit and the deadlock
 
@@ -107,6 +109,28 @@ cannot judge timbre. Whether the sound changes is open until the listening
 test. A read right after a write sometimes returns the old value; after
 300 ms it is correct. `DriveShaper On` is a toggle but stores 0.4 and 0.6
 without snapping.
+
+Listening test (`listen.py`, pattern 80 playing, each parameter 0/1/0/1
+for 3 s through REC, plugin windows open, Noa listening):
+
+| Plugin / parameter | Knob moves in the plugin window | Audible |
+|---|---|---|
+| Portal / MACRO 1, MACRO 2, MASTER DRY/WET | yes | yes, on a preset with a clear effect (first run on the old preset: MACRO 1 moved, no audible change) |
+| ShaperBox / CrushShaper On, Crush Mid Mix, Crush Mid Bits Push, Crush Mid Treble | yes | no difference, because the Crush curves sat at their defaults |
+| ShaperBox / Master Mix, DriveShaper On, Drive Low Mix (first run) | not reported | no: the preset has no Drive module, only Crush and Time |
+
+So REC writes reach third-party plugins in mixer slots while the song
+plays, the plugin GUIs follow, and Portal changes audibly.
+
+ShaperBox does not expose the Bits and Resample amounts as host
+parameters. The amount of a ShaperBox module is the drawn curve per band,
+and FL only lists its frame settings per band and module: On, Mix, Split,
+Length, Speed, Wave, Smooth, Timing Mode, envelope follower, Push, Dither,
+Jitter, Pre-Filter, Treble (876 real parameters). Noa checked by hand:
+moving the Bits curve does not register as FL's "last tweaked parameter",
+so no host or script can automate it. For bit and sample-rate reduction
+the demo uses a plugin with knobs for it (Kilohearts). The picker must not
+promise parameters that a plugin keeps internal.
 
 Thermal does not load as a plugin on Noa's machine and was not tested.
 

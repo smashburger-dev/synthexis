@@ -17,7 +17,8 @@ through the test bridge. Results and the spec proposal: [RESULT.md](RESULT.md).
   payload limit 1 MiB, timeout 5 s, request frames of any size,
   `FLB_DEBUG=1` logs every inbound packet).
 - `fl.py`: client helpers (timed calls, paging, run files).
-- `inventory.py`, `focus_probe.py`, `write_probe.py`: the three probes.
+- `inventory.py`, `focus_probe.py`, `write_probe.py`: the three probes;
+  `listen.py` switches parameters 0/1 while a person listens.
 
 ## Run
 
