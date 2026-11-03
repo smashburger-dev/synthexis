@@ -32,6 +32,10 @@ terminal it stops with the command to run. If `coremlcompiler` cannot
 compile a model, the .mlpackage is copied and the plugin compiles it when
 it loads.
 
+Last, install.sh runs `assistant/install.sh` for the mapping assistant's
+parser and completion data (dev links or the release download); if that
+fails, the plugin installs without the sentence field.
+
 install.sh refuses only when OsxFL is running AND the synthexis bundle is
 already installed (a loaded dylib can't be replaced safely; first install
 is fine — FL hasn't loaded it). Log: ~/Library/Logs/synthexis.log.

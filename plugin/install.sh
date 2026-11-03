@@ -100,3 +100,8 @@ done
 BACKEND=${SYNTHEXIS_PERCEPTION:-hybrid}
 echo "$BACKEND" > "$MODELS/backend"
 echo "perception backend: $BACKEND"
+
+# Mapping assistant runtime (parser and completion): plugin/assistant/install.sh
+# links data/mapping in a dev checkout, else copies the tracked completion data
+# and downloads the parser release. Not fatal, so camera and macros install offline.
+./assistant/install.sh || echo "assistant: runtime not installed, the sentence field stays off (see plugin/assistant/README.md)"
