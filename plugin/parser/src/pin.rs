@@ -4,11 +4,15 @@
 //!
 //! - a parameter chip goes to a target, not a whole route: one route may
 //!   drive several targets (fan-out, "resonance and cutoff"). It takes the
-//!   free target next to the PNAME span that covers it, else a free target
-//!   of its class, else the only free parameter or toggle target when it is
-//!   the last chip, else one more target in the nearest route that has a
-//!   source; that target becomes T:param:<class> (T:toggle for a switch)
-//!   and carries the parameter id;
+//!   free target whose words it covers (the BIO head's name groups,
+//!   align.rs; the parser's other targets of the same words go), else a
+//!   free target of its class, else the only free parameter or toggle
+//!   target when it is the last chip, else one more target in the nearest
+//!   route that has a source; that target becomes T:param:<class>
+//!   (T:toggle for a switch) and carries the parameter id. The words decide
+//!   first because a real parameter's class often differs from the
+//!   parser's (probes/pin-hill: with a class that matches nothing, chip_edit
+//!   0.608 by class against 0.834 by words);
 //! - a gesture chip goes to the route that already has its source; the
 //!   others go in sentence order to the free routes when their counts are
 //!   equal, else each to the free route nearest to it (by its spans and
@@ -23,7 +27,7 @@
 //! Runs after decoding, never inside the grammar: the parser still reads
 //! the chips as plain words.
 
-use crate::Item;
+use crate::{align, Item, Tagged};
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum PinWhat {
@@ -78,10 +82,6 @@ fn tok(it: &Item) -> &str {
         Item::Token(t) => t,
         Item::Span { .. } => "",
     }
-}
-
-fn overlaps(a: (usize, usize), b: (usize, usize)) -> bool {
-    a.0 < b.1 && b.0 < a.1
 }
 
 impl Route {
@@ -173,27 +173,6 @@ impl Route {
         (0..self.items.len())
             .filter(|&i| self.pinned[i].is_none() && Self::is_param_target(tok(&self.items[i])))
             .collect()
-    }
-
-    /// The free target a chip under the PNAME span at `p` names: the free
-    /// parameter target nearest to it, else the first unpinned target of any
-    /// kind (a macro or MIDI guess), else none (a target gets inserted).
-    fn target_for_pname(&self, p: usize) -> Option<usize> {
-        self.free_targets()
-            .into_iter()
-            .min_by_key(|&i| i.abs_diff(p))
-            .or_else(|| {
-                (0..self.items.len())
-                    .find(|&i| self.pinned[i].is_none() && tok(&self.items[i]).starts_with("T:"))
-            })
-    }
-
-    /// Item indices of the PNAME tokens whose span overlaps `b`.
-    fn pname_at(&self, b: (usize, usize)) -> Option<usize> {
-        (0..self.items.len().saturating_sub(1)).find(|&i| {
-            tok(&self.items[i]) == "PNAME"
-                && matches!(&self.items[i + 1], Item::Span { bytes, .. } if overlaps(*bytes, b))
-        })
     }
 
     /// A free target of the chip's class (any toggle for a switch).
@@ -431,6 +410,13 @@ type GesturePin<'a> = ((usize, usize), &'a str, Option<&'a str>, Option<&'a str>
 
 /// Enforces `pins` on the decoded `items` (see the module doc).
 pub fn pin(items: &[Item], pins: &[Pin]) -> Frame {
+    pin_spans(items, "", &[], pins)
+}
+
+/// `pin` with the parse's BIO spans: a parameter chip first takes the
+/// target whose words it covers (align.rs); the other targets the parser
+/// made of the same words go, since the chip names one parameter.
+pub fn pin_spans(items: &[Item], text: &str, spans: &[Tagged], pins: &[Pin]) -> Frame {
     let mut f = Frame::from_items(items);
     let mut pins: Vec<&Pin> = pins.iter().collect();
     pins.sort_by_key(|p| p.bytes.0);
@@ -440,24 +426,37 @@ pub fn pin(items: &[Item], pins: &[Pin]) -> Frame {
     });
     let params: Vec<_> = params.collect();
     let mut placed = vec![false; params.len()];
-    // 1. PNAME cover, 2. class
-    for rule in 0..2 {
+    // 1. the target the chip's words name
+    if !spans.is_empty() {
+        let al = align::align(&f, text, spans);
+        let mut fold: Vec<(usize, usize)> = Vec::new();
         for (k, &(bytes, id, class, switch)) in params.iter().enumerate() {
-            if placed[k] {
-                continue;
-            }
             let mut routes = f.routes_mut();
-            let hit = routes.iter_mut().find_map(|r| {
-                let t = match rule {
-                    0 => r.pname_at(bytes).map(|p| r.target_for_pname(p)),
-                    _ => r.target_of_class(class, switch).map(Some),
-                }?;
-                Some((r, t))
-            });
-            if let Some((r, t)) = hit {
-                r.set_param(t, id, class, switch, bytes);
-                placed[k] = true;
+            let hit = al.slot_at(bytes, |r, i| routes[r].pinned[i].is_none());
+            let Some((r, i)) = hit else { continue };
+            routes[r].set_param(Some(i), id, class, switch, bytes);
+            placed[k] = true;
+            let g = al.routes[r].slots.iter().find(|s| s.item == i).and_then(|s| s.group);
+            fold.extend(al.routes[r].slots.iter().filter(|s| s.shares && s.group == g && s.item != i).map(|s| (r, s.item)));
+        }
+        fold.sort_unstable_by(|a, b| b.cmp(a));
+        let mut routes = f.routes_mut();
+        for (r, i) in fold {
+            if routes[r].pinned[i].is_none() && !routes[r].tgt_pinned[i] {
+                routes[r].remove(i);
             }
+        }
+    }
+    // 2. a free target of the chip's class
+    for (k, &(bytes, id, class, switch)) in params.iter().enumerate() {
+        if placed[k] {
+            continue;
+        }
+        let mut routes = f.routes_mut();
+        let hit = routes.iter_mut().find_map(|r| r.target_of_class(class, switch).map(|t| (r, t)));
+        if let Some((r, t)) = hit {
+            r.set_param(Some(t), id, class, switch, bytes);
+            placed[k] = true;
         }
     }
     // 3. the only free target takes the only unplaced chip
@@ -665,14 +664,32 @@ mod tests {
     }
 
     #[test]
-    fn pname_cover_sets_param_and_kind() {
+    fn chip_takes_the_target_its_words_name() {
         let t = "when I make a fist the Filter 1 Freq goes up";
         let fr = ["I:map", "<route>", "S:hand.fist", "T:param:fx.tone", "PNAME", "=filter 1 freq", "</route>"];
-        let out = run(t, &fr, &[param(t, "Filter 1 Freq", "p#205", "filter.cutoff", false)]);
+        let b = at(t, "Filter 1 Freq");
+        let spans = [Tagged { tag: "PNAME", bytes: b }];
+        let pins = [param(t, "Filter 1 Freq", "p#205", "filter.cutoff", false)];
+        let out = pin_spans(&items(&fr, t), t, &spans, &pins).frame();
         assert_eq!(
             out,
             ["I:map", "<route>", "S:hand.fist", "T:param:filter.cutoff", "@p#205", "PNAME", "=filter 1 freq", "</route>"]
         );
+    }
+
+    /// v11 reads one long name as two classes; the chip on it keeps one.
+    #[test]
+    fn a_chip_on_a_split_name_folds_the_extra_target() {
+        let t = "when I open my mouth pan mid env attack on ShaperBox goes up";
+        let fr = ["I:map", "<route>", "S:mouth.open", "T:param:amp.pan", "T:param:env.attack", "</route>"];
+        let spans = [Tagged { tag: "TGT", bytes: at(t, "pan") }, Tagged { tag: "TGT", bytes: at(t, "mid env attack") }];
+        let pins = [param(t, "pan mid env attack", "p#7", "env.attack", false)];
+        let out = pin_spans(&items(&fr, t), t, &spans, &pins).frame();
+        assert_eq!(out, ["I:map", "<route>", "S:mouth.open", "T:param:env.attack", "@p#7", "</route>"]);
+        // with a class that matches nothing the words still decide
+        let pins = [param(t, "pan mid env attack", "p#7", "other", false)];
+        let out = pin_spans(&items(&fr, t), t, &spans, &pins).frame();
+        assert_eq!(out, ["I:map", "<route>", "S:mouth.open", "T:param:other", "@p#7", "</route>"]);
     }
 
     #[test]

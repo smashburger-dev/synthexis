@@ -72,6 +72,27 @@ def main() -> None:
             i += 1
         return out
 
+    def pred_bio(s):
+        """BIO head spans [start byte, end byte, tag]: ensemble mean of the
+        members' log-softmax, argmax per piece, frame_parser's grouping (the
+        same as the Rust runtime's Parse::spans)."""
+        x = torch.tensor([s["ids"]], device=dev)
+        with torch.no_grad():
+            lp = sum(torch.log_softmax(m.bio(m.encode(x)[0])[0].float(), -1) for m in models)
+        out, open_ = [], False
+        for i, t in enumerate(lp.argmax(-1).tolist()):
+            b, e = s["offs"][i] if s["offs"][i] else (0, 0)
+            if i == 0 or t == 0 or b >= e:
+                open_ = False
+                continue
+            name = fp.BIO[t]
+            if open_ and name.startswith("I-") and out[-1][2] == name[2:]:
+                out[-1][1] = e
+            else:
+                out.append([b, e, name[2:]])
+                open_ = True
+        return out
+
     with open(a.out, "w") as f:
         for split in a.splits.split(","):
             path = train / a.ds / f"{split}.jsonl"
@@ -101,6 +122,7 @@ def main() -> None:
                     "pred_bytes": ranges,
                     "gold": gold,
                     "bio": [[cb[b], cb[e], k] for b, e, k in rec.get("bio") or []],
+                    "pred_bio": pred_bio(s),
                 }, ensure_ascii=False) + "\n")
             print(f"{split}: {len(data)} rows, {time.time() - t0:.0f} s", flush=True)
 

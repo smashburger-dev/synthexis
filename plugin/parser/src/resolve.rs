@@ -13,6 +13,7 @@
 
 use std::collections::HashMap;
 
+use crate::align;
 use crate::pin::{Frame, Part};
 use crate::{Item, Tagged};
 
@@ -211,84 +212,6 @@ fn cut(sentence: &str, b: (usize, usize), spans: &[Tagged]) -> String {
     s.split_whitespace().collect::<Vec<_>>().join(" ")
 }
 
-fn gap(a: (usize, usize), b: (usize, usize)) -> usize {
-    a.0.saturating_sub(b.1).max(b.0.saturating_sub(a.1))
-}
-
-/// Words that separate two targets rather than two pieces of one name.
-const SEPARATE: [&str; 12] = ["and", "und", "or", "oder", "plus", "sowie", "to", "zu", "with", "mit", "then", "dann"];
-
-/// The TGT and PNAME pieces of the BIO head, joined where at most one word
-/// and no comma or conjunction lies between them: long names come back in
-/// fragments ("crush resample" + "mid env threshold", "xlfo 1" + "1" +
-/// "glide" for "xlfo 1 step 1 glide").
-fn groups(sentence: &str, spans: &[Tagged]) -> Vec<(usize, usize)> {
-    let mut out: Vec<(usize, usize)> = Vec::new();
-    for t in spans.iter().filter(|t| matches!(t.tag, "TGT" | "PNAME")) {
-        if let Some(last) = out.last_mut() {
-            let between = sentence.get(last.1..t.bytes.0).unwrap_or(",");
-            let ws: Vec<&str> = between.split_whitespace().collect();
-            let joins = ws.len() <= 1
-                && !between.contains([',', ';', '+', '&', '>'])
-                && !ws.iter().any(|w| SEPARATE.contains(&w.to_lowercase().as_str()));
-            if joins && last.1 <= t.bytes.0 {
-                last.1 = t.bytes.1;
-                continue;
-            }
-        }
-        out.push(t.bytes);
-    }
-    out
-}
-
-/// Which groups belong to which route: with as many groups as T: tokens
-/// they pair in order; else each goes to the route whose spans (and SRC
-/// span, when there is one per route) lie nearest.
-fn by_route(frame: &Frame, spans: &[Tagged], groups: &[(usize, usize)]) -> Vec<Vec<usize>> {
-    let routes: Vec<_> = frame.routes().collect();
-    let mut out = vec![Vec::new(); routes.len()];
-    if routes.is_empty() {
-        return out;
-    }
-    let slots: Vec<usize> = routes.iter().map(|r| r.items.iter().filter(|it| tok(it).starts_with("T:")).count()).collect();
-    if slots.iter().sum::<usize>() == groups.len() {
-        let mut g = 0;
-        for (r, n) in slots.iter().enumerate() {
-            out[r].extend(g..g + n);
-            g += n;
-        }
-        return out;
-    }
-    let src: Vec<(usize, usize)> = spans.iter().filter(|t| t.tag == "SRC").map(|t| t.bytes).collect();
-    let anchors: Vec<Option<(usize, usize)>> = routes
-        .iter()
-        .enumerate()
-        .map(|(r, route)| {
-            let own = route.items.iter().filter_map(|it| match it {
-                Item::Span { bytes, .. } => Some(*bytes),
-                Item::Token(_) => None,
-            });
-            let src = (src.len() == routes.len()).then(|| src[r]);
-            own.chain(src).reduce(|a, b| (a.0.min(b.0), a.1.max(b.1)))
-        })
-        .collect();
-    for (g, b) in groups.iter().enumerate() {
-        let near = (0..routes.len()).filter(|&r| anchors[r].is_some()).min_by_key(|&r| anchors[r].map_or(usize::MAX, |a| gap(a, *b)));
-        // no anchors anywhere: fill the routes in order
-        let r = near.unwrap_or_else(|| {
-            let mut left = g;
-            (0..routes.len()).find(|&r| {
-                let fits = left < slots[r];
-                left = left.saturating_sub(slots[r]);
-                fits
-            })
-            .unwrap_or(routes.len() - 1)
-        });
-        out[r].push(g);
-    }
-    out
-}
-
 /// The PNAME span text that belongs to the target at `item`: the PNAME
 /// whose nearest parameter target it is.
 fn pname_for(items: &[Item], item: usize) -> Option<String> {
@@ -418,32 +341,37 @@ pub fn resolve(
         Part::Item(it) => tok(it).strip_prefix("side:").map(str::to_string),
         Part::Route(_) => None,
     });
-    let groups = groups(sentence, spans);
-    let texts: Vec<String> = groups.iter().map(|b| cut(sentence, *b, spans)).collect();
-    let owned = by_route(frame, spans, &groups);
+    let al = align::align(frame, sentence, spans);
+    let texts: Vec<String> = al.groups.iter().map(|b| cut(sentence, *b, spans)).collect();
     frame
         .routes()
-        .zip(owned)
-        .map(|(route, gs)| {
+        .zip(&al.routes)
+        .map(|(route, ra)| {
             let find = |p: &str| route.items.iter().find_map(|it| tok(it).strip_prefix(p).map(str::to_string));
-            let slots: Vec<usize> = (0..route.items.len()).filter(|&i| tok(&route.items[i]).starts_with("T:")).collect();
             let mut targets = Vec::new();
             let mut k = 0;
-            while k < slots.len() {
-                let item = slots[k];
-                // the last group also names every token after it
-                let g = gs.get(k.min(gs.len().saturating_sub(1))).copied().filter(|_| !gs.is_empty());
-                let rest = if k + 1 == gs.len() { slots.len() - k - 1 } else { 0 };
+            while k < ra.slots.len() {
+                let slot = &ra.slots[k];
+                let item = slot.item;
+                // the slots after it that share its group
+                let rest = ra.slots[k + 1..].iter().take_while(|s| s.shares).count();
                 let token = tok(&route.items[item]).to_string();
-                let words: Vec<String> =
-                    g.map(|g| texts[g].clone()).into_iter().chain(pname_for(&route.items, item)).filter(|t| !t.is_empty()).collect();
+                let words: Vec<String> = slot
+                    .group
+                    .map(|g| texts[g].clone())
+                    .into_iter()
+                    .chain(pname_for(&route.items, item))
+                    .filter(|t| !t.is_empty())
+                    .collect();
                 let (bound, score) = bind(&token, route.pinned[item].as_deref(), &words, plugin, params, aliases);
-                let merged = rest > 0 && score >= MERGE_MIN && slots[k + 1..].iter().all(|&i| route.pinned[i].is_none());
+                let merged = rest > 0
+                    && score >= MERGE_MIN
+                    && ra.slots[k + 1..=k + rest].iter().all(|s| route.pinned[s.item].is_none());
                 targets.push(Target { token, text: words.first().cloned().unwrap_or_default(), bound });
                 k += if merged { rest + 1 } else { 1 };
             }
             let all: Vec<&Candidate> = params.iter().collect();
-            for &g in gs.iter().skip(slots.len()) {
+            for &g in &ra.extra {
                 if let Some((s, p)) = by_name(std::slice::from_ref(&texts[g]), &all, None) {
                     if s >= MERGE_MIN {
                         let bound = Some(Bound { index: p.index, name: p.name.into(), via: Via::Name });

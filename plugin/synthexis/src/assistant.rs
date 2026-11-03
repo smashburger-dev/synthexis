@@ -21,7 +21,7 @@ use std::time::Instant;
 use crossbeam_channel::{bounded, unbounded, Receiver, Sender};
 use synthexis_complete::Param;
 use synthexis_parser::resolve::{self, resolve, Candidate};
-use synthexis_parser::{pin, Options, Parser, Pin};
+use synthexis_parser::{pin_spans, Options, Parser, Pin};
 
 use crate::log::log;
 
@@ -128,7 +128,7 @@ fn parse(parser: &Parser, text: &str, pins: &[Pin], scope: Option<&Scope>) -> Re
         }
     };
     let parsed_ms = t0.elapsed().as_secs_f64() * 1e3;
-    let frame = pin(&p.items, pins);
+    let frame = pin_spans(&p.items, text, &p.spans, pins);
     let cands: Vec<Candidate> = scope
         .map(|s| s.params.iter().map(|p| Candidate { index: p.index, name: &p.name, class: &p.class }).collect())
         .unwrap_or_default();

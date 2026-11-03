@@ -1,5 +1,7 @@
 //! Pins given chips on dumped frames (probes/pin-hill): reads rows
-//! {pred, pred_bytes, pins} from stdin, writes {frame} per row.
+//! {pred, pred_bytes, pins, text, spans} from stdin, writes {frame} per
+//! row. `spans` (the BIO head's [start, end, tag]) is optional; with it the
+//! chips go through pin_spans.
 //! A pin: [start byte, end byte, "g", source, shape, side] for a gesture,
 //! [start, end, "p", class, switch] for a parameter, [start, end, "t", kind]
 //! for a target that is no parameter.
@@ -9,7 +11,7 @@
 use std::io::{BufRead, Write};
 
 use serde_json::{json, Value};
-use synthexis_parser::{pin, Item, Pin, PinWhat};
+use synthexis_parser::{pin_spans, Item, Pin, PinWhat, Tagged, BIO_TAGS};
 
 fn s(v: &Value) -> Option<String> {
     v.as_str().map(str::to_string)
@@ -55,7 +57,18 @@ fn main() {
                 Some(Pin { bytes, what })
             })
             .collect();
-        let frame: Vec<String> = pin(&items, &pins).frame().into_iter().filter(|t| !t.starts_with('@')).collect();
+        let spans: Vec<Tagged> = r["spans"]
+            .as_array()
+            .unwrap_or(&empty)
+            .iter()
+            .filter_map(|t| {
+                let tag = BIO_TAGS.iter().find(|x| Some(**x) == t[2].as_str())?;
+                Some(Tagged { tag, bytes: (t[0].as_u64()? as usize, t[1].as_u64()? as usize) })
+            })
+            .collect();
+        let text = r["text"].as_str().unwrap_or_default();
+        let frame: Vec<String> =
+            pin_spans(&items, text, &spans, &pins).frame().into_iter().filter(|t| !t.starts_with('@')).collect();
         if writeln!(out, "{}", json!({ "frame": frame })).is_err() {
             std::process::exit(1);
         }

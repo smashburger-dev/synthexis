@@ -65,3 +65,27 @@ Same harness after C2, frames dumped again with fewer v11 seeds (Q8_0, same rule
 | seed 0 alone | 0.7506 | 0.8142 |
 
 The chips do not close the gap: each halving of the ensemble costs about as much with chips as without (one seed -2.2 points with chips, -2.6 without; on the real set one seed had 44 of 102 exact against 66). The four seeds stay; memory is better saved by loading the parser on demand.
+
+## One alignment for pin.rs and the resolver (11-03)
+
+Question (Noa): pin.rs and the resolver each decide which words belong to which target (pin.rs by PNAME cover, class, the only free target, the nearest route; the resolver by the BIO head's name groups). Can both use the same alignment, with less code and the same or better frames?
+
+Built first: `plugin/parser/src/align.rs` holds the resolver's alignment (name groups from the BIO TGT and PNAME pieces, groups per route, pairing with the T: tokens); the resolver uses it unchanged (held-out template top-1 0.828 and real eval 0.681, as before). `pin_spans` adds rule 0: a parameter chip takes the free target whose group its bytes overlap; with fold, the other targets that share that group go (one chipped name, one parameter).
+
+Rule (written before the run): frames dumped again with the BIO head's spans (`rows-bio.jsonl`, same frames). Two chip conditions: the gold class (as above, `gpts`) and a class that matches nothing in the frame (`gptsx`, the case of a real plugin whose param-sense class differs from the parser's). Variants: V0 pin.rs as it is, V1 rule 0 without fold, V2 rule 0 with fold. V1 or V2 is kept when its mean chip_edit with the mismatched class rises by at least 0.005 over V0 and with the gold class falls by at most 0.002; V2 is preferred unless it is more than 0.002 below V1 in either condition. Then V3: the kept variant without the PNAME-cover rule (less code), kept when both conditions stay within 0.002 of it.
+
+Runs (`--modes gpts,gptsx` for V0, `gptsb,gptsxb` for V1 to V3; chip_edit, means over the nine sets):
+
+| variant | chip class = gold | chip class matches nothing | decision |
+|---|---|---|---|
+| V0: pin.rs (PNAME cover, class, only free, nearest route) | 0.83585 | 0.60800 | |
+| V1: rule 0 by words, no fold | 0.83672 | 0.83605 | kept over V0 (+0.0009 / +0.228) |
+| V2: rule 0 by words, with fold | 0.83475 | 0.83408 | preferred over V1 (0.00197 below, not more than 0.002) |
+| V3: V2 without the PNAME-cover rule | 0.83475 | 0.83408 | kept: identical, the words cover what PNAME did |
+
+V2 against V1 per set (gold class): challenge -0.0054, dev_s7 -0.0044, dev_s4 -0.0024, dev_s5 -0.0024, dev_s8 -0.0023, dev_s2 -0.0007, the other three equal. The fold removes a target the gold keeps when the BIO head joins two names into one group; by the rule V2 stays, V1 is the fallback if real sentences show the loss.
+
+What this says:
+- pin.rs found the target of a parameter chip mostly through the class. With a real plugin the chip's class is param-sense's class of that parameter, which often differs from the parser's; then 23 points of chip_edit were lost. By the chip's words (the BIO head's name groups, the same alignment the resolver uses) the loss is gone: 0.834 with and without a matching class.
+- One alignment now serves both: `align.rs` is the only place that decides which words name which target; pin.rs lost its PNAME rule (`pname_at`, `target_for_pname`), the resolver lost its private copy. The plugin calls `pin_spans` with the parse's spans.
+- Limits: the oracle chips sit on gold TGT spans; the mismatched class is the worst case (no class matches), real chips sit between the two conditions.

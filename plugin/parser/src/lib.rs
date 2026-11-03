@@ -14,6 +14,7 @@
 //! Loading the four v11 runs in Q8_0 takes 0.2 to 0.6 s and about 350 MB;
 //! call it off the audio thread. `parse` is CPU-bound and blocking.
 
+pub mod align;
 mod decoder;
 mod encoder;
 mod grammar;
@@ -34,7 +35,7 @@ use tokenizers::Tokenizer;
 use decoder::Decoder;
 use encoder::Encoder;
 use grammar::Grammar;
-pub use pin::{pin, Frame, Pin, PinWhat};
+pub use pin::{pin, pin_spans, Frame, Pin, PinWhat};
 
 const BOS: u32 = 1;
 const EOS: u32 = 2;
