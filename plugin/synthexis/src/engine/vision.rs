@@ -184,11 +184,13 @@ pub struct FaceLandmarks {
     req: Retained<VNDetectFaceLandmarksRequest>,
     adapt: FaceAdapt,
     errors: u64,
+    /// Consecutive failed requests (Vision error, not "no face").
+    pub failing: u32,
 }
 
 impl FaceLandmarks {
     pub fn new() -> Self {
-        Self { req: unsafe { VNDetectFaceLandmarksRequest::new() }, adapt: FaceAdapt::default(), errors: 0 }
+        Self { req: unsafe { VNDetectFaceLandmarksRequest::new() }, adapt: FaceAdapt::default(), errors: 0, failing: 0 }
     }
 
     pub fn run(&mut self, buf: &PixelBuf, seed: &Seed, t_ns: u64, hand_on_face: bool) -> Option<(FaceFeatures, f32)> {
@@ -214,11 +216,13 @@ impl FaceLandmarks {
             let reqs: [&VNRequest; 1] = [&self.req];
             if let Err(e) = handler.performRequests_error(&NSArray::from_slice(&reqs)) {
                 self.errors += 1;
+                self.failing += 1;
                 if self.errors.is_power_of_two() {
                     log(&format!("perception: face landmarks failed ({}x): {}", self.errors, e.localizedDescription()));
                 }
                 return None;
             }
+            self.failing = 0;
             let obs = self.req.results()?.firstObject()?;
             let mut f = face(&obs, Place { w: n, h: n, x0: seed.x0, y0: seed.y0, k: seed.side / n })?;
             if let Some(lm) = obs.landmarks() {

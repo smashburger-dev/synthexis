@@ -26,15 +26,17 @@ cp -R target/bundled/synthexis.vst3 "$HOME/Library/Audio/Plug-Ins/VST3/"
 cp -R target/bundled/synthexis.clap "$HOME/Library/Audio/Plug-Ins/CLAP/"
 echo "installed synthexis.vst3 + synthexis.clap"
 
-# Perception students: trained models from data/models (train-students),
-# else the preflight stand-ins; compiled for this Mac into the model dir
-# the plugin reads (engine/perception.rs).
+# Perception students: data/models (train-students' working copies, a dev
+# override), else the tracked copies in plugin/models (a fresh clone has
+# no data/), else the preflight stand-ins; compiled for this Mac into the
+# model dir the plugin reads (engine/perception.rs).
 DATA="${SYNTHEXIS_DATA:-$(cd .. && pwd)/data}"
 MODELS="$HOME/Library/Application Support/synthexis/models"
 mkdir -p "$MODELS"
 pick() { # name, stand-in file
     local m
     m=$(ls -d "$DATA/models/$1"*.mlpackage 2>/dev/null | head -1 || true)
+    [ -z "$m" ] && [ -d "models/$1.mlpackage" ] && m="$(pwd)/models/$1.mlpackage"
     [ -z "$m" ] && [ -n "$2" ] && [ -d "$DATA/preflight/$2" ] && m="$DATA/preflight/$2"
     echo "$m"
 }

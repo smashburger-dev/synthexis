@@ -129,6 +129,9 @@ pub fn make_backend(dir: &Path, choice: &str) -> Option<Box<dyn Backend>> {
             Some(mut s) => {
                 if choice == "hybrid" {
                     s.landmarks = LandmarkWorker::start();
+                    if s.landmarks.is_none() {
+                        log("perception: no face landmarks, face from the face student");
+                    }
                 }
                 Some(Box::new(s))
             }
@@ -336,9 +339,16 @@ struct FaceHead {
 
 /// Runs the face landmarks (backend `hybrid`) on their own thread, so a
 /// frame's hand signals go out while Vision still works on its face.
+/// Failed Vision requests in a row after which `hybrid` gives up on the
+/// landmarks and takes the face from the face student (about 1 s).
+const LM_GIVE_UP: u32 = 30;
+
+/// A landmark result: face, landmark ms, failed requests in a row.
+type LmDone = (Option<(FaceFeatures, f32)>, f64, u32);
+
 struct LandmarkWorker {
     tx: Sender<(PixelBuf, Seed, u64, bool)>,
-    rx: Receiver<(PixelBuf, Option<(FaceFeatures, f32)>, f64)>,
+    rx: Receiver<(PixelBuf, LmDone)>,
     buf: Option<PixelBuf>,
 }
 
@@ -354,7 +364,7 @@ impl LandmarkWorker {
                 for (buf, seed, t_ns, hand_on_face) in jobs {
                     let t0 = Instant::now();
                     let face = lm.run(&buf, &seed, t_ns, hand_on_face);
-                    if done.send((buf, face, t0.elapsed().as_secs_f64() * 1e3)).is_err() {
+                    if done.send((buf, (face, t0.elapsed().as_secs_f64() * 1e3, lm.failing))).is_err() {
                         break;
                     }
                 }
@@ -377,11 +387,11 @@ impl LandmarkWorker {
         }
     }
 
-    /// Waits for the submitted face: (face, landmark ms).
-    fn wait(&mut self) -> Option<(Option<(FaceFeatures, f32)>, f64)> {
-        let (buf, face, ms) = self.rx.recv().ok()?;
+    /// Waits for the submitted face.
+    fn wait(&mut self) -> Option<LmDone> {
+        let (buf, done) = self.rx.recv().ok()?;
         self.buf = Some(buf);
-        Some((face, ms))
+        Some(done)
     }
 }
 
@@ -589,9 +599,13 @@ impl Backend for Students {
             return Some(None);
         }
         let t0 = Instant::now();
-        let (face, ms) = lm.wait()?;
+        let (face, ms, failing) = lm.wait()?;
         stages.push(("face_wait", t0.elapsed().as_secs_f64() * 1e3));
         stages.push(("landmarks", ms));
+        if failing >= LM_GIVE_UP {
+            log(&format!("perception: face landmarks failed {failing}x in a row, face from the face student from now on"));
+            self.landmarks = None;
+        }
         Some(face)
     }
 

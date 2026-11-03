@@ -51,11 +51,14 @@ first segment (`cam0.hand.R.openness`, `cam0.mouth.open`); a unit test
 checks them against `tools/mapping/ontology.yaml`.
 
 `install.sh` compiles the students into
-`~/Library/Application Support/synthexis/models` (trained ones from
-`data/models/`, else the preflight stand-ins) and writes `backend` there:
-`hybrid` by default: the students for seg and hands, Apple Vision face
-landmarks on the seg face box (probes/plugin-perception/RESULT.md).
-Override with `SYNTHEXIS_PERCEPTION=students|vision|off`.
+`~/Library/Application Support/synthexis/models` (from `data/models/` when
+it exists, else the tracked copies in `plugin/models/`, else the preflight
+stand-ins) and writes `backend` there: `hybrid` by default: the students
+for seg and hands, Apple Vision face landmarks on the seg face box
+(probes/plugin-perception/RESULT.md). When the landmarks cannot start or
+fail 30 frames in a row, `hybrid` takes the face from the face student
+(mouth usable, eyes weak). Override with
+`SYNTHEXIS_PERCEPTION=students|vision|off`.
 
 Offline bench over a recording (no camera needed):
 
