@@ -114,6 +114,18 @@ Student numbers use untrained weights; latency does not depend on weight values.
 
 Planning board with all diagrams: [FigJam](https://www.figma.com/board/WJIE59w34hCSTXuq3XpKGH).
 
+## Platforms
+
+synthexis runs on macOS with Apple Silicon. Perception uses CoreML on the Neural Engine for the three students in [`plugin/models/`](plugin/models/README.md) and Apple Vision for face landmarks. Without Apple Vision, the face student takes over (mouth works; its eye signal is weak). A Windows or Linux port would swap two parts and keep the pipeline:
+
+| part | macOS today | Windows / Linux candidate |
+|---|---|---|
+| student models (seg, hand, face) | CoreML FP16 on the Neural Engine | the same weights exported to ONNX, run with ONNX Runtime through the Rust crate [`ort`](https://docs.rs/ort): DirectML on Windows; CPU, CUDA or OpenVINO on Linux (built from source) |
+| face landmarks (eyes, mouth, smile, head pose) | Apple Vision | [MediaPipe Face Landmarker](https://developers.google.com/edge/mediapipe/solutions/vision/face_landmarker/index): 478 points and 52 blendshapes such as `eyeBlinkLeft` and `jawOpen`; licence of the model bundle still to check |
+| hand keypoints (optional second source) | hand student | MediaPipe Hand Landmarker (Apache 2.0, already the keypoint teacher of the hand student) |
+
+None of this is built yet.
+
 ## Repository
 
 | Path | Content |
@@ -122,10 +134,12 @@ Planning board with all diagrams: [FigJam](https://www.figma.com/board/WJIE59w34
 | `docs/` | plan, judging fit, recording protocol, hill-climb protocol, credit texts |
 | `probes/` | feasibility probes, each with code, `RESULT.md` and raw logs |
 | `tools/` | generators (recording script) |
+| `plugin/models/` | the three trained perception students (CoreML), with their licence notice |
+| `LICENSES/` | licence texts of the models and weights the project builds on |
 
 ## Privacy
 
-Recordings of faces and hands stay on the machine and in a private Modal volume used for labeling. `data/` is git-ignored; no recording or dataset is ever committed.
+Recordings of faces and hands stay on the machine and in a private Modal volume used for labeling. `data/` is git-ignored; no recording or dataset is ever committed. The trained student weights are published; they hold model parameters only, not images.
 
 ## Carried over from earlier work
 
@@ -133,6 +147,8 @@ The one thing synthexis takes from before Oct 26 is a weight file, not code: the
 
 ## License
 
-Source code: [MIT](LICENSE). VST3 builds made with nih-plug's VST3 wrapper link GPLv3 bindings, so those binaries are distributed under GPLv3. SAM 3.1 is used under the SAM License; Muse Glimmer under Apache 2.0; the mmBERT encoder under MIT; the MobileNetV4 and RepViT backbones from timm under Apache 2.0. Required attributions: [docs/credits.md](docs/credits.md); licence review: [probes/licence-check](probes/licence-check/RESULT.md).
+Source code: [MIT](LICENSE). VST3 builds made with nih-plug's VST3 wrapper link GPLv3 bindings, so those binaries are distributed under GPLv3. SAM 3.1 is used under the SAM License; Muse Glimmer under Apache 2.0; the mmBERT encoder under MIT; the MobileNetV4 and MobileNetV3 backbones from timm under Apache 2.0.
+
+The trained perception students in [`plugin/models/`](plugin/models/README.md) are released with the code. They build on timm backbones (Apache 2.0) and learned from SAM 3.1 and SAM 3D Body (SAM License; DINOv3 License for SAM 3D Body's backbone code) and MediaPipe Hand Landmarker (Apache 2.0), so those terms apply to the weights; the texts are in [`LICENSES/`](LICENSES). This project uses SAM 3.1, SAM 3D Body and DINOv3 by Meta. Required attributions: [docs/credits.md](docs/credits.md); licence review: [probes/licence-check](probes/licence-check/RESULT.md).
 
 Built with Muse Spark Open: the parameter labels and the mapping models are trained on Muse Spark Open outputs under the Muse Model License.

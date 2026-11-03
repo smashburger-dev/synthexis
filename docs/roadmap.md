@@ -21,7 +21,7 @@ Hard dates: S3 and S4 recorded 10-30/10-31, training from 11-01 (new Modal credi
 - [x] S3: iPhone via Continuity, landscape, 20-30 degrees to the side and a bit higher, studio or demo light, no glasses, full protocol (Noa, recorded 11-01)
 - [x] S4: other shirt and cap, FaceTime camera, short protocol, held out (Noa, recorded 11-01, same day as S3)
 - [x] Label S3 and S4 in image mode (S3 1.22 $, S4 0.78 $), contact sheets checked
-- [ ] Decide: ignore S2 eye class in the loss (glasses)
+- [x] Decide: ignore S2 eye class in the loss (glasses): ignored (Noa, 2026-11-02)
 - [x] Hand keypoints offline on S1-S4 as targets for `perc.hand`: MediaPipe Hand Landmarker (Apache-2.0, 0 $) on all frames, SAM 3D Body (Modal A10G, 5.36 $) on every second SAM-hand frame, merged into `keypoints_teacher.jsonl`; Apple Vision dropped (Apple terms) ([result](../probes/hand-keypoints/RESULT.md))
 - [x] SAM 3D Body hand keypoints as second teacher (Noa approved 11-02): fills fists, occluded and object-holding hands MediaPipe misses; chirality 99.7-100 %
 - [x] Spark Open freestyle timelines and segment QA (`motion.labels`, Baseten, 5.63 $; [result](../probes/motion-labels/RESULT.md))
@@ -31,9 +31,11 @@ Hard dates: S3 and S4 recorded 10-30/10-31, training from 11-01 (new Modal credi
 - [x] Packer: tar shards, 384x216 frames, 128 px hand and face crops, segment-level dev split (`train.setup`; 47,367 frames, 5.2 GB, 354 s; hand keypoints from the MediaPipe + SAM 3D Body teacher file on 38,004 of 43,753 crops, no Apple Vision data; [result](../probes/train-packer/RESULT.md))
 - [x] Mac preflight: 64 samples, 20 steps, CoreML export (all 20 checks pass on MPS, both students export; [result](../probes/train-packer/RESULT.md))
 - [ ] Licence check of every pretrained weight file (`probes/licence-check/RESULT.md`, 2026-11-02): 16 of 19 rows have a verdict; Apple Vision is blocked as the `perc.hand` teacher; Noa chose the best licence-clean alternative (2026-11-02). Missing: Meta Model API terms (SAM 3.1 API, Muse Image) and torchvision's weight terms for LR-ASPP MobileNetV3-Large
-- [ ] Decide D9 (proxy teacher), D10 (crops), D11 (temporal prior), D12 (backbone)
-- [ ] Proxy teacher, then students seg and hand on Modal L4; eval on S4 against `budget.quality`
-- [ ] H3: ANE latency of the trained students, end-to-end frame benchmark
+- [x] Decide D9 (proxy teacher), D10 (crops), D11 (temporal prior), D12 (backbone): D10 to D12 as packed (Noa yes, 11-02); D9 deferred, runs only if S4 misses and a proxy could fix the miss (it would not fix the misses found, [result](../probes/train-students/RESULT.md))
+- [x] Students seg, hand and face on Modal (13.92 $ over two rounds), gated once per candidate on S4 against `budget.quality`: mouth passes (0.705); seg person/face/hand 0.77/0.80/0.80 live-like (gate 0.85), finger states 0.892 with pseudo finger labels (0.95; per finger 0.95 to 0.99, Apple Vision 0.962), face eye 0.24 (0.70). Models in `data/models/` ([result](../probes/train-students/RESULT.md))
+- [x] Student hill-climb round 2 (leave-one-session-out validation, 11 levers): pseudo finger labels kept; seg levers void after a CUDA autocast bug, re-run self-prev equal to the control; no face lever helped
+- [ ] Student hill-climb 3: seg without or with a stronger prev channel on clean LOSO runs, thumb and pinky labels, eye masks consistent across sessions (Apple Vision face landmarks as runtime eye source meanwhile)
+- [x] H3: ANE latency of the trained students: seg 0.55 / 0.65 ms, hand 0.34 / 0.52 ms per crop, face 0.34 / 0.50 ms (median / p95); end-to-end frame bench in the perception session ([result](../probes/train-students/RESULT.md))
 
 ## Plugin (hill-climb line owns `plugin/`)
 

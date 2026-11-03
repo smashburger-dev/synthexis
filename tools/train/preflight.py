@@ -7,11 +7,11 @@
   uv run tools/train/preflight.py [--session 2026-10-27-S1] [--samples 64]
       [--steps 20] [--device mps]
 
-For the seg and the hand student: load 64 packed samples, check shapes and
+For the seg, hand and face students: load 64 packed samples, check shapes and
 label ranges, train 20 steps (AdamW + cosine, bf16 autocast if the device
 supports it) and require a falling loss, then export to CoreML FP16 and
 compare the CoreML prediction with PyTorch on one sample. Writes
-data/preflight/preflight.json and the two .mlpackage files. Exit 1 on any
+data/preflight/preflight.json and the three .mlpackage files. Exit 1 on any
 failed check.
 """
 
@@ -85,15 +85,15 @@ def train(name, model, batches, loss_fn, steps, device, report):
           report)
 
 
-def export(name, model, example, inputs):
+def export(name, model, example, inputs, out=OUT):
     model = model.float().cpu().eval()
     with torch.no_grad():
         traced = torch.jit.freeze(torch.jit.trace(model, example))
     mlmodel = ct.convert(traced, inputs=inputs, convert_to="mlprogram",
                          compute_precision=ct.precision.FLOAT16,
                          minimum_deployment_target=ct.target.macOS15)
-    OUT.mkdir(parents=True, exist_ok=True)
-    path = OUT / f"{name}.mlpackage"
+    out.mkdir(parents=True, exist_ok=True)
+    path = out / f"{name}.mlpackage"
     mlmodel.save(str(path))
     return mlmodel, path
 
@@ -184,6 +184,40 @@ def run_hand(samples, args, report):
           report)
 
 
+def run_face(samples, args, report):
+    rep = report["face"]
+    rep["samples"] = len(samples)
+    check(len(samples) == args.samples, f"face: {len(samples)} samples", report)
+    batches = [st.face_batch(samples[i:i + BATCH]) for i in range(0, len(samples), BATCH)]
+    b = batches[0]
+    check(tuple(b["image"].shape[1:]) == (3, 128, 128), f"face: image shape {tuple(b['image'].shape)}", report)
+    check(tuple(b["mask"].shape[1:]) == (128, 128), f"face: mask shape {tuple(b['mask'].shape)}", report)
+    labels = torch.cat([x["mask"].unique() for x in batches]).unique().tolist()
+    rep["mask_values"] = labels
+    check(set(labels) <= {0, 1, 2} and {1, 2} <= set(labels), f"face: mask values {labels} in 0..2, eye and mouth present",
+          report)
+
+    model = st.FaceStudent(pretrained=True)
+    rep["params"] = sum(p.numel() for p in model.parameters())
+    with torch.no_grad():
+        out = model.eval()(b["image"][:2])
+    check(tuple(out.shape) == (2, st.NUM_FACE_CLASSES, 128, 128), f"face: logits shape {tuple(out.shape)}", report)
+    train("face", model, batches, st.face_loss, args.steps, args.device, report)
+
+    mlmodel, path = export("face_mnv4s_128", model, (b["image"][:1],), [
+        ct.ImageType(name="image", shape=(1, 3, 128, 128), color_layout=ct.colorlayout.RGB, scale=1 / 255),
+    ])
+    img = pil(b["image"][0])
+    image_q = torch.from_numpy(np.asarray(img).copy()).permute(2, 0, 1).float().unsqueeze(0) / 255
+    with torch.no_grad():
+        ref = model(image_q).argmax(1).numpy()
+    pred = mlmodel.predict({"image": img})
+    cm = np.asarray(next(iter(pred.values()))).argmax(1)
+    agree = float((cm == ref).mean())
+    rep.update(coreml=str(path.relative_to(ROOT)), coreml_argmax_agreement=round(agree, 4))
+    check(agree >= 0.98, f"face: CoreML vs PyTorch argmax agreement {agree:.4f} >= 0.98", report)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--session", default="2026-10-27-S1")
@@ -193,13 +227,15 @@ def main():
     args = ap.parse_args()
     torch.manual_seed(0)
     report = {"args": vars(args), "torch": torch.__version__, "coremltools": ct.__version__,
-              "backbone": st.BACKBONE, "checks": [], "seg": {}, "hand": {}}
+              "backbone": st.BACKBONE, "checks": [], "seg": {}, "hand": {}, "face": {}}
 
     shard = PACKED / "seg" / args.session / "train-00000.tar"
     run_seg(st.read_samples(shard, args.samples, keep=lambda s: s["meta"]["has_prev"]), args, report)
     shard = PACKED / "hand" / args.session / "train-00000.tar"
     run_hand(st.read_samples(shard, args.samples, keep=lambda s: s["meta"]["fingers"] is not None
                              and s["meta"].get("keypoints") is not None), args, report)
+    shard = PACKED / "face" / args.session / "train-00000.tar"
+    run_face(st.read_samples(shard, args.samples), args, report)
 
     ok = all(c["ok"] for c in report["checks"])
     report["passed"] = ok

@@ -22,7 +22,7 @@ Use: Muse Glimmer 30B on Fireworks serverless inference as the second labeler ne
 
 ## Attributions and licence notices
 
-Required by the licences of the models and services synthexis uses. Source and reasoning for every line: `probes/licence-check/RESULT.md`. Written 2026-11-02 after Noa's decisions recorded there. The plugin's About panel and the README carry the first line; the licence texts ship in a `LICENSES/` folder next to the weights in every release.
+Required by the licences of the models and services synthexis uses. Source and reasoning for every line: `probes/licence-check/RESULT.md`. Written 2026-11-02 after Noa's decisions recorded there. The plugin's About panel and the README carry the first line; the licence texts are in `LICENSES/` at the repository root. The perception student weights are in `plugin/models/` (notice per model: `plugin/models/README.md`). Their labels came from SAM 3.1, SAM 3D Body, MediaPipe and the recording script; none was written or filtered by Muse Spark Open (the Spark QA exclusion list was dropped before training, `probes/train-packer/RESULT.md`).
 
 ### Muse Spark Open
 
@@ -32,7 +32,7 @@ The parameter-meaning classifier, the mapping parser and any perception student 
 
 ### SAM 3.1
 
-The segmentation and hand students learn from masks produced by SAM 3.1 (Meta, `facebook/sam3.1`, code `facebookresearch/sam3`), used under the SAM License (2025-11-19). A copy of the SAM License ships with the student weights (`LICENSES/SAM-LICENSE.txt`); to the extent those weights are derivative works of the SAM Materials, they are distributed under that agreement.
+The segmentation, hand and face students learn from masks produced by SAM 3.1 (Meta, `facebook/sam3.1`, code `facebookresearch/sam3`), used under the SAM License (2025-11-19). A copy of the SAM License ships with the student weights (`LICENSES/SAM-LICENSE.txt`); to the extent those weights are derivative works of the SAM Materials, they are distributed under that agreement.
 
 ### mmBERT small
 
@@ -40,7 +40,7 @@ The mapping parser's encoder is mmBERT small (Marone et al. 2025, arXiv 2509.068
 
 ### Vision backbones
 
-MobileNetV4-Conv-Small (`timm/mobilenetv4_conv_small.e2400_r224_in1k`) and, if chosen, RepViT-M0.9 (`timm/repvit_m0_9.dist_300e_in1k`, upstream `THU-MIG/RepViT`) come from timm (Ross Wightman, Hugging Face) under the Apache License 2.0; both were pretrained on ImageNet-1k. The Apache text ships as `LICENSES/Apache-2.0.txt`, and the student weights are modified versions of these backbones.
+MobileNetV4-Conv-Small (`timm/mobilenetv4_conv_small.e2400_r224_in1k`, seg and face students) and MobileNetV3-Small (`timm/mobilenetv3_small_100.lamb_in1k`, hand student) come from timm (Ross Wightman, Hugging Face) under the Apache License 2.0; both were pretrained on ImageNet-1k. The Apache text ships as `LICENSES/Apache-2.0.txt`, and the student weights are modified versions of these backbones.
 
 ### MediaPipe Hand Landmarker
 
@@ -48,7 +48,7 @@ The hand student learns most of its 21-point teacher keypoints from MediaPipe Ha
 
 ### SAM 3D Body and DINOv3
 
-The hand student also learns from SAM 3D Body (Meta, `facebook/sam-3d-body-dinov3` at `11aaa346`, code `facebookresearch/sam-3d-body`): 2,349 of 38,004 teacher hands and the left/right label of every hand it saw. SAM 3D Body is used under the SAM License; its DINOv3 backbone code (`facebookresearch/dinov3`) under the DINOv3 License (2025-08-19); its MHR body model under Apache-2.0. Copies of the SAM License and the DINOv3 License ship with the hand student weights (`LICENSES/SAM-LICENSE.txt`, `LICENSES/DINOv3-LICENSE.md`); to the extent those weights are derivative works of either set of materials, they are distributed under those agreements.
+The hand student also learns from SAM 3D Body (Meta, `facebook/sam-3d-body-dinov3` at `11aaa346`, code `facebookresearch/sam-3d-body`): 2,349 of 38,004 teacher hands and the left/right label of every hand it saw. SAM 3D Body is used under the SAM License; its DINOv3 backbone code (`facebookresearch/dinov3`) under the DINOv3 License (2025-08-19); its MHR body model under Apache-2.0. Copies of the SAM License (as shipped with SAM 3D Body, which adds a patent clause: `LICENSES/SAM-LICENSE-sam-3d-body.txt`) and the DINOv3 License (`LICENSES/DINOv3-LICENSE.md`) ship with the hand student weights; to the extent those weights are derivative works of either set of materials, they are distributed under those agreements.
 
 ### DeepSeek
 
