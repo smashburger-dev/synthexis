@@ -53,3 +53,15 @@ The answer line shows what the frame read between gesture and parameter: "hand o
 - One gesture, parameters in opposite directions: INV is per route, so a fan-out with opposite directions needs one route per direction; pin.rs pins per target and keeps the parser's routes.
 - Ranges read as lo or hi ("nur bis 95 Prozent" as lo:0.95 in one gold row, hi:0.95 from the parser).
 - Limits: oracle chips with gold classes; synthetic sentences; route_edit compares a unit's tokens in order (C1).
+
+## Do chips make the four-seed ensemble unnecessary? (11-03)
+
+Same harness after C2, frames dumped again with fewer v11 seeds (Q8_0, same rules):
+
+| parser | base (no chips) | chip_edit (all chips) |
+|---|---|---|
+| four seeds (shipped, about 350 MB, 75 ms median) | 0.7761 | 0.8358 |
+| seeds 0 + 1 | 0.7652 | 0.8249 |
+| seed 0 alone | 0.7506 | 0.8142 |
+
+The chips do not close the gap: each halving of the ensemble costs about as much with chips as without (one seed -2.2 points with chips, -2.6 without; on the real set one seed had 44 of 102 exact against 66). The four seeds stay; memory is better saved by loading the parser on demand.
