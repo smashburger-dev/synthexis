@@ -24,6 +24,7 @@ recordings/
 # Build output
 probes/coreml-student-latency/bench
 probes/coreml-student-latency/mem
+probes/coreml-student-latency/bench2
 probes/coreml-student-latency/models/
 probes/apple-vision-fps/vision_probe
 probes/fl-camera-plugin/synthexis-probe-standalone.app/

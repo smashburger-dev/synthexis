@@ -6,7 +6,7 @@ import SwiftUI
 // instructions), records each selected camera to .mov, writes
 // segments.json + session.json. New work for the Meta hackathon.
 
-let APP_VERSION = "0.2.0"
+let APP_VERSION = "0.3.0"
 
 let rlogFile: FileHandle? = {
     let p = NSHomeDirectory() + "/Library/Logs/synthexis-recorder.log"
@@ -102,6 +102,19 @@ final class CameraRec: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
     var firstPTS: CMTime?   // first appended frame; segment times are relative to this
     var framesWritten = 0
     var onError: ((String) -> Void)?
+    // Live stats counted on the capture queue before the writer guard so the
+    // start screen can prove the camera delivers frames. NSLock: written on
+    // the capture queue, read by the UI timer on main.
+    let statLock = NSLock()
+    var statFrames = 0
+    var statLastHost = 0.0
+    var statW = 0, statH = 0
+    var statTimes: [Double] = []   // host times of frames in the last ~1 s
+    var configuredAt = Date()
+    // Stall bookkeeping, main thread only (pollCamStats).
+    var stallsOver1s = 0
+    var stallActive = false
+    var disconnected = false
 
     init(device: AVCaptureDevice) { self.device = device }
 
@@ -143,7 +156,23 @@ final class CameraRec: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
         device.unlockForConfiguration()
         session.commitConfiguration()
         session.startRunning()
+        configuredAt = Date()
         rlog("cam \(device.localizedName) configured: isRunning=\(session.isRunning) fpsLock=\(configuredFps)")
+    }
+
+    func status() -> CamStatus {
+        statLock.lock(); defer { statLock.unlock() }
+        var s = CamStatus()
+        s.framesSeen = statFrames
+        s.w = statW; s.h = statH
+        if statFrames > 0 {
+            let now = CMClockGetTime(CMClockGetHostTimeClock()).seconds
+            s.age = max(0, now - statLastHost)
+            if statTimes.count > 1 {
+                s.fps = Double(statTimes.count - 1) / max(0.05, now - statTimes.first!)
+            }
+        }
+        return s
     }
 
     func startRecording(to url: URL) {
@@ -179,6 +208,18 @@ final class CameraRec: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
 
     func captureOutput(_ o: AVCaptureOutput, didOutput sb: CMSampleBuffer,
                        from c: AVCaptureConnection) {
+        // stats run before the writer guard so preview/status stay live
+        let now = CMClockGetTime(CMClockGetHostTimeClock()).seconds
+        statLock.lock()
+        statFrames += 1
+        statLastHost = now
+        if let buf = CMSampleBufferGetImageBuffer(sb) {
+            statW = CVPixelBufferGetWidth(buf)
+            statH = CVPixelBufferGetHeight(buf)
+        }
+        statTimes.append(now)
+        while let t = statTimes.first, now - t > 1.0 { statTimes.removeFirst() }
+        statLock.unlock()
         guard let w = writer, let vi = vIn else { return }
         let pts = CMSampleBufferGetPresentationTimeStamp(sb)
         if !sessionStarted {
@@ -205,6 +246,22 @@ final class CameraRec: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
     }
 }
 
+// snapshot of a camera's live stats, read on main
+struct CamStatus {
+    var framesSeen = 0
+    var age = Double.infinity   // seconds since the last delivered frame
+    var w = 0, h = 0
+    var fps = 0.0
+}
+
+func kindName(_ d: AVCaptureDevice) -> String {
+    switch d.deviceType {
+    case .continuityCamera: return "iPhone (Continuity)"
+    case .builtInWideAngleCamera: return "eingebaut"
+    default: return "extern"
+    }
+}
+
 // MARK: - App state
 
 enum Phase { case start, gap, segment, done }
@@ -223,8 +280,13 @@ final class Model: ObservableObject {
     @Published var sessionId = "S1"
     @Published var notes = ""
     @Published var devices: [AVCaptureDevice] = []
-    @Published var cam0 = 0
-    @Published var cam1 = -1  // -1 = none
+    // camera selection by uniqueID ("" = none): survives re-ordering when a
+    // device connects or disconnects
+    @Published var cam0ID = "" { didSet { schedulePreviewSync() } }
+    @Published var cam1ID = "" { didSet { schedulePreviewSync() } }
+    @Published var statuses: [String: CamStatus] = [:]   // by device uniqueID
+    @Published var stallCams: [String] = []   // names of cams with no frames > 1 s
+    @Published var freeGB = 0.0
     @Published var phase: Phase = .start
     @Published var segIdx = 0
     @Published var countdown = 0.0
@@ -236,7 +298,10 @@ final class Model: ObservableObject {
 
     var proto: RecProtocol?
     var protos: [String: RecProtocol] = [:]
-    var cams: [CameraRec] = []
+    @Published var cams: [CameraRec] = []
+    var accessGranted = false
+    var didSetup = false
+    var statusTimer: Timer?
     var records: [SegRecord] = []
     var segEnd = 0.0
     var segStartHost = Date()
@@ -302,35 +367,168 @@ final class Model: ObservableObject {
             deviceTypes: [.builtInWideAngleCamera, .external, .continuityCamera],
             mediaType: .video, position: .unspecified)
         devices = ds.devices
-        cam0 = devices.isEmpty ? -1 : 0
+        // keep selections whose device is still present
+        if !devices.contains(where: { $0.uniqueID == cam0ID }) {
+            if sessionId == "S3",
+               let ip = devices.first(where: { $0.deviceType == .continuityCamera }) {
+                cam0ID = ip.uniqueID
+            } else {
+                cam0ID = devices.first?.uniqueID ?? ""
+            }
+        }
+        if !devices.contains(where: { $0.uniqueID == cam1ID }) { cam1ID = "" }
+        syncPreviewCams()
+    }
+
+    // selected cameras, deduplicated, cam0 first
+    func wantedCamIDs() -> [String] {
+        var w = [cam0ID].filter { !$0.isEmpty }
+        if !cam1ID.isEmpty, cam1ID != cam0ID { w.append(cam1ID) }
+        return w
+    }
+
+    func cam(for id: String) -> CameraRec? {
+        cams.first(where: { $0.device.uniqueID == id })
+    }
+
+    // one running CameraRec per selected camera, already live before Start so
+    // the status line can prove frames actually arrive
+    func schedulePreviewSync() {
+        // the didSet runs inside a view update; hop out before mutating cams
+        DispatchQueue.main.async { self.syncPreviewCams() }
+    }
+
+    func syncPreviewCams() {
+        guard phase == .start, accessGranted else { return }
+        let wanted = wantedCamIDs()
+        cams = cams.filter { c in
+            let keep = wanted.contains(c.device.uniqueID)
+            if !keep { c.session.stopRunning() }
+            return keep
+        }
+        for id in wanted where cam(for: id) == nil {
+            guard let d = devices.first(where: { $0.uniqueID == id }) else { continue }
+            let c = CameraRec(device: d)
+            c.onError = self.log
+            do {
+                try c.configure(log: self.log)
+                cams.append(c)
+                log("preview running: \(d.localizedName)")
+            } catch { log("camera \(d.localizedName) configure failed: \(error)") }
+        }
+    }
+
+    func observeDevices() {
+        NotificationCenter.default.addObserver(
+            forName: .AVCaptureDeviceWasConnected, object: nil, queue: .main
+        ) { [weak self] _ in self?.discoverCameras() }
+        NotificationCenter.default.addObserver(
+            forName: .AVCaptureDeviceWasDisconnected, object: nil, queue: .main
+        ) { [weak self] n in
+            guard let self else { return }
+            if let d = n.object as? AVCaptureDevice,
+               let c = self.cams.first(where: { $0.device.uniqueID == d.uniqueID }) {
+                c.disconnected = true
+                self.log("camera \(d.localizedName) disconnected")
+            }
+            self.discoverCameras()
+        }
+    }
+
+    // 0.5 s timer: publishes live stats per camera and detects stalls
+    func startStatusTimer() {
+        pollCamStats()
+        statusTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
+            self?.pollCamStats()
+        }
+    }
+
+    func pollCamStats() {
+        var st: [String: CamStatus] = [:]
+        var stalled: [String] = []
+        let recording = phase == .gap || phase == .segment
+        for c in cams {
+            let s = c.status()
+            st[c.device.uniqueID] = s
+            if recording {
+                if s.age > 1.0 && !c.stallActive {
+                    c.stallActive = true
+                    c.stallsOver1s += 1
+                    log(String(format: "camera %@ stalled, %.1f s recorded",
+                               c.device.localizedName, c.curRecordedSeconds))
+                } else if s.age <= 1.0 {
+                    c.stallActive = false
+                }
+            }
+            if c.stallActive || c.disconnected { stalled.append(c.device.localizedName) }
+        }
+        statuses = st
+        stallCams = stalled
+        if let v = try? Model.recordingsRoot.resourceValues(
+                forKeys: [.volumeAvailableCapacityForImportantUsageKey]),
+           let b = v.volumeAvailableCapacityForImportantUsage {
+            freeGB = Double(b) / 1e9
+        }
+    }
+
+    // session sanity checks, shown on the start screen (Start stays enabled)
+    var sessionWarnings: [String] {
+        var w: [String] = []
+        let d0 = devices.first(where: { $0.uniqueID == cam0ID })
+        if sessionId == "S3", d0?.deviceType != .continuityCamera {
+            w.append("S3 nimmt mit dem iPhone auf: Kamera 0 auf das iPhone stellen")
+        }
+        if sessionId == "S4", d0?.deviceType != .builtInWideAngleCamera {
+            w.append("S4 nimmt mit der eingebauten Kamera auf")
+        }
+        if ["S1", "S2", "S3"].contains(sessionId), protoSel != "full" {
+            w.append("Protokoll für \(sessionId) ist „full“")
+        }
+        if sessionId == "S4", protoSel != "short" {
+            w.append("Protokoll für S4 ist „short“")
+        }
+        return w
     }
 
     func startAll() {
         reloadProto()
         guard proto != nil else { authNote = "Kein Protokoll geladen (siehe Zeile darunter)"; return }
-        guard cam0 >= 0, cam0 < devices.count else { authNote = "Keine Kamera gefunden"; return }
-        AVCaptureDevice.requestAccess(for: .video) { granted in
-            DispatchQueue.main.async {
-                if !granted {
-                    self.authNote = "Kamera verweigert: Systemeinstellungen → Datenschutz & Sicherheit → Kamera → synthexis recorder einschalten"
-                    return
+        guard !cam0ID.isEmpty else { authNote = "Keine Kamera gefunden"; return }
+        guard accessGranted else {
+            AVCaptureDevice.requestAccess(for: .video) { granted in
+                DispatchQueue.main.async {
+                    self.accessGranted = granted
+                    if !granted {
+                        self.authNote = "Kamera verweigert: Systemeinstellungen → Datenschutz & Sicherheit → Kamera → synthexis recorder einschalten"
+                        return
+                    }
+                    self.syncPreviewCams()
+                    self.beginRecording()
                 }
-                self.beginRecording()
             }
+            return
         }
+        beginRecording()
     }
 
     func beginRecording() {
+        // reuse the preview CameraRec objects already running; create only if
+        // missing (e.g. --auto before access was granted)
         var camsToUse: [CameraRec] = []
-        for (i, d) in devices.enumerated() where i == cam0 || i == cam1 {
-            let c = CameraRec(device: d)
-            do { try c.configure(log: self.log) }
-            catch { log("camera \(d.localizedName) configure failed: \(error)"); continue }
-            c.onError = self.log
-            camsToUse.append(c)
+        for id in wantedCamIDs() {
+            if let c = cam(for: id) {
+                camsToUse.append(c)
+            } else if let d = devices.first(where: { $0.uniqueID == id }) {
+                let c = CameraRec(device: d)
+                c.onError = self.log
+                do { try c.configure(log: self.log); camsToUse.append(c) }
+                catch { log("camera \(d.localizedName) configure failed: \(error)") }
+            }
         }
+        guard phase == .start else { return }   // e.g. a stale requestAccess callback
         guard !camsToUse.isEmpty else { authNote = "no usable camera"; return }
         cams = camsToUse
+        for c in cams { c.stallsOver1s = 0; c.stallActive = false; c.disconnected = false }
 
         let date = DateFormatter()
         date.dateFormat = "yyyy-MM-dd"
@@ -345,23 +543,44 @@ final class Model: ObservableObject {
         do { try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true) }
         catch { log("cannot create \(dir.path): \(error)"); authNote = "Ordner nicht anlegbar"; return }
         outDir = dir
-        // give sessions a moment to produce frames before startRecording,
+        // wait until every camera has produced frames before startRecording,
         // else the file output may have no live connection and record 0 s
         self.log("outdir exists=\(FileManager.default.fileExists(atPath: dir.path))")
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-            for (i, c) in self.cams.enumerated() {
-                let u = dir.appendingPathComponent("cam\(i).mov")
-                self.log("startRecording cam\(i) -> \(u.path) sessionRunning=\(c.session.isRunning)")
-                c.startRecording(to: u)
-            }
-            self.segIdx = 0
-            self.records = []
-            self.startGapThenSegment()
-        }
+        waitForFramesThenRecord(dir: dir, deadline: Date().addingTimeInterval(5))
         log("recording to \(dir.path)")
         timer?.invalidate()
         timer = Timer.scheduledTimer(withTimeInterval: 0.033, repeats: true) { _ in
             self.tick()
+        }
+    }
+
+    // polls every 0.1 s, up to 5 s total; on timeout the empty output dir is
+    // removed and the app stays on the start screen
+    func waitForFramesThenRecord(dir: URL, deadline: Date) {
+        let dead = cams.filter { $0.status().framesSeen == 0 }
+        if dead.isEmpty {
+            for (i, c) in cams.enumerated() {
+                let u = dir.appendingPathComponent("cam\(i).mov")
+                log("startRecording cam\(i) -> \(u.path) sessionRunning=\(c.session.isRunning)")
+                c.startRecording(to: u)
+            }
+            segIdx = 0
+            records = []
+            startGapThenSegment()
+            return
+        }
+        if Date() >= deadline {
+            let name = dead.first!.device.localizedName
+            log("camera \(name) produced no frames within 5 s")
+            authNote = "Kamera \(name) liefert keine Bilder"
+            try? FileManager.default.removeItem(at: dir)
+            outDir = nil
+            timer?.invalidate()
+            timer = nil
+            return
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            self.waitForFramesThenRecord(dir: dir, deadline: deadline)
         }
     }
 
@@ -456,7 +675,9 @@ final class Model: ObservableObject {
                             "model": c.device.modelID, "resolution": "1280x720",
                             "configured_fps": c.configuredFps,
                             "fps_note": c.fpsNote, "measured_fps": measured,
-                            "duration_s": dur, "size_bytes": size])
+                            "duration_s": dur, "size_bytes": size,
+                            "stalls_over_1s": c.stallsOver1s,
+                            "disconnected": c.disconnected])
             endLines.append(String(format: "cam%d %@: %.1f fps, %@, %d frames", i,
                                    c.device.localizedName, measured, sizes[i], frames))
         }
@@ -482,19 +703,41 @@ extension Array { subscript(safe i: Int) -> Element? { indices.contains(i) ? sel
 
 // MARK: - Preview
 
+// keeps the preview layer pinned to the view bounds, on the start screen
+// (640x360) and later in the recording view (320x180)
+final class PreviewView: NSView {
+    override init(frame f: NSRect) {
+        super.init(frame: f)
+        postsFrameChangedNotifications = true
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(syncLayerFrame),
+            name: NSView.frameDidChangeNotification, object: self)
+    }
+    required init?(coder: NSCoder) { fatalError("init(coder:)") }
+    @objc func syncLayerFrame() { layer?.frame = bounds }
+    override func layout() { super.layout(); syncLayerFrame() }
+}
+
 struct Preview: NSViewRepresentable {
     let layer: AVCaptureVideoPreviewLayer
     func makeNSView(context: Context) -> NSView {
-        let v = NSView()
+        let v = PreviewView()
         v.wantsLayer = true
         v.layer = layer
-        layer.frame = CGRect(x: 0, y: 0, width: 640, height: 360)
-        // mirror the preview only (recording stays unmirrored)
-        layer.connection?.automaticallyAdjustsVideoMirroring = false
-        layer.connection?.isVideoMirrored = true
+        syncMirroring()
         return v
     }
-    func updateNSView(_ v: NSView, context: Context) {}
+    func updateNSView(_ v: NSView, context: Context) {
+        v.layer?.frame = v.bounds
+        syncMirroring()
+    }
+    // mirror the preview only (recording stays unmirrored); the connection
+    // only appears once the session runs, so retry on every update
+    func syncMirroring() {
+        guard let conn = layer.connection else { return }
+        conn.automaticallyAdjustsVideoMirroring = false
+        conn.isVideoMirrored = true
+    }
 }
 
 // MARK: - UI
@@ -509,7 +752,7 @@ struct ContentView: View {
             default: recView
             }
         }
-        .frame(minWidth: 800, minHeight: 600)
+        .frame(minWidth: 900, minHeight: 820)
     }
 
     var startView: some View {
@@ -519,29 +762,84 @@ struct ContentView: View {
                 ForEach(m.protocolNames, id: \.self) { Text($0) }
             }
             TextField("Session (S1–S4 oder frei)", text: $m.sessionId)
-            Picker("Kamera 0", selection: $m.cam0) {
-                ForEach(Array(m.devices.enumerated()), id: \.offset) {
-                    Text($0.element.localizedName).tag($0.offset)
+            Picker("Kamera 0", selection: $m.cam0ID) {
+                ForEach(m.devices, id: \.uniqueID) { d in
+                    Text("\(d.localizedName) · \(kindName(d))").tag(d.uniqueID)
                 }
             }
-            Picker("Kamera 1 (optional)", selection: $m.cam1) {
-                Text("keine").tag(-1)
-                ForEach(Array(m.devices.enumerated()), id: \.offset) {
-                    Text($0.element.localizedName).tag($0.offset)
+            Picker("Kamera 1 (optional)", selection: $m.cam1ID) {
+                Text("keine").tag("")
+                ForEach(m.devices, id: \.uniqueID) { d in
+                    Text("\(d.localizedName) · \(kindName(d))").tag(d.uniqueID)
+                }
+            }
+            Button("Kameras neu suchen") { m.discoverCameras() }
+            // live previews prove the selected cameras deliver before Start
+            HStack(alignment: .top, spacing: 16) {
+                if let c0 = m.cam(for: m.cam0ID) {
+                    VStack(spacing: 4) {
+                        Preview(layer: c0.previewLayer).frame(width: 640, height: 360)
+                        statusLine(c0)
+                    }
+                }
+                if m.cam1ID != "", m.cam1ID != m.cam0ID, let c1 = m.cam(for: m.cam1ID) {
+                    VStack(spacing: 4) {
+                        Preview(layer: c1.previewLayer).frame(width: 320, height: 180)
+                        statusLine(c1)
+                    }
                 }
             }
             TextField("Licht / Notizen", text: $m.notes)
             if let p = m.proto {
                 Text("\(p.segments.count) Segmente, gap \(p.gap_s)s").foregroundColor(.secondary)
             }
+            ForEach(m.sessionWarnings, id: \.self) {
+                Text($0).foregroundColor(.orange)
+            }
+            Text(String(format: "Festplatte frei: %.1f GB", m.freeGB))
+                .foregroundColor(m.freeGB < 5 ? .red : .secondary)
             Button("Start") { m.startAll() }.keyboardShortcut(.defaultAction)
             Text(m.authNote).foregroundColor(.red)
             ForEach(m.logLines.suffix(8), id: \.self) { Text($0).font(.caption) }
         }.padding(30)
     }
 
+    // per-camera status line: green only when frames arrive live at ~30 fps
+    // in 1280x720, otherwise the concrete reason in orange or red
+    func statusLine(_ c: CameraRec) -> some View {
+        let s = m.statuses[c.device.uniqueID] ?? CamStatus()
+        let name = c.device.localizedName
+        let text: String, col: Color
+        if s.framesSeen == 0 {
+            let wait = Date().timeIntervalSince(c.configuredAt)
+            if wait > 3 {
+                text = String(format: "● keine Bilder seit %.0f s · %@", wait, name); col = .red
+            } else {
+                text = "● warte auf Bilder · \(name)"; col = .orange
+            }
+        } else if s.age > 1.0 {
+            text = String(format: "● keine Bilder seit %.1f s · %@", s.age, name); col = .red
+        } else if s.age >= 0.5 {
+            text = String(format: "● letztes Bild vor %.1f s · %@", s.age, name); col = .orange
+        } else if s.w * 9 != s.h * 16 || s.w < 1280 {
+            // the writer scales to 1280x720: other aspect ratios get distorted
+            text = String(format: "● liefert %dx%d, nicht 16:9 ab 1280x720: Bild wird verzerrt · %@",
+                          s.w, s.h, name); col = .orange
+        } else if s.fps < 25 {
+            text = String(format: "● nur %.0f fps: mehr Licht · %@", s.fps, name); col = .orange
+        } else {
+            text = String(format: "● live %.1f fps · %dx%d · %@", s.fps, s.w, s.h, name)
+            col = .green
+        }
+        return Text(text).font(.callout).foregroundColor(col)
+    }
+
     var recView: some View {
         VStack(spacing: 8) {
+            if !m.stallCams.isEmpty {
+                Text("KAMERA \(m.stallCams.joined(separator: ", ").uppercased()) LIEFERT KEINE BILDER")
+                    .font(.system(size: 40, weight: .bold)).foregroundColor(.red)
+            }
             HStack {
                 if let c = m.cams.first { Preview(layer: c.previewLayer)
                     .frame(width: 320, height: 180) }
@@ -564,9 +862,11 @@ struct ContentView: View {
                     if m.badFlagged { Text("marked bad").foregroundColor(.red) }
                 }.padding()
             }
-            if m.phase == .segment {
-                ProgressView(value: m.current!.duration_s - m.countdown,
-                             total: m.current!.duration_s)
+            // bind current: between segIdx++ and phase=.done current is nil and
+            // a forced layout in that instant crashed on the force unwrap
+            if m.phase == .segment, let s = m.current {
+                ProgressView(value: s.duration_s - m.countdown,
+                             total: s.duration_s)
                     .progressViewStyle(.linear).padding(.horizontal)
                 Text(String(format: "%.1f s", m.countdown)).font(.title2)
                 if let n = m.nextSeg {
@@ -613,6 +913,18 @@ struct RampPulse: View {
 @main
 enum Launcher {
     static func main() {
+        if CommandLine.arguments.contains("--list-cameras") {
+            // headless list like --selftest: name, kind, uniqueID, format
+            let ds = AVCaptureDevice.DiscoverySession(
+                deviceTypes: [.builtInWideAngleCamera, .external, .continuityCamera],
+                mediaType: .video, position: .unspecified)
+            for d in ds.devices {
+                let dims = CMVideoFormatDescriptionGetDimensions(
+                    d.activeFormat.formatDescription)
+                print("\(d.localizedName) · \(kindName(d)) · \(d.uniqueID) · \(dims.width)x\(dims.height)")
+            }
+            exit(0)
+        }
         guard CommandLine.arguments.contains("--selftest") else { RecorderApp.main(); return }
         // Headless check run by build.sh: protocol loads from the bundle and the
         // recordings folder is writable. Exit code 0 = ready to record.
@@ -653,7 +965,23 @@ struct RecorderApp: App {
         .windowStyle(.hiddenTitleBar)
     }
     func setup() {
+        // a reopened window re-runs onAppear on the same Model: run once,
+        // else a second window would re-trigger --auto on stopped cameras
+        guard !m.didSetup else { return }
+        m.didSetup = true
         m.loadProtocol(); m.discoverCameras()
+        // request access once at setup so previews can start before Start
+        AVCaptureDevice.requestAccess(for: .video) { granted in
+            DispatchQueue.main.async {
+                self.m.accessGranted = granted
+                if !granted {
+                    self.m.authNote = "Kamera verweigert: Systemeinstellungen → Datenschutz & Sicherheit → Kamera → synthexis recorder einschalten"
+                }
+                self.m.syncPreviewCams()
+            }
+        }
+        m.startStatusTimer()
+        m.observeDevices()
         if CommandLine.arguments.contains("--auto") { m.startAll() }
         NSEvent.addLocalMonitorForEvents(matching: .keyDown) { e in
             // Shortcuts only while recording, so text fields keep space and "b".
