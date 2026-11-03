@@ -1,0 +1,19 @@
+synthexis mapping parser, runtime files (runs listed in parser.release)
+
+Built with Muse Spark Open.
+
+These weights are a Derivative of Muse Spark Open under the Muse Model
+License (version Muse Spark Open, 2026-10-15): part of their training labels
+and sentences were written by Muse Spark Open. Licence and Usage Policy:
+LICENSES/MUSE-MODEL-LICENSE.md. The training sentences and labels were
+written by AI models, not by people.
+
+Encoder: mmBERT small (jhu-clsp/mmBERT-small at abc32620), vocabulary trimmed
+to German and English. Copyright (c) 2025 the mmBERT authors, Johns Hopkins
+University CLSP. Released under the MIT License: LICENSES/MIT-mmBERT.txt.
+
+Part of the synthetic training sentences (stage 6) and some teacher labels
+were written by DeepSeek V4.1 Flash through the DeepSeek Open Platform API.
+
+Source, training code and full credits: https://github.com/smashburger-dev/synthexis
+(docs/credits.md, probes/licence-check/RESULT.md).
