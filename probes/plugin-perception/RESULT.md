@@ -231,6 +231,38 @@ Latency in FL, from `~/Library/Logs/synthexis.log`, 5 s windows over the run (al
 - Vision takes about twice as long in FL as in the offline bench (21 to 31 ms median), because FL, the camera and other sessions' training share the machine. Perception processed about 20 of 30 frames per second; the bounded queue dropped the rest.
 - `cam_to_param_ms` medians match the 116 to 126 ms of the camera features alone (before perception), but p95 rises to about 200 ms. Vision blows the 5 ms frame budget by an order of magnitude here. The students (2.8 to 3.0 / 4.3 ms offline) would remove most of the 40 to 60 ms Vision call and the queue wait, once their side errors are fixed.
 
+### FL live with `hybrid` (2026-11-03, later)
+
+Same setup and script, backend `hybrid` (seg-a-s0, hand-chir, pair gate, eye warm-up), run file `runs/1793701616-fl_live.json`. Every phase reached nearly the full range:
+
+| macro | signal | range (min to max) |
+|---|---|---:|
+| Signal 3 | `cam0.hand.R.openness` | 0.96 (0.00 to 0.96) |
+| Signal 4 | `cam0.hand.L.openness` | 0.95 (0.00 to 0.95) |
+| Signal 6 | `cam0.hand.R.y` | 0.84 |
+| Signal 7 | `cam0.hand.R.x` | 0.86 |
+| Signal 8 | `cam0.hand.R.pinch` | 0.98 |
+| Signal 5 | `cam0.mouth.open` | 1.00 |
+| Signal 9 | `cam0.eye.L.open` | 1.00 |
+| Signal 10 | `cam0.head.yaw` | 1.00 |
+
+Automation replay of Signal 3: 0.00 to 0.97, verdict `recorded`. Right-hand openness now spans 0 to 0.96 live (Vision run: 0.24 to 0.58).
+
+Latency, 22 windows of 5 s:
+
+| | median | p95 |
+|---|---:|---:|
+| camera to FL parameter (`cam_to_param_ms`) | 88 to 130 ms | 120 to 148 ms |
+| camera frame time to callback (`pts_to_cb_ms`, before perception) | 71 to 111 ms | 85 to 122 ms |
+| callback to hands and body emitted (`cb_to_emit`) | 10 to 21 ms | 22 to 47 ms |
+| callback to face emitted (`cb_to_face`) | 20 to 27 ms | 37 to 53 ms |
+| seg student | 1.9 to 7.7 ms | 19 to 23 ms |
+| Vision landmarks | 5.4 to 11 ms | 22 to 27 ms |
+
+- Against `vision` in FL, p95 from camera to parameter drops from 157 to 212 ms to 120 to 148 ms. Perception kept up with all 30 frames per second; nothing was dropped.
+- Most of the remaining delay sits before perception: the camera hands each frame to the callback 71 to 111 ms after its timestamp.
+- In FL the students run slower than offline (seg p95 about 21 ms against 0.85 ms). FL shared the Neural Engine and CPU with a training session (train-students was working during the run), so the in-FL perception numbers are upper bounds.
+
 ## Signal contract
 
 - Ids: `cam0.` + ontology source id, side after the first segment for sided sources: `cam0.hand.R.openness`, `cam0.hand.L.finger.index.tilt`, `cam0.eye.L.open`, `cam0.mouth.open`, `cam0.face.smile`, `cam0.head.yaw`, `cam0.hands.distance`, `cam0.object.x`. `S:hand.openness side:right` maps to `cam0.hand.R.openness`. The spec's example `cam0.face.mouth.open` (sig.contract) differs from the ontology's `mouth.open`; the code follows the ontology.
@@ -241,7 +273,7 @@ Latency in FL, from `~/Library/Logs/synthexis.log`, 5 s windows over the run (al
 
 ## Open
 
-- FL live run with `hybrid`: camera to parameter latency and the same macro phases as above.
+- Camera delay: 71 to 111 ms from frame timestamp to callback, the largest share of the live latency; not looked at yet.
 - Face p95 swings between 9 and 17 ms with machine load; hands stay under 5 ms.
 - Winks while a hand overlaps the face fall back to the outline; the rule checks the whole face box, not the eye band.
 - S2 (glasses): closed eyes read 0.23 / 0.87.
