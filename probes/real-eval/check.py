@@ -61,7 +61,9 @@ def check(lines: list, rows: list, names: dict) -> int:
     for r in rows:
         if split.get(r["group"]) != r["split"]:
             bad.append(f"{r['id']}: split differs from its group")
-        if "style_from" in r and split[group[r["style_from"]]] != r["split"]:
+        if "style_from" in r and r["style_from"] not in group:
+            bad.append(f"{r['id']}: style frame from line {r['style_from']}, which has no original row")
+        elif "style_from" in r and split[group[r["style_from"]]] != r["split"]:
             bad.append(f"{r['id']}: style frame from the other split")
         for p in r["params"]:
             if r["plugin"] not in names or p not in names[r["plugin"]]:
