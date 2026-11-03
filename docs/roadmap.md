@@ -92,7 +92,7 @@ Hard dates: S3 and S4 recorded 10-30/10-31, training from 11-01 (new Modal credi
 - [ ] FigJam: update again after Noa's sentences, the retrain and the FL test
 - [ ] Demo project in FL, 3-minute video with presets and behind the scenes (11-03)
 - [ ] README with real request counts, repo public (11-03)
-- [ ] Install from source for others: `plugin/install.sh` offers Apple's Command Line Tools and the official rustup installer when missing (commit 4778556); parser and completion runtime still come from `data/` and have to be tracked like `plugin/models/` (asked of the mapping assistant session, 11-03)
+- [ ] Install from source for others: `plugin/install.sh` offers Apple's Command Line Tools and the official rustup installer when missing (commit 4778556); its last step runs `plugin/assistant/install.sh` (branch claude/assistant-runtime-release: completion data tracked, parser as GitHub release `assistant-parser-v11`, sha256 pinned; the release has to be published)
 - [ ] Download release (Noa, 11-03): signed synthexis.vst3 and .clap with the three models as a GitHub release, installed by copying only, without Rust or the Command Line Tools; publishing needs Noa's OK
 - [ ] Final install test once everything is merged and before the demo: fresh clone without `data/`, `./install.sh` with its prompts, FL loads the plugin, one assigned route moves and is recorded alone, `fl_live.py`; then the release zip on a clean user account
 - [ ] Submission (11-04)
