@@ -88,7 +88,7 @@ pub fn make_editor(
     let state = params.editor_state.clone();
     let inner = create_egui_editor(
         state,
-        UiState { params, shared, texture: None, sentence: Sentence::new() },
+        UiState { params, shared, texture: None, sentence: Sentence::new(Some(crate::fl::bridge())) },
         // Runs on every open: the egui Context is new each time but UiState
         // persists, so drop the stale texture handle.
         |_, s| {
@@ -138,7 +138,7 @@ pub fn make_editor(
                 ui.separator();
                 ui.label("Mapping assistant");
                 let completion = s.params.completion.load(Ordering::Relaxed);
-                s.sentence.ui(ui, completion, &s.params.completion_plugin);
+                s.sentence.ui(ui, completion, &s.params.target_pin);
                 ui.collapsing("Settings", |ui| {
                     let mut on = completion;
                     if ui.checkbox(&mut on, "Completion in the sentence field").changed() {

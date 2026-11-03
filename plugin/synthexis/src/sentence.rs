@@ -5,40 +5,69 @@
 //! its chips (as pinned spans) go to the parser worker. Plain styling only;
 //! the final look comes from Figma.
 //!
+//! Plugin picker: lists the plugins of the open FL project (fl.rs) as
+//! "Portal, Master slot 1" and by default follows the plugin window last
+//! clicked in FL. A mixer track with more than one plugin folds into its
+//! own group, Sound (generators routed to it) above FX (its slots); picking an entry or "Pin" freezes the target until
+//! "Follow FL" or "Unpin". The pin persists as a fl::Key id and is dropped
+//! when its slot holds another plugin. Parameter names come from FL when a
+//! target is picked; classes come from the exported plugin of the same
+//! name, if there is one.
+//!
 //! Completion data: $SYNTHEXIS_COMPLETION_DIR, else
 //! ~/Library/Application Support/synthexis/completion, as
 //! tools/mapping/export_completion.py writes it. Loaded on its own thread;
 //! queries run on the GUI thread (about 2 ms per keystroke for a plugin of
 //! 2,600 parameters), never on the audio thread.
 
+use std::collections::{BTreeMap, HashMap};
 use std::path::PathBuf;
 
 use crossbeam_channel::{bounded, Receiver};
 use nih_plug_egui::egui::{
     self, emath::easing, text::CCursor, text::CCursorRange, text::LayoutJob, text::TextFormat,
-    Align2, Color32, EventFilter, FontId, Id, Key, Modifiers, Order, Rect, Sense, TextEdit, Ui,
+    Align2, Color32, EventFilter, FontId, Id, Key, Modifiers, Order, PopupCloseBehavior, Rect, RichText, Sense,
+    TextEdit, Ui,
 };
 use parking_lot::RwLock;
 use synthexis_complete::data::{self, PluginInfo};
 use synthexis_complete::doc::ChipText;
-use synthexis_complete::{Chip, Engine, Suggestion};
+use synthexis_complete::{Chip, Engine, Param, Suggestion};
 use synthexis_parser::{Pin, PinWhat};
 
 use crate::assistant;
+use crate::fl::{self, Link};
 use crate::log::log;
 
 const TOP: usize = 3;
 const OPEN_SECS: f32 = 0.15;
 const ROW_H: f32 = 22.0;
+/// Picker list: row height and the height the list grows to before it scrolls.
+const PICK_ROW_H: f32 = 26.0;
+const PICKER_H: f32 = 420.0;
 
 type Loaded = Result<(Engine, Vec<PluginInfo>), String>;
 
 pub struct Sentence {
     doc: ChipText,
     engine: Option<Engine>,
-    plugins: Vec<PluginInfo>,
+    /// Plugins with exported completion data, for parameter classes.
+    exported: Vec<PluginInfo>,
+    classes: HashMap<String, HashMap<String, String>>,
     loader: Option<Receiver<Loaded>>,
     status: String,
+    bridge: Option<&'static fl::Bridge>,
+    seen: u64,
+    link: Link,
+    targets: Vec<fl::Target>,
+    fl_loaded: bool,
+    focus: Option<fl::Key>,
+    got: Option<(fl::Key, fl::Params)>,
+    /// Current target: the pin, else the FL focus.
+    want: Option<fl::Key>,
+    /// Target whose parameters the engine holds.
+    applied: Option<fl::Key>,
+    pick_note: String,
     sugg: Vec<Suggestion>,
     list_open: bool,
     sel: usize,
@@ -54,6 +83,32 @@ fn data_dir() -> PathBuf {
     }
     let home = std::env::var("HOME").unwrap_or_else(|_| "/tmp".into());
     PathBuf::from(home).join("Library/Application Support/synthexis/completion")
+}
+
+/// One picker row over the full list width: plugin name on the left, its
+/// place (slot, channel or track) on the right. True when clicked.
+fn pick_row(ui: &mut Ui, selected: bool, name: &str, place: &str, hover: &str) -> bool {
+    let (rect, resp) = ui.allocate_exact_size(egui::vec2(ui.available_width(), PICK_ROW_H), Sense::click());
+    let v = ui.visuals();
+    if selected {
+        ui.painter().rect_filled(rect, 3.0, v.selection.bg_fill);
+    } else if resp.hovered() {
+        ui.painter().rect_filled(rect, 3.0, v.widgets.hovered.weak_bg_fill);
+    }
+    let (fg, weak) = if selected {
+        (v.selection.stroke.color, v.selection.stroke.color)
+    } else {
+        (v.text_color(), v.weak_text_color())
+    };
+    let font = FontId::proportional(15.0);
+    let place_w = ui.painter().layout_no_wrap(place.to_string(), font.clone(), weak).size().x;
+    ui.painter().text(rect.right_center() - egui::vec2(8.0, 0.0), Align2::RIGHT_CENTER, place, font.clone(), weak);
+    let name_rect = Rect::from_min_max(rect.min, egui::pos2(rect.right() - place_w - 20.0, rect.bottom()));
+    ui.painter()
+        .with_clip_rect(name_rect)
+        .text(rect.left_center() + egui::vec2(8.0, 0.0), Align2::LEFT_CENTER, name, font, fg);
+    let resp = if hover.is_empty() { resp } else { resp.on_hover_text(hover) };
+    resp.clicked()
 }
 
 fn set_cursor(ctx: &egui::Context, id: Id, text: &str, byte: usize) {
@@ -90,14 +145,9 @@ fn hint(s: &Suggestion) -> String {
     }
 }
 
-impl Default for Sentence {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 impl Sentence {
-    pub fn new() -> Self {
+    /// `bridge`: None runs without FL (tests).
+    pub fn new(bridge: Option<&'static fl::Bridge>) -> Self {
         let (tx, rx) = bounded(1);
         let spawned = std::thread::Builder::new()
             .name("synthexis-completion".into())
@@ -111,9 +161,20 @@ impl Sentence {
         Self {
             doc: ChipText::default(),
             engine: None,
-            plugins: Vec::new(),
+            exported: Vec::new(),
+            classes: HashMap::new(),
             loader: Some(rx),
             status,
+            bridge,
+            seen: u64::MAX,
+            link: Link::Waiting,
+            targets: Vec::new(),
+            fl_loaded: false,
+            focus: None,
+            got: None,
+            want: None,
+            applied: None,
+            pick_note: String::new(),
             sugg: Vec::new(),
             list_open: false,
             sel: 0,
@@ -123,19 +184,15 @@ impl Sentence {
         }
     }
 
-    fn poll_loader(&mut self, picked: &RwLock<String>) {
+    fn poll_loader(&mut self) {
         let Some(rx) = &self.loader else { return };
         let Ok(res) = rx.try_recv() else { return };
         self.loader = None;
         match res {
             Ok((engine, plugins)) => {
                 self.engine = Some(engine);
-                self.plugins = plugins;
+                self.exported = plugins;
                 self.status.clear();
-                let want = picked.read().clone();
-                if let Some(info) = self.plugins.iter().find(|p| p.plugin_id == want).cloned() {
-                    self.pick(&info, picked);
-                }
             }
             Err(e) => {
                 log(&format!("completion: {e}"));
@@ -144,14 +201,210 @@ impl Sentence {
         }
     }
 
-    fn pick(&mut self, info: &PluginInfo, picked: &RwLock<String>) {
-        let Some(engine) = self.engine.as_mut() else { return };
-        match data::load_plugin(&data_dir(), info) {
-            Ok(params) => {
-                engine.set_plugin(&info.plugin_id, params);
-                *picked.write() = info.plugin_id.clone();
+    /// Parameter name -> class from the exported plugin named `plugin`.
+    fn classes_of(&mut self, plugin: &str) -> &HashMap<String, String> {
+        if !self.classes.contains_key(plugin) {
+            let info = self.exported.iter().find(|p| p.name.eq_ignore_ascii_case(plugin));
+            let map = info
+                .and_then(|i| data::load_plugin(&data_dir(), i).ok())
+                .map(|ps| ps.into_iter().map(|p| (p.name, p.class)).collect())
+                .unwrap_or_default();
+            self.classes.insert(plugin.to_string(), map);
+        }
+        &self.classes[plugin]
+    }
+
+    /// Takes the bridge's news, resolves the target and hands its
+    /// parameters to the engine once FL sent them.
+    fn sync_fl(&mut self, pin: &RwLock<String>) {
+        let Some(b) = self.bridge else { return };
+        {
+            let v = b.view();
+            if v.gen != self.seen {
+                self.seen = v.gen;
+                self.link = v.link.clone();
+                self.targets = v.targets.clone();
+                self.fl_loaded = v.loaded;
+                self.focus = v.focus.clone();
+                self.got = v.params.clone();
             }
-            Err(e) => self.status = e,
+        }
+        let pinned = fl::Key::parse(&pin.read());
+        if let Some(p) = &pinned {
+            if self.fl_loaded && !self.targets.iter().any(|t| t.key == *p) {
+                self.pick_note = format!("pinned {} is gone, following FL", p.label());
+                pin.write().clear();
+            }
+        }
+        let target = fl::Key::parse(&pin.read()).or_else(|| self.focus.clone());
+        if target != self.want {
+            let how = if pin.read().is_empty() { "follows FL" } else { "pinned" };
+            log(&format!("picker: {} ({how})", target.as_ref().map_or("none".into(), fl::Key::label)));
+            self.want = target;
+            if let Some(k) = &self.want {
+                b.want(k);
+            }
+            if let Some(e) = self.engine.as_mut() {
+                // no stale parameters while FL sends the new ones
+                e.set_plugin(&self.want.as_ref().map(fl::Key::id).unwrap_or_default(), Vec::new());
+                self.applied = None;
+            }
+        }
+        let Some(want) = self.want.clone() else { return };
+        if self.applied.as_ref() == Some(&want) || self.engine.is_none() {
+            return;
+        }
+        let Some((k, res)) = self.got.clone() else { return };
+        if k != want {
+            return;
+        }
+        match res {
+            Ok(names) => {
+                let classes = self.classes_of(&want.plugin).clone();
+                let params: Vec<Param> = names
+                    .into_iter()
+                    .map(|(index, name)| {
+                        let class = classes.get(&name).cloned().unwrap_or_default();
+                        Param { index, name, class }
+                    })
+                    .collect();
+                self.pick_note = format!("{} parameters", params.len());
+                if let Some(e) = self.engine.as_mut() {
+                    e.set_plugin(&want.id(), params);
+                }
+                self.applied = Some(want);
+            }
+            Err(e) => self.pick_note = e,
+        }
+    }
+
+    /// The project's plugins by mixer track; returns the clicked one.
+    /// `current` is the pin, else the followed plugin.
+    fn picker_list(&self, ui: &mut Ui, current: Option<&fl::Key>) -> Option<fl::Key> {
+        let mut tracks: BTreeMap<u32, Vec<&fl::Target>> = BTreeMap::new();
+        for t in &self.targets {
+            tracks.entry(t.track).or_default().push(t);
+        }
+        let mut clicked = None;
+        for (track, items) in &tracks {
+            if let [only] = items.as_slice() {
+                if pick_row(ui, current == Some(&only.key), &only.key.plugin, &only.track_label(), &only.key.label()) {
+                    clicked = Some(only.key.clone());
+                }
+                continue;
+            }
+            let open = items.iter().any(|t| Some(&t.key) == current);
+            let title = RichText::new(format!("{}   {}", items[0].track_label(), items.len())).size(15.0);
+            egui::CollapsingHeader::new(title)
+                .id_salt(("synthexis-picker-track", *track))
+                .default_open(open)
+                .show(ui, |ui| {
+                    for (title, sound) in [("Sound", true), ("FX", false)] {
+                        let mut part: Vec<&&fl::Target> = items.iter().filter(|t| t.is_sound() == sound).collect();
+                        if part.is_empty() {
+                            continue;
+                        }
+                        part.sort_by_key(|t| match t.key.at {
+                            fl::At::Fx { slot, .. } => slot,
+                            fl::At::Gen { ch } => ch,
+                        });
+                        ui.add_space(2.0);
+                        ui.label(RichText::new(title).size(13.0).strong().color(ui.visuals().weak_text_color()));
+                        for t in part {
+                            let num = match t.key.at {
+                                fl::At::Fx { slot, .. } => slot,
+                                fl::At::Gen { ch } => ch,
+                            };
+                            if pick_row(ui, current == Some(&t.key), &t.key.plugin, &num.to_string(), &t.key.label()) {
+                                clicked = Some(t.key.clone());
+                            }
+                        }
+                        ui.add_space(4.0);
+                    }
+                });
+        }
+        clicked
+    }
+
+    fn picker(&mut self, ui: &mut Ui, pin: &RwLock<String>) {
+        let pinned = fl::Key::parse(&pin.read());
+        let shown = match (&pinned, &self.want) {
+            (Some(p), _) => p.label(),
+            (None, Some(f)) => format!("{} (follows FL)", f.label()),
+            (None, None) => "follows FL".to_string(),
+        };
+        let mut choice = None;
+        ui.horizontal(|ui| {
+            ui.label("Plugin");
+            let width = (ui.available_width() - 70.0).clamp(240.0, 420.0);
+            // A ComboBox's list keeps the height of the previous frame, so an
+            // opened track group would be cut off; this list grows with its
+            // rows up to PICKER_H and scrolls beyond that.
+            let button = ui.add(
+                egui::Button::new(RichText::new(shown))
+                    .wrap_mode(egui::TextWrapMode::Truncate)
+                    .min_size(egui::vec2(width, 0.0)),
+            );
+            let popup = Id::new("synthexis-picker-popup");
+            let arrow = button.rect.right_center() - egui::vec2(12.0, 0.0);
+            let col = ui.visuals().text_color();
+            ui.painter().add(egui::Shape::convex_polygon(
+                vec![arrow + egui::vec2(-4.0, -2.0), arrow + egui::vec2(4.0, -2.0), arrow + egui::vec2(0.0, 3.0)],
+                col,
+                egui::Stroke::NONE,
+            ));
+            if button.clicked() {
+                ui.memory_mut(|m| m.toggle_popup(popup));
+            }
+            // opening or closing a track group must not close the list
+            egui::popup_below_widget(ui, popup, &button, PopupCloseBehavior::CloseOnClickOutside, |ui| {
+                egui::ScrollArea::vertical()
+                    .max_height(PICKER_H)
+                    .min_scrolled_height(PICKER_H)
+                    .show(ui, |ui| {
+                        ui.set_min_width(width);
+                        let current = pinned.as_ref().or(self.want.as_ref());
+                        if pick_row(ui, pinned.is_none(), "Follow FL", "", "the plugin window last clicked in FL") {
+                            choice = Some(None);
+                        }
+                        ui.separator();
+                        if let Some(k) = self.picker_list(ui, current) {
+                            choice = Some(Some(k));
+                        }
+                    });
+            });
+            if choice.is_some() {
+                ui.memory_mut(|m| m.close_popup());
+            }
+            match (&pinned, &self.want) {
+                (Some(_), _) => {
+                    if ui.button("Unpin").clicked() {
+                        choice = Some(None);
+                    }
+                }
+                (None, Some(f)) => {
+                    if ui.button("Pin").clicked() {
+                        choice = Some(Some(f.clone()));
+                    }
+                }
+                (None, None) => {}
+            }
+        });
+        if let Some(c) = choice {
+            *pin.write() = c.map(|k| k.id()).unwrap_or_default();
+            self.pick_note.clear();
+        }
+        let note = match &self.link {
+            _ if self.bridge.is_none() => String::new(),
+            Link::Waiting => "waiting for FL".to_string(),
+            Link::Down(e) => e.clone(),
+            Link::Up if self.fl_loaded && self.targets.is_empty() => "no plugins in the project".to_string(),
+            Link::Up if self.want.is_none() => "click a plugin window in FL".to_string(),
+            Link::Up => self.pick_note.clone(),
+        };
+        let notes: Vec<&str> = [note.as_str(), self.status.as_str()].into_iter().filter(|n| !n.is_empty()).collect();
+        if !notes.is_empty() {
+            ui.weak(notes.join(" · "));
         }
     }
 
@@ -197,37 +450,13 @@ impl Sentence {
         self.list_open = false;
     }
 
-    pub fn ui(&mut self, ui: &mut Ui, enabled: bool, picked: &RwLock<String>) {
-        self.poll_loader(picked);
+    /// `pin`: the pinned target's fl::Key id, empty while following FL.
+    pub fn ui(&mut self, ui: &mut Ui, enabled: bool, pin: &RwLock<String>) {
+        self.poll_loader();
+        self.sync_fl(pin);
         let id = ui.make_persistent_id("synthexis-sentence");
         self.id = Some(id);
-        ui.horizontal(|ui| {
-            ui.label("Plugin");
-            let current = picked.read().clone();
-            let shown = self
-                .plugins
-                .iter()
-                .find(|p| p.plugin_id == current)
-                .map_or("none", |p| p.name.as_str())
-                .to_string();
-            let mut choice = None;
-            egui::ComboBox::from_id_salt("synthexis-completion-plugin")
-                .selected_text(shown)
-                .show_ui(ui, |ui| {
-                    for p in &self.plugins {
-                        let label = format!("{} ({})", p.name, p.n);
-                        if ui.selectable_label(p.plugin_id == current, label).clicked() {
-                            choice = Some(p.clone());
-                        }
-                    }
-                });
-            if let Some(p) = choice {
-                self.pick(&p, picked);
-            }
-            if !self.status.is_empty() {
-                ui.weak(&self.status);
-            }
-        });
+        self.picker(ui, pin);
 
         let has_focus = ui.memory(|m| m.has_focus(id));
         let active = enabled && has_focus && !self.sugg.is_empty();
@@ -452,14 +681,15 @@ mod tests {
         ctx: egui::Context,
         s: Sentence,
         picked: RwLock<String>,
+        out: Option<egui::FullOutput>,
     }
 
     impl Harness {
         fn new() -> Self {
-            let mut s = Sentence::new();
+            let mut s = Sentence::new(None);
             s.loader = None;
             s.engine = Some(engine());
-            let mut h = Self { ctx: egui::Context::default(), s, picked: RwLock::new(String::new()) };
+            let mut h = Self { ctx: egui::Context::default(), s, picked: RwLock::new(String::new()), out: None };
             h.frame(vec![]);
             let id = h.s.id;
             h.ctx.memory_mut(|m| id.into_iter().for_each(|id| m.request_focus(id)));
@@ -474,9 +704,46 @@ mod tests {
                 ..Default::default()
             };
             let (s, picked) = (&mut self.s, &self.picked);
-            let _ = self.ctx.run(raw, |ctx| {
+            self.out = Some(self.ctx.run(raw, |ctx| {
                 egui::CentralPanel::default().show(ctx, |ui| s.ui(ui, true, picked));
-            });
+            }));
+        }
+
+        /// Centre of the topmost visible text containing `needle` (inside
+        /// its clip rect, so a row cut off by a too small list is missing).
+        fn find(&self, needle: &str) -> Option<Pos2> {
+            fn walk(s: &egui::Shape, needle: &str) -> Option<Pos2> {
+                match s {
+                    egui::Shape::Text(t) if t.galley.text().contains(needle) => {
+                        Some(t.pos + t.galley.rect.center().to_vec2())
+                    }
+                    egui::Shape::Vec(v) => v.iter().rev().find_map(|s| walk(s, needle)),
+                    _ => None,
+                }
+            }
+            let shapes = &self.out.as_ref()?.shapes;
+            shapes.iter().rev().find_map(|c| walk(&c.shape, needle).filter(|p| c.clip_rect.contains(*p)))
+        }
+
+        /// Clicks the text like a user, then lets animations settle.
+        fn click(&mut self, needle: &str) -> bool {
+            let Some(at) = self.find(needle) else { return false };
+            let button = |pressed| Event::PointerButton {
+                pos: at,
+                button: egui::PointerButton::Primary,
+                pressed,
+                modifiers: Modifiers::NONE,
+            };
+            self.frame(vec![Event::PointerMoved(at), button(true)]);
+            self.frame(vec![button(false)]);
+            for _ in 0..20 {
+                self.frame(vec![]);
+            }
+            true
+        }
+
+        fn popup_open(&self) -> bool {
+            self.ctx.memory(|m| m.any_popup_open())
         }
 
         fn focused(&self) -> bool {
@@ -535,6 +802,82 @@ mod tests {
         h.frame(vec![key(Key::Tab)]);
         assert_eq!(h.s.doc.text, "zzz");
         assert!(h.focused());
+    }
+
+    #[test]
+    fn picker_follows_fl_and_pins() {
+        let b = fl::Bridge::detached();
+        let mut h = Harness::new();
+        h.s.bridge = Some(b);
+        let key = |t, s, p: &str| fl::Key { at: fl::At::Fx { track: t, slot: s }, plugin: p.into() };
+        let (portal, proq) = (key(0, 1, "Portal"), key(3, 0, "Pro-Q 3"));
+        let target = |k: &fl::Key| {
+            let fl::At::Fx { track, .. } = k.at else { return None };
+            Some(fl::Target { key: k.clone(), track, track_name: String::new() })
+        };
+        b.update(|v| {
+            v.link = fl::Link::Up;
+            v.loaded = true;
+            v.targets = [&portal, &proq].into_iter().filter_map(target).collect();
+            v.focus = Some(portal.clone());
+            v.params = Some((portal.clone(), Ok(vec![(93, "MASTER DRY/WET".into())])));
+        });
+        h.frame(vec![]);
+        assert_eq!(h.s.want, Some(portal.clone()));
+        let engine = h.s.engine.as_ref().map(|e| e.plugin().map(str::to_string));
+        assert_eq!(engine, Some(Some("fx:0:1:Portal".into())));
+        assert_eq!(h.s.applied, Some(portal.clone()));
+
+        // pinned: focus moves on, the target stays
+        *h.picked.write() = portal.id();
+        b.update(|v| v.focus = Some(proq.clone()));
+        h.frame(vec![]);
+        assert_eq!(h.s.want, Some(portal.clone()));
+
+        // the pinned plugin leaves its slot: pin dropped, follow FL again
+        b.update(|v| v.targets = target(&proq).into_iter().collect());
+        h.frame(vec![]);
+        assert!(h.picked.read().is_empty());
+        assert_eq!(h.s.want, Some(proq.clone()));
+        assert_eq!(h.s.applied, None, "Pro-Q 3 names not sent yet");
+    }
+
+    #[test]
+    fn picker_groups_stay_open_and_rows_pin() {
+        let b = fl::Bridge::detached();
+        let mut h = Harness::new();
+        h.s.bridge = Some(b);
+        let fx = |track, slot, p: &str| fl::Target {
+            key: fl::Key { at: fl::At::Fx { track, slot }, plugin: p.into() },
+            track,
+            track_name: String::new(),
+        };
+        let serum = fl::Target {
+            key: fl::Key { at: fl::At::Gen { ch: 1 }, plugin: "Serum 2".into() },
+            track: 0,
+            track_name: "Master".into(),
+        };
+        b.update(|v| {
+            v.link = fl::Link::Up;
+            v.loaded = true;
+            v.targets = vec![fx(0, 0, "ValhallaSupermassive"), fx(0, 1, "Portal"), fx(3, 0, "Pro-Q 3"), serum];
+        });
+        h.frame(vec![]);
+        assert!(h.click("follows FL"), "combo button not drawn");
+        assert!(h.popup_open());
+        assert!(h.find("Pro-Q 3").is_some(), "single-plugin track shows as a row");
+        assert!(h.find("Portal").is_none(), "Master starts folded");
+        // a user opens Master, closes it, opens it again: the list stays up
+        for _ in 0..3 {
+            assert!(h.click("Master   3"));
+            assert!(h.popup_open(), "toggling a group closed the list");
+        }
+        for row in ["Sound", "Serum 2", "FX", "ValhallaSupermassive", "Portal", "Pro-Q 3", "Track 3"] {
+            assert!(h.find(row).is_some(), "{row} not visible in the opened list");
+        }
+        assert!(h.click("Portal"));
+        assert_eq!(*h.picked.read(), "fx:0:1:Portal");
+        assert!(!h.popup_open(), "picking a row closes the list");
     }
 
     #[test]

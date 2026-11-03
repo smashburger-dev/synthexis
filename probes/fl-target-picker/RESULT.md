@@ -39,9 +39,20 @@ pseudo-parameters at index 4096 to 4239 to every plugin; Valhalla plugins
 and Serum also name their own CC slots (Serum: 2048 "CC# Chan #"). A
 resolver must drop index >= 4096 and the plugin's own CC names.
 
+Placeholder rule (11-03, checked over the AU and VST3 harvests of all 887
+mapped plugins; `tools/mapping/fl_param_counts.py`, table in
+[param_counts.md](param_counts.md)): drop "MIDI CC n|m" (JUCE, 325
+plugins), "MIDI CC" (FabFilter VST3), "CCn Chan m", "Aftertouch Chan m",
+"Pitch Bend Chan m" (Serum), "ReservedN" (Valhalla), "X (Reserved)"
+(ShaperBox, 2081), "Internal" and "unused". Kept: Omnisphere's "Param N"
+and Cherry Audio's "1" to "128", which are real automation slots. FL lists
+a plugin's parameters like the AU harvest: after the rule, 6 of the 7
+plugins below match the AU count exactly; ShaperBox has one more (its
+bypass). The "Real" column below follows this rule.
+
 | Plugin | Named | Real | FL scan | Wall time at budget 3.5k / 16k / 56k |
 |---|---|---|---|---|
-| Serum 2 | 2765 | 2604 (idx 0..2620) | 7 ms | 20 / 14 / 13 ms |
+| Serum 2 | 2765 | 541 (idx 0..2620; 2,080 more are MIDI slots "CCn Chan m", "Aftertouch/Pitch Bend Chan m", corrected 11-03) | 7 ms | 20 / 14 / 13 ms |
 | ShaperBox 3 | 1020 | 876 (idx 2..2956; harvest 5037, 875 shared) | 4 ms | 16 / 8 / 7 ms |
 | Pro-Q 3 | 502 | 358 | 2 ms | 2-5 ms |
 | Archetype John Mayer X | 316 | 172 (harvest 2253) | 2 ms | 2-5 ms |

@@ -37,6 +37,8 @@ block2 = "0.6"
 dispatch2 = "0.3"
 parking_lot = "0.12"
 crossbeam-channel = "0.5"
+coremidi = "0.6"
+serde_json = "1"
 synthexis-parser = { path = "../parser" }
 synthexis-complete = { path = "../complete" }
 objc2-core-ml = "0.3"

@@ -9,6 +9,7 @@ mod assistant;
 mod cond;
 mod editor;
 mod engine;
+mod fl;
 mod log;
 mod params;
 mod route;
@@ -96,8 +97,10 @@ impl Plugin for Synthexis {
         _buffer_config: &BufferConfig,
         _context: &mut impl InitContext<Self>,
     ) -> bool {
-        // Not called during plugin scans; loads the parser in the background.
+        // Not called during plugin scans; loads the parser in the background
+        // and opens the FL bridge, so focus is tracked with the editor closed.
         assistant::start();
+        fl::bridge();
         true
     }
 
