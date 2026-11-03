@@ -1,10 +1,9 @@
 //! FL Studio bridge: what the open FL project holds and which plugin window
 //! the user last clicked, for the mapping assistant's plugin picker.
 //!
-//! The plugin owns two CoreMIDI virtual ports with the names and unique IDs
-//! of probes/fl-target-picker/flbridged.swift, so FL binds them to the
-//! "synthexis bridge" device script (plugin/fl/device_synthexis_bridge.py,
-//! protocol 4) the way it bound the probe daemon. Frames both ways are
+//! The plugin owns a CoreMIDI virtual source and destination, both named
+//! "synthexis", which FL binds to the "synthexis bridge" device script
+//! (plugin/fl/device_synthexis_bridge.py, protocol 4). Frames both ways are
 //! F0 7D <ASCII JSON> F7. One worker thread owns the ports, sends requests
 //! and pages through replies; the script pushes focus and inventory events
 //! on its own. The GUI reads a snapshot (`View`) and asks for parameter
@@ -12,16 +11,23 @@
 //! (fire and forget, the worker keeps only the latest value per parameter);
 //! nothing here runs on the audio thread.
 //!
-//! Test hook: SYNTHEXIS_FL_PORTS="name" opens "name" / "name return"
-//! without the fixed IDs, next to a running probe daemon
-//! (plugin/fl/test/fakefl.swift).
+//! Setup without MIDI settings (probes/fl-midi-autolink/RESULT.md): FL asks
+//! every MIDI device it has never seen who it is (Universal Device Inquiry,
+//! about 1 s after the ports appear). The destination's callback answers
+//! with `IDENTITY`, which the script lists in `# supportedHardwareIds=`, so
+//! FL enables the input, links the output and loads the script itself; the
+//! shared name matches `# supportedDevices=` as a second way. FL never asks
+//! again for a name it stored, so a port name stays fixed once shipped.
+//!
+//! Test hook: SYNTHEXIS_FL_PORTS="name" opens both ports as "name" without
+//! the fixed IDs, next to a running probe daemon (plugin/fl/test/fakefl.swift).
 //!
 //! Size rule (probes/fl-target-picker/RESULT.md, section 1): a 65,536-byte
 //! frame froze FL 26.1.7, so requests ask for pages of PAGE bytes and the
 //! script refuses replies above 60,000 bytes.
 
 use std::collections::HashMap;
-use std::sync::OnceLock;
+use std::sync::{Arc, OnceLock};
 use std::time::{Duration, Instant};
 
 use coremidi::{Client, PacketBuffer, PacketList, Sources, VirtualSource};
@@ -31,14 +37,25 @@ use serde_json::{json, Value};
 
 use crate::log::log;
 
-const SOURCE: &str = "synthexis bridge";
-const DEST: &str = "synthexis bridge return";
+/// Source and destination share the name: FL pairs them by it when it
+/// assigns the script by name. Before 2026-11-03 the ports were "synthexis
+/// bridge" / "synthexis bridge return"; FL had stored those without an ID,
+/// and it never asks a stored name again.
+const PORT: &str = "synthexis";
 const SOURCE_UID: i32 = 0x5359_4E01;
 const DEST_UID: i32 = 0x5359_4E02;
 const PROTO: u64 = 4;
+/// Our reply to FL's device inquiry: manufacturer 7D (non-commercial),
+/// family "SX", model "FL", version = protocol. The script's
+/// `# supportedHardwareIds=7D 53 58 46 4C` is a prefix of it.
+const IDENTITY: [u8; 9] = [0x7D, 0x53, 0x58, 0x46, 0x4C, PROTO as u8, 0, 0, 0];
 const PAGE: u64 = 16_000;
 const REPLY_TIMEOUT: Duration = Duration::from_secs(2);
 const RETRY: Duration = Duration::from_secs(2);
+/// FL loads the script a few seconds after the ports appear (7 s at the
+/// first setup in FL 26.1.7, probes/fl-midi-autolink); no answer before
+/// then is still "waiting", not "FL does not answer".
+const SETUP: Duration = Duration::from_secs(20);
 const KEEPALIVE: Duration = Duration::from_secs(10);
 /// Our own plugin name; FL shows it like any other effect or generator.
 const SELF_NAME: &str = "synthexis";
@@ -262,14 +279,14 @@ impl Bridge {
     }
 }
 
-/// Splits a byte stream into the JSON payloads of F0 7D ... F7 frames.
+/// Splits a byte stream into SysEx frames, F0 ... F7 included.
 #[derive(Default)]
 struct Deframer {
     buf: Vec<u8>,
 }
 
 impl Deframer {
-    fn feed(&mut self, data: &[u8], out: &mut impl FnMut(Vec<u8>)) {
+    fn feed(&mut self, data: &[u8], out: &mut impl FnMut(&[u8])) {
         self.buf.extend_from_slice(data);
         loop {
             let Some(start) = self.buf.iter().position(|&b| b == 0xF0) else {
@@ -278,12 +295,26 @@ impl Deframer {
             };
             self.buf.drain(..start);
             let Some(end) = self.buf.iter().position(|&b| b == 0xF7) else { return };
-            if self.buf.get(1) == Some(&0x7D) {
-                out(self.buf[2..end].to_vec());
-            }
+            out(&self.buf[..=end]);
             self.buf.drain(..=end);
         }
     }
+}
+
+/// The JSON of an F0 7D ... F7 frame.
+fn json_payload(frame: &[u8]) -> Option<&[u8]> {
+    (frame.len() >= 3 && frame[1] == 0x7D).then(|| &frame[2..frame.len() - 1])
+}
+
+/// The identity reply when `frame` is a Universal Device Inquiry
+/// (F0 7E <device> 06 01 F7, any device number).
+fn identity_reply(frame: &[u8]) -> Option<Vec<u8>> {
+    matches!(frame, [0xF0, 0x7E, _, 0x06, 0x01, 0xF7]).then(|| {
+        let mut r = vec![0xF0, 0x7E, 0x7F, 0x06, 0x02];
+        r.extend_from_slice(&IDENTITY);
+        r.push(0xF7);
+        r
+    })
 }
 
 fn frame(v: &Value) -> Vec<u8> {
@@ -305,33 +336,38 @@ fn frame(v: &Value) -> Vec<u8> {
 
 struct Ports {
     _client: Client,
-    source: VirtualSource,
+    source: Arc<VirtualSource>,
     _dest: coremidi::VirtualDestination,
 }
 
 fn open_ports(frames: Sender<Vec<u8>>) -> Result<Ports, String> {
     let test = std::env::var("SYNTHEXIS_FL_PORTS").ok();
-    let (src_name, dest_name) = match &test {
-        Some(n) => (n.clone(), format!("{n} return")),
-        None => (SOURCE.to_string(), DEST.to_string()),
-    };
-    if Sources.into_iter().any(|s| s.name().as_deref() == Some(src_name.as_str())) {
-        return Err(format!("another process owns \"{src_name}\" (flbridged running?)"));
+    let name = test.clone().unwrap_or_else(|| PORT.to_string());
+    if Sources.into_iter().any(|s| s.name().as_deref() == Some(name.as_str())) {
+        return Err(format!("another process owns \"{name}\" (synthexis open in another host?)"));
     }
     let client = Client::new("synthexis").map_err(|e| format!("MIDI client: {e}"))?;
-    let source = client.virtual_source(&src_name).map_err(|e| format!("MIDI source: {e}"))?;
+    let source = Arc::new(client.virtual_source(&name).map_err(|e| format!("MIDI source: {e}"))?);
     let mut de = Deframer::default();
+    let answer = Arc::clone(&source);
     let dest = client
-        .virtual_destination(&dest_name, move |list: &PacketList| {
+        .virtual_destination(&name, move |list: &PacketList| {
             for p in list.iter() {
                 de.feed(p.data(), &mut |f| {
-                    let _ = frames.send(f);
+                    // answered here on the CoreMIDI thread, whatever the worker
+                    // is waiting for: FL lists devices once and moves on
+                    if let Some(r) = identity_reply(f) {
+                        let sent = answer.received(&PacketBuffer::new(0, &r));
+                        log(&format!("fl: FL asked who we are, answered: {sent:?}"));
+                    } else if let Some(j) = json_payload(f) {
+                        let _ = frames.send(j.to_vec());
+                    }
                 });
             }
         })
         .map_err(|e| format!("MIDI destination: {e}"))?;
     // fixed IDs so FL re-identifies the ports across restarts
-    let ids = if test.is_some() { vec![] } else { vec![(&**source, SOURCE_UID), (&**dest, DEST_UID)] };
+    let ids = if test.is_some() { vec![] } else { vec![(&***source, SOURCE_UID), (&**dest, DEST_UID)] };
     for (obj, uid) in ids {
         if let Err(e) = obj.set_property_integer("uniqueID", uid) {
             log(&format!("fl: unique id {uid:#x} not set: {e}"));
@@ -352,7 +388,17 @@ fn run(want: Receiver<Key>, writes: Receiver<(Key, u32, f32)>) {
         }
     };
     log("fl: MIDI ports open");
-    let mut w = Worker { b, ports, frames, next_id: 1, hash: None, sync: true, cache: HashMap::new(), unsent: Vec::new() };
+    let mut w = Worker {
+        b,
+        ports,
+        frames,
+        opened: Instant::now(),
+        next_id: 1,
+        hash: None,
+        sync: true,
+        cache: HashMap::new(),
+        unsent: Vec::new(),
+    };
     let mut last = Instant::now();
     loop {
         if w.sync {
@@ -386,6 +432,7 @@ struct Worker {
     b: &'static Bridge,
     ports: Ports,
     frames: Receiver<Vec<u8>>,
+    opened: Instant,
     next_id: u64,
     /// Inventory hash the targets were loaded at.
     hash: Option<i64>,
@@ -488,7 +535,12 @@ impl Worker {
                 "{OLD_SCRIPT}{}, install plugin/fl/device_synthexis_bridge.py",
                 r.get("proto").map_or("?".into(), Value::to_string)
             )),
-            Err(e) => self.down(e),
+            Err(e) => {
+                let setting_up = self.b.view().link == Link::Waiting && self.opened.elapsed() < SETUP;
+                if !(setting_up && e == NO_ANSWER) {
+                    self.down(e);
+                }
+            }
         }
     }
 
@@ -680,10 +732,34 @@ mod tests {
     fn deframer_splits_and_joins_packets() {
         let mut d = Deframer::default();
         let mut got = Vec::new();
-        d.feed(&[0x00, 0xF0, 0x7D, b'{', b'}'], &mut |f| got.push(f));
-        assert!(got.is_empty());
-        d.feed(&[0xF7, 0xF0, 0x7E, b'x', 0xF7, 0xF0, 0x7D, b'1', 0xF7], &mut |f| got.push(f));
+        let mut keep = |f: &[u8]| got.extend(json_payload(f).map(<[u8]>::to_vec));
+        d.feed(&[0x00, 0xF0, 0x7D, b'{', b'}'], &mut keep);
+        d.feed(&[0xF7, 0xF0, 0x7E, b'x', 0xF7, 0xF0, 0x7D, b'1', 0xF7], &mut keep);
         assert_eq!(got, vec![b"{}".to_vec(), b"1".to_vec()]);
+    }
+
+    #[test]
+    fn answers_device_inquiry_only() {
+        // FL sent exactly this in probes/fl-midi-autolink (M1)
+        let want = [0xF0, 0x7E, 0x7F, 0x06, 0x02, 0x7D, 0x53, 0x58, 0x46, 0x4C, 0x04, 0, 0, 0, 0xF7];
+        assert_eq!(identity_reply(&[0xF0, 0x7E, 0x7F, 0x06, 0x01, 0xF7]).as_deref(), Some(&want[..]));
+        assert_eq!(identity_reply(&[0xF0, 0x7E, 0x00, 0x06, 0x01, 0xF7]).as_deref(), Some(&want[..]));
+        assert!(IDENTITY.iter().all(|b| *b < 0x80));
+        assert_eq!(identity_reply(&[0xF0, 0x7E, 0x7F, 0x06, 0x02, 0xF7]), None);
+        assert_eq!(identity_reply(&[0xF0, 0x7D, b'{', b'}', 0xF7]), None);
+        assert_eq!(json_payload(&[0xF0, 0x7E, 0x7F, 0x06, 0x01, 0xF7]), None);
+    }
+
+    #[test]
+    fn script_declares_our_identity() {
+        // the header line FL matches by prefix against IDENTITY
+        let script = include_str!("../../fl/device_synthexis_bridge.py");
+        let header = |key: &str| script.lines().find_map(|l| l.strip_prefix(key)).unwrap_or("");
+        let ids = header("# supportedHardwareIds=");
+        let id: Vec<u8> = ids.split(' ').filter_map(|h| u8::from_str_radix(h, 16).ok()).collect();
+        assert!(id.len() >= 5 && id.len() == ids.split(' ').count() && IDENTITY.starts_with(&id), "{ids}");
+        let names = header("# supportedDevices=");
+        assert!(names.split(',').any(|n| n == PORT), "{names}");
     }
 
     #[test]

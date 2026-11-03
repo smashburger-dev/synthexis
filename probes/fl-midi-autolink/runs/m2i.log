@@ -1,0 +1,212 @@
+  0.014 open src="synthexis probe i" dst="synthexis probe i" identity=7D 53 58 01 00 00 00 00 00
+  0.266 notify 2
+  0.266 notify 2
+  0.266 notify 1
+ 63.968 in  DEVICE INQUIRY F0 7E 7F 06 01 F7
+ 63.969 out identity F0 7E 7F 06 02 7D 53 58 01 00 00 00 00 00 F7
+ 66.129 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "ev": "hello"}
+ 67.297 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 67}
+ 68.302 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 68}
+ 69.307 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 69}
+ 70.312 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 70}
+ 71.315 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 71}
+ 72.320 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 72}
+ 73.325 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 73}
+ 74.329 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 74}
+ 75.333 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 75}
+ 76.337 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 76}
+ 77.342 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 77}
+ 78.345 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 78}
+ 79.350 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 79}
+ 80.355 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 80}
+ 81.360 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 81}
+ 82.364 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 82}
+ 83.369 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 83}
+ 84.372 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 84}
+ 84.555 notify 2
+ 84.555 notify 2
+ 84.555 notify 1
+ 84.684 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "ev": "hello"}
+ 86.382 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 86}
+ 87.380 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "ev": "hello"}
+ 88.390 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 88}
+ 89.395 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 89}
+ 90.400 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 90}
+ 91.405 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 91}
+ 92.410 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 92}
+ 93.415 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 93}
+ 94.423 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 94}
+ 95.427 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 95}
+ 96.437 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 96}
+ 97.442 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 97}
+ 98.446 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 98}
+ 99.451 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 99}
+100.456 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 100}
+101.460 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 101}
+102.464 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 102}
+103.469 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 103}
+104.473 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 104}
+105.478 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 105}
+106.482 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 106}
+107.487 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 107}
+108.492 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 108}
+109.497 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 109}
+109.668 notify 3
+109.668 notify 3
+109.668 notify 1
+109.804 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "ev": "hello"}
+110.502 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 110}
+111.506 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 111}
+112.508 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 112}
+113.513 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 113}
+114.518 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 114}
+114.787 notify 2
+114.788 notify 2
+114.788 notify 1
+114.916 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "ev": "hello"}
+116.527 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 116}
+117.611 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "ev": "hello"}
+118.533 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 118}
+119.537 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 119}
+120.542 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 120}
+121.545 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 121}
+122.549 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 122}
+123.554 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 123}
+124.558 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 124}
+125.563 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 125}
+126.568 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 126}
+127.573 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 127}
+128.578 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 128}
+129.582 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 129}
+130.586 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 130}
+131.591 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 131}
+132.595 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 132}
+133.600 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 133}
+134.604 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 134}
+135.609 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 135}
+136.612 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 136}
+137.617 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 137}
+138.621 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 138}
+139.625 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 139}
+139.893 notify 3
+139.894 notify 3
+139.894 notify 1
+140.034 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "ev": "hello"}
+140.630 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 140}
+141.635 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 141}
+142.640 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 142}
+143.645 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 143}
+144.649 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 144}
+145.006 notify 2
+145.007 notify 2
+145.007 notify 1
+145.131 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "ev": "hello"}
+146.655 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 146}
+147.661 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 147}
+147.820 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "ev": "hello"}
+148.664 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 148}
+149.667 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 149}
+150.671 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 150}
+151.678 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 151}
+152.682 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 152}
+153.685 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 153}
+154.690 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 154}
+155.694 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 155}
+156.703 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 156}
+157.707 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 157}
+158.712 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 158}
+159.718 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 159}
+160.722 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 160}
+161.726 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 161}
+162.731 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 162}
+163.733 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 163}
+164.738 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 164}
+165.742 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 165}
+166.746 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 166}
+167.750 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 167}
+168.755 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 168}
+169.758 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 169}
+170.123 notify 3
+170.123 notify 3
+170.123 notify 1
+170.259 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "ev": "hello"}
+171.766 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 171}
+172.771 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 172}
+173.776 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 173}
+174.780 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 174}
+175.228 notify 2
+175.228 notify 2
+175.228 notify 1
+175.356 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "ev": "hello"}
+176.794 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 176}
+177.800 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 177}
+178.052 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "ev": "hello"}
+178.806 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 178}
+179.811 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 179}
+180.815 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 180}
+181.819 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 181}
+182.824 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 182}
+183.830 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 183}
+184.835 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 184}
+185.838 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 185}
+186.843 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 186}
+187.846 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 187}
+188.849 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 188}
+189.852 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 189}
+190.857 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 190}
+191.861 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 191}
+192.864 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 192}
+193.867 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 193}
+194.870 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 194}
+195.875 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 195}
+196.880 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 196}
+197.883 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 197}
+198.888 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 198}
+199.892 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 199}
+200.361 notify 3
+200.361 notify 3
+200.361 notify 1
+200.499 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "ev": "hello"}
+201.905 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 201}
+202.909 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 202}
+203.912 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 203}
+204.916 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 204}
+205.922 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 205}
+206.926 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 206}
+207.930 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 207}
+208.935 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 208}
+209.940 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 209}
+210.944 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 210}
+211.949 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 211}
+212.954 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 212}
+213.958 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 213}
+214.963 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 214}
+215.967 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 215}
+216.970 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 216}
+217.975 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 217}
+218.979 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 218}
+219.982 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 219}
+220.987 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 220}
+221.991 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 221}
+222.995 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 222}
+223.998 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 223}
+225.001 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 224}
+226.005 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 225}
+227.009 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 226}
+228.013 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 227}
+229.017 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 228}
+230.022 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 229}
+231.025 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 230}
+232.029 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 231}
+233.034 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 232}
+234.037 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 233}
+234.277 notify 2
+234.277 notify 2
+234.277 notify 1
+234.411 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "ev": "hello"}
+235.041 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 234}
+236.046 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 235}
+237.049 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 236}
+238.053 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 237}
+239.058 in  json {"script": "hw", "dev": "synthexis probe i", "port": 236, "assigned": true, "id": 238}
+240.061 done

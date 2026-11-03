@@ -1,10 +1,18 @@
 # name=synthexis bridge
+# supportedHardwareIds=7D 53 58 46 4C
+# supportedDevices=synthexis
 #
 # synthexis FL bridge, protocol 4: the device script the synthexis plugin
-# talks to. The plugin owns the virtual MIDI ports "synthexis bridge"
-# (plugin -> FL) and "synthexis bridge return" (FL -> plugin); see
-# plugin/synthexis/src/fl.rs. Measurements behind every rule here:
-# probes/fl-target-picker/RESULT.md.
+# talks to. The plugin owns a virtual MIDI source and destination, both
+# named "synthexis"; see plugin/synthexis/src/fl.rs. Measurements behind
+# every rule here: probes/fl-target-picker/RESULT.md.
+#
+# Setup: none in MIDI settings. FL asks each new MIDI device who it is; the
+# plugin answers 7D 53 58 46 4C ..., which matches supportedHardwareIds, so
+# FL enables the input, links the output and loads this script on its own
+# (supportedDevices is the second way, by name). FL reads this folder only
+# at start: the script has to be here before FL first sees the "synthexis"
+# ports, or FL stores them without a script (probes/fl-midi-autolink).
 #
 # Frames both ways: F0 7D <7-bit ASCII JSON> F7.
 #
