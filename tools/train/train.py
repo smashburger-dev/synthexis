@@ -176,9 +176,13 @@ def decode_hand(s, meta, cfg):
             "fingers": target,
             "finger_mask": mask,
             "script": torch.tensor(1.0 if fingers else 0.0),
+            # teacher handedness (person's side), only where the teacher saw the hand
+            "chir": torch.tensor(1.0 if meta["side"] == "R" else 0.0),
+            "chir_mask": torch.tensor(1.0 if meta["side_source"] == "kp_chirality" else 0.0),
             "kp": torch.tensor([p[:2] for p in pts], dtype=torch.float32),
             "kp_conf": torch.tensor([p[2] for p in pts], dtype=torch.float32),
             "kp_sam3d": torch.tensor(float(meta.get("kp_source") == "sam3dbody")),
+            "segment": meta["segment_id"] or "",
             "session": SESSIONS.index(meta["session"])}
 
 
@@ -389,13 +393,17 @@ def prepare(batch, student, device, gen=None, opts=None):
             image, mask = warp(image, theta, "bilinear"), warp_label(mask, theta)
             image = apply_photometric(image, photometric(gen, n, device, strong), gen)
         return {"image": image, "mask": mask}
-    kp, conf = b["kp"], b["kp_conf"]
+    kp, conf, chir = b["kp"], b["kp_conf"], b["chir"]
     if gen is not None:
         theta = random_theta(n, "crop", gen, device, wide)
         image = warp(image, theta, "bilinear")
         kp, conf = warp_keypoints(kp, conf, theta)
+        a = theta[:, :, :2]
+        mirrored = (a[:, 0, 0] * a[:, 1, 1] - a[:, 0, 1] * a[:, 1, 0]) < 0
+        chir = torch.where(mirrored, 1 - chir, chir)  # a mirrored right hand is a left hand
         image = apply_photometric(image, photometric(gen, n, device, strong), gen)
-    return {"image": image, "fingers": b["fingers"], "finger_mask": b["finger_mask"], "kp": kp, "kp_conf": conf}
+    return {"image": image, "fingers": b["fingers"], "finger_mask": b["finger_mask"], "kp": kp, "kp_conf": conf,
+            "chir": chir, "chir_mask": b["chir_mask"]}
 
 
 # --- models -------------------------------------------------------------------
@@ -405,7 +413,7 @@ def build(student, args, pretrained=True):
         return st.SegStudent(pretrained=pretrained, backbone=args.seg_backbone)
     if student == "face":
         return st.FaceStudent(pretrained=pretrained)
-    return st.HandStudent(pretrained=pretrained, backbone=args.hand_backbone)
+    return st.HandStudent(pretrained=pretrained, backbone=args.hand_backbone, chirality=getattr(args, "chirality", False))
 
 
 def loss_fn(student, model, batch):
@@ -460,6 +468,7 @@ def evaluate(student, model, files, args, cfg, limit=None, sequential=False):
     cms = defaultdict(lambda: torch.zeros(k, k, dtype=torch.long)) if k else None
     probs, labels, kp_err, kp_src = [], [], [], []
     variants = defaultdict(list)  # hand: flip TTA, keypoint geometry, fusions
+    chir_hits, chir_seg = [], []  # hand: handedness vs teacher chirality
     for raw in loader(ds, args.eval_batch, args.workers, dev, False):
         b = prepare(raw, student, dev)
         sess = raw["session"]
@@ -478,14 +487,15 @@ def evaluate(student, model, files, args, cfg, limit=None, sequential=False):
                     sel = (sess == si).to(dev)
                     cms[("crop", si)] += confusion(pred[sel], b["mask"][sel], k)
             else:
-                kp, logits = model(b["image"])
+                out_h = model(b["image"])
+                kp, logits = out_h[0], out_h[1]
         if student == "hand":
             fm = raw["script"].to(dev) > 0  # script labels only, never pseudo labels
             head = torch.sigmoid(logits.float())
             probs.append(head[fm].cpu())
             labels.append(b["fingers"][fm].cpu())
             with autocast(dev):
-                kp_f, logits_f = model(b["image"].flip(-1))
+                logits_f = model(b["image"].flip(-1))[1]
             tta = (head + torch.sigmoid(logits_f.float())) / 2
             variants["tta"].append(tta[fm].cpu())
             if getattr(args, "geo", None):
@@ -497,6 +507,10 @@ def evaluate(student, model, files, args, cfg, limit=None, sequential=False):
             err = (kp.float() - b["kp"]).norm(dim=-1) * 128
             kp_err.append(err[w].cpu())
             kp_src.append(raw["kp_sam3d"].to(dev).unsqueeze(1).expand_as(w)[w].cpu())
+            if len(out_h) == 3:
+                cm_ = raw["chir_mask"] > 0
+                chir_hits.append(((out_h[2][:, 0].float().cpu() > 0) == (raw["chir"] > 0.5))[cm_])
+                chir_seg.extend(sid for sid, keep in zip(raw["segment"], cm_.tolist()) if keep)
     if student in ("seg", "face"):
         names = SEG_CLASSES if student == "seg" else FACE_CLASSES
         modes = sorted({m for m, _ in cms})
@@ -516,6 +530,12 @@ def evaluate(student, model, files, args, cfg, limit=None, sequential=False):
     out["kp_px_mean_sam3d"] = round(float(err[src == 1].mean()), 2) if (src == 1).any() else None
     out["finger_samples"] = int(len(labels))
     out["finger"] = finger_metrics(probs, labels, [0.5] * 5)
+    if chir_hits:
+        hits = torch.cat(chir_hits).numpy()
+        one = np.array([s.startswith(("A_L_", "A_R_")) for s in chir_seg])
+        out["chirality_accuracy"] = round(float(hits.mean()), 4)
+        out["chirality_accuracy_block_a_one_hand"] = round(float(hits[one].mean()), 4) if one.any() else None
+        out["chirality_samples"] = int(len(hits))
     out["_probs"], out["_labels"] = probs, labels
     out["_variants"] = {"head": probs, **{k: torch.cat(v).numpy() for k, v in variants.items()}}
     out["variants_state_accuracy"] = {k: finger_metrics(v, labels, [0.5] * 5)["state_accuracy"]
@@ -640,6 +660,7 @@ def main():
     ap.add_argument("--pseudo-fingers", action="store_true",
                     help="hand: confident finger labels from teacher-keypoint geometry on unlabelled crops")
     ap.add_argument("--ema", type=float, default=0.0, help="EMA decay of the weights, 0 = off")
+    ap.add_argument("--chirality", action="store_true", help="hand: third output, handedness logit (> 0 = right)")
     ap.add_argument("--include-dev", action="store_true",
                     help="final run: train on train + dev of S1-S3, keep the last epoch (dev is then seen)")
     ap.add_argument("--variant", default="head", help="hand gate and export: head, tta, geo, fused, fused_tta")
@@ -799,7 +820,7 @@ def main():
             best = ev["score"]
             torch.save({"model": net.state_dict(), "epoch": epoch, "score": best, "student": args.student,
                         "hand_backbone": args.hand_backbone, "seg_backbone": args.seg_backbone,
-                        "geo": getattr(args, "geo", None)}, run / "best.pt")
+                        "geo": getattr(args, "geo", None), "chirality": args.chirality}, run / "best.pt")
         if epoch == start_epoch and args.usd_per_hour and args.max_usd and not stop:
             per_epoch = time.time() - t0
             projected = usd() + (args.epochs - epoch - 1) * per_epoch / 3600 * args.usd_per_hour
@@ -842,6 +863,7 @@ def load_best(args, run):
     ck = torch.load(path, map_location="cpu", weights_only=False)
     args.hand_backbone = ck.get("hand_backbone", args.hand_backbone)
     args.seg_backbone = ck.get("seg_backbone", st.BACKBONE)
+    args.chirality = ck.get("chirality", False)
     if ck.get("geo"):
         args.geo = ck["geo"]
     model = build(ck["student"], args, pretrained=False)
@@ -906,6 +928,8 @@ def gate(args, run, cfg):
         held["finger_calibrated"] = finger_metrics(held["_variants"][v], held["_labels"], thr)
         held["variant"] = v
         acc = held["finger_calibrated"]["state_accuracy"]
+        if "chirality_accuracy" in held:
+            print("S4 chirality accuracy", held["chirality_accuracy"], "block A one hand", held["chirality_accuracy_block_a_one_hand"])
         result = {"dev": strip(dev), "heldout": strip(held), "thresholds": thr,
                   "gate": {"finger_state_accuracy": {"value": acc, "min": 0.95, "pass": acc >= 0.95}}}
     result["epoch"] = ck["epoch"]
@@ -960,10 +984,13 @@ def export(args, run):
             pred = mlmodel.predict({"image": pimg})
             report["argmax_agreement"] = float((np.asarray(next(iter(pred.values()))).argmax(1) == ref).mean())
         else:
-            rk, rf = model(xt)
+            ref = model(xt)
             outs = sorted(mlmodel.predict({"image": pimg}).values(), key=lambda v: np.asarray(v).size)
-            report["max_abs_diff_fingers"] = float(np.abs(np.asarray(outs[0]) - rf.numpy()).max())
-            report["max_abs_diff_keypoints"] = float(np.abs(np.asarray(outs[1]) - rk.numpy()).max())
+            if len(ref) == 3:  # (1,1) handedness, (1,5) fingers, (1,21,2) keypoints
+                report["max_abs_diff_chirality"] = float(np.abs(np.asarray(outs[0]) - ref[2].numpy()).max())
+                outs = outs[1:]
+            report["max_abs_diff_fingers"] = float(np.abs(np.asarray(outs[0]) - ref[1].numpy()).max())
+            report["max_abs_diff_keypoints"] = float(np.abs(np.asarray(outs[1]) - ref[0].numpy()).max())
     report["spec"] = {"inputs": [str(i) for i in mlmodel.get_spec().description.input],
                       "outputs": [o.name for o in mlmodel.get_spec().description.output]}
     (run / "export.json").write_text(json.dumps(report, indent=1))

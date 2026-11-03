@@ -102,15 +102,24 @@ class FaceStudent(SegStudent):
 
 
 class HandStudent(nn.Module):
-    def __init__(self, pretrained=True, backbone=BACKBONE):
+    """chirality: a third output, one logit, > 0 = the person's right hand.
+    Apple Vision returns handedness; without it the plugin has to guess the
+    side of a single hand near the image centre (probes/train-students)."""
+
+    def __init__(self, pretrained=True, backbone=BACKBONE, chirality=False):
         super().__init__()
+        self.chirality = chirality
         self.norm = Normalize()
-        self.net = timm.create_model(backbone, pretrained=pretrained, num_classes=NUM_JOINTS * 2 + 5)
+        self.net = timm.create_model(backbone, pretrained=pretrained,
+                                     num_classes=NUM_JOINTS * 2 + 5 + int(chirality))
 
     def forward(self, image):
         out = self.net(self.norm(image))
         keypoints = torch.sigmoid(out[:, :NUM_JOINTS * 2]).view(-1, NUM_JOINTS, 2)
-        return keypoints, out[:, NUM_JOINTS * 2:]
+        fingers = out[:, NUM_JOINTS * 2:NUM_JOINTS * 2 + 5]
+        if self.chirality:
+            return keypoints, fingers, out[:, NUM_JOINTS * 2 + 5:]
+        return keypoints, fingers
 
 
 def soft_dice(logits, mask):
@@ -202,8 +211,12 @@ def face_loss(model, batch, dice_weight=DICE_WEIGHT):
     return ce + dice_weight * dice, {"ce": ce.item(), "dice": dice.item()}
 
 
+CHIRALITY_WEIGHT = 0.5
+
+
 def hand_loss(model, batch):
-    keypoints, finger_logits = model(batch["image"])
+    out = model(batch["image"])
+    keypoints, finger_logits = out[0], out[1]
     fm = batch["finger_mask"]
     if fm.dim() == 1:  # one flag per sample -> per finger
         fm = fm.unsqueeze(1).expand(-1, 5)
@@ -211,6 +224,12 @@ def hand_loss(model, batch):
               * fm).sum() / fm.sum().clamp(min=1)
     w = (batch["kp_conf"] > KP_MIN_CONF).float()
     kp = ((keypoints - batch["kp"]).abs().sum(-1) * w).sum() / w.sum().clamp(min=1)
+    if len(out) == 3:
+        cm = batch["chir_mask"]
+        chir = (F.binary_cross_entropy_with_logits(out[2][:, 0], batch["chir"], reduction="none") * cm).sum() \
+            / cm.sum().clamp(min=1)
+        return finger + kp + CHIRALITY_WEIGHT * chir, {"finger_bce": finger.item(), "kp_l1": kp.item(),
+                                                      "chir_bce": chir.item()}
     return finger + kp, {"finger_bce": finger.item(), "kp_l1": kp.item()}
 
 
@@ -345,7 +364,8 @@ class HandDeploy(nn.Module):
         self.register_buffer("bias", torch.log(t) - torch.log1p(-t))
 
     def forward(self, image):
-        kp, logits = self.model(image)
+        out = self.model(image)
+        kp, logits = out[0], out[1]
         p = torch.sigmoid(logits)
         if self.tta:
             p = (p + torch.sigmoid(self.model(image.flip(-1))[1])) / 2
@@ -353,7 +373,8 @@ class HandDeploy(nn.Module):
             x = (finger_geometry(kp) - self.g_mu) / self.g_sd
             p = (p + torch.sigmoid((x * self.g_w[:, :3]).sum(-1) + self.g_w[:, 3])) / 2
         p = p.clamp(1e-4, 1 - 1e-4)
-        return kp, torch.log(p) - torch.log1p(-p) - self.bias
+        fingers = torch.log(p) - torch.log1p(-p) - self.bias
+        return (kp, fingers, out[2]) if len(out) == 3 else (kp, fingers)
 
 
 class FaceDeploy(nn.Module):

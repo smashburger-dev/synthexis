@@ -184,12 +184,18 @@ The only S4-free calibration source for an eye bias and dilation is the LOSO fol
 
 Final, Modal billing report at 2026-11-03 00:4x CET: `synthexis-students` 13.92 $ in total (both rounds), November 41.42 $ of Noa's 42.50 $ limit. During round 2: billing 2026-11-02 for `synthexis-students`, all on A10G (the L4-first list never got an L4): 11.66 $ in total for the day (A10G 9.22, CPU 1.64, memory 0.80). By group: round 1 2.81 $ (13 runs), seg LOSO 3.36 $ (4), face levers 3.34 $ (18), hand levers 0.56 $ (4), failed and cancelled starts about 1.6 $. Round 2 bought mostly negative results; a one-seed screen first, seeds only for winners, would have cost about a third. Noa's November limit is 42.50 $; the month stood at 39.04 $ before the two final runs.
 
+## Handedness output (2026-11-03, contract change approved by Noa)
+
+The plugin (probes/plugin-perception) kept Apple Vision as default because a single hand near the image centre landed on the wrong side in 32 % of S4 block A frames. Diagnosis on S4 block A one-hand segments (1,446 frames, shipped seg, own prev, no choice made from it): SAM shows a hand in 1,374 frames, seg covers it in 1,370 (99.7 %); 72 frames (5 %) show no hand; seg adds a non-overlapping hand blob in 69 (4.8 %). So seg is not the cause. Vision returns handedness per hand; our hand contract had none, and a 2D keypoint rule (thumb side of the wrist-index-pinky triangle) reads the side right only 57 % of the time on dev, because palm and back flip it.
+
+`hand-chir`: the hand-final recipe plus one handedness logit, trained on the teacher chirality (87 % of crops; a mirrored crop flips its label, checked: labels flip exactly on the 31 of 64 mirrored samples), weight 0.5, 20 epochs, seed 0, Modal 0.14 $. Dev: fingers 0.887 (hand-final 0.887), keypoints 10.8 px, handedness 0.931 over all crops and 0.983 for the single hand in block A. S4, gated once: handedness 0.941, block A single hand 0.982; finger states 0.890 (per finger 0.931 / 0.985 / 0.990 / 0.982 / 0.959), keypoints 9.1 / 6.7 px. ANE 0.400 / 0.657 ms per crop. Shipped as `hand.mlpackage`; outputs keypoints 1x21x2, finger logits 1x5, handedness 1x1 (> 0 = right), picked by element count, so a plugin that ignores the new output keeps working.
+
 ## Shipped state (2026-11-03)
 
 | student | run | S4 | gate | ANE median / p95 ms |
 |---------|-----|----|------|---------------------|
 | seg | seg-a-s0, BN recalibrated | person 0.766, face 0.798, hand 0.797 (own prev, time order); mouth 0.659 | 0.85: no | 0.547 / 0.649 |
-| hand | hand-final, MobileNetV3-Small, pseudo finger labels | states 0.892; per finger 0.945 / 0.985 / 0.990 / 0.983 / 0.946; keypoints 8.9 / 6.3 px | 0.95: no | 0.416 / 0.682 |
+| hand | hand-chir, MobileNetV3-Small, pseudo finger labels, handedness output | states 0.890; per finger 0.931 / 0.985 / 0.990 / 0.982 / 0.959; keypoints 9.1 / 6.7 px; handedness 0.941 (single hand, block A: 0.982) | 0.95: no | 0.400 / 0.657 |
 | face | face-a-s1 | mouth 0.705, eye 0.243 | 0.70: mouth yes, eye no | 0.339 / 0.500 |
 
 Hand logits now carry the dev-calibrated thresholds: extended = logit > 0. CoreML and PyTorch agree on the 5-bit state for 495 of 500 dev crops (the rest sit on the threshold in FP16). `data/models/students.json` records all of it.
