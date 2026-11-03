@@ -1,7 +1,7 @@
 //! Loads what tools/mapping/export_completion.py writes:
 //!
-//!   <dir>/vocab.json           gesture phrases, class phrases, class prior,
-//!                              exported plugins
+//!   <dir>/vocab.json           gesture phrases, class phrases, target
+//!                              phrases, class prior, exported plugins
 //!   <dir>/plugins/<slug>.json  one plugin's parameters (index, name, class)
 
 use std::collections::HashMap;
@@ -15,6 +15,11 @@ use crate::{Engine, Gesture, Param};
 struct VocabFile {
     gestures: Vec<GestureRow>,
     param_phrases: Vec<PhraseRow>,
+    #[serde(default)]
+    targets: Vec<TargetRow>,
+    /// [span text, class or target, count] from the training spans
+    #[serde(default)]
+    span_prior: Vec<(String, String, u32)>,
     class_prior: HashMap<String, u64>,
     plugins: Vec<PluginInfo>,
 }
@@ -31,6 +36,12 @@ struct GestureRow {
 #[derive(Deserialize)]
 struct PhraseRow {
     class: String,
+    p: String,
+}
+
+#[derive(Deserialize)]
+struct TargetRow {
+    kind: String,
     p: String,
 }
 
@@ -68,7 +79,9 @@ pub fn load(dir: &Path) -> Result<(Engine, Vec<PluginInfo>), String> {
         .map(|g| Gesture { source: g.source, shape: g.shape, phrase: g.p, pol: g.pol })
         .collect();
     let phrases = v.param_phrases.into_iter().map(|r| (r.class, r.p)).collect();
-    Ok((Engine::new(gestures, phrases, &v.class_prior), v.plugins))
+    let targets = v.targets.into_iter().map(|r| (r.kind, r.p)).collect();
+    let engine = Engine::new(gestures, phrases, &v.class_prior).with_targets(targets).with_span_prior(v.span_prior);
+    Ok((engine, v.plugins))
 }
 
 pub fn load_plugin(dir: &Path, info: &PluginInfo) -> Result<Vec<Param>, String> {

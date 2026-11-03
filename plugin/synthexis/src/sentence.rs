@@ -1,7 +1,9 @@
 //! Sentence field of the mapping assistant with IDE-style completion
 //! (synthexis_complete): the best item shows as ghost text after the
-//! cursor, Tab accepts it, the arrow keys open the top 3, Enter picks, Esc
-//! dismisses. An accepted item becomes a chip; on Enter the sentence and
+//! cursor and Tab accepts it. From two typed characters a list of up to 8
+//! items opens below the field (5 rows visible, it scrolls); the arrow keys
+//! move through it, Tab or Enter picks, Esc dismisses. Enter picks only
+//! after an arrow key, so Enter on a finished sentence still sends it. An accepted item becomes a chip; on Enter the sentence and
 //! its chips (as pinned spans) go to the parser worker. Plain styling only;
 //! the final look comes from Figma.
 //!
@@ -21,14 +23,16 @@ use nih_plug_egui::egui::{
 use parking_lot::RwLock;
 use synthexis_complete::data::{self, PluginInfo};
 use synthexis_complete::doc::ChipText;
-use synthexis_complete::{Chip, Engine, Suggestion};
+use synthexis_complete::{Chip, Engine, Suggestion, GHOST_MIN_CHARS};
 use synthexis_parser::{Pin, PinWhat};
 
 use crate::assistant;
 use crate::log::log;
 
-const TOP: usize = 3;
+const TOP: usize = 8;
+const VISIBLE: usize = 5;
 const OPEN_SECS: f32 = 0.15;
+const MOVE_SECS: f32 = 0.08;
 const ROW_H: f32 = 22.0;
 
 type Loaded = Result<(Engine, Vec<PluginInfo>), String>;
@@ -41,7 +45,11 @@ pub struct Sentence {
     status: String,
     sugg: Vec<Suggestion>,
     list_open: bool,
+    /// An arrow key moved through the list; Enter now picks instead of sending.
+    nav: bool,
     sel: usize,
+    /// First visible row of the list.
+    scroll: usize,
     /// Esc pressed; cleared by the next edit or cursor move.
     dismissed: bool,
     cursor: usize,
@@ -75,6 +83,7 @@ fn to_pin(range: &std::ops::Range<usize>, chip: &Chip) -> Pin {
             source: source.clone(),
             shape: shape.clone(),
         },
+        Chip::Target { kind, .. } => PinWhat::Target { kind: kind.clone() },
     };
     Pin { bytes: (range.start, range.end), what }
 }
@@ -87,6 +96,15 @@ fn hint(s: &Suggestion) -> String {
         (Chip::Gesture { source, shape: Some(sh), .. }, _) => format!("{source}/{sh}"),
         (Chip::Gesture { source, pol, .. }, _) if *pol < 0 => format!("{source} (inverse)"),
         (Chip::Gesture { source, .. }, _) => source.clone(),
+        (Chip::Target { kind, .. }, _) => match kind.as_str() {
+            "midi.note" => "MIDI note".into(),
+            "midi.chord" => "MIDI chord".into(),
+            "midi.pattern" => "MIDI pattern".into(),
+            "midi.cc" => "MIDI CC".into(),
+            "macro" => "macro".into(),
+            "xy" => "XY pad".into(),
+            k => k.strip_prefix("midi.prop:").map_or_else(|| k.to_string(), |p| format!("MIDI {p}")),
+        },
     }
 }
 
@@ -116,7 +134,9 @@ impl Sentence {
             status,
             sugg: Vec::new(),
             list_open: false,
+            nav: false,
             sel: 0,
+            scroll: 0,
             dismissed: false,
             cursor: 0,
             id: None,
@@ -160,9 +180,21 @@ impl Sentence {
             (Some(e), true) => e.complete(&self.doc.text, self.cursor, self.doc.floor(self.cursor), TOP),
             _ => Vec::new(),
         };
-        self.sel = self.sel.min(self.sugg.len().saturating_sub(1));
-        if self.sugg.is_empty() {
-            self.list_open = false;
+        // new items after an edit: the best one is selected again
+        self.sel = 0;
+        self.scroll = 0;
+        self.nav = false;
+        let typed = self.sugg.first().map_or(0, |s| self.doc.text[s.replace.clone()].chars().count());
+        self.list_open = !self.dismissed && self.sugg.len() >= 2 && typed >= GHOST_MIN_CHARS;
+    }
+
+    fn select(&mut self, i: usize) {
+        self.sel = i;
+        self.nav = true;
+        if i < self.scroll {
+            self.scroll = i;
+        } else if i >= self.scroll + VISIBLE {
+            self.scroll = i + 1 - VISIBLE;
         }
     }
 
@@ -234,7 +266,7 @@ impl Sentence {
         let at_end = self.cursor == self.doc.text.len();
         let ghost = active
             && !self.dismissed
-            && !self.list_open
+            && self.sel == 0
             && at_end
             && self.sugg[0].ghost_worthy(&self.doc.text);
         let mut take = None;
@@ -248,16 +280,17 @@ impl Sentence {
             ui.input_mut(|i| {
                 if i.consume_key(Modifiers::NONE, Key::ArrowDown) {
                     if self.list_open {
-                        self.sel = (self.sel + 1).min(n - 1);
+                        self.select((self.sel + 1).min(n - 1));
                     } else {
                         self.list_open = true;
-                        self.sel = 0;
+                        self.dismissed = false;
+                        self.select(0);
                     }
                 }
                 if self.list_open && i.consume_key(Modifiers::NONE, Key::ArrowUp) {
-                    self.sel = self.sel.saturating_sub(1);
+                    self.select(self.sel.saturating_sub(1));
                 }
-                if self.list_open && i.consume_key(Modifiers::NONE, Key::Enter) {
+                if self.list_open && self.nav && i.consume_key(Modifiers::NONE, Key::Enter) {
                     take = Some(self.sel);
                 }
                 if (ghost || self.list_open) && i.consume_key(Modifiers::NONE, Key::Escape) {
@@ -329,6 +362,9 @@ impl Sentence {
             self.dismissed = false;
             self.refresh(enabled);
         }
+        if !(enabled && out.response.has_focus()) {
+            self.list_open = false;
+        }
         if out.response.lost_focus() && ui.input(|i| i.key_pressed(Key::Enter)) {
             self.submit();
             ui.memory_mut(|m| m.request_focus(id));
@@ -338,7 +374,7 @@ impl Sentence {
         let show_ghost = enabled
             && out.response.has_focus()
             && !self.dismissed
-            && !self.list_open
+            && self.sel == 0
             && self.cursor == self.doc.text.len()
             && self.sugg.first().is_some_and(|s| s.ghost_worthy(&self.doc.text));
         if let (true, Some(s)) = (show_ghost, self.sugg.first()) {
@@ -351,7 +387,8 @@ impl Sentence {
                 .text(pos, Align2::LEFT_TOP, ghost, FontId::proportional(14.0), ui.visuals().weak_text_color());
         }
 
-        // top-3 list, opens in 150 ms with an ease-out
+        // the list opens in 150 ms with an ease-out; selection and scrolling
+        // glide in 80 ms
         let shown = enabled && self.list_open && !self.sugg.is_empty();
         // egui drops the focus on Esc before widgets see it; while there is
         // something to dismiss, the field keeps Esc (and Tab) for itself
@@ -371,26 +408,46 @@ impl Sentence {
         let t = ui
             .ctx()
             .animate_bool_with_time_and_easing(id.with("list"), shown, OPEN_SECS, easing::cubic_out);
+        let ctx = ui.ctx().clone();
         if !shown {
+            // the next list starts at its top row, without a glide
+            ctx.animate_value_with_time(id.with("sel"), 0.0, 0.0);
+            ctx.animate_value_with_time(id.with("scroll"), 0.0, 0.0);
             return;
         }
+        let sel_y = ctx.animate_value_with_time(id.with("sel"), self.sel as f32, MOVE_SECS);
+        let scroll_y = ctx.animate_value_with_time(id.with("scroll"), self.scroll as f32, MOVE_SECS);
         let width = out.response.rect.width().min(420.0);
-        let full = ROW_H * self.sugg.len() as f32 + 8.0;
+        let rows = self.sugg.len().min(VISIBLE);
+        let full = ROW_H * rows as f32 + 8.0;
         let pos = out.response.rect.left_bottom() + egui::vec2(0.0, 2.0);
         let mut clicked = None;
         egui::Area::new(id.with("list-area"))
             .order(Order::Foreground)
             .fixed_pos(pos)
-            .show(ui.ctx(), |ui| {
+            .show(&ctx, |ui| {
                 ui.set_clip_rect(Rect::from_min_size(pos, egui::vec2(width + 16.0, full * t + 8.0)));
                 ui.multiply_opacity(t);
                 egui::Frame::popup(ui.style()).show(ui, |ui| {
-                    ui.set_width(width);
+                    let (bx, _) = ui.allocate_exact_size(egui::vec2(width, ROW_H * rows as f32), Sense::hover());
+                    let mut ui = ui.new_child(egui::UiBuilder::new().max_rect(bx));
+                    ui.set_clip_rect(bx.intersect(ui.clip_rect()));
+                    let row = |y: f32| Rect::from_min_size(bx.min + egui::vec2(0.0, (y - scroll_y) * ROW_H), egui::vec2(width, ROW_H));
+                    ui.painter().rect_filled(row(sel_y), 3.0, ui.visuals().selection.bg_fill);
+                    if self.sugg.len() > VISIBLE {
+                        // where the visible rows sit in the whole list
+                        let n = self.sugg.len() as f32;
+                        let h = bx.height() * VISIBLE as f32 / n;
+                        let y = bx.top() + bx.height() * scroll_y / n;
+                        let bar = Rect::from_min_size(egui::pos2(bx.right() - 2.0, y), egui::vec2(2.0, h));
+                        ui.painter().rect_filled(bar, 1.0, ui.visuals().weak_text_color().gamma_multiply(0.6));
+                    }
                     for (i, s) in self.sugg.iter().enumerate() {
-                        let (rect, resp) = ui.allocate_exact_size(egui::vec2(width, ROW_H), Sense::click());
-                        if i == self.sel {
-                            ui.painter().rect_filled(rect, 3.0, ui.visuals().selection.bg_fill);
+                        let rect = row(i as f32);
+                        if !rect.intersects(bx) {
+                            continue;
                         }
+                        let resp = ui.interact(rect.intersect(bx), id.with(("row", i)), Sense::click());
                         let p = ui.painter();
                         p.text(
                             rect.left_center() + egui::vec2(6.0, 0.0),
@@ -400,7 +457,7 @@ impl Sentence {
                             ui.visuals().strong_text_color(),
                         );
                         p.text(
-                            rect.right_center() - egui::vec2(6.0, 0.0),
+                            rect.right_center() - egui::vec2(10.0, 0.0),
                             Align2::RIGHT_CENTER,
                             hint(s),
                             FontId::proportional(11.0),
@@ -514,6 +571,32 @@ mod tests {
         assert_eq!(h.s.doc.text, "the Filter 2 Freq ");
         assert_eq!(h.chips(), ["param:Synth/Test#1"]);
         assert!(h.focused());
+    }
+
+    #[test]
+    fn list_opens_while_typing_and_enter_still_sends() {
+        let mut h = Harness::new();
+        h.frame(vec![Event::Text("the cut".into())]);
+        assert!(h.s.list_open);
+        assert_eq!(h.s.sugg.len(), 2);
+        h.frame(vec![key(Key::Enter)]);
+        assert!(h.chips().is_empty());
+        assert_eq!(h.s.doc.text, "", "Enter without an arrow key sends the sentence");
+    }
+
+    #[test]
+    fn list_scrolls_past_five_rows() {
+        let mut h = Harness::new();
+        let p = |index: u32| Param { index, name: format!("Filter {index} Freq"), class: "filter.cutoff".into() };
+        h.s.engine.as_mut().unwrap().set_plugin("Synth/Test", (0..10).map(p).collect());
+        h.frame(vec![Event::Text("the fil".into())]);
+        assert_eq!(h.s.sugg.len(), TOP);
+        for _ in 0..6 {
+            h.frame(vec![key(Key::ArrowDown)]);
+        }
+        assert_eq!((h.s.sel, h.s.scroll), (6, 2));
+        h.frame(vec![key(Key::Tab)]);
+        assert_eq!(h.s.doc.text, "the Filter 6 Freq ");
     }
 
     #[test]
