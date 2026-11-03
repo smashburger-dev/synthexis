@@ -294,6 +294,23 @@ Latency, 22 windows of 5 s:
 - Most of the remaining delay sits before perception: the camera hands each frame to the callback 71 to 111 ms after its timestamp.
 - In FL the students run slower than offline (seg p95 about 21 ms against 0.85 ms). FL shared the Neural Engine and CPU with a training session (train-students was working during the run), so the in-FL perception numbers are upper bounds.
 
+### FL live with the new curves (2026-11-03, later)
+
+Same script after the response curves and the median stage (run file `runs/1793703694-fl_live.json`). `fl_live.py` stores only min, max and the count of distinct values per phase, so the time in the middle band is not measured live.
+
+| macro | signal | range now | range before | distinct values now / before |
+|---|---|---:|---:|---:|
+| Signal 3 | `cam0.hand.R.openness` | 0.87 (0.00 to 0.87) | 0.96 | 120 / 96 |
+| Signal 4 | `cam0.hand.L.openness` | 0.92 | 0.95 | 112 / 108 |
+| Signal 6 | `cam0.hand.R.y` | 0.90 | 0.84 | 146 / 132 |
+| Signal 7 | `cam0.hand.R.x` | 0.84 | 0.86 | 128 / 124 |
+| Signal 8 | `cam0.hand.R.pinch` | 0.84 | 0.98 | 124 / 108 |
+| Signal 5 | `cam0.mouth.open` | 1.00 | 1.00 | 110 / 72 |
+| Signal 9 | `cam0.eye.L.open` | 0.99 | 1.00 | 113 / 114 |
+| Signal 10 | `cam0.head.yaw` | 1.00 | 1.00 | 90 / 67 |
+
+Automation replay: 0.01 to 0.89, verdict `recorded`. The open hand now tops out at 0.87 to 0.92: the extended anchors are the median of extended fingers, so a hand reads 1 only when it is opened at least as far as the typical recorded one. Camera to parameter over 25 windows: median 55 to 145 ms (mid 58), p95 76 to 155 ms (mid 80). The camera's frame-to-callback delay swung between 49 and 134 ms; callback to hands emitted took 3 to 8 ms median.
+
 ## Signal contract
 
 - Ids: `cam0.` + ontology source id, side after the first segment for sided sources: `cam0.hand.R.openness`, `cam0.hand.L.finger.index.tilt`, `cam0.eye.L.open`, `cam0.mouth.open`, `cam0.face.smile`, `cam0.head.yaw`, `cam0.hands.distance`, `cam0.object.x`. `S:hand.openness side:right` maps to `cam0.hand.R.openness`. The spec's example `cam0.face.mouth.open` (sig.contract) differs from the ontology's `mouth.open`; the code follows the ontology.
@@ -305,7 +322,6 @@ Latency, 22 windows of 5 s:
 ## Open
 
 - Camera delay: 71 to 111 ms from frame timestamp to callback, the largest share of the live latency; not looked at yet.
-- New response curves and the median stage: not yet tried live in FL.
 - Face p95 swings between 9 and 17 ms with machine load; hands stay under 5 ms.
 - Winks while a hand overlaps the face fall back to the outline; the rule checks the whole face box, not the eye band.
 - S2 (glasses): closed eyes read 0.23 / 0.87.
