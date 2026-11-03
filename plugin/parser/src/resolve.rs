@@ -82,7 +82,16 @@ pub struct Route {
     /// all of them); left means the left hand only.
     pub side: Option<String>,
     pub inv: bool,
+    /// The route's modifiers as the frame has them (lo:, hi:, amt:, mode:,
+    /// curve:, smooth:, hold:, quantize:, delta:, BIP), in frame order.
+    pub mods: Vec<String>,
     pub targets: Vec<Target>,
+}
+
+const MODS: [&str; 10] = ["lo:", "hi:", "amt:", "mode:", "curve:", "smooth:", "hold:", "quantize:", "delta:", "BIP"];
+
+fn percent(v: &str) -> String {
+    v.parse::<f32>().map_or_else(|_| v.to_string(), |x| format!("{:.0}", x * 100.0))
 }
 
 fn tok(it: &Item) -> &str {
@@ -424,6 +433,13 @@ pub fn resolve(
                 source: find("S:").unwrap_or_default(),
                 side: find("side:").or_else(|| shared.clone()),
                 inv: route.items.iter().any(|it| tok(it) == "INV"),
+                mods: route
+                    .items
+                    .iter()
+                    .map(tok)
+                    .filter(|t| MODS.iter().any(|m| t.starts_with(m)))
+                    .map(str::to_string)
+                    .collect(),
                 targets,
             }
         })
@@ -459,7 +475,42 @@ impl Route {
             })
             .collect();
         let targets = if targets.is_empty() { "?".to_string() } else { targets.join(", ") };
-        format!("{} -> {targets}", self.source_label())
+        let mods = self.mod_labels();
+        let mods = if mods.is_empty() { String::new() } else { format!(" ({})", mods.join(", ")) };
+        format!("{} -> {targets}{mods}", self.source_label())
+    }
+
+    /// The words between gesture and parameter, as the frame read them:
+    /// "range 5-35 %", "amount 25 %", "steps", "snappy", "centred".
+    pub fn mod_labels(&self) -> Vec<String> {
+        let get = |p: &str| self.mods.iter().find_map(|m| m.strip_prefix(p));
+        let mut out = Vec::new();
+        if get("lo:").is_some() || get("hi:").is_some() {
+            out.push(format!("range {}-{} %", percent(get("lo:").unwrap_or("0")), percent(get("hi:").unwrap_or("1"))));
+        }
+        for m in &self.mods {
+            let (k, v) = m.split_once(':').unwrap_or((m, ""));
+            let label = match (k, v) {
+                ("lo" | "hi", _) => continue,
+                ("amt", v) => format!("amount {} %", percent(v)),
+                ("delta", v) => format!("{}{} %", if v.starts_with('-') { "-" } else { "+" }, percent(v.trim_start_matches(['+', '-']))),
+                ("mode", "step") => "steps".into(),
+                ("mode", "toggle") => "toggles".into(),
+                ("mode", "momentary") => "while held".into(),
+                ("mode", "ramp") => "ramps".into(),
+                ("curve", c) => format!("{c} curve"),
+                ("smooth", "low") => "snappy".into(),
+                ("smooth", "high") => "smooth".into(),
+                ("smooth", v) => format!("{v} smoothing"),
+                ("hold", "hold") => "holds".into(),
+                ("hold", v) => format!("{v}s"),
+                ("quantize", v) => format!("{v} steps"),
+                ("BIP", _) => "centred".into(),
+                (k, v) => format!("{k} {v}"),
+            };
+            out.push(label);
+        }
+        out
     }
 }
 
@@ -560,5 +611,17 @@ mod tests {
         let ps = cands(&topos());
         let r = resolve(&pin(&it, &[]), text, &[], "fx:0:0:Topos", &ps, &HashMap::new());
         assert_eq!(r[0].describe("Topos"), "hand pinch -> midi.note, fx.bitcrush (no parameter)");
+    }
+
+    #[test]
+    fn modifiers_show_in_the_line() {
+        let text = "fist steps the tone only up to 80 percent, snappy";
+        let it = items(
+            &["I:map", "<route>", "S:hand.openness", "INV", "T:param:filter.cutoff", "mode:step", "hi:0.8", "smooth:low", "</route>"],
+            text,
+        );
+        let ps = cands(&topos());
+        let r = resolve(&pin(&it, &[]), text, &[tgt(text, "the tone")], "fx:0:0:Topos", &ps, &HashMap::new());
+        assert_eq!(r[0].describe("Topos"), "hand openness inverted -> Topos / Tone (range 0-80 %, steps, snappy)");
     }
 }
