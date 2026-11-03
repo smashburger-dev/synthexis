@@ -21,6 +21,8 @@ from pathlib import Path
 
 PLUGIN = Path(__file__).resolve().parents[2] / "plugin"
 FOLD = {"hand.fist": "hand.openness", "eye.closed": "eye.open"}
+# target chips (probes/completion-targets)
+TARGET_KINDS = {"midi.note", "midi.chord", "midi.pattern", "midi.cc", "macro"}
 
 
 def routes(frame):
@@ -70,14 +72,16 @@ def assign(row):
     ts = [t for r in rs for t in r if t.startswith("T:")]
     if len(ts) != len(tgts):
         ts = [next((t for t in r if t.startswith("T:")), None) for r in rs]
-    tgt = []
+    tgt, tk = [], []
     if tgts and len(ts) == len(tgts):
         for (b, e), t in zip(tgts, ts):
             if t and t.startswith("T:param:"):
                 tgt.append([b, e, t[8:], False])
             elif t and t.startswith("T:toggle:"):
                 tgt.append([b, e, "ctl.switch", True])
-    return src, tgt, [s for s, _ in distinct]
+            elif t and t[2:].split(":")[0] in TARGET_KINDS:
+                tk.append([b, e, t[2:].split(":")[0]])
+    return src, tgt, tk, [s for s, _ in distinct]
 
 
 def main() -> None:
@@ -96,9 +100,9 @@ def main() -> None:
     rows = [json.loads(l) for l in open(a.rows)]
     sim_in = []
     for r in rows:
-        src, tgt, gsrc = assign(r)
+        src, tgt, tk, gsrc = assign(r)
         sim_in.append({"text": r["text"], "pred": r["pred"], "pred_bytes": r["pred_bytes"],
-                       "src": src, "tgt": tgt, "gold_sources": gsrc})
+                       "src": src, "tgt": tgt, "tk": tk, "gold_sources": gsrc})
     payload = "".join(json.dumps(x, ensure_ascii=False) + "\n" for x in sim_in)
     if not a.sim:
         subprocess.run(["cargo", "build", "--release", "-q", "-p", "synthexis-complete", "--example", "sim_v11"],
@@ -118,21 +122,22 @@ def main() -> None:
         g = agg[r["split"]]
         g["n"] += 1
         g["base"] += fp.compare(r["pred"], r["gold"])["route_edit"]
-        for k in ("G", "P", "GP"):
+        for k in ("G", "P", "GP", "GPT"):
             g[f"pin_{k}"] += fp.compare(o[k], r["gold"])["route_edit"]
-        for k in ("src_total", "src_hits", "src_ghost", "words", "false_ghost"):
+        for k in ("src_total", "src_hits", "src_ghost", "words", "false_ghost", "tk_total", "tk_hits"):
             g[k] += o[k]
     table = {}
     for split, g in agg.items():
         n = g["n"]
         table[split] = {
             "n": int(n),
-            **{k: round(g[k] / n, 4) for k in ("base", "pin_G", "pin_P", "pin_GP")},
+            **{k: round(g[k] / n, 4) for k in ("base", "pin_G", "pin_P", "pin_GP", "pin_GPT")},
+            "T8": round(g["tk_hits"] / max(g["tk_total"], 1), 4),
             "R3": round(g["src_hits"] / max(g["src_total"], 1), 4),
             "R1": round(g["src_ghost"] / max(g["src_total"], 1), 4),
             "F": round(g["false_ghost"] / max(g["words"], 1), 4),
         }
-    keys = ("base", "pin_G", "pin_P", "pin_GP", "R3", "R1", "F")
+    keys = ("base", "pin_G", "pin_P", "pin_GP", "pin_GPT", "T8", "R3", "R1", "F")
     mean = {k: round(sum(t[k] for t in table.values()) / len(table), 4) for k in keys}
     print(f"{a.name}: " + " ".join(f"{k} {mean[k]}" for k in keys))
     for split, t in table.items():

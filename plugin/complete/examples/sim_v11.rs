@@ -24,6 +24,10 @@ struct Row {
     src: Vec<(usize, usize, String, Option<String>)>,
     /// [byte start, byte end, class, switch]
     tgt: Vec<(usize, usize, String, bool)>,
+    /// [byte start, byte end, target kind] of MIDI and macro spans
+    /// (probes/completion-targets)
+    #[serde(default)]
+    tk: Vec<(usize, usize, String)>,
     gold_sources: Vec<String>,
 }
 
@@ -62,6 +66,16 @@ fn type_span(e: &Engine, text: &str, b: usize, end: usize, src: &str, shape: Opt
         }
     }
     None
+}
+
+/// Types text[b..e] like type_span; true once the 8-item list holds a
+/// target item of `kind`.
+fn type_target(e: &Engine, text: &str, b: usize, end: usize, kind: &str) -> bool {
+    text[b..end].char_indices().map(|(i, c)| b + i + c.len_utf8()).any(|c| {
+        e.complete(&text[..c], c, 0, 8)
+            .iter()
+            .any(|s| matches!(&s.chip, Chip::Target { kind: k, .. } if k == kind))
+    })
 }
 
 fn frame(items: &[Item], pins: &[Pin]) -> Vec<String> {
@@ -130,10 +144,20 @@ fn main() {
             false_ghost += usize::from(shown);
         }
         let all: Vec<Pin> = gpins.iter().chain(&ppins).cloned().collect();
+        let tpins: Vec<Pin> = r
+            .tk
+            .iter()
+            .filter(|(b, e, k)| type_target(&engine, &r.text, *b, *e, k))
+            .map(|(b, e, k)| Pin { bytes: (*b, *e), what: PinWhat::Target { kind: k.clone() } })
+            .collect();
+        let with_t: Vec<Pin> = all.iter().chain(&tpins).cloned().collect();
         let o = json!({
             "G": frame(&its, &gpins),
             "P": frame(&its, &ppins),
             "GP": frame(&its, &all),
+            "GPT": frame(&its, &with_t),
+            "tk_total": r.tk.len(),
+            "tk_hits": tpins.len(),
             "src_total": r.src.len(),
             "src_hits": hits,
             "src_ghost": ghost,

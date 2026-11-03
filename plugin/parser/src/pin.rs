@@ -13,6 +13,10 @@
 //!   equal, else each to the free route nearest to it (by its spans and
 //!   pinned parameter); the route's S: token becomes the chip's source (and
 //!   shape:);
+//! - a target chip (MIDI note, chord, pattern, CC, macro) goes to the
+//!   nearest route with a free target token, one of its own kind first;
+//!   that token becomes T:<kind>: and keeps its value when the kind was
+//!   already right;
 //! - a chip no route takes gets a route of its own.
 //!
 //! Runs after decoding, never inside the grammar: the parser still reads
@@ -26,6 +30,9 @@ pub enum PinWhat {
     Param { id: String, class: String, switch: bool },
     /// A gesture source, with a shape id when the source is hand.shape.
     Gesture { source: String, shape: Option<String> },
+    /// A target kind that is no plugin parameter: midi.note, midi.chord,
+    /// midi.pattern, midi.cc or macro.
+    Target { kind: String },
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -44,6 +51,8 @@ pub struct Route {
     pub source_pinned: bool,
     /// Pinned source per item: true on an S: token a gesture chip set.
     src_pinned: Vec<bool>,
+    /// True on a T: token a target chip set.
+    tgt_pinned: Vec<bool>,
     /// Bytes from the first to the last span or pinned chip.
     anchor: Option<(usize, usize)>,
 }
@@ -75,7 +84,8 @@ impl Route {
     fn new(items: Vec<Item>) -> Self {
         let pinned = vec![None; items.len()];
         let src_pinned = vec![false; items.len()];
-        let mut r = Self { items, pinned, src_pinned, ..Self::default() };
+        let tgt_pinned = vec![false; items.len()];
+        let mut r = Self { items, pinned, src_pinned, tgt_pinned, ..Self::default() };
         let spans: Vec<(usize, usize)> = r
             .items
             .iter()
@@ -107,12 +117,14 @@ impl Route {
         self.items.insert(i, it);
         self.pinned.insert(i, None);
         self.src_pinned.insert(i, false);
+        self.tgt_pinned.insert(i, false);
     }
 
     fn remove(&mut self, i: usize) {
         self.items.remove(i);
         self.pinned.remove(i);
         self.src_pinned.remove(i);
+        self.tgt_pinned.remove(i);
     }
 
     /// Source slots a gesture chip can take: the unpinned S: tokens (a
@@ -183,6 +195,35 @@ impl Route {
                 t.strip_prefix("T:param:") == Some(class)
             }
         })
+    }
+
+    /// An unpinned T: token for a target chip of `kind`: one of that kind
+    /// first, else the first of any kind; with whether the kind matched.
+    fn target_for_kind(&self, kind: &str) -> Option<(usize, bool)> {
+        let free: Vec<usize> = (0..self.items.len())
+            .filter(|&i| self.pinned[i].is_none() && !self.tgt_pinned[i] && tok(&self.items[i]).starts_with("T:"))
+            .collect();
+        let same = free.iter().find(|&&i| target_kind(tok(&self.items[i])) == kind);
+        same.map(|&i| (i, true)).or_else(|| free.first().map(|&i| (i, false)))
+    }
+
+    /// Pins the target token at `at` (None: a new one after the sources) to
+    /// the chip's kind.
+    fn set_target(&mut self, at: Option<usize>, kind: &str, bytes: (usize, usize)) {
+        let i = match at {
+            Some(i) if target_kind(tok(&self.items[i])) == kind => i,
+            Some(i) => {
+                self.items[i] = Item::Token(format!("T:{kind}:"));
+                i
+            }
+            None => {
+                let i = self.after_source();
+                self.insert(i, Item::Token(format!("T:{kind}:")));
+                i
+            }
+        };
+        self.tgt_pinned[i] = true;
+        self.widen(bytes);
     }
 
     /// Position after the leading source tokens.
@@ -257,6 +298,11 @@ impl Route {
         }
         self.source_pinned = true;
     }
+}
+
+/// "T:midi.cc:74" -> "midi.cc".
+fn target_kind(t: &str) -> &str {
+    t.strip_prefix("T:").and_then(|r| r.split(':').next()).unwrap_or("")
 }
 
 /// conventions.FOLD: (folded source, whether INV flips).
@@ -353,7 +399,7 @@ pub fn pin(items: &[Item], pins: &[Pin]) -> Frame {
     pins.sort_by_key(|p| p.bytes.0);
     let params = pins.iter().filter_map(|p| match &p.what {
         PinWhat::Param { id, class, switch } => Some((p.bytes, id, class, *switch)),
-        PinWhat::Gesture { .. } => None,
+        _ => None,
     });
     let params: Vec<_> = params.collect();
     let mut placed = vec![false; params.len()];
@@ -398,11 +444,27 @@ pub fn pin(items: &[Item], pins: &[Pin]) -> Frame {
             f.add_route(r);
         }
     }
+    for p in &pins {
+        let PinWhat::Target { kind } = &p.what else { continue };
+        let mut routes = f.routes_mut();
+        let near = routes
+            .iter_mut()
+            .filter_map(|r| r.target_for_kind(kind).map(|(i, same)| (r, i, same)))
+            .min_by_key(|(r, _, same)| (!same, r.gap(p.bytes)));
+        match near {
+            Some((r, i, _)) => r.set_target(Some(i), kind, p.bytes),
+            None => {
+                let mut r = Route::default();
+                r.set_target(None, kind, p.bytes);
+                f.add_route(r);
+            }
+        }
+    }
     let mut gestures: Vec<((usize, usize), &str, Option<&str>)> = pins
         .iter()
         .filter_map(|p| match &p.what {
             PinWhat::Gesture { source, shape } => Some((p.bytes, source.as_str(), shape.as_deref())),
-            PinWhat::Param { .. } => None,
+            _ => None,
         })
         .collect();
     // 1. the S: token that already names the movement
@@ -491,6 +553,32 @@ mod tests {
 
     fn run(text: &str, frame: &[&str], pins: &[Pin]) -> Vec<String> {
         pin(&items(frame, text), pins).frame()
+    }
+
+    fn target(text: &str, chip: &str, kind: &str) -> Pin {
+        Pin { bytes: at(text, chip), what: PinWhat::Target { kind: kind.into() } }
+    }
+
+    #[test]
+    fn target_chip_keeps_the_kind_and_value_the_parser_chose() {
+        let t = "when I spread my fingers play the kick pattern";
+        let fr = ["I:map", "<route>", "S:hand.spread", "T:midi.pattern:kick pattern", "</route>"];
+        assert_eq!(run(t, &fr, &[target(t, "kick pattern", "midi.pattern")]), fr);
+    }
+
+    #[test]
+    fn target_chip_replaces_a_wrong_kind() {
+        let t = "wenn ich die Faust mache Akkord spielen";
+        let fr = ["I:map", "<route>", "S:hand.fist", "T:param:other", "</route>"];
+        let out = run(t, &fr, &[target(t, "Akkord spielen", "midi.chord")]);
+        assert_eq!(out, ["I:map", "<route>", "S:hand.fist", "T:midi.chord:", "</route>"]);
+    }
+
+    #[test]
+    fn target_chip_without_a_target_gets_a_route() {
+        let t = "Akkord spielen";
+        let out = run(t, &["I:none"], &[target(t, "Akkord spielen", "midi.chord")]);
+        assert_eq!(out, ["I:map", "<route>", "T:midi.chord:", "</route>"]);
     }
 
     #[test]

@@ -1,10 +1,12 @@
 //! IDE-style completion for the mapping assistant's sentence field.
 //!
-//! Two kinds of items: parameters of the picked plugin (matched by their
+//! Three kinds of items: parameters of the picked plugin (matched by their
 //! name and, through the glossary, by phrases of their param-sense class:
-//! "cut" or "Filter auf" offer "Filter 1 Freq") and gestures (glossary
+//! "cut" or "Filter auf" offer "Filter 1 Freq"), gestures (glossary
 //! phrases of the ontology sources and hand shapes, only where a gesture is
-//! named: sentence start, "when I", "wenn ich", "with my"). An accepted
+//! named: sentence start, "when I", "wenn ich", "with my") and targets that
+//! are not plugin parameters (glossary phrases of MIDI note, chord, pattern,
+//! CC and the macros: "Akk" offers "Akkord spielen"). An accepted
 //! item becomes a chip that carries an id; on submit the chips become
 //! pinned spans for the parser (synthexis_parser::pin).
 //!
@@ -43,7 +45,13 @@ const RECENT_CAP: usize = 32;
 const SWITCH_UP: f32 = 0.15;
 const SWITCH_DOWN: f32 = -0.05;
 const NOT_MAPPABLE: f32 = -0.2;
+/// Target items rank below parameters of the same match.
+const TARGET_DOWN: f32 = -0.1;
 pub const SWITCH_CLASS: &str = "ctl.switch";
+/// Classes that gather unrelated parameters: their glossary phrases
+/// ("the gap before the reverb starts" in `other`) would offer every one of
+/// them, so these parameters complete by name only.
+const CATCH_ALL: [&str; 3] = ["other", "system", "unsafe"];
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Gesture {
@@ -67,6 +75,9 @@ pub struct Param {
 pub enum Chip {
     Param { plugin: String, index: u32, name: String, class: String },
     Gesture { source: String, shape: Option<String>, phrase: String, pol: i8 },
+    /// A target kind of the ontology that is no plugin parameter:
+    /// midi.note, midi.chord, midi.pattern, midi.cc or macro.
+    Target { kind: String, phrase: String },
 }
 
 impl Chip {
@@ -76,6 +87,7 @@ impl Chip {
             Chip::Param { plugin, index, .. } => format!("param:{plugin}#{index}"),
             Chip::Gesture { source, shape: Some(s), .. } => format!("gesture:{source}/{s}"),
             Chip::Gesture { source, .. } => format!("gesture:{source}"),
+            Chip::Target { kind, .. } => format!("target:{kind}"),
         }
     }
 
@@ -83,7 +95,7 @@ impl Chip {
     pub fn label(&self) -> &str {
         match self {
             Chip::Param { name, .. } => name,
-            Chip::Gesture { phrase, .. } => phrase,
+            Chip::Gesture { phrase, .. } | Chip::Target { phrase, .. } => phrase,
         }
     }
 
@@ -149,6 +161,9 @@ pub struct Engine {
     prior: Vec<f32>,
     plugin: Option<Plugin>,
     recent: Vec<String>,
+    /// (kind, phrase) of the non-parameter targets.
+    targets: Vec<(String, String)>,
+    tindex: Index,
 }
 
 #[derive(Default)]
@@ -162,9 +177,10 @@ impl Engine {
     /// per class over the harvested plugins.
     pub fn new(
         gestures: Vec<Gesture>,
-        phrases: Vec<(String, String)>,
+        mut phrases: Vec<(String, String)>,
         prior: &HashMap<String, u64>,
     ) -> Self {
+        phrases.retain(|(c, _)| !CATCH_ALL.contains(&c.as_str()));
         let mut classes: Vec<String> = prior.keys().cloned().collect();
         classes.extend(phrases.iter().map(|(c, _)| c.clone()));
         classes.sort();
@@ -192,7 +208,16 @@ impl Engine {
             prior,
             plugin: None,
             recent: Vec::new(),
+            targets: Vec::new(),
+            tindex: Index::new(std::iter::empty()),
         }
+    }
+
+    /// Targets that are no plugin parameter, as (kind, phrase).
+    pub fn with_targets(mut self, targets: Vec<(String, String)>) -> Self {
+        self.tindex = Index::new(targets.iter().map(|(_, p)| p.as_str()));
+        self.targets = targets;
+        self
     }
 
     /// The plugin whose parameters complete (the target picker's choice).
@@ -290,6 +315,20 @@ impl Engine {
                     keep(Suggestion { chip, score, replace: replace.clone(), via: None, prefix, weak }, key);
                 }
             }
+            self.tindex.with_word_prefix(&first, &mut sc.seen, &mut sc.ids);
+            for &i in &sc.ids {
+                let k = &self.tindex.keys[i as usize];
+                let Some(m) = q.score(k).filter(|&m| m >= MIN_MATCH) else {
+                    continue;
+                };
+                let (kind, phrase) = &self.targets[i as usize];
+                let chip = Chip::Target { kind: kind.clone(), phrase: phrase.clone() };
+                let key = chip.id();
+                let score = m + TARGET_DOWN + wb + self.recency(&key);
+                // list only: short target words ("fire chords", "pad chords")
+                // start like parameter words and would take the ghost text
+                keep(Suggestion { chip, score, replace: replace.clone(), via: None, prefix: q.is_prefix(k), weak: true }, key);
+            }
             let Some(p) = &self.plugin else { continue };
             // (param, match, via phrase, prefix)
             let mut cands: Vec<(u32, f32, Option<String>, bool)> = Vec::new();
@@ -341,6 +380,14 @@ impl Engine {
                 .then_with(|| a.chip.id().cmp(&b.chip.id()))
         });
         contrast(&mut out);
+        // a target item never takes the first row (the ghost text) from an
+        // item that could be ghost text
+        if matches!(out.first(), Some(s) if matches!(s.chip, Chip::Target { .. })) {
+            if let Some(j) = out.iter().position(|s| s.ghost_worthy(text)) {
+                let s = out.remove(j);
+                out.insert(0, s);
+            }
+        }
         out.truncate(k);
         out
     }
@@ -351,6 +398,7 @@ fn kind(c: &Chip) -> &str {
     match c {
         Chip::Param { class, .. } => class,
         Chip::Gesture { source, .. } => source,
+        Chip::Target { kind, .. } => kind,
     }
 }
 
@@ -377,7 +425,7 @@ fn contrast(out: &mut Vec<Suggestion>) {
 fn param_index(c: &Chip) -> u32 {
     match c {
         Chip::Param { index, .. } => *index,
-        Chip::Gesture { .. } => 0,
+        Chip::Gesture { .. } | Chip::Target { .. } => 0,
     }
 }
 

@@ -83,6 +83,7 @@ fn to_pin(range: &std::ops::Range<usize>, chip: &Chip) -> Pin {
             source: source.clone(),
             shape: shape.clone(),
         },
+        Chip::Target { kind, .. } => PinWhat::Target { kind: kind.clone() },
     };
     Pin { bytes: (range.start, range.end), what }
 }
@@ -95,6 +96,14 @@ fn hint(s: &Suggestion) -> String {
         (Chip::Gesture { source, shape: Some(sh), .. }, _) => format!("{source}/{sh}"),
         (Chip::Gesture { source, pol, .. }, _) if *pol < 0 => format!("{source} (inverse)"),
         (Chip::Gesture { source, .. }, _) => source.clone(),
+        (Chip::Target { kind, .. }, _) => match kind.as_str() {
+            "midi.note" => "MIDI note".into(),
+            "midi.chord" => "MIDI chord".into(),
+            "midi.pattern" => "MIDI pattern".into(),
+            "midi.cc" => "MIDI CC".into(),
+            "macro" => "macro".into(),
+            k => k.to_string(),
+        },
     }
 }
 

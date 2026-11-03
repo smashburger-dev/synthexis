@@ -9,7 +9,9 @@
 
 Writes into data/mapping/completion/ (or --out):
   vocab.json            gesture phrases (glossary kind source and shape),
-                        parameter-class phrases (kind param), class prior
+                        parameter-class phrases (kind param), target phrases
+                        (kind target: MIDI note, chord, pattern, CC and
+                        macro, up to 3 words), class prior
                         (label counts over all harvested plugins), and the
                         list of exported plugins
   plugins/<slug>.json   one picked plugin's parameters: index, name, class
@@ -34,6 +36,10 @@ LABEL_RUNS = [  # earlier entries win per plugin id
     "label-prio-v1",
     "label-bulk-v1",
 ]
+# targets that are no plugin parameter; a chip puts its phrase into the
+# sentence, so long phrases ("MIDI Note halten solange Hand da ist") stay out
+TARGET_KINDS = {"midi.note", "midi.chord", "midi.pattern", "midi.cc", "macro"}
+TARGET_WORDS = 3
 # demo plugins (probes/real-eval) plus a few common effects
 DEFAULT_PLUGINS = [
     "Xfer Records/Serum 2",
@@ -68,7 +74,7 @@ def main() -> None:
     (out / "plugins").mkdir(parents=True, exist_ok=True)
     wanted = set(a.plugin or DEFAULT_PLUGINS)
 
-    gestures, phrases, seen = [], [], set()
+    gestures, phrases, targets, seen = [], [], [], set()
     for line in open(data / "glossary/gloss-v1/glossary.jsonl", encoding="utf-8"):
         r = json.loads(line)
         if r.get("typo"):
@@ -84,6 +90,8 @@ def main() -> None:
             gestures.append({"source": "hand.shape", "shape": cid, "p": r["p"], "lang": r["lang"], "pol": r["pol"]})
         elif kind == "param":
             phrases.append({"class": cid, "p": r["p"], "lang": r["lang"]})
+        elif kind == "target" and cid in TARGET_KINDS and len(r["p"].split()) <= TARGET_WORDS:
+            targets.append({"kind": cid, "p": r["p"], "lang": r["lang"]})
 
     prior: Counter = Counter()
     params: dict[str, dict[int, dict]] = {}
@@ -106,9 +114,10 @@ def main() -> None:
         (out / "plugins" / f).write_text(json.dumps({"plugin_id": pid, "params": rows}, ensure_ascii=False))
         plugins.append({"plugin_id": pid, "name": pid.split("/", 1)[-1], "file": f, "n": len(rows)})
     missing = sorted(wanted - set(params))
-    vocab = {"gestures": gestures, "param_phrases": phrases, "class_prior": dict(prior), "plugins": plugins}
+    vocab = {"gestures": gestures, "param_phrases": phrases, "targets": targets, "class_prior": dict(prior), "plugins": plugins}
     (out / "vocab.json").write_text(json.dumps(vocab, ensure_ascii=False))
-    print(f"{len(gestures)} gesture phrases, {len(phrases)} parameter phrases, {len(prior)} classes, "
+    print(f"{len(gestures)} gesture phrases, {len(phrases)} parameter phrases, {len(targets)} target phrases, "
+          f"{len(prior)} classes, "
           f"{len(plugins)} plugins -> {out}")
     if missing:
         print("no labels for:", ", ".join(missing))

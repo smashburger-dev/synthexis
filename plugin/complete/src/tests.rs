@@ -85,6 +85,39 @@ fn three_rows_per_kind_then_other_kinds() {
 }
 
 #[test]
+fn catch_all_phrases_offer_nothing() {
+    let phrases = vec![("other".to_string(), "the gap before the reverb starts".to_string())];
+    let mut e = Engine::new(Vec::new(), phrases, &HashMap::new());
+    e.set_plugin("Synth/Test", vec![p(0, "Swing", "other"), p(1, "Filter 1 Res", "filter.resonance")]);
+    assert_eq!(labels(&top(&e, "the res")), ["Filter 1 Res"]);
+    assert_eq!(labels(&top(&e, "the swi")), ["Swing"]);
+}
+
+fn with_targets(e: Engine) -> Engine {
+    let t = [("midi.chord", "Akkord spielen"), ("midi.chord", "play a chord"), ("midi.pattern", "fire pattern")];
+    e.with_targets(t.iter().map(|(k, p)| (k.to_string(), p.to_string())).collect())
+}
+
+#[test]
+fn target_items_in_the_list_only() {
+    let e = with_targets(engine());
+    let s = e.complete("then Akk", 8, 0, 8);
+    assert_eq!(s[0].chip, Chip::Target { kind: "midi.chord".into(), phrase: "Akkord spielen".into() });
+    assert_eq!(s[0].chip.id(), "target:midi.chord");
+    assert!(!s[0].ghost_worthy("then Akk"));
+}
+
+#[test]
+fn target_item_leaves_the_ghost_row() {
+    // "fi" starts "fire pattern" and "Filter 1 Freq"; the parameter keeps row 0
+    let e = with_targets(engine());
+    let s = e.complete("the fi", 6, 0, 8);
+    assert!(s[0].ghost_worthy("the fi"));
+    assert!(matches!(s[0].chip, Chip::Param { .. }));
+    assert!(s.iter().any(|x| matches!(x.chip, Chip::Target { .. })));
+}
+
+#[test]
 fn german_phrase_over_two_words() {
     let e = engine();
     let t = "mit der Faust Filter auf";

@@ -54,7 +54,7 @@ fn pinned_frames() -> Result<(), String> {
             .iter()
             .filter_map(|p| match &p.what {
                 PinWhat::Param { id, .. } => Some(id.as_str()),
-                PinWhat::Gesture { .. } => None,
+                _ => None,
             })
             .collect();
         for id in params {
