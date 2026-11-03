@@ -146,3 +146,11 @@ Same principle for unknown plugins and for vague sentences.
 - Baseten: 54.65 $ of 100 $, 3,670 requests. Reserve for motion labels 25 $.
 - Modal: 25 $ credit used up by 10-29, overage allowed by Noa, 30 $ from 11-01.
 - Meta API: 150 $ claimed.
+
+## Update Nov 3: FL target picker and write test
+
+Source: `probes/fl-target-picker/RESULT.md`. Changed on the board:
+- "Writing into FL": the grey "not tested yet" sticky is now green (Portal and ShaperBox move while the song plays, knobs turn in the plugin window, Portal audible, FL records automation). A second row adds the inventory speed (blue), the 64 KB freeze (red), ShaperBox hiding Bits and Resample in its curves (yellow) and the open focus question (grey).
+- "Open": the FL write test sticky is green, Thermal does not load in FL.
+- "Unknown plugins": the ShaperBox/Thermal sticky now reports the FL result.
+- "UX 4 Target picker": the follow-FL note says what was measured and that pick track, then slot is the default; the first-pick note gives 7 to 20 ms per plugin and the dropped MIDI CC entries.
