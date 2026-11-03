@@ -53,9 +53,9 @@ checks them against `tools/mapping/ontology.yaml`.
 `install.sh` compiles the students into
 `~/Library/Application Support/synthexis/models` (trained ones from
 `data/models/`, else the preflight stand-ins) and writes `backend` there:
-`vision` by default, because the trained students still mix up the side
-of a single hand (probes/plugin-perception/RESULT.md). Override with
-`SYNTHEXIS_PERCEPTION=students|vision|off`.
+`hybrid` by default: the students for seg and hands, Apple Vision face
+landmarks on the seg face box (probes/plugin-perception/RESULT.md).
+Override with `SYNTHEXIS_PERCEPTION=students|vision|off`.
 
 Offline bench over a recording (no camera needed):
 

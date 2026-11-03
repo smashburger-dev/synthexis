@@ -10,7 +10,7 @@ use std::time::Instant;
 
 use objc2::rc::Retained;
 use objc2::AnyThread;
-use objc2_core_foundation::CGSize;
+use objc2_core_foundation::{CGPoint, CGRect, CGSize};
 use objc2_foundation::{NSArray, NSDictionary};
 use objc2_vision::*;
 
@@ -130,6 +130,54 @@ fn face(obs: &VNFaceObservation, w: f32, h: f32) -> Option<(FaceFeatures, f32)> 
             f.pitch = 0.5 - 0.5 * (p.floatValue() / quarter).clamp(-1.0, 1.0);
         }
         Some((f, lm.confidence()))
+    }
+}
+
+/// Face landmarks only, on the seg student's face box: skips Vision's own
+/// face detection. The `hybrid` backend uses it for the face because the
+/// face student's eye and mouth masks do not separate open from closed.
+pub struct FaceLandmarks {
+    req: Retained<VNDetectFaceLandmarksRequest>,
+    errors: u64,
+}
+
+impl FaceLandmarks {
+    pub fn new() -> Self {
+        Self { req: unsafe { VNDetectFaceLandmarksRequest::new() }, errors: 0 }
+    }
+
+    /// `bb`: face box in normalised image coordinates, origin top-left
+    /// (x, y, w, h).
+    pub fn run(&mut self, frame: &Frame, bb: [f32; 4]) -> Option<(FaceFeatures, f32)> {
+        let (w, h) = frame.read(|_, _, w, h| (w as f32, h as f32))?;
+        unsafe {
+            let rect = CGRect {
+                origin: CGPoint { x: bb[0] as f64, y: (1.0 - bb[1] - bb[3]) as f64 },
+                size: CGSize { width: bb[2] as f64, height: bb[3] as f64 },
+            };
+            let seed = VNFaceObservation::faceObservationWithRequestRevision_boundingBox_roll_yaw(
+                VNDetectFaceRectanglesRequestRevision3,
+                rect,
+                None,
+                None,
+            );
+            self.req.setInputFaceObservations(Some(&NSArray::from_retained_slice(&[seed])));
+            let handler = VNImageRequestHandler::initWithCVPixelBuffer_options(
+                VNImageRequestHandler::alloc(),
+                frame.pixel_buffer(),
+                &NSDictionary::new(),
+            );
+            let reqs: [&VNRequest; 1] = [&self.req];
+            if let Err(e) = handler.performRequests_error(&NSArray::from_slice(&reqs)) {
+                self.errors += 1;
+                if self.errors.is_power_of_two() {
+                    log(&format!("perception: face landmarks failed ({}x): {}", self.errors, e.localizedDescription()));
+                }
+                return None;
+            }
+            let obs = self.req.results()?.firstObject()?;
+            face(&obs, w, h)
+        }
     }
 }
 

@@ -95,7 +95,7 @@ fn backend_choice(dir: &Path) -> String {
         .ok()
         .or_else(|| std::fs::read_to_string(dir.join("backend")).ok())
         .and_then(|s| s.split_whitespace().next().map(str::to_string))
-        .unwrap_or_else(|| "students".into())
+        .unwrap_or_else(|| "hybrid".into())
 }
 
 /// What one frame produced, before the hold logic.
@@ -120,7 +120,12 @@ pub fn make_backend(dir: &Path, choice: &str) -> Option<Box<dyn Backend>> {
         "off" => None,
         "vision" => Some(Box::new(super::vision::VisionBackend::new())),
         _ => match Students::new(&dir) {
-            Some(s) => Some(Box::new(s)),
+            Some(mut s) => {
+                if choice == "hybrid" {
+                    s.landmarks = Some(super::vision::FaceLandmarks::new());
+                }
+                Some(Box::new(s))
+            }
             None => {
                 log("perception: no seg student, falling back to Apple Vision");
                 Some(Box::new(super::vision::VisionBackend::new()))
@@ -322,6 +327,8 @@ pub struct Students {
     /// Hand crop and hand model time of the current frame, ms.
     hand_ms: [f64; 2],
     raw: bool,
+    /// Backend `hybrid`: Vision face landmarks on the seg face box.
+    landmarks: Option<super::vision::FaceLandmarks>,
 }
 
 impl Students {
@@ -358,6 +365,7 @@ impl Students {
             object_track: PointTrack::default(),
             hand_ms: [0.0; 2],
             raw: std::env::var_os("SYNTHEXIS_BENCH_RAW").is_some(),
+            landmarks: None,
         })
     }
 
@@ -483,7 +491,11 @@ impl Students {
 
 impl Backend for Students {
     fn name(&self) -> &'static str {
-        "students"
+        if self.landmarks.is_some() {
+            "hybrid"
+        } else {
+            "students"
+        }
     }
 
     fn process(&mut self, frame: &Frame, t_ns: u64, stages: &mut Vec<(&'static str, f64)>) -> Option<Percept> {
@@ -544,7 +556,7 @@ impl Backend for Students {
             stage(stages, "hands");
             stages.push(("hand_crop", self.hand_ms[0]));
             stages.push(("hand_model", self.hand_ms[1]));
-            if let Some(f) = face.as_ref() {
+            if let Some(f) = face.as_ref().filter(|_| self.landmarks.is_none()) {
                 p.face = self.face(&src, f);
             }
             stage(stages, "face");
@@ -558,8 +570,20 @@ impl Backend for Students {
             if self.raw {
                 p.debug = Some(self.raw_line(&src, face.as_ref()));
             }
-            Some(p)
+            let face_box = face.map(|f| {
+                let (x, y, w, h) = blob_box(&f, 1.0, 1.0);
+                [x, y, w, h]
+            });
+            Some((p, face_box))
         })
         .flatten()
+        .map(|(mut p, face_box)| {
+            if let (Some(lm), Some(bb)) = (self.landmarks.as_mut(), face_box) {
+                let t0 = Instant::now();
+                p.face = lm.run(frame, bb);
+                stages.push(("landmarks", t0.elapsed().as_secs_f64() * 1e3));
+            }
+            p
+        })
     }
 }

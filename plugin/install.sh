@@ -52,9 +52,9 @@ for spec in "seg:seg_mnv4s_384x216_pm.mlpackage" "hand:hand_mnv4s_128.mlpackage"
     rmdir "$tmp"
     echo "perception: $name <- $src"
 done
-# Apple Vision by default: the trained students put a single centred hand
-# on the wrong side in 3 of 10 frames on S4 (probes/plugin-perception).
-# SYNTHEXIS_PERCEPTION=students opts in.
-BACKEND=${SYNTHEXIS_PERCEPTION:-vision}
+# hybrid by default: the students for hands and seg, Apple Vision face
+# landmarks on the seg face box (probes/plugin-perception). Others:
+# SYNTHEXIS_PERCEPTION=students (fastest, weak face), vision, off.
+BACKEND=${SYNTHEXIS_PERCEPTION:-hybrid}
 echo "$BACKEND" > "$MODELS/backend"
 echo "perception backend: $BACKEND"
