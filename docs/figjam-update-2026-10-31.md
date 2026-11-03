@@ -154,3 +154,13 @@ Source: `probes/fl-target-picker/RESULT.md`. Changed on the board:
 - "Open": the FL write test sticky is green, Thermal does not load in FL.
 - "Unknown plugins": the ShaperBox/Thermal sticky now reports the FL result.
 - "UX 4 Target picker": the follow-FL note says what was measured and that pick track, then slot is the default; the first-pick note gives 7 to 20 ms per plugin and the dropped MIDI CC entries.
+
+## Update Nov 3: students trained
+
+Source: `probes/train-students/RESULT.md`. Changed on the board:
+- New section "Students" (x 29000, y 1148, under "Four recordings"): what ships and how fast (blue), the hybrid default and the left/right fix (green), the missed S4 gate (grey), the BatchNorm and autocast bugs (red), the bigger seg net that lost in the plugin and the seed noise (yellow), the public weights (blue).
+- "Local perception, real time": Apple Vision gives the face landmarks with the face student as fallback; seg and hand show their sizes and the hand outputs.
+- "Raw material" and "Teachers": Muse Image frames were not used by the students; the Spark label check was dropped (21 of 24 flags wrong).
+- "Training on Modal GPUs and the Mac" (renamed): seg 1.5M, hand 1.6M instead of the caps.
+- "Data engine": the glasses eye question is decided (S2 eye masks left out of the loss), now yellow.
+- "Open": student training is done. "Budget": Modal about 41.6 $ of 42.50 $, students 14.06 $.
