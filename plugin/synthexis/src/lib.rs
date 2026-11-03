@@ -6,6 +6,7 @@
 //! records main-thread edits with the window closed). Audio: stereo silence.
 
 mod alias;
+mod assign;
 mod assistant;
 mod cond;
 mod editor;
@@ -86,6 +87,7 @@ impl Plugin for Synthexis {
         editor::make_editor(
             self.params.clone(),
             engine::engine().camera.clone(),
+            self.writer.clone(),
         )
     }
 

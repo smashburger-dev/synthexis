@@ -67,7 +67,8 @@ def pins(row, mode: str) -> list:
     if "g" in mode:
         out += [[b, e, "g", s, sh, sd if "s" in mode else None] for b, e, s, sh, sd in src]
     if "p" in mode:
-        out += [[b, e, "p", c, sw] for b, e, c, sw in tgt]
+        # x: the chip's class matches nothing the parser wrote
+        out += [[b, e, "p", "none" if "x" in mode and not sw else c, sw] for b, e, c, sw in tgt]
     if "t" in mode:
         out += [[b, e, "t", k] for b, e, k in tk]
     return out
@@ -117,7 +118,9 @@ def main() -> None:
     modes = a.modes.split(",")
     framed = {}
     for m in modes:
-        payload = "".join(json.dumps({"pred": r["pred"], "pred_bytes": r["pred_bytes"], "pins": pins(r, m)},
+        # b: with the BIO head's spans (pin_spans)
+        payload = "".join(json.dumps({"pred": r["pred"], "pred_bytes": r["pred_bytes"], "pins": pins(r, m),
+                                      "text": r["text"], "spans": r.get("pred_bio", []) if "b" in m else []},
                                      ensure_ascii=False) + "\n" for r in rows)
         res = subprocess.run([a.bin], input=payload, capture_output=True, text=True, check=True)
         framed[m] = [json.loads(l)["frame"] for l in res.stdout.splitlines()]
@@ -130,13 +133,15 @@ def main() -> None:
         g["base"] += fp.compare(r["pred"], r["gold"])["route_edit"]
         for m in modes:
             g[m] += fp.compare(framed[m][k], r["gold"])["route_edit"]
+        for m in modes:
+            g["ce_" + m] += chip_ok(framed[m][k], r["gold"])
         g["chip_edit"] += chip_ok(framed[modes[0]][k], r["gold"])
         if not chip_ok(framed[modes[0]][k], r["gold"]):
             why.update(diff(norm(framed[modes[0]][k]), norm(r["gold"])))
-    keys = ["base"] + modes + ["chip_edit"]
+    keys = ["base"] + modes + ["chip_edit"] + ["ce_" + m for m in modes]
     table = {s: {k: g[k] / g["n"] for k in keys} for s, g in agg.items()}
     mean = {k: sum(t[k] for t in table.values()) / len(table) for k in keys}
-    print(f"{a.name}: " + " ".join(f"{k} {mean[k]:.4f}" for k in keys))
+    print(f"{a.name}: " + " ".join(f"{k} {mean[k]:.5f}" for k in keys))
     for s, t in table.items():
         print(f"  {s:9} n {int(agg[s]['n']):5} " + " ".join(f"{k} {t[k]:.4f}" for k in keys))
     n_wrong = sum(1 for k, r in enumerate(rows) if not chip_ok(framed[modes[0]][k], r["gold"]))

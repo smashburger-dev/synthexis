@@ -13,6 +13,7 @@
 
 use std::collections::HashMap;
 
+use crate::align;
 use crate::pin::{Frame, Part};
 use crate::{Item, Tagged};
 
@@ -62,6 +63,9 @@ pub struct Bound {
     pub index: u32,
     pub name: String,
     pub via: Via,
+    /// The chip's plugin (fl::Key id) when it is not the picked one: the
+    /// chip was picked before the picker moved on.
+    pub plugin: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -82,6 +86,9 @@ pub struct Route {
     /// all of them); left means the left hand only.
     pub side: Option<String>,
     pub inv: bool,
+    /// Gates ("only while I pinch"): each G: source with its side and
+    /// shape tokens, e.g. ["G:hand.pinch", "side:left"].
+    pub gates: Vec<Vec<String>>,
     /// The route's modifiers as the frame has them (lo:, hi:, amt:, mode:,
     /// curve:, smooth:, hold:, quantize:, delta:, BIP), in frame order.
     pub mods: Vec<String>,
@@ -89,6 +96,31 @@ pub struct Route {
 }
 
 const MODS: [&str; 10] = ["lo:", "hi:", "amt:", "mode:", "curve:", "smooth:", "hold:", "quantize:", "delta:", "BIP"];
+
+/// G: tokens with the side:/shape: tokens right after them.
+fn gates(items: &[Item]) -> Vec<Vec<String>> {
+    let mut out: Vec<Vec<String>> = Vec::new();
+    let mut open = false;
+    for t in items.iter().map(tok) {
+        if t.starts_with("G:") {
+            out.push(vec![t.to_string()]);
+            open = true;
+        } else if open && (t.starts_with("side:") || t.starts_with("shape:")) {
+            if let Some(g) = out.last_mut() {
+                g.push(t.to_string());
+            }
+        } else {
+            open = false;
+        }
+    }
+    out
+}
+
+/// The plugin name of an fl::Key id ("fx:0:1:Portal", "gen:2:Serum 2").
+fn plugin_name(id: &str) -> &str {
+    let n = if id.starts_with("fx:") { 3 } else { 2 };
+    id.splitn(n + 1, ':').nth(n).unwrap_or(id)
+}
 
 fn percent(v: &str) -> String {
     v.parse::<f32>().map_or_else(|_| v.to_string(), |x| format!("{:.0}", x * 100.0))
@@ -189,84 +221,6 @@ fn cut(sentence: &str, b: (usize, usize), spans: &[Tagged]) -> String {
     s.split_whitespace().collect::<Vec<_>>().join(" ")
 }
 
-fn gap(a: (usize, usize), b: (usize, usize)) -> usize {
-    a.0.saturating_sub(b.1).max(b.0.saturating_sub(a.1))
-}
-
-/// Words that separate two targets rather than two pieces of one name.
-const SEPARATE: [&str; 12] = ["and", "und", "or", "oder", "plus", "sowie", "to", "zu", "with", "mit", "then", "dann"];
-
-/// The TGT and PNAME pieces of the BIO head, joined where at most one word
-/// and no comma or conjunction lies between them: long names come back in
-/// fragments ("crush resample" + "mid env threshold", "xlfo 1" + "1" +
-/// "glide" for "xlfo 1 step 1 glide").
-fn groups(sentence: &str, spans: &[Tagged]) -> Vec<(usize, usize)> {
-    let mut out: Vec<(usize, usize)> = Vec::new();
-    for t in spans.iter().filter(|t| matches!(t.tag, "TGT" | "PNAME")) {
-        if let Some(last) = out.last_mut() {
-            let between = sentence.get(last.1..t.bytes.0).unwrap_or(",");
-            let ws: Vec<&str> = between.split_whitespace().collect();
-            let joins = ws.len() <= 1
-                && !between.contains([',', ';', '+', '&', '>'])
-                && !ws.iter().any(|w| SEPARATE.contains(&w.to_lowercase().as_str()));
-            if joins && last.1 <= t.bytes.0 {
-                last.1 = t.bytes.1;
-                continue;
-            }
-        }
-        out.push(t.bytes);
-    }
-    out
-}
-
-/// Which groups belong to which route: with as many groups as T: tokens
-/// they pair in order; else each goes to the route whose spans (and SRC
-/// span, when there is one per route) lie nearest.
-fn by_route(frame: &Frame, spans: &[Tagged], groups: &[(usize, usize)]) -> Vec<Vec<usize>> {
-    let routes: Vec<_> = frame.routes().collect();
-    let mut out = vec![Vec::new(); routes.len()];
-    if routes.is_empty() {
-        return out;
-    }
-    let slots: Vec<usize> = routes.iter().map(|r| r.items.iter().filter(|it| tok(it).starts_with("T:")).count()).collect();
-    if slots.iter().sum::<usize>() == groups.len() {
-        let mut g = 0;
-        for (r, n) in slots.iter().enumerate() {
-            out[r].extend(g..g + n);
-            g += n;
-        }
-        return out;
-    }
-    let src: Vec<(usize, usize)> = spans.iter().filter(|t| t.tag == "SRC").map(|t| t.bytes).collect();
-    let anchors: Vec<Option<(usize, usize)>> = routes
-        .iter()
-        .enumerate()
-        .map(|(r, route)| {
-            let own = route.items.iter().filter_map(|it| match it {
-                Item::Span { bytes, .. } => Some(*bytes),
-                Item::Token(_) => None,
-            });
-            let src = (src.len() == routes.len()).then(|| src[r]);
-            own.chain(src).reduce(|a, b| (a.0.min(b.0), a.1.max(b.1)))
-        })
-        .collect();
-    for (g, b) in groups.iter().enumerate() {
-        let near = (0..routes.len()).filter(|&r| anchors[r].is_some()).min_by_key(|&r| anchors[r].map_or(usize::MAX, |a| gap(a, *b)));
-        // no anchors anywhere: fill the routes in order
-        let r = near.unwrap_or_else(|| {
-            let mut left = g;
-            (0..routes.len()).find(|&r| {
-                let fits = left < slots[r];
-                left = left.saturating_sub(slots[r]);
-                fits
-            })
-            .unwrap_or(routes.len() - 1)
-        });
-        out[r].push(g);
-    }
-    out
-}
-
 /// The PNAME span text that belongs to the target at `item`: the PNAME
 /// whose nearest parameter target it is.
 fn pname_for(items: &[Item], item: usize) -> Option<String> {
@@ -304,7 +258,7 @@ fn bind(
     params: &[Candidate],
     aliases: &HashMap<String, String>,
 ) -> (Option<Bound>, f32) {
-    let found = |index: u32, via| params.iter().find(|p| p.index == index).map(|p| Bound { index, name: p.name.into(), via });
+    let found = |index: u32, via| params.iter().find(|p| p.index == index).map(|p| Bound { index, name: p.name.into(), via, plugin: None });
     let all: Vec<&Candidate> = params.iter().collect();
     // a macro or CC guess that names a parameter of the picked plugin
     // ("slot 18 target" read as macro 18) is that parameter
@@ -313,7 +267,7 @@ fn bind(
             return (None, 0.0);
         }
         return match by_name(texts, &all, None) {
-            Some((s, p)) if s >= MERGE_MIN => (Some(Bound { index: p.index, name: p.name.into(), via: Via::Name }), s),
+            Some((s, p)) if s >= MERGE_MIN => (Some(Bound { index: p.index, name: p.name.into(), via: Via::Name, plugin: None }), s),
             _ => (None, 0.0),
         };
     }
@@ -322,9 +276,9 @@ fn bind(
         let Some((pl, index)) = id.strip_prefix("param:").and_then(|x| x.rsplit_once('#')) else { return (None, 0.0) };
         let Ok(index) = index.parse::<u32>() else { return (None, 0.0) };
         let b = if pl == plugin {
-            found(index, Via::Chip).unwrap_or(Bound { index, name: format!("#{index}"), via: Via::Chip })
+            found(index, Via::Chip).unwrap_or(Bound { index, name: format!("#{index}"), via: Via::Chip, plugin: None })
         } else {
-            Bound { index, name: format!("{pl} #{index}"), via: Via::Chip }
+            Bound { index, name: format!("#{index}"), via: Via::Chip, plugin: Some(pl.to_string()) }
         };
         return (Some(b), 0.0);
     }
@@ -334,7 +288,7 @@ fn bind(
     for t in texts {
         if let Some(name) = aliases.get(&alias_key(t)) {
             if let Some(p) = params.iter().find(|p| p.name == name) {
-                return (Some(Bound { index: p.index, name: p.name.into(), via: Via::Alias }), 0.0);
+                return (Some(Bound { index: p.index, name: p.name.into(), via: Via::Alias, plugin: None }), 0.0);
             }
         }
     }
@@ -347,7 +301,7 @@ fn bind(
     if let Some((s, p)) = by_name(texts, pool, class) {
         let agrees = class == Some(p.class) || !has_class || class.is_some_and(|c| NAME_ONLY.contains(&c));
         if s >= EXACT_MIN || (s >= NAME_MIN && agrees) {
-            return (Some(Bound { index: p.index, name: p.name.into(), via: Via::Name }), s);
+            return (Some(Bound { index: p.index, name: p.name.into(), via: Via::Name, plugin: None }), s);
         }
     }
     // 4. class: the parameters of the target's class, best name first; a
@@ -371,7 +325,7 @@ fn bind(
             Some(a) if a.0 >= b.0 => Some(a),
             _ => Some(b),
         })
-        .map(|(_, p)| Bound { index: p.index, name: p.name.into(), via: Via::Class });
+        .map(|(_, p)| Bound { index: p.index, name: p.name.into(), via: Via::Class, plugin: None });
     (b, 0.0)
 }
 
@@ -396,43 +350,74 @@ pub fn resolve(
         Part::Item(it) => tok(it).strip_prefix("side:").map(str::to_string),
         Part::Route(_) => None,
     });
-    let groups = groups(sentence, spans);
-    let texts: Vec<String> = groups.iter().map(|b| cut(sentence, *b, spans)).collect();
-    let owned = by_route(frame, spans, &groups);
+    let al = align::align(frame, sentence, spans);
+    let texts: Vec<String> = al.groups.iter().map(|b| cut(sentence, *b, spans)).collect();
     frame
         .routes()
-        .zip(owned)
-        .map(|(route, gs)| {
+        .zip(&al.routes)
+        .map(|(route, ra)| {
             let find = |p: &str| route.items.iter().find_map(|it| tok(it).strip_prefix(p).map(str::to_string));
-            let slots: Vec<usize> = (0..route.items.len()).filter(|&i| tok(&route.items[i]).starts_with("T:")).collect();
+            // the side that follows the S: token, not a gate's
+            let side = route
+                .items
+                .iter()
+                .map(tok)
+                .skip_while(|t| !t.starts_with("S:"))
+                .skip(1)
+                .take_while(|t| ["side:", "shape:", "object:"].iter().any(|p| t.starts_with(p)))
+                .find_map(|t| t.strip_prefix("side:").map(str::to_string));
             let mut targets = Vec::new();
             let mut k = 0;
-            while k < slots.len() {
-                let item = slots[k];
-                // the last group also names every token after it
-                let g = gs.get(k.min(gs.len().saturating_sub(1))).copied().filter(|_| !gs.is_empty());
-                let rest = if k + 1 == gs.len() { slots.len() - k - 1 } else { 0 };
+            while k < ra.slots.len() {
+                let slot = &ra.slots[k];
+                let item = slot.item;
+                // the slots after it that share its group
+                let rest = ra.slots[k + 1..].iter().take_while(|s| s.shares).count();
                 let token = tok(&route.items[item]).to_string();
-                let words: Vec<String> =
-                    g.map(|g| texts[g].clone()).into_iter().chain(pname_for(&route.items, item)).filter(|t| !t.is_empty()).collect();
+                let words: Vec<String> = slot
+                    .group
+                    .map(|g| texts[g].clone())
+                    .into_iter()
+                    .chain(pname_for(&route.items, item))
+                    .filter(|t| !t.is_empty())
+                    .collect();
                 let (bound, score) = bind(&token, route.pinned[item].as_deref(), &words, plugin, params, aliases);
-                let merged = rest > 0 && score >= MERGE_MIN && slots[k + 1..].iter().all(|&i| route.pinned[i].is_none());
+                let merged = rest > 0
+                    && score >= MERGE_MIN
+                    && ra.slots[k + 1..=k + rest].iter().all(|s| route.pinned[s.item].is_none());
                 targets.push(Target { token, text: words.first().cloned().unwrap_or_default(), bound });
                 k += if merged { rest + 1 } else { 1 };
             }
+            // a target bound to a parameter another target of the route
+            // already drives is a misread of the same words (pin.rs keeps a
+            // slot that only inherited a chip's group); the chip's wins
+            let chip_of = |t: &Target| t.bound.as_ref().filter(|b| b.via == Via::Chip).map(|b| (b.index, b.plugin.clone()));
+            let chipped: Vec<(u32, Option<String>)> = targets.iter().filter_map(chip_of).collect();
+            let mut seen: Vec<(u32, Option<String>)> = Vec::new();
+            targets.retain(|t| match &t.bound {
+                Some(b) if b.via == Via::Chip => true,
+                Some(b) => {
+                    let k = (b.index, b.plugin.clone());
+                    let keep = !chipped.contains(&k) && !seen.contains(&k);
+                    seen.push(k);
+                    keep
+                }
+                None => true,
+            });
             let all: Vec<&Candidate> = params.iter().collect();
-            for &g in gs.iter().skip(slots.len()) {
+            for &g in &ra.extra {
                 if let Some((s, p)) = by_name(std::slice::from_ref(&texts[g]), &all, None) {
                     if s >= MERGE_MIN {
-                        let bound = Some(Bound { index: p.index, name: p.name.into(), via: Via::Name });
+                        let bound = Some(Bound { index: p.index, name: p.name.into(), via: Via::Name, plugin: None });
                         targets.push(Target { token: format!("T:param:{}", p.class), text: texts[g].clone(), bound });
                     }
                 }
             }
             Route {
                 source: find("S:").unwrap_or_default(),
-                side: find("side:").or_else(|| shared.clone()),
+                side: side.or_else(|| shared.clone()),
                 inv: route.items.iter().any(|it| tok(it) == "INV"),
+                gates: gates(&route.items),
                 mods: route
                     .items
                     .iter()
@@ -466,7 +451,7 @@ impl Route {
             .targets
             .iter()
             .map(|t| match (&t.bound, t.token.split_once(':').map(|x| x.1).unwrap_or(&t.token)) {
-                (Some(b), _) => format!("{plugin} / {}", b.name),
+                (Some(b), _) => format!("{} / {}", b.plugin.as_deref().map_or(plugin, plugin_name), b.name),
                 (None, kind) if is_param_target(&t.token) => {
                     let what = kind.split_once(':').map_or(kind, |x| x.1);
                     format!("{what} (no parameter)")
@@ -484,7 +469,16 @@ impl Route {
     /// "range 5-35 %", "amount 25 %", "steps", "snappy", "centred".
     pub fn mod_labels(&self) -> Vec<String> {
         let get = |p: &str| self.mods.iter().find_map(|m| m.strip_prefix(p));
-        let mut out = Vec::new();
+        let mut out: Vec<String> = self
+            .gates
+            .iter()
+            .map(|g| {
+                let src = g[0].trim_start_matches("G:").replace(['.', '_'], " ");
+                let side = g.iter().find_map(|t| t.strip_prefix("side:")).map(|s| format!("{s} ")).unwrap_or_default();
+                let shape = g.iter().find_map(|t| t.strip_prefix("shape:")).map(|s| format!(" {s}")).unwrap_or_default();
+                format!("while {side}{src}{shape}")
+            })
+            .collect();
         if get("lo:").is_some() || get("hi:").is_some() {
             out.push(format!("range {}-{} %", percent(get("lo:").unwrap_or("0")), percent(get("hi:").unwrap_or("1"))));
         }
@@ -568,7 +562,7 @@ mod tests {
         let f = pin(&items(&["I:map", "<route>", "S:hand.openness", "side:left", "T:param:fx.drive", "</route>"], text), &[]);
         let ps = cands(&topos());
         let r = resolve(&f, text, &[tgt(text, "the drive")], "fx:0:0:Topos", &ps, &HashMap::new());
-        assert_eq!(r[0].targets[0].bound, Some(Bound { index: 12, name: "Drive".into(), via: Via::Name }));
+        assert_eq!(r[0].targets[0].bound, Some(Bound { index: 12, name: "Drive".into(), via: Via::Name, plugin: None }));
         assert_eq!(r[0].describe("Topos"), "left hand openness -> Topos / Drive");
         // no target words: the class decides
         let r = resolve(&f, text, &[], "fx:0:0:Topos", &ps, &HashMap::new());
@@ -588,6 +582,22 @@ mod tests {
         let aliases = HashMap::from([("tone".to_string(), "Drive".to_string())]);
         let r = resolve(&pin(&it, &[]), text, &[tgt(text, "the tone")], "fx:0:0:Topos", &ps, &aliases);
         assert_eq!(r[0].targets[0].bound.as_ref().map(|b| (b.index, b.via)), Some((12, Via::Alias)));
+    }
+
+    /// The parser read one chipped name as two targets: the second binds
+    /// the chip's parameter by its words and goes.
+    #[test]
+    fn a_target_repeating_the_chip_goes() {
+        let text = "mouth opens pan mid env attack";
+        let it = items(&["I:map", "<route>", "S:mouth.open", "T:param:amp.pan", "T:param:env.attack", "</route>"], text);
+        let b = text.find("pan").unwrap_or(0);
+        let p = Pin { bytes: (b, text.len()), what: PinWhat::Param { id: "param:fx:0:0:SB#7".into(), class: "other".into(), switch: false } };
+        let spans = [tgt(text, "pan"), tgt(text, "mid env attack")];
+        let ps = cands(&[(7, "Pan Mid Env Attack", "env.attack"), (8, "Pan Mid Mix", "amp.pan")]);
+        let f = crate::pin::pin_spans(&it, text, &spans, &[p]);
+        let r = resolve(&f, text, &spans, "fx:0:0:SB", &ps, &HashMap::new());
+        let bound: Vec<_> = r[0].targets.iter().map(|t| t.bound.as_ref().map(|b| (b.index, b.via))).collect();
+        assert_eq!(bound, [Some((7, Via::Chip))]);
     }
 
     #[test]

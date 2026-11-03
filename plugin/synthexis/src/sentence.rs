@@ -31,9 +31,14 @@
 //! ready even while the synthexis window draws no frame.
 //!
 //! After Enter the assistant's answer shows below the field, one line per
-//! route ("left hand openness -> Topos / Drive"). A parameter chip picked
-//! through a class phrase ("Cutoff" -> Filter 1 Freq) is kept as an alias
-//! of that plugin (alias.rs).
+//! route ("left hand openness -> Topos / Drive"), and its routes run at once
+//! as pending (assign.rs, writer.rs): Keep makes them stay, Discard removes
+//! them, the arrow button flips a route's direction. A sentence while
+//! routes are pending adds to them. Kept routes are listed with a button
+//! to remove each; "clear" removes all, "undo" the pending or the last kept
+//! ones, "unmap" the ones with the same movement and target. A parameter
+//! chip picked through a class phrase ("Cutoff" -> Filter 1 Freq) is kept
+//! as an alias of that plugin (alias.rs).
 //!
 //! Completion data: $SYNTHEXIS_COMPLETION_DIR, else
 //! ~/Library/Application Support/synthexis/completion, as
@@ -58,10 +63,13 @@ use synthexis_complete::{finger_open, Chip, Engine, Param, Suggestion, Variants,
 use synthexis_parser::{Pin, PinWhat};
 
 use crate::alias;
+use crate::assign;
 use crate::assistant;
 use crate::fl::{self, Link};
 use crate::log::log;
+use crate::route::Target;
 use crate::sense;
+use crate::writer::Writer;
 
 const TOP: usize = 8;
 const VISIBLE: usize = 5;
@@ -72,6 +80,10 @@ const ROW_H: f32 = 22.0;
 const PICK_ROW_H: f32 = 26.0;
 const PICKER_H: f32 = 420.0;
 
+/// The mark on a line that lost part of its routes.
+const PARTLY: &str = "partly removed";
+/// A writer id with the (signal, target) of its engine route.
+type Owned = (u64, (String, Target));
 type Loaded = (Result<(Engine, Vec<PluginInfo>), String>, Arc<sense::Classes>, Vec<String>);
 type Classified = (fl::Key, Vec<Param>);
 
@@ -89,9 +101,19 @@ pub struct Sentence {
     sensed: Option<Receiver<Classified>>,
     loader: Option<Receiver<Loaded>>,
     status: String,
-    /// The assistant's answer to the last sentence, and where it arrives.
-    reply: Option<Receiver<Vec<String>>>,
+    /// The assistant's answer to the last sentence, where it arrives, and
+    /// the plugin it was resolved on.
+    /// In the order sent, so a "clear" typed before a "map" is applied first.
+    reply: std::collections::VecDeque<(Receiver<assistant::Reply>, Option<fl::Key>)>,
+    next_batch: u64,
+    next_line: u64,
+    /// What the last sentence did when it made no route ("no route (none)").
     mapped: Vec<String>,
+    /// Routes of the sentences since the last Keep or Discard, and the kept ones.
+    pending: Vec<Mapped>,
+    kept: Vec<Mapped>,
+    /// None without a plugin instance (tests).
+    writer: Option<Arc<Writer>>,
     bridge: Option<&'static fl::Bridge>,
     seen: u64,
     link: Link,
@@ -158,6 +180,64 @@ fn pick_row(ui: &mut Ui, selected: bool, name: &str, place: &str, hover: &str) -
     let resp = if hover.is_empty() { resp } else { resp.on_hover_text(hover) };
     resp.clicked()
 }
+
+/// One resolved route in the list: what the line says and the engine
+/// routes it became.
+struct Mapped {
+    route: synthexis_parser::resolve::Route,
+    /// The plugin the sentence was resolved on.
+    key: Option<fl::Key>,
+    note: String,
+    /// The writer's ids of its engine routes, and (signal, target) of each,
+    /// in the same order.
+    ids: Vec<u64>,
+    keys: Vec<(String, Target)>,
+    /// Keep number; undo takes back the last Keep as a whole.
+    batch: u64,
+    /// Stable id of the line; its engine routes carry it (route.rs
+    /// averages a line's routes on one target).
+    line: u64,
+    /// How many engine routes the line had when it was made.
+    full: usize,
+    /// Kept routes a modify or replace took out; Discard, and undo of the
+    /// Keep that kept this line, bring them back.
+    replaced: Vec<Mapped>,
+}
+
+impl Mapped {
+    /// A copy without the lines it replaced.
+    fn clone_shallow(&self) -> Mapped {
+        Mapped {
+            route: self.route.clone(),
+            key: self.key.clone(),
+            note: self.note.clone(),
+            ids: self.ids.clone(),
+            keys: self.keys.clone(),
+            batch: self.batch,
+            line: self.line,
+            full: self.full,
+            replaced: Vec::new(),
+        }
+    }
+
+    fn new(route: synthexis_parser::resolve::Route, key: Option<&fl::Key>) -> (Self, Vec<crate::route::Route>) {
+        let (routes, note) = assign::routes(&route, key);
+        let keys: Vec<(String, Target)> = routes.iter().map(|x| (x.signal.clone(), x.target.clone())).collect();
+        let full = keys.len();
+        (Mapped { route, key: key.cloned(), note, ids: Vec::new(), keys, batch: 0, line: 0, full, replaced: Vec::new() }, routes)
+    }
+
+    fn line(&self) -> String {
+        let plugin = self.key.as_ref().map_or("", |k| k.plugin.as_str());
+        let l = self.route.describe(plugin);
+        if self.note.is_empty() {
+            l
+        } else {
+            format!("{l} · {}", self.note)
+        }
+    }
+}
+
 
 /// Parameter name -> class of the exported plugin named `plugin`.
 fn exported_classes(plugins: &[PluginInfo], plugin: &str) -> HashMap<String, String> {
@@ -281,8 +361,8 @@ fn hint(s: &Suggestion) -> String {
 }
 
 impl Sentence {
-    /// `bridge`: None runs without FL (tests).
-    pub fn new(bridge: Option<&'static fl::Bridge>) -> Self {
+    /// `bridge`: None runs without FL (tests); `writer`: None maps nothing.
+    pub fn new(bridge: Option<&'static fl::Bridge>, writer: Option<Arc<Writer>>) -> Self {
         let (tx, rx) = bounded(1);
         let (stx, srx) = crossbeam_channel::unbounded();
         let spawned = std::thread::Builder::new()
@@ -312,8 +392,13 @@ impl Sentence {
             sensed: bridge.map(|_| srx),
             loader: Some(rx),
             status,
-            reply: None,
+            reply: std::collections::VecDeque::new(),
+            next_batch: 1,
+            next_line: 1,
             mapped: Vec::new(),
+            pending: Vec::new(),
+            kept: Vec::new(),
+            writer,
             bridge,
             seen: u64::MAX,
             link: Link::Waiting,
@@ -655,19 +740,303 @@ impl Sentence {
         self.sugg.clear();
     }
 
-    /// The assistant's lines once they arrive; asks for frames meanwhile.
+    /// The assistant's replies in the order sent; asks for frames meanwhile.
     fn poll_reply(&mut self, ctx: &egui::Context) {
-        let Some(rx) = &self.reply else { return };
-        match rx.try_recv() {
-            Ok(lines) => {
-                self.mapped = lines;
-                self.reply = None;
+        while let Some((rx, key)) = self.reply.front() {
+            match rx.try_recv() {
+                Ok(r) => {
+                    let key = key.clone();
+                    self.reply.pop_front();
+                    self.apply(r, key.as_ref());
+                }
+                Err(TryRecvError::Disconnected) => {
+                    self.mapped = vec!["parser unavailable (see the log)".into()];
+                    self.reply.pop_front();
+                }
+                Err(TryRecvError::Empty) => {
+                    ctx.request_repaint_after(std::time::Duration::from_millis(30));
+                    return;
+                }
             }
-            Err(TryRecvError::Disconnected) => {
-                self.mapped = vec!["parser unavailable (see the log)".into()];
-                self.reply = None;
+        }
+    }
+
+    /// Runs `routes` as pending in the writer under a new line id; their
+    /// ids go to `m`.
+    fn propose(&mut self, m: &mut Mapped, routes: Vec<crate::route::Route>) {
+        if m.line == 0 {
+            m.line = self.next_line;
+            self.next_line += 1;
+        }
+        let routes = routes.into_iter().map(|mut r| {
+            r.line = m.line;
+            r
+        });
+        if let Some(w) = &self.writer {
+            m.ids = w.propose(routes.collect());
+        }
+    }
+
+    /// Carries out a reply: new routes run as pending, the edit intents
+    /// change the list.
+    fn apply(&mut self, r: assistant::Reply, key: Option<&fl::Key>) {
+        self.mapped.clear();
+        let made: Vec<(Mapped, Vec<crate::route::Route>)> = r.routes.into_iter().map(|route| Mapped::new(route, key)).collect();
+        match r.intent.as_str() {
+            "map" if !made.is_empty() => {
+                for (mut m, routes) in made {
+                    self.propose(&mut m, routes);
+                    self.pending.push(m);
+                }
             }
-            Err(TryRecvError::Empty) => ctx.request_repaint_after(std::time::Duration::from_millis(30)),
+            // a change of a route that runs: the old one goes (Discard
+            // brings it back), the new one runs as pending
+            "modify" | "replace" if made.iter().any(|(m, _)| !m.keys.is_empty()) => {
+                let by_signal = r.intent == "replace";
+                let keys: Vec<(String, Target)> = made.iter().flat_map(|(m, _)| m.keys.clone()).collect();
+                let hit = |k: &(String, Target)| keys.iter().any(|x| x.0 == k.0 && (by_signal || x.1 == k.1));
+                let (from_kept, from_pending) = self.take_matching(&hit);
+                self.remove(&from_kept.iter().chain(&from_pending).flat_map(|m| m.ids.clone()).collect::<Vec<_>>());
+                // kept routes come back on Discard; a pending one was never
+                // kept, it only hands on what it had replaced
+                let mut replaced: Vec<Mapped> = from_kept;
+                replaced.extend(from_pending.into_iter().flat_map(|m| m.replaced));
+                let mut first = true;
+                for (mut m, routes) in made {
+                    self.propose(&mut m, routes);
+                    if first {
+                        m.replaced = std::mem::take(&mut replaced);
+                        first = false;
+                    }
+                    self.pending.push(m);
+                }
+            }
+            "modify" | "replace" => {
+                // nothing to run: show why (the note), not a bare line
+                self.mapped = made.iter().map(|(m, _)| m.line()).collect();
+                if self.mapped.is_empty() {
+                    self.mapped = r.lines;
+                }
+            }
+            "clear" => {
+                let scoped = r.rest.iter().any(|t| t.starts_with("scope:") && t != "scope:all");
+                if scoped {
+                    self.mapped = vec!["clearing one movement, target or track is not live yet; say which route to unmap".into()];
+                } else {
+                    let n = self.pending.len() + self.kept.len();
+                    let all: Vec<Mapped> = self.pending.drain(..).chain(self.kept.drain(..)).collect();
+                    self.drop_routes(all);
+                    self.mapped = vec![format!("removed {n} route(s)")];
+                }
+            }
+            "undo" => {
+                if self.pending.is_empty() {
+                    let last = self.kept.iter().map(|m| m.batch).max();
+                    let (gone, stay): (Vec<Mapped>, Vec<Mapped>) = self.kept.drain(..).partition(|m| Some(m.batch) == last);
+                    self.kept = stay;
+                    self.mapped = vec![format!("undid {} route(s)", gone.len())];
+                    for mut m in gone {
+                        self.remove(&m.ids);
+                        for old in std::mem::take(&mut m.replaced) {
+                            self.restore(old);
+                        }
+                    }
+                } else {
+                    self.mapped = vec![format!("undid {} route(s)", self.pending.len())];
+                    self.discard();
+                }
+            }
+            "unmap" => {
+                // a movement named without its side means both sides; one
+                // that is not live matches nothing
+                let mut unknown = false;
+                let mut sigs: Vec<String> = Vec::new();
+                for (m, _) in &made {
+                    if m.route.source.is_empty() {
+                        continue;
+                    }
+                    let side = m.route.side.as_deref();
+                    match assign::signals(&m.route.source, side).or_else(|_| assign::signals(&m.route.source, Some("both"))) {
+                        Ok(s) => sigs.extend(s),
+                        Err(_) => unknown = true,
+                    }
+                }
+                let targets: Vec<Target> = made.iter().flat_map(|(m, _)| assign::targets(&m.route, key)).collect();
+                let names_target = made.iter().any(|(m, _)| !m.route.targets.is_empty());
+                if unknown {
+                    self.mapped = vec!["unmap: that movement has no route, nothing removed".into()];
+                } else if names_target && targets.is_empty() {
+                    self.mapped = vec!["unmap: that target is not a parameter here, nothing removed".into()];
+                } else if sigs.is_empty() && targets.is_empty() {
+                    self.mapped = vec!["unmap: say which movement or target".into()];
+                } else {
+                    let hit = |k: &(String, Target)| {
+                        (sigs.is_empty() || sigs.contains(&k.0)) && (targets.is_empty() || targets.contains(&k.1))
+                    };
+                    let (kept, pending) = self.take_matching(&hit);
+                    let n: usize = kept.iter().chain(&pending).map(|m| m.ids.len()).sum();
+                    self.mapped = vec![format!("removed {n} route(s)")];
+                    self.drop_routes(kept.into_iter().chain(pending).collect());
+                }
+            }
+            _ => self.mapped = r.lines,
+        }
+    }
+
+    /// Takes the engine routes whose (signal, target) `hit` matches out of
+    /// the kept and pending lists, one engine route at a time; a line that
+    /// keeps some of its routes stays, marked. Returns what was taken from
+    /// each list, with only the taken ids (and, for a whole line, what it
+    /// had replaced); the caller removes them from the writer.
+    fn take_matching(&mut self, hit: &dyn Fn(&(String, Target)) -> bool) -> (Vec<Mapped>, Vec<Mapped>) {
+        let mut taken_from = [Vec::new(), Vec::new()];
+        for (n, list) in [&mut self.kept, &mut self.pending].into_iter().enumerate() {
+            let out = &mut taken_from[n];
+            let mut stay = Vec::new();
+            for mut m in list.drain(..) {
+                let (take, keep): (Vec<Owned>, Vec<Owned>) =
+                    m.ids.iter().copied().zip(m.keys.iter().cloned()).partition(|(_, k)| hit(k));
+                if take.is_empty() {
+                    stay.push(m);
+                    continue;
+                }
+                let mut taken = m.clone_shallow();
+                (taken.ids, taken.keys) = take.into_iter().unzip();
+                if keep.is_empty() {
+                    taken.replaced = std::mem::take(&mut m.replaced);
+                } else {
+                    (m.ids, m.keys) = keep.into_iter().unzip();
+                    if !m.note.contains(PARTLY) {
+                        m.note = if m.note.is_empty() { PARTLY.into() } else { format!("{}, {PARTLY}", m.note) };
+                    }
+                    stay.push(m);
+                }
+                out.push(taken);
+            }
+            *list = stay;
+        }
+        let [kept, pending] = taken_from;
+        (kept, pending)
+    }
+
+    /// Brings a kept line's taken routes back: into the line when it still
+    /// holds the rest (its mark goes once it is whole), else as its own.
+    fn restore(&mut self, old: Mapped) {
+        let (mut back, routes) = Mapped::new(old.route.clone(), old.key.as_ref());
+        let (routes, keys): (Vec<_>, Vec<_>) =
+            routes.into_iter().zip(std::mem::take(&mut back.keys)).filter(|(_, k)| old.keys.contains(k)).unzip();
+        back.keys = keys;
+        back.line = old.line;
+        self.propose(&mut back, routes);
+        if let Some(w) = &self.writer {
+            w.accept(&back.ids);
+        }
+        match self.kept.iter_mut().find(|m| m.line == old.line) {
+            Some(m) => {
+                m.ids.extend(back.ids);
+                m.keys.extend(back.keys);
+                if m.ids.len() >= m.full {
+                    m.note = m.note.replace(&format!(", {PARTLY}"), "").replace(PARTLY, "");
+                }
+            }
+            None => {
+                back.note = old.note;
+                back.batch = old.batch;
+                back.full = old.full;
+                back.replaced = old.replaced;
+                self.kept.push(back);
+            }
+        }
+    }
+
+    fn remove(&self, ids: &[u64]) {
+        if let Some(w) = &self.writer {
+            w.remove(ids);
+        }
+    }
+
+    fn drop_routes(&self, gone: Vec<Mapped>) {
+        self.remove(&gone.into_iter().flat_map(|m| m.ids).collect::<Vec<_>>());
+    }
+
+    /// Keep: the pending routes stay as one batch; lines without an engine
+    /// route (a question, "not live yet") go.
+    fn keep(&mut self) {
+        let batch = self.next_batch;
+        self.next_batch += 1;
+        let ids: Vec<u64> = self.pending.iter().flat_map(|m| m.ids.clone()).collect();
+        if let Some(w) = &self.writer {
+            w.accept(&ids);
+        }
+        for mut m in std::mem::take(&mut self.pending) {
+            if m.ids.is_empty() {
+                // a line that runs nothing still gives back what it replaced
+                for old in m.replaced {
+                    self.restore(old);
+                }
+            } else {
+                m.batch = batch;
+                self.kept.push(m);
+            }
+        }
+    }
+
+    /// Discard: the pending routes go, the ones they replaced come back.
+    fn discard(&mut self) {
+        for mut m in std::mem::take(&mut self.pending) {
+            self.remove(&m.ids);
+            for old in std::mem::take(&mut m.replaced) {
+                self.restore(old);
+            }
+        }
+    }
+
+    /// The pending and kept routes with their buttons.
+    fn routes_ui(&mut self, ui: &mut Ui) {
+        for line in &self.mapped {
+            ui.label(RichText::new(line).size(14.0));
+        }
+        let mut flip = None;
+        for (i, m) in self.pending.iter().enumerate() {
+            ui.horizontal(|ui| {
+                if !m.ids.is_empty() && ui.small_button("⇅").on_hover_text("flip the direction").clicked() {
+                    flip = Some(i);
+                }
+                ui.label(RichText::new(m.line()).size(14.0).strong());
+            });
+        }
+        if let Some(i) = flip {
+            let m = &mut self.pending[i];
+            m.route.inv = !m.route.inv;
+            if let Some(w) = &self.writer {
+                w.flip(&m.ids);
+            }
+        }
+        if !self.pending.is_empty() {
+            ui.horizontal(|ui| {
+                if ui.button("Keep").clicked() {
+                    self.keep();
+                }
+                if ui.button("Discard").clicked() {
+                    self.discard();
+                }
+            });
+        }
+        let mut gone = None;
+        if !self.kept.is_empty() {
+            ui.weak("assigned");
+        }
+        for (i, m) in self.kept.iter().enumerate() {
+            ui.horizontal(|ui| {
+                if ui.small_button("×").on_hover_text("remove this route").clicked() {
+                    gone = Some(i);
+                }
+                ui.label(RichText::new(m.line()).size(13.0));
+            });
+        }
+        if let Some(i) = gone {
+            let m = self.kept.remove(i);
+            self.remove(&m.ids);
         }
     }
 
@@ -683,6 +1052,7 @@ impl Sentence {
             .filter(|c| c.range.end <= text.len())
             .map(|c| to_pin(&c.range, &c.chip))
             .collect();
+        let asked = self.applied.clone();
         let scope = self.applied.as_ref().map(|k| assistant::Scope {
             key: k.id(),
             plugin: k.plugin.clone(),
@@ -690,7 +1060,7 @@ impl Sentence {
             aliases: alias::of(&k.plugin),
         });
         self.mapped = vec!["parsing".into()];
-        self.reply = Some(assistant::submit(&text, pins, scope));
+        self.reply.push_back((assistant::submit(&text, pins, scope), asked));
         self.doc.clear();
         self.cursor = 0;
         self.sugg.clear();
@@ -854,9 +1224,7 @@ impl Sentence {
             self.submit();
             ui.memory_mut(|m| m.request_focus(id));
         }
-        for line in &self.mapped {
-            ui.label(RichText::new(line).size(14.0));
-        }
+        self.routes_ui(ui);
 
         // ghost text after the cursor at the end of the line
         let show_ghost = enabled
@@ -1079,7 +1447,7 @@ mod tests {
 
     impl Harness {
         fn new() -> Self {
-            let mut s = Sentence::new(None);
+            let mut s = Sentence::new(None, None);
             s.loader = None;
             s.engine = Some(engine());
             let mut h = Self { ctx: egui::Context::default(), s, picked: RwLock::new(String::new()), out: None };
@@ -1264,6 +1632,183 @@ mod tests {
         let classes: Vec<String> = h.s.classified[&key].iter().map(|p| p.class.clone()).collect();
         assert_eq!(classes[0], "filter.cutoff");
         assert!(classes.iter().all(|c| !c.is_empty()), "{classes:?}");
+    }
+
+    /// A map sentence runs as pending, Keep keeps it, the arrow flips it,
+    /// undo removes the last kept routes, a sentence without a side asks.
+    #[test]
+    fn routes_run_pending_then_keep_flip_undo() {
+        use synthexis_parser::resolve::{Bound, Route as R, Target as T, Via};
+        let writer = Writer::new(Arc::new(crate::params::SynthexisParams::default()));
+        let mut h = Harness::new();
+        h.s.writer = Some(writer.clone());
+        let key = fl::Key { at: fl::At::Fx { track: 0, slot: 0 }, plugin: "Topos".into() };
+        let route = |side: Option<&str>| R {
+            source: "hand.openness".into(),
+            side: side.map(str::to_string),
+            inv: false,
+            gates: Vec::new(),
+            mods: Vec::new(),
+            targets: vec![T {
+                token: "T:param:fx.drive".into(),
+                text: "drive".into(),
+                bound: Some(Bound { index: 12, name: "Amp Drive".into(), via: Via::Name, plugin: None }),
+            }],
+        };
+        let reply = |intent: &str, routes| assistant::Reply { intent: intent.into(), rest: Vec::new(), routes, lines: vec!["x".into()] };
+        h.s.apply(reply("map", vec![route(Some("left"))]), Some(&key));
+        assert_eq!(h.s.pending.len(), 1);
+        assert_eq!(h.s.pending[0].line(), "left hand openness -> Topos / Amp Drive");
+        assert_eq!(writer.assigned().iter().map(|a| a.1).collect::<Vec<_>>(), [true]);
+        h.frame(vec![]);
+        assert!(h.click("Keep"));
+        h.frame(vec![]);
+        assert!(h.s.pending.is_empty() && h.s.kept.len() == 1);
+        assert_eq!(writer.assigned().iter().map(|a| a.1).collect::<Vec<_>>(), [false]);
+        // no side: a line that asks, no engine route
+        h.s.apply(reply("map", vec![route(None)]), Some(&key));
+        assert!(h.s.pending[0].line().contains("which hand"), "{}", h.s.pending[0].line());
+        assert_eq!(writer.assigned().len(), 1);
+        h.frame(vec![]);
+        assert!(h.click("Discard"));
+        h.frame(vec![]);
+        // flip a pending route
+        h.s.apply(reply("map", vec![route(Some("right"))]), Some(&key));
+        h.frame(vec![]);
+        assert!(h.click("⇅"));
+        h.frame(vec![]);
+        assert!(h.s.pending[0].line().contains("inverted"));
+        assert_eq!(writer.assigned().iter().map(|a| a.2).collect::<Vec<_>>(), [false, true]);
+        // undo drops the pending ones first, then the last kept
+        h.s.apply(reply("undo", Vec::new()), Some(&key));
+        h.s.apply(reply("undo", Vec::new()), Some(&key));
+        assert!(h.s.pending.is_empty() && h.s.kept.is_empty());
+        assert!(writer.assigned().is_empty());
+    }
+
+    /// modify replaces the running route (Discard brings it back), undo
+    /// takes back a whole Keep, unmap takes one hand of a both-hands line,
+    /// a scoped clear removes nothing, replies apply in the order sent.
+    #[test]
+    fn edits_change_the_running_routes() {
+        use synthexis_parser::resolve::{Bound, Route as R, Target as T, Via};
+        let writer = Writer::new(Arc::new(crate::params::SynthexisParams::default()));
+        let mut h = Harness::new();
+        h.s.writer = Some(writer.clone());
+        let key = fl::Key { at: fl::At::Fx { track: 0, slot: 0 }, plugin: "Topos".into() };
+        let route = |source: &str, side: &str, index: u32, mods: &[&str]| R {
+            source: source.into(),
+            side: Some(side.into()),
+            inv: false,
+            gates: Vec::new(),
+            mods: mods.iter().map(|m| m.to_string()).collect(),
+            targets: vec![T {
+                token: "T:param:fx.drive".into(),
+                text: "drive".into(),
+                bound: Some(Bound { index, name: format!("P{index}"), via: Via::Name, plugin: None }),
+            }],
+        };
+        let reply = |intent: &str, routes, rest: &[&str]| assistant::Reply {
+            intent: intent.into(),
+            rest: rest.iter().map(|t| t.to_string()).collect(),
+            routes,
+            lines: vec!["x".into()],
+        };
+        // one Keep of two routes, then a second Keep
+        h.s.apply(reply("map", vec![route("hand.openness", "left", 12, &[]), route("hand.y", "right", 13, &[])], &[]), Some(&key));
+        h.s.keep();
+        h.s.apply(reply("map", vec![route("hand.y", "both", 14, &[])], &[]), Some(&key));
+        h.s.keep();
+        assert_eq!(writer.assigned().len(), 4);
+        // unmap the right hand from P14: the left hand's half stays
+        h.s.apply(reply("unmap", vec![route("hand.y", "right", 14, &[])], &[]), Some(&key));
+        assert_eq!(writer.assigned().len(), 3);
+        assert!(h.s.kept.last().is_some_and(|m| m.ids.len() == 1 && m.line().contains("partly removed")));
+        // undo: the whole last Keep goes
+        h.s.apply(reply("undo", Vec::new(), &[]), Some(&key));
+        assert_eq!(writer.assigned().len(), 2);
+        // modify the drive route: the old one goes, the new one is pending
+        h.s.apply(reply("modify", vec![route("hand.openness", "left", 12, &["smooth:low"])], &[]), Some(&key));
+        assert_eq!(writer.assigned().len(), 2);
+        assert_eq!(h.s.kept.len(), 1);
+        assert!(h.s.pending[0].line().contains("snappy"));
+        // Discard brings the old one back as kept
+        h.s.discard();
+        assert_eq!(h.s.kept.len(), 2);
+        assert!(writer.assigned().iter().all(|a| !a.1));
+        // a clear scoped to one source removes nothing; "clear" removes all
+        h.s.apply(reply("clear", Vec::new(), &["S:hand.y", "scope:source"]), Some(&key));
+        assert_eq!(writer.assigned().len(), 2);
+        h.s.apply(reply("clear", Vec::new(), &[]), Some(&key));
+        assert!(writer.assigned().is_empty() && h.s.kept.is_empty());
+        // Keep drops a line that made no engine route
+        let mut no_side = route("hand.openness", "left", 12, &[]);
+        no_side.side = None;
+        h.s.apply(reply("map", vec![no_side], &[]), Some(&key));
+        h.s.keep();
+        assert!(h.s.kept.is_empty());
+    }
+
+    /// Review round 2: modify chains, modify of a pending line, undo of a
+    /// Keep that replaced, partial modify brought back, unmap without a side.
+    #[test]
+    fn replace_chains_and_undo_restore_the_state_before() {
+        use synthexis_parser::resolve::{Bound, Route as R, Target as T, Via};
+        let writer = Writer::new(Arc::new(crate::params::SynthexisParams::default()));
+        let mut h = Harness::new();
+        h.s.writer = Some(writer.clone());
+        let key = fl::Key { at: fl::At::Fx { track: 0, slot: 0 }, plugin: "Topos".into() };
+        let route = |source: &str, side: Option<&str>, mods: &[&str]| R {
+            source: source.into(),
+            side: side.map(str::to_string),
+            inv: false,
+            gates: Vec::new(),
+            mods: mods.iter().map(|m| m.to_string()).collect(),
+            targets: vec![T {
+                token: "T:param:fx.drive".into(),
+                text: "drive".into(),
+                bound: Some(Bound { index: 12, name: "Drive".into(), via: Via::Name, plugin: None }),
+            }],
+        };
+        let reply = |intent: &str, routes| assistant::Reply { intent: intent.into(), rest: Vec::new(), routes, lines: vec!["x".into()] };
+        let lines = |h: &Harness| h.s.kept.iter().map(|m| m.line()).collect::<Vec<_>>();
+        h.s.apply(reply("map", vec![route("hand.openness", Some("left"), &[])]), Some(&key));
+        h.s.keep();
+        // two modifies, then Discard: the original comes back
+        h.s.apply(reply("modify", vec![route("hand.openness", Some("left"), &["smooth:low"])]), Some(&key));
+        h.s.apply(reply("modify", vec![route("hand.openness", Some("left"), &["smooth:high"])]), Some(&key));
+        assert_eq!(h.s.pending.len(), 1);
+        h.s.discard();
+        assert_eq!(lines(&h), ["left hand openness -> Topos / Drive"]);
+        assert_eq!(writer.assigned().len(), 1);
+        // modify kept, Keep, undo: the original comes back
+        h.s.apply(reply("modify", vec![route("hand.openness", Some("left"), &["smooth:low"])]), Some(&key));
+        h.s.keep();
+        assert!(lines(&h)[0].contains("snappy"));
+        h.s.apply(reply("undo", Vec::new()), Some(&key));
+        assert_eq!(lines(&h), ["left hand openness -> Topos / Drive"]);
+        assert_eq!(writer.assigned().len(), 1);
+        // a pending line modified and discarded is gone, not kept
+        h.s.apply(reply("map", vec![route("hand.y", Some("right"), &[])]), Some(&key));
+        h.s.apply(reply("modify", vec![route("hand.y", Some("right"), &["smooth:low"])]), Some(&key));
+        h.s.discard();
+        assert_eq!(h.s.kept.len(), 1);
+        assert_eq!(writer.assigned().len(), 1);
+        // both hands: modify one hand, Discard merges it back into the line
+        h.s.apply(reply("map", vec![route("hand.x", Some("both"), &[])]), Some(&key));
+        h.s.keep();
+        h.s.apply(reply("modify", vec![route("hand.x", Some("right"), &["smooth:low"])]), Some(&key));
+        assert!(h.s.kept[1].line().contains("partly removed"));
+        h.s.discard();
+        assert_eq!(h.s.kept.len(), 2);
+        assert!(!h.s.kept[1].line().contains("partly"), "{}", h.s.kept[1].line());
+        assert_eq!(h.s.kept[1].ids.len(), 2);
+        // unmap of a movement that is not live removes nothing; without a
+        // side it means both
+        h.s.apply(reply("unmap", vec![route("motion.circle", None, &[])]), Some(&key));
+        assert_eq!(writer.assigned().len(), 3);
+        h.s.apply(reply("unmap", vec![route("hand.x", None, &[])]), Some(&key));
+        assert_eq!(writer.assigned().len(), 1);
     }
 
     #[test]

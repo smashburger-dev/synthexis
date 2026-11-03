@@ -16,7 +16,7 @@ use nih_plug::prelude::*;
 
 use crate::engine::SignalSubscriber;
 use crate::log;
-use crate::route::{apply_sample, default_routes, Route, NUM_MACROS};
+use crate::route::{apply_sample, default_routes, Route, Target, Values, NUM_MACROS};
 use crate::signal::Sample;
 
 const WRITE_EPS: f32 = 1.0 / 1024.0;
@@ -26,7 +26,12 @@ const LOG_EVERY_S: u64 = 5;
 pub struct Writer {
     pub params: Arc<crate::params::SynthexisParams>,
     host_ctx: Mutex<Option<Arc<dyn GuiContext>>>,
+    /// Test routes plus the assigned ones (Route::id, 0 for tests).
     routes: Mutex<Vec<Route>>,
+    next_id: AtomicU64,
+    /// Plugin parameter values (bridge path) and the gates' last signal
+    /// values; its macros are refreshed from `written` per sample.
+    values: Mutex<Values>,
     /// Self-reference so subscriber calls can re-enter `submit_main`
     /// (the trait gives us `&self`, the dispatch block needs `Arc<Self>`).
     me: Mutex<std::sync::Weak<Self>>,
@@ -55,6 +60,8 @@ impl Writer {
             params,
             host_ctx: Mutex::new(None),
             routes: Mutex::new(default_routes(test_on)),
+            next_id: AtomicU64::new(1),
+            values: Mutex::new(Values::default()),
             latest: Box::new([const { AtomicU32::new(0) }; NUM_MACROS]),
             latest_ts: Box::new([const { AtomicU64::new(0) }; NUM_MACROS]),
             pending: AtomicBool::new(false),
@@ -72,6 +79,46 @@ impl Writer {
         let api = format!("{:?}", ctx.plugin_api());
         *self.host_ctx.lock() = Some(ctx);
         log::log(&format!("host context available (api={api})"));
+    }
+
+    /// Adds assistant routes as pending (they run at once); returns their ids.
+    pub fn propose(&self, routes: Vec<Route>) -> Vec<u64> {
+        let mut table = self.routes.lock();
+        routes
+            .into_iter()
+            .map(|mut r| {
+                r.id = self.next_id.fetch_add(1, Ordering::Relaxed);
+                r.pending = true;
+                let id = r.id;
+                table.push(r);
+                id
+            })
+            .collect()
+    }
+
+    /// Keeps pending routes for good.
+    pub fn accept(&self, ids: &[u64]) {
+        for r in self.routes.lock().iter_mut().filter(|r| ids.contains(&r.id)) {
+            r.pending = false;
+        }
+    }
+
+    /// Removes routes; the targets keep their last value.
+    pub fn remove(&self, ids: &[u64]) {
+        self.routes.lock().retain(|r| !ids.contains(&r.id));
+    }
+
+    /// Flips the direction of routes (one click for a wrong INV).
+    pub fn flip(&self, ids: &[u64]) {
+        for r in self.routes.lock().iter_mut().filter(|r| ids.contains(&r.id)) {
+            r.cond.range.invert = !r.cond.range.invert;
+        }
+    }
+
+    /// (id, pending, inverted) of the assigned routes.
+    #[cfg(test)]
+    pub fn assigned(&self) -> Vec<(u64, bool, bool)> {
+        self.routes.lock().iter().filter(|r| r.id > 0).map(|r| (r.id, r.pending, r.cond.range.invert)).collect()
     }
 
     /// Called by process() once per block (audio thread).
@@ -152,37 +199,51 @@ impl Writer {
 
 impl SignalSubscriber for Writer {
     fn on_sample(&self, signal_id: &str, sample: &Sample) {
+        let mut writes = Vec::new();
+        let live = self.params.live.value();
         {
             let mut routes = self.routes.lock();
             let test_on = self.params.test_signal.value();
             for r in routes.iter_mut().filter(|r| r.test) {
                 r.enabled = test_on;
             }
-            let mut current = *self.written.lock();
+            let mut current = self.values.lock();
+            current.macros = *self.written.lock();
             let t_s = sample.t_capture_ns as f64 / 1e9;
-            let changed =
-                apply_sample(&mut routes, &mut current, signal_id, sample, t_s);
+            let changed = apply_sample(&mut routes, &mut current, signal_id, sample, t_s);
+            if !live {
+                // not sent, so not written: the first sample with Live on
+                // sends it (macros catch up through `written` instead)
+                for (t, _) in changed.iter().filter(|(t, _)| matches!(t, Target::Param { .. })) {
+                    current.params.insert(t.clone(), f32::NAN);
+                }
+            }
             drop(current);
             if changed.is_empty() {
                 self.periodic_log();
                 return;
             }
-            for (i, v) in &changed {
-                self.latest[*i].store(v.to_bits(), Ordering::Relaxed);
-                self.snapshot[*i].store(v.to_bits(), Ordering::Relaxed);
-                self.latest_ts[*i].store(
-                    if signal_id.starts_with("cam") {
-                        sample.t_capture_ns
-                    } else {
-                        0
-                    },
-                    Ordering::Relaxed,
-                );
+            for (t, v) in &changed {
+                match t {
+                    Target::Macro(i) => {
+                        self.latest[*i].store(v.to_bits(), Ordering::Relaxed);
+                        self.snapshot[*i].store(v.to_bits(), Ordering::Relaxed);
+                        self.latest_ts[*i].store(
+                            if signal_id.starts_with("cam") { sample.t_capture_ns } else { 0 },
+                            Ordering::Relaxed,
+                        );
+                    }
+                    Target::Param { plugin, index } => writes.push((plugin.clone(), *index, *v)),
+                }
             }
         }
-        if !self.params.live.value() {
+        if !live {
             self.periodic_log();
             return;
+        }
+        // plugin parameters go through the FL script, not the host
+        for (plugin, index, v) in writes {
+            crate::fl::bridge().write(&plugin, index, v);
         }
         if self.host_ctx.lock().is_none() {
             self.periodic_log();

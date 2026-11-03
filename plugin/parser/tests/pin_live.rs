@@ -8,7 +8,7 @@
 
 use std::path::PathBuf;
 
-use synthexis_parser::{pin, Options, Parser, Pin, PinWhat};
+use synthexis_parser::{pin_spans, Options, Parser, Pin, PinWhat};
 
 fn span(text: &str, chip: &str) -> (usize, usize) {
     let b = text.find(chip).unwrap_or(0);
@@ -50,7 +50,7 @@ fn pinned_frames() -> Result<(), String> {
     };
     for (text, pins) in &cases {
         let p = parser.parse(text).map_err(|e| format!("parse failed: {e:#}"))?;
-        let f = pin(&p.items, pins);
+        let f = pin_spans(&p.items, text, &p.spans, pins);
         eprintln!("{text}\n  parser: {}\n  pinned: {}", p.frame().join(" "), f.frame().join(" "));
         let params: Vec<&str> = pins
             .iter()
