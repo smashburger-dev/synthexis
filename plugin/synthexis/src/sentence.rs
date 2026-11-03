@@ -25,7 +25,15 @@
 //! "Unpin". The pin persists as a fl::Key id and is dropped when its slot
 //! holds another plugin. Parameter names come from FL when a target is
 //! picked; their classes from the exported plugin of the same name, else
-//! the labels of a mapped plugin, else param-sense (sense.rs).
+//! the labels of a mapped plugin, else param-sense (sense.rs). The
+//! completion loader thread stays on as the classifier: it gets each list
+//! from the bridge as it arrives (fl::Bridge::on_names), so the classes are
+//! ready even while the synthexis window draws no frame.
+//!
+//! After Enter the assistant's answer shows below the field, one line per
+//! route ("left hand openness -> Topos / Drive"). A parameter chip picked
+//! through a class phrase ("Cutoff" -> Filter 1 Freq) is kept as an alias
+//! of that plugin (alias.rs).
 //!
 //! Completion data: $SYNTHEXIS_COMPLETION_DIR, else
 //! ~/Library/Application Support/synthexis/completion, as
@@ -49,6 +57,7 @@ use synthexis_complete::doc::ChipText;
 use synthexis_complete::{finger_open, Chip, Engine, Param, Suggestion, Variants, FINGERS, GHOST_MIN_CHARS, SIDES};
 use synthexis_parser::{Pin, PinWhat};
 
+use crate::alias;
 use crate::assistant;
 use crate::fl::{self, Link};
 use crate::log::log;
@@ -63,7 +72,8 @@ const ROW_H: f32 = 22.0;
 const PICK_ROW_H: f32 = 26.0;
 const PICKER_H: f32 = 420.0;
 
-type Loaded = (Result<(Engine, Vec<PluginInfo>), String>, sense::Classes, Vec<String>);
+type Loaded = (Result<(Engine, Vec<PluginInfo>), String>, Arc<sense::Classes>, Vec<String>);
+type Classified = (fl::Key, Vec<Param>);
 
 pub struct Sentence {
     doc: ChipText,
@@ -73,12 +83,15 @@ pub struct Sentence {
     classes: HashMap<String, HashMap<String, String>>,
     /// Labels of the mapped plugins and param-sense, and their result per target.
     labels: Arc<sense::Classes>,
-    classified: HashMap<fl::Key, Vec<Param>>,
-    /// param-sense runs off the GUI thread (ps-v2: about 80 ms for 2,600
-    /// names); the target it works for and where its result arrives.
-    classifying: Option<(fl::Key, Receiver<Vec<Param>>)>,
+    classified: HashMap<fl::Key, Arc<Vec<Param>>>,
+    /// Classes from the classifier thread (param-sense: about 80 ms for
+    /// 2,600 names); None without a bridge, then sync_fl classifies itself.
+    sensed: Option<Receiver<Classified>>,
     loader: Option<Receiver<Loaded>>,
     status: String,
+    /// The assistant's answer to the last sentence, and where it arrives.
+    reply: Option<Receiver<Vec<String>>>,
+    mapped: Vec<String>,
     bridge: Option<&'static fl::Bridge>,
     seen: u64,
     link: Link,
@@ -144,6 +157,29 @@ fn pick_row(ui: &mut Ui, selected: bool, name: &str, place: &str, hover: &str) -
         .text(rect.left_center() + egui::vec2(8.0, 0.0), Align2::LEFT_CENTER, name, font, fg);
     let resp = if hover.is_empty() { resp } else { resp.on_hover_text(hover) };
     resp.clicked()
+}
+
+/// Parameter name -> class of the exported plugin named `plugin`.
+fn exported_classes(plugins: &[PluginInfo], plugin: &str) -> HashMap<String, String> {
+    let info = plugins.iter().find(|p| p.name.eq_ignore_ascii_case(plugin));
+    info.and_then(|i| data::load_plugin(&data_dir(), i).ok())
+        .map(|ps| ps.into_iter().map(|p| (p.name, p.class)).collect())
+        .unwrap_or_default()
+}
+
+/// Classifies each parameter list the bridge hands over until the field
+/// is gone (its receiver dropped).
+fn classify_loop(b: &fl::Bridge, labels: &sense::Classes, plugins: &[PluginInfo], out: &crossbeam_channel::Sender<Classified>) {
+    let (tx, rx) = crossbeam_channel::unbounded();
+    b.on_names(tx);
+    let mut exported: HashMap<String, HashMap<String, String>> = HashMap::new();
+    for (key, names) in rx {
+        let ex = exported.entry(key.plugin.clone()).or_insert_with(|| exported_classes(plugins, &key.plugin));
+        let params = classify(labels, &key, names, ex);
+        if out.send((key, params)).is_err() {
+            return;
+        }
+    }
 }
 
 /// FL's parameter names of `key` with their classes (sense::Classes::of).
@@ -248,12 +284,19 @@ impl Sentence {
     /// `bridge`: None runs without FL (tests).
     pub fn new(bridge: Option<&'static fl::Bridge>) -> Self {
         let (tx, rx) = bounded(1);
+        let (stx, srx) = crossbeam_channel::unbounded();
         let spawned = std::thread::Builder::new()
             .name("synthexis-completion".into())
             .spawn(move || {
                 let dir = data_dir();
                 let (labels, notes) = sense::Classes::load(&dir);
-                let _ = tx.send((data::load(&dir), labels, notes));
+                let labels = Arc::new(labels);
+                let loaded = data::load(&dir);
+                let plugins = loaded.as_ref().map(|(_, p)| p.clone()).unwrap_or_default();
+                let _ = tx.send((loaded, labels.clone(), notes));
+                if let Some(b) = bridge {
+                    classify_loop(b, &labels, &plugins, &stx);
+                }
             });
         let status = match spawned {
             Ok(_) => "loading completion".to_string(),
@@ -266,9 +309,11 @@ impl Sentence {
             classes: HashMap::new(),
             labels: Arc::new(sense::Classes::default()),
             classified: HashMap::new(),
-            classifying: None,
+            sensed: bridge.map(|_| srx),
             loader: Some(rx),
             status,
+            reply: None,
+            mapped: Vec::new(),
             bridge,
             seen: u64::MAX,
             link: Link::Waiting,
@@ -298,7 +343,7 @@ impl Sentence {
         let Some(rx) = &self.loader else { return };
         let Ok((res, labels, notes)) = rx.try_recv() else { return };
         self.loader = None;
-        self.labels = Arc::new(labels);
+        self.labels = labels;
         for n in notes {
             log(&format!("completion: classes: {n}"));
         }
@@ -318,11 +363,7 @@ impl Sentence {
     /// Parameter name -> class from the exported plugin named `plugin`.
     fn classes_of(&mut self, plugin: &str) -> &HashMap<String, String> {
         if !self.classes.contains_key(plugin) {
-            let info = self.exported.iter().find(|p| p.name.eq_ignore_ascii_case(plugin));
-            let map = info
-                .and_then(|i| data::load_plugin(&data_dir(), i).ok())
-                .map(|ps| ps.into_iter().map(|p| (p.name, p.class)).collect())
-                .unwrap_or_default();
+            let map = exported_classes(&self.exported, plugin);
             self.classes.insert(plugin.to_string(), map);
         }
         &self.classes[plugin]
@@ -332,6 +373,9 @@ impl Sentence {
     /// parameters to the engine once FL sent them.
     fn sync_fl(&mut self, pin: &RwLock<String>) {
         let Some(b) = self.bridge else { return };
+        while let Some(Ok((k, params))) = self.sensed.as_ref().map(Receiver::try_recv) {
+            self.classified.insert(k, Arc::new(params));
+        }
         {
             let v = b.view();
             if v.gen != self.seen {
@@ -374,46 +418,20 @@ impl Sentence {
         }
         match res {
             Ok(names) => {
-                if let Some((k, rx)) = &self.classifying {
-                    match rx.try_recv() {
-                        Ok(params) => {
-                            self.classified.insert(k.clone(), params);
-                            self.classifying = None;
-                        }
-                        Err(TryRecvError::Disconnected) => self.classifying = None,
-                        Err(TryRecvError::Empty) => {}
-                    }
-                }
                 if !self.classified.contains_key(&want) {
-                    if self.classifying.as_ref().is_some_and(|(k, _)| *k == want) {
+                    // the classifier thread started on these names already
+                    if self.sensed.is_some() {
                         self.pick_note = "reading parameter classes".into();
                         return;
                     }
                     let exported = self.classes_of(&want.plugin).clone();
-                    if self.labels.needs_sense(&want.plugin, &names, &exported) {
-                        let (tx, rx) = bounded(1);
-                        let (labels, key) = (self.labels.clone(), want.clone());
-                        let job = std::thread::Builder::new()
-                            .name("synthexis-paramsense".into())
-                            .spawn(move || {
-                                let _ = tx.send(classify(&labels, &key, names, &exported));
-                            });
-                        match job {
-                            Ok(_) => {
-                                self.classifying = Some((want, rx));
-                                self.pick_note = "reading parameter classes".into();
-                            }
-                            Err(e) => self.pick_note = format!("param-sense not started: {e}"),
-                        }
-                        return;
-                    }
                     let params = classify(&self.labels, &want, names, &exported);
-                    self.classified.insert(want.clone(), params);
+                    self.classified.insert(want.clone(), Arc::new(params));
                 }
                 let params = self.classified.get(&want).cloned().unwrap_or_default();
                 self.pick_note = format!("{} parameters", params.len());
                 if let Some(e) = self.engine.as_mut() {
-                    e.set_plugin(&want.id(), params);
+                    e.set_plugin(&want.id(), params.to_vec());
                 }
                 self.applied = Some(want);
             }
@@ -625,6 +643,9 @@ impl Sentence {
         let Some(mut s) = self.sugg.get(i).cloned() else { return };
         let (side, finger) = self.choice(i);
         s.chip = s.chip.with_variant(side, finger);
+        if let (Chip::Param { name, .. }, Some(via), Some(k)) = (&s.chip, &s.via, &self.applied) {
+            alias::learn(&k.plugin, via, name);
+        }
         self.cursor = self.doc.accept(&s);
         if let Some(e) = self.engine.as_mut() {
             e.picked(&s.chip);
@@ -632,6 +653,22 @@ impl Sentence {
         set_cursor(ctx, id, &self.doc.text, self.cursor);
         self.list_open = false;
         self.sugg.clear();
+    }
+
+    /// The assistant's lines once they arrive; asks for frames meanwhile.
+    fn poll_reply(&mut self, ctx: &egui::Context) {
+        let Some(rx) = &self.reply else { return };
+        match rx.try_recv() {
+            Ok(lines) => {
+                self.mapped = lines;
+                self.reply = None;
+            }
+            Err(TryRecvError::Disconnected) => {
+                self.mapped = vec!["parser unavailable (see the log)".into()];
+                self.reply = None;
+            }
+            Err(TryRecvError::Empty) => ctx.request_repaint_after(std::time::Duration::from_millis(30)),
+        }
     }
 
     fn submit(&mut self) {
@@ -646,8 +683,14 @@ impl Sentence {
             .filter(|c| c.range.end <= text.len())
             .map(|c| to_pin(&c.range, &c.chip))
             .collect();
-        self.status = format!("sent, {} pinned", pins.len());
-        assistant::submit(&text, pins);
+        let scope = self.applied.as_ref().map(|k| assistant::Scope {
+            key: k.id(),
+            plugin: k.plugin.clone(),
+            params: self.classified.get(k).cloned().unwrap_or_default(),
+            aliases: alias::of(&k.plugin),
+        });
+        self.mapped = vec!["parsing".into()];
+        self.reply = Some(assistant::submit(&text, pins, scope));
         self.doc.clear();
         self.cursor = 0;
         self.sugg.clear();
@@ -658,6 +701,7 @@ impl Sentence {
     pub fn ui(&mut self, ui: &mut Ui, enabled: bool, pin: &RwLock<String>) {
         self.poll_loader();
         self.sync_fl(pin);
+        self.poll_reply(ui.ctx());
         let id = ui.make_persistent_id("synthexis-sentence");
         self.id = Some(id);
         self.picker(ui, pin);
@@ -809,6 +853,9 @@ impl Sentence {
         if out.response.lost_focus() && ui.input(|i| i.key_pressed(Key::Enter)) {
             self.submit();
             ui.memory_mut(|m| m.request_focus(id));
+        }
+        for line in &self.mapped {
+            ui.label(RichText::new(line).size(14.0));
         }
 
         // ghost text after the cursor at the end of the line
@@ -1178,15 +1225,20 @@ mod tests {
         assert!(h.focused());
     }
 
-    /// An unmapped plugin: param-sense runs on its own thread, the field
-    /// shows a note meanwhile, and the classes then reach the engine.
+    /// An unmapped plugin: the classifier runs param-sense as soon as the
+    /// bridge has the names, before any frame of the field; the next frame
+    /// hands the classes to the engine.
     #[test]
-    fn unmapped_plugin_is_classified_off_the_gui_thread() {
+    fn unmapped_plugin_is_classified_when_the_names_arrive() {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
         let b = fl::Bridge::detached();
         let mut h = Harness::new();
         h.s.bridge = Some(b);
-        h.s.labels = Arc::new(sense::Classes::load(&root.join("../assistant/completion")).0);
+        let labels = Arc::new(sense::Classes::load(&root.join("../assistant/completion")).0);
+        h.s.labels = labels.clone();
+        let (tx, rx) = crossbeam_channel::unbounded();
+        h.s.sensed = Some(rx);
+        std::thread::spawn(move || classify_loop(b, &labels, &[], &tx));
         let key = fl::Key { at: fl::At::Fx { track: 2, slot: 0 }, plugin: "Totally Unknown Synth".into() };
         let names: Vec<(u32, String)> =
             ["VCF Cutoff", "VCF Resonance", "Amp Attack", "Delay Mix"].iter().enumerate().map(|(i, n)| (i as u32, n.to_string())).collect();
@@ -1195,17 +1247,19 @@ mod tests {
             v.loaded = true;
             v.targets = vec![fl::Target { key: key.clone(), track: 2, track_name: String::new() }];
             v.focus = Some(key.clone());
-            v.params = Some((key.clone(), Ok(names)));
         });
         h.frame(vec![]);
-        assert_eq!(h.s.pick_note, "reading parameter classes");
-        for _ in 0..200 {
-            if h.s.applied.is_some() {
+        b.set_params(key.clone(), Ok(names));
+        // no frame in between: the classes arrive on their own
+        let waiting = h.s.sensed.as_ref().map(|r| r.len());
+        for _ in 0..400 {
+            if h.s.sensed.as_ref().is_some_and(|r| !r.is_empty()) {
                 break;
             }
             std::thread::sleep(std::time::Duration::from_millis(5));
-            h.frame(vec![]);
         }
+        assert!(h.s.sensed.as_ref().is_some_and(|r| r.len() == 1), "classes not ready (had {waiting:?})");
+        h.frame(vec![]);
         assert_eq!(h.s.applied, Some(key.clone()));
         let classes: Vec<String> = h.s.classified[&key].iter().map(|p| p.class.clone()).collect();
         assert_eq!(classes[0], "filter.cutoff");

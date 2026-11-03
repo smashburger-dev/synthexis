@@ -5,6 +5,7 @@
 //! main thread via the vendored host_context_available hook (H2: FL Studio
 //! records main-thread edits with the window closed). Audio: stereo silence.
 
+mod alias;
 mod assistant;
 mod cond;
 mod editor;
