@@ -3,7 +3,17 @@
 //! cursor and Tab accepts it. From two typed characters a list of up to 8
 //! items opens below the field (5 rows visible, it scrolls); the arrow keys
 //! move through it, Tab or Enter picks, Esc dismisses. Enter picks only
-//! after an arrow key, so Enter on a finished sentence still sends it. An accepted item becomes a chip; on Enter the sentence and
+//! after an arrow key, so Enter on a finished sentence still sends it.
+//! A gesture done by one hand (hand, finger, eye, arm, one-hand motions)
+//! needs its side picked: the selected row opens a panel right of the list,
+//! Left picks left and Right picks right at any moment while it is open,
+//! Enter confirms. There is no default side and no "both hands"; only a
+//! side named right before the gesture ("die linke Fau") is preset. Tab or
+//! Enter on a row without its side opens the panel and inserts nothing; the
+//! ghost text shows the open choice ("(left/right?)"). A bare "Finger"
+//! shows the fingers once a side is picked: Up/Down go through thumb to
+//! pinky inside the panel. Esc closes the panel first, then the list.
+//! An accepted item becomes a chip (a picked side shows as a badge); on Enter the sentence and
 //! its chips (as pinned spans) go to the parser worker. Plain styling only;
 //! the final look comes from Figma.
 //!
@@ -35,7 +45,7 @@ use nih_plug_egui::egui::{
 use parking_lot::RwLock;
 use synthexis_complete::data::{self, PluginInfo};
 use synthexis_complete::doc::ChipText;
-use synthexis_complete::{Chip, Engine, Param, Suggestion, GHOST_MIN_CHARS};
+use synthexis_complete::{finger_open, Chip, Engine, Param, Suggestion, Variants, FINGERS, GHOST_MIN_CHARS, SIDES};
 use synthexis_parser::{Pin, PinWhat};
 
 use crate::assistant;
@@ -86,6 +96,12 @@ pub struct Sentence {
     sel: usize,
     /// First visible row of the list.
     scroll: usize,
+    /// The variant panel's choice for the selected row (indices into SIDES
+    /// and FINGERS); reset when the selection moves.
+    side: Option<usize>,
+    finger: Option<usize>,
+    /// Esc closed the panel; Up/Down move through the list again.
+    panel_closed: bool,
     /// Esc pressed; cleared by the next edit or cursor move.
     dismissed: bool,
     cursor: usize,
@@ -141,13 +157,47 @@ fn to_pin(range: &std::ops::Range<usize>, chip: &Chip) -> Pin {
             class: class.clone(),
             switch: chip.is_switch(),
         },
-        Chip::Gesture { source, shape, .. } => PinWhat::Gesture {
+        Chip::Gesture { source, shape, side, .. } => PinWhat::Gesture {
             source: source.clone(),
             shape: shape.clone(),
+            side: side.clone(),
         },
         Chip::Target { kind, .. } => PinWhat::Target { kind: kind.clone() },
     };
     Pin { bytes: (range.start, range.end), what }
+}
+
+/// A side as the panel, the ghost text and a chip badge show it.
+const SIDE_BADGES: [&str; 2] = ["L", "R"];
+
+/// The open or made choice of a row, for the ghost text: "left/right?",
+/// "left, finger?", "right, index".
+fn variant_note(v: Variants, side: Option<usize>, finger: Option<usize>) -> String {
+    let s = side.and_then(|i| SIDES.get(i)).map_or_else(|| "left/right?".to_string(), |s| s.to_string());
+    let f = finger.and_then(|i| FINGERS.get(i)).map_or_else(|| "finger?".to_string(), |f| f.to_string());
+    match (v.sided, v.finger) {
+        (true, true) => format!("{s}, {f}"),
+        (false, true) => f,
+        _ => s,
+    }
+}
+
+/// The badge after a chip: its finger when the phrase named none, its side.
+fn badge(chip: &Chip) -> Option<String> {
+    let Chip::Gesture { source, phrase, side, .. } = chip else { return None };
+    let finger = finger_open(phrase_source(source), phrase).then(|| source.trim_start_matches("hand.finger.").to_string());
+    let side = side.as_deref().and_then(|s| SIDES.iter().position(|x| *x == s)).map(|i| SIDE_BADGES[i].to_string());
+    let parts: Vec<String> = [finger, side].into_iter().flatten().collect();
+    (!parts.is_empty()).then(|| parts.join(" "))
+}
+
+/// A picked finger replaced the source; finger_open only asks the family.
+fn phrase_source(source: &str) -> &str {
+    if source.starts_with("hand.finger.") {
+        "hand.finger.index"
+    } else {
+        source
+    }
 }
 
 /// Secondary text of a list row: what the item is.
@@ -210,6 +260,9 @@ impl Sentence {
             nav: false,
             sel: 0,
             scroll: 0,
+            side: None,
+            finger: None,
+            panel_closed: false,
             dismissed: false,
             cursor: 0,
             id: None,
@@ -467,12 +520,57 @@ impl Sentence {
         self.sel = 0;
         self.scroll = 0;
         self.nav = false;
+        self.reset_variant();
         let typed = self.sugg.first().map_or(0, |s| self.doc.text[s.replace.clone()].chars().count());
         self.list_open = !self.dismissed && self.sugg.len() >= 2 && typed >= GHOST_MIN_CHARS;
     }
 
+    fn reset_variant(&mut self) {
+        let v = self.sugg.get(self.sel).map(|s| s.variants).unwrap_or_default();
+        (self.side, self.finger, self.panel_closed) = (v.side, None, false);
+    }
+
+    /// The variant choice row `i` would take: the panel's for the selected
+    /// row, else only the side its sentence names.
+    fn choice(&self, i: usize) -> (Option<usize>, Option<usize>) {
+        if i == self.sel {
+            (self.side, self.finger)
+        } else {
+            (self.sugg.get(i).and_then(|s| s.variants.side), None)
+        }
+    }
+
+    /// Row `i` still needs a side or a finger before it can become a chip.
+    fn needs_choice(&self, i: usize) -> bool {
+        let Some(v) = self.sugg.get(i).map(|s| s.variants) else { return false };
+        let (side, finger) = self.choice(i);
+        (v.sided && side.is_none()) || (v.finger && finger.is_none())
+    }
+
+    /// The selected row's panel is showing: the list is open, the row has
+    /// variants and Esc has not closed it.
+    fn panel_open(&self) -> bool {
+        self.list_open && !self.panel_closed && self.sugg.get(self.sel).is_some_and(|s| s.variants.any())
+    }
+
+    /// Tab, Enter or a click on row `i`: a row that still needs a choice
+    /// opens its panel and inserts nothing; any other becomes a chip.
+    fn take(&mut self, ctx: &egui::Context, id: Id, i: usize) {
+        if self.needs_choice(i) {
+            self.list_open = true;
+            self.dismissed = false;
+            self.select(i);
+            self.panel_closed = false;
+        } else {
+            self.accept(ctx, id, i);
+        }
+    }
+
     fn select(&mut self, i: usize) {
-        self.sel = i;
+        if i != self.sel {
+            self.sel = i;
+            self.reset_variant();
+        }
         self.nav = true;
         if i < self.scroll {
             self.scroll = i;
@@ -482,7 +580,9 @@ impl Sentence {
     }
 
     fn accept(&mut self, ctx: &egui::Context, id: Id, i: usize) {
-        let Some(s) = self.sugg.get(i).cloned() else { return };
+        let Some(mut s) = self.sugg.get(i).cloned() else { return };
+        let (side, finger) = self.choice(i);
+        s.chip = s.chip.with_variant(side, finger);
         self.cursor = self.doc.accept(&s);
         if let Some(e) = self.engine.as_mut() {
             e.picked(&s.chip);
@@ -536,7 +636,38 @@ impl Sentence {
         }
         if active {
             let n = self.sugg.len();
+            let v = self.sugg[self.sel].variants;
+            let panel = self.panel_open();
+            // the finger step: once a side is picked, Up/Down go through the
+            // fingers inside the panel instead of the list
+            let fingers = panel && v.finger && (self.side.is_some() || !v.sided);
             ui.input_mut(|i| {
+                if panel && i.consume_key(Modifiers::NONE, Key::Escape) {
+                    self.panel_closed = true;
+                } else if (ghost || self.list_open) && i.consume_key(Modifiers::NONE, Key::Escape) {
+                    self.list_open = false;
+                    self.dismissed = true;
+                }
+                // Left/Right pick the side at any moment while the panel is
+                // open (it never locks) and never move the cursor then
+                if panel && v.sided {
+                    for (k, side) in [(Key::ArrowLeft, 0), (Key::ArrowRight, 1)] {
+                        if i.consume_key(Modifiers::NONE, k) {
+                            self.side = Some(side);
+                            self.nav = true;
+                        }
+                    }
+                }
+                if fingers {
+                    if i.consume_key(Modifiers::NONE, Key::ArrowDown) {
+                        self.finger = Some(self.finger.map_or(0, |f| (f + 1).min(FINGERS.len() - 1)));
+                        self.nav = true;
+                    }
+                    if i.consume_key(Modifiers::NONE, Key::ArrowUp) {
+                        self.finger = Some(self.finger.map_or(0, |f| f.saturating_sub(1)));
+                        self.nav = true;
+                    }
+                }
                 if i.consume_key(Modifiers::NONE, Key::ArrowDown) {
                     if self.list_open {
                         self.select((self.sel + 1).min(n - 1));
@@ -552,14 +683,10 @@ impl Sentence {
                 if self.list_open && self.nav && i.consume_key(Modifiers::NONE, Key::Enter) {
                     take = Some(self.sel);
                 }
-                if (ghost || self.list_open) && i.consume_key(Modifiers::NONE, Key::Escape) {
-                    self.list_open = false;
-                    self.dismissed = true;
-                }
             });
         }
         if let Some(i) = take {
-            self.accept(ui.ctx(), id, i);
+            self.take(ui.ctx(), id, i);
         }
 
         let chip_bg = ui.visuals().selection.bg_fill.gamma_multiply(0.45);
@@ -600,6 +727,19 @@ impl Sentence {
             .lock_focus(enabled)
             .layouter(&mut layouter)
             .show(ui);
+        // a small badge over the end of a chip with a picked finger or side
+        if text == self.doc.text {
+            for c in &self.doc.chips {
+                let Some(b) = badge(&c.chip) else { continue };
+                let ci = self.doc.text[..c.range.end.min(self.doc.text.len())].chars().count();
+                let at = out.galley.pos_from_ccursor(CCursor::new(ci)).translate(out.galley_pos.to_vec2());
+                let p = ui.painter().with_clip_rect(out.text_clip_rect.expand(8.0));
+                let g = p.layout_no_wrap(b, FontId::proportional(9.0), ui.visuals().selection.stroke.color);
+                let r = Rect::from_min_size(at.left_top() - egui::vec2(g.size().x + 4.0, 6.0), g.size() + egui::vec2(4.0, 0.0));
+                p.rect_filled(r, 3.0, ui.visuals().selection.bg_fill);
+                p.galley(r.min + egui::vec2(2.0, 0.0), g, Color32::PLACEHOLDER);
+            }
+        }
 
         let edited = text != self.doc.text;
         // a deletion that removed a whole chip moves the cursor itself
@@ -637,9 +777,15 @@ impl Sentence {
             && self.cursor == self.doc.text.len()
             && self.sugg.first().is_some_and(|s| s.ghost_worthy(&self.doc.text));
         if let (true, Some(s)) = (show_ghost, self.sugg.first()) {
-            let ghost = s
+            let mut ghost = s
                 .ghost_suffix(&self.doc.text)
                 .unwrap_or_else(|| format!("  → {}", s.chip.label()));
+            // the choice Tab takes, or the one still open ("left/right?")
+            if s.variants.any() {
+                let (side, finger) = self.choice(0);
+                let note = variant_note(s.variants, side, finger);
+                ghost = if self.needs_choice(0) { format!("{ghost}  ({note})") } else { format!("{ghost}  · {note}") };
+            }
             let pos = out.galley_pos + egui::vec2(out.galley.rect.right(), 0.0);
             ui.painter()
                 .with_clip_rect(out.text_clip_rect)
@@ -681,6 +827,7 @@ impl Sentence {
         let full = ROW_H * rows as f32 + 8.0;
         let pos = out.response.rect.left_bottom() + egui::vec2(0.0, 2.0);
         let mut clicked = None;
+        let mut sel_rect = None;
         egui::Area::new(id.with("list-area"))
             .order(Order::Foreground)
             .fixed_pos(pos)
@@ -693,6 +840,7 @@ impl Sentence {
                     ui.set_clip_rect(bx.intersect(ui.clip_rect()));
                     let row = |y: f32| Rect::from_min_size(bx.min + egui::vec2(0.0, (y - scroll_y) * ROW_H), egui::vec2(width, ROW_H));
                     ui.painter().rect_filled(row(sel_y), 3.0, ui.visuals().selection.bg_fill);
+                    sel_rect = Some(row(self.sel as f32).intersect(bx));
                     if self.sugg.len() > VISIBLE {
                         // where the visible rows sit in the whole list
                         let n = self.sugg.len() as f32;
@@ -732,9 +880,69 @@ impl Sentence {
                     }
                 });
             });
+        let list = Rect::from_min_size(pos, egui::vec2(width + 16.0, full + 8.0));
+        if let Some(r) = sel_rect.filter(|r| r.height() > 0.0) {
+            self.variant_panel(&ctx, ui, id, list, r, t);
+        }
         if let Some(i) = clicked {
-            self.accept(ui.ctx(), id, i);
+            self.take(ui.ctx(), id, i);
             ui.memory_mut(|m| m.request_focus(id));
+        }
+    }
+
+    /// The selected row's choice, right of the list (always: the plugin
+    /// window has one fixed width that fits list and panel): the hand row,
+    /// and for a bare "finger" the finger row once a side is picked. The
+    /// current value is highlighted; a click picks it, and a click that
+    /// completes the choice makes the chip.
+    fn variant_panel(&mut self, ctx: &egui::Context, ui: &Ui, id: Id, list: Rect, row: Rect, t: f32) {
+        if !self.panel_open() {
+            return;
+        }
+        let v = self.sugg[self.sel].variants;
+        let fingers = v.finger && (self.side.is_some() || !v.sided);
+        let at = egui::pos2(list.right() + 4.0, row.top() - 6.0);
+        let hint = match (v.sided, fingers) {
+            (true, true) => "← → hand   ↑ ↓ finger   Enter",
+            (true, false) => "← left   → right   Enter",
+            _ => "↑ ↓ finger   Enter",
+        };
+        let mut picked = None;
+        egui::Area::new(id.with("variant-area"))
+            .order(Order::Foreground)
+            .fixed_pos(at)
+            .show(ctx, |ui| {
+                ui.multiply_opacity(t);
+                egui::Frame::popup(ui.style()).show(ui, |ui| {
+                    let mut axis = |ui: &mut Ui, name: &str, vals: &[&str], cur: Option<usize>, k: usize| {
+                        ui.horizontal(|ui| {
+                            ui.add_sized([44.0, 22.0], egui::Label::new(RichText::new(name).weak().size(12.0)));
+                            for (j, val) in vals.iter().enumerate() {
+                                if ui.selectable_label(cur == Some(j), RichText::new(*val).size(13.0)).clicked() {
+                                    picked = Some((k, j));
+                                }
+                            }
+                        });
+                    };
+                    if v.sided {
+                        axis(ui, "Hand", &SIDES, self.side, 0);
+                    }
+                    if fingers {
+                        axis(ui, "Finger", &FINGERS, self.finger, 1);
+                    }
+                    ui.label(RichText::new(hint).weak().size(11.0));
+                });
+            });
+        if let Some((k, j)) = picked {
+            match k {
+                0 => self.side = Some(j),
+                _ => self.finger = Some(j),
+            }
+            self.nav = true;
+            if !self.needs_choice(self.sel) {
+                self.accept(ctx, id, self.sel);
+            }
+            ui.ctx().memory_mut(|m| m.request_focus(id));
         }
     }
 }
@@ -751,10 +959,11 @@ mod tests {
     fn engine() -> Engine {
         let g = |source: &str, phrase: &str| Gesture { source: source.into(), shape: None, phrase: phrase.into(), pol: 1 };
         let mut e = Engine::new(
-            vec![g("hand.spread", "spread my fingers"), g("hand.fist", "Faust schließen")],
+            vec![g("hand.spread", "spread my fingers"), g("hand.fist", "Faust schließen"), g("hand.finger.index", "Finger")],
             vec![("filter.cutoff".into(), "Cutoff".into())],
             &HashMap::new(),
-        );
+        )
+        .with_sided(vec!["hand.fist".into(), "hand.finger.index".into()]);
         let p = |index: u32, name: &str, class: &str| Param { index, name: name.into(), class: class.into() };
         e.set_plugin("Synth/Test", vec![p(0, "Filter 1 Freq", "filter.cutoff"), p(1, "Filter 2 Freq", "filter.cutoff")]);
         e
@@ -762,6 +971,18 @@ mod tests {
 
     fn key(k: Key) -> Event {
         Event::Key { key: k, physical_key: None, pressed: true, repeat: false, modifiers: Modifiers::NONE }
+    }
+
+    fn shift(k: Key) -> Event {
+        Event::Key { key: k, physical_key: None, pressed: true, repeat: false, modifiers: Modifiers::SHIFT }
+    }
+
+    /// Source and side of the first chip.
+    fn gesture_of(h: &Harness) -> (String, Option<String>) {
+        match &h.s.doc.chips[0].chip {
+            Chip::Gesture { source, side, .. } => (source.clone(), side.clone()),
+            c => panic!("not a gesture: {c:?}"),
+        }
     }
 
     struct Harness {
@@ -999,13 +1220,117 @@ mod tests {
     }
 
     #[test]
+    fn left_right_pick_the_hand_not_the_cursor() {
+        let mut h = Harness::new();
+        h.frame(vec![Event::Text("wenn ich die Fau".into())]);
+        h.frame(vec![key(Key::ArrowDown)]);
+        assert!(h.s.panel_open());
+        assert_eq!(h.s.side, None, "no default side");
+        h.frame(vec![]);
+        let row = h.find("Faust").expect("row drawn");
+        let panel = h.find("right").expect("variant panel drawn");
+        assert!(panel.x > row.x, "panel sits right of the list");
+        h.frame(vec![key(Key::ArrowRight)]);
+        assert_eq!(h.s.cursor, "wenn ich die Fau".len(), "Right moved the cursor");
+        assert_eq!(h.s.side, Some(1));
+        h.frame(vec![key(Key::ArrowLeft)]);
+        assert_eq!(h.s.side, Some(0));
+        h.frame(vec![key(Key::Enter)]);
+        assert_eq!(gesture_of(&h), ("hand.fist".into(), Some("left".into())));
+        let c = &h.s.doc.chips[0];
+        assert!(matches!(to_pin(&c.range, &c.chip).what, PinWhat::Gesture { side: Some(ref s), .. } if s == "left"));
+        assert_eq!(badge(&c.chip).as_deref(), Some("L"));
+    }
+
+    #[test]
+    fn tab_without_a_side_opens_the_panel_and_inserts_nothing() {
+        let mut h = Harness::new();
+        h.frame(vec![Event::Text("wenn ich die Fau".into())]);
+        assert!(h.s.needs_choice(0));
+        h.frame(vec![key(Key::Tab)]);
+        assert!(h.s.doc.chips.is_empty());
+        assert_eq!(h.s.doc.text, "wenn ich die Fau");
+        assert!(h.s.panel_open());
+        h.frame(vec![key(Key::Tab)]);
+        assert!(h.s.doc.chips.is_empty(), "Tab again still needs a side");
+        h.frame(vec![key(Key::ArrowRight)]);
+        h.frame(vec![key(Key::Tab)]);
+        assert_eq!(gesture_of(&h), ("hand.fist".into(), Some("right".into())));
+    }
+
+    #[test]
+    fn a_side_named_right_before_is_preset() {
+        let mut h = Harness::new();
+        h.frame(vec![Event::Text("wenn ich die rechte Fau".into())]);
+        assert_eq!(h.s.side, Some(1));
+        h.frame(vec![key(Key::Tab)]);
+        assert_eq!(gesture_of(&h), ("hand.fist".into(), Some("right".into())));
+        // "beide" is no side the panel offers: the choice stays open
+        let mut h = Harness::new();
+        h.frame(vec![Event::Text("wenn ich beide Fau".into())]);
+        assert!(h.s.needs_choice(0));
+    }
+
+    #[test]
+    fn a_bare_finger_takes_side_then_finger_and_the_side_never_locks() {
+        let mut h = Harness::new();
+        // two items: the list is open already, "Finger" selected
+        h.frame(vec![Event::Text("wenn ich die Fin".into())]);
+        assert!(h.s.panel_open());
+        h.frame(vec![]);
+        assert!(h.find("thumb").is_none(), "fingers show only after the side");
+        h.frame(vec![key(Key::ArrowLeft)]);
+        h.frame(vec![]);
+        assert!(h.find("thumb").is_some(), "fingers show once a side is picked");
+        h.frame(vec![key(Key::ArrowDown)]);
+        h.frame(vec![key(Key::ArrowDown)]);
+        assert_eq!((h.s.sel, h.s.finger), (0, Some(1)), "Up/Down move the fingers, not the list");
+        h.frame(vec![key(Key::Enter)]);
+        assert_eq!(gesture_of(&h), ("hand.finger.index".into(), Some("left".into())));
+        let mut h = Harness::new();
+        h.frame(vec![Event::Text("wenn ich die Fin".into())]);
+        for k in [Key::ArrowLeft, Key::ArrowDown, Key::ArrowDown, Key::ArrowDown] {
+            h.frame(vec![key(k)]);
+        }
+        h.frame(vec![key(Key::ArrowRight)]);
+        assert_eq!((h.s.side, h.s.finger), (Some(1), Some(2)), "Right switches the hand in the finger step");
+        h.frame(vec![key(Key::Enter)]);
+        assert_eq!(gesture_of(&h), ("hand.finger.middle".into(), Some("right".into())));
+        assert_eq!(badge(&h.s.doc.chips[0].chip).as_deref(), Some("middle R"));
+    }
+
+    #[test]
+    fn esc_closes_the_panel_then_the_list() {
+        let mut h = Harness::new();
+        h.frame(vec![Event::Text("wenn ich die Fin".into())]);
+        h.frame(vec![key(Key::ArrowLeft)]);
+        h.frame(vec![key(Key::Escape)]);
+        assert!(h.s.list_open && !h.s.panel_open());
+        h.frame(vec![key(Key::ArrowDown)]);
+        assert_eq!(h.s.sel, 1, "Up/Down move through the list again");
+        h.frame(vec![key(Key::Escape)]);
+        assert!(!h.s.list_open);
+    }
+
+    #[test]
+    fn arrows_move_the_cursor_on_rows_without_variants() {
+        let mut h = Harness::new();
+        h.frame(vec![Event::Text("the cut".into())]);
+        assert!(h.s.list_open);
+        h.frame(vec![key(Key::ArrowLeft)]);
+        assert_eq!(h.s.cursor, "the cu".len());
+    }
+
+    #[test]
     fn pins_follow_chips() {
         let mut h = Harness::new();
         h.frame(vec![Event::Text("Fau".into())]);
         h.frame(vec![key(Key::Tab)]);
+        h.frame(vec![key(Key::ArrowLeft)]);
+        h.frame(vec![key(Key::Tab)]);
         let c = &h.s.doc.chips[0];
         let pin = to_pin(&c.range, &c.chip);
         assert_eq!(pin.bytes, (0, "Faust schließen".len()));
-        assert_eq!(pin.what, PinWhat::Gesture { source: "hand.fist".into(), shape: None });
+        assert_eq!(pin.what, PinWhat::Gesture { source: "hand.fist".into(), shape: None, side: Some("left".into()) });
     }
 }

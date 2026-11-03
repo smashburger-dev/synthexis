@@ -32,6 +32,31 @@ const SWITCH_WORDS: &[&str] = &[
 const CLAUSE_END: &[char] = &['.', ',', ';', '!', '?', ':'];
 const MAX_WORDS: usize = 3;
 
+/// The hand side the words name, the last one winning: "with my left
+/// hand" -> left, "die rechte" -> right, "beide Hände" -> both.
+pub fn named_side(text: &str) -> Option<&'static str> {
+    text.split(|c: char| !c.is_alphanumeric())
+        .filter_map(|w| match w.to_lowercase().as_str() {
+            "left" | "links" | "linke" | "linken" | "linker" | "linkes" => Some("left"),
+            "right" | "rechts" | "rechte" | "rechten" | "rechter" | "rechtes" => Some("right"),
+            "both" | "beide" | "beiden" | "beidhändig" => Some("both"),
+            _ => None,
+        })
+        .last()
+}
+
+/// The side named right before a gesture ("die linke Fau", "my left
+/// hand"): the word before it, after articles and possessives. So "left
+/// swipe to eq and circle" and "Hand nach rechts und Faust" give no side.
+/// "both" counts too; completion offers no both-hands side and drops it.
+pub fn side_before(text: &str) -> Option<&'static str> {
+    let words: Vec<String> = text.split(|c: char| !c.is_alphanumeric()).filter(|w| !w.is_empty()).map(str::to_lowercase).collect();
+    // "both" and "beide" sit in ARTICLES too; a side word is never skipped
+    let skip = |w: &String| (ARTICLES.contains(&w.as_str()) || POSSESSIVES.contains(&w.as_str())) && named_side(w).is_none();
+    let last = words.iter().rev().find(|w| !skip(w))?;
+    named_side(last)
+}
+
 /// A query: the last `words` words before the cursor.
 #[derive(Clone, Debug, PartialEq)]
 pub struct QuerySpan {

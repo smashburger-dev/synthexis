@@ -40,17 +40,19 @@ def routes(frame):
 
 def sources(route):
     """Every S: token of a route (fan-in has several), folded, with the
-    shape that follows it."""
+    shape and the side that follow it."""
     out = []
     for i, t in enumerate(route):
         if t.startswith("S:"):
-            shape = None
+            shape = side = None
             for u in route[i + 1:]:
                 if u.startswith("S:"):
                     break
                 if u.startswith("shape:"):
                     shape = u[6:]
-            out.append((FOLD.get(t[2:], t[2:]), shape))
+                if u.startswith("side:"):
+                    side = u[5:]
+            out.append((FOLD.get(t[2:], t[2:]), shape, side))
     return out
 
 
@@ -66,7 +68,7 @@ def assign(row):
                 distinct.append(s)
     src = []
     if srcs and len(srcs) == len(distinct):
-        src = [[b, e, s, sh] for (b, e), (s, sh) in zip(srcs, distinct)]
+        src = [[b, e, s, sh, sd] for (b, e), (s, sh, sd) in zip(srcs, distinct)]
     elif srcs and len(distinct) == 1:
         src = [[b, e, *distinct[0]] for b, e in srcs]
     ts = [t for r in rs for t in r if t.startswith("T:")]
@@ -81,7 +83,7 @@ def assign(row):
                 tgt.append([b, e, "ctl.switch", True])
             elif t and t[2:].split(":")[0] in TARGET_KINDS:
                 tk.append([b, e, t[2:].split(":")[0]])
-    return src, tgt, tk, [s for s, _ in distinct]
+    return src, tgt, tk, [d[0] for d in distinct]
 
 
 def main() -> None:

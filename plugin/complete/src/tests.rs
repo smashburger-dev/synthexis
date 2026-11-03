@@ -127,6 +127,41 @@ fn span_prior_ranks_the_class_training_meant() {
 }
 
 #[test]
+fn side_before_takes_the_word_right_before_the_gesture() {
+    assert_eq!(context::side_before("wenn ich die linke "), Some("left"));
+    assert_eq!(context::side_before("with my right "), Some("right"));
+    assert_eq!(context::side_before("wenn ich beide "), Some("both"));
+    assert_eq!(context::side_before("hook left swipe to eq and "), None);
+    assert_eq!(context::side_before("meine Hand nach rechts und "), None);
+}
+
+#[test]
+fn gestures_get_side_and_finger_axes() {
+    let gestures = vec![
+        g("hand.fist", "Faust schließen"),
+        g("hand.finger.index", "Finger"),
+        g("hand.finger.index", "pointing finger"),
+        g("hand.finger.thumb", "Daumen hoch"),
+        g("mouth.open", "Mund auf"),
+    ];
+    let sided = ["hand.fist", "hand.finger.index", "hand.finger.thumb"];
+    let e = Engine::new(gestures, Vec::new(), &HashMap::new()).with_sided(sided.iter().map(|s| s.to_string()).collect());
+    let v = |t: &str| e.complete(t, t.len(), 0, 8)[0].variants;
+    let fist = Variants { sided: true, side: None, finger: false };
+    assert_eq!(v("wenn ich die Fau"), fist, "no default side");
+    assert_eq!(v("wenn ich die linke Fau"), Variants { side: Some(0), ..fist });
+    assert_eq!(v("wenn ich die rechte Fau"), Variants { side: Some(1), ..fist });
+    assert_eq!(v("wenn ich beide Fau"), fist, "no both-hands side");
+    assert_eq!(v("wenn ich den Fin"), Variants { sided: true, side: None, finger: true });
+    assert_eq!(v("wenn ich den poi"), fist, "pointing finger keeps its finger");
+    assert_eq!(v("wenn ich den Dau"), fist);
+    assert_eq!(v("wenn ich den Mun"), Variants::default());
+    let finger = &e.complete("wenn ich den Fin", 16, 0, 8)[0].chip;
+    let picked = finger.with_variant(Some(1), Some(4));
+    assert!(matches!(&picked, Chip::Gesture { source, side: Some(s), .. } if source == "hand.finger.pinky" && s == "right"));
+}
+
+#[test]
 fn german_phrase_over_two_words() {
     let e = engine();
     let t = "mit der Faust Filter auf";

@@ -47,6 +47,9 @@ TARGET_WORDS = 3
 TRAIN = "train/ds-v11c/train_all.jsonl"
 HARVEST_MIN = 3  # occurrences; drops typos ("reverv")
 HARVEST_SHARE = 0.8  # of a text's occurrences on one target
+ONTOLOGY = Path(__file__).resolve().parent / "ontology.yaml"
+# a bare "Finger": the panel picks which one (index by default)
+GENERIC = [{"source": "hand.finger.index", "p": "Finger", "lang": "de", "pol": 1}]
 # demo plugins (probes/real-eval) plus a few common effects
 DEFAULT_PLUGINS = [
     "Xfer Records/Serum 2",
@@ -134,6 +137,12 @@ def harvest_targets(path: Path, known: set[str]) -> list[dict]:
             if not any(o["kind"] == h["kind"] and o["n"] > h["n"] and one_edit(o["key"], h["key"]) for o in out)]
 
 
+def sided_sources(path: Path) -> list[str]:
+    """Sources the ontology marks `side: true` (hand, eye, arm, motion):
+    their completion items get the hand-side panel."""
+    return re.findall(r"\{id: ([a-z_.]+), side: true", path.read_text(encoding="utf-8"))
+
+
 def label_class(r: dict) -> str:
     return r["final"][0] if "final" in r else r["class"]
 
@@ -174,6 +183,8 @@ def main() -> None:
     for text, target in train_targets(data / TRAIN):
         cls = target[6:] if target.startswith("param:") else "ctl.switch" if target == "toggle" else target
         span_prior[(" ".join(text.casefold().split()), cls)] += 1
+    gestures += [g for g in GENERIC if (g["source"], g["p"].casefold()) not in
+                 {(x["source"], x["p"].casefold()) for x in gestures}]
     known = {t["p"].casefold() for t in targets}
     harvested = harvest_targets(data / TRAIN, known)
     targets += [{"kind": h["kind"], "p": h["p"], "lang": "train"} for h in harvested]
@@ -199,7 +210,7 @@ def main() -> None:
         (out / "plugins" / f).write_text(json.dumps({"plugin_id": pid, "params": rows}, ensure_ascii=False))
         plugins.append({"plugin_id": pid, "name": pid.split("/", 1)[-1], "file": f, "n": len(rows)})
     missing = sorted(wanted - set(params))
-    vocab = {"gestures": gestures, "param_phrases": phrases, "targets": targets,
+    vocab = {"gestures": gestures, "param_phrases": phrases, "targets": targets, "sided": sided_sources(ONTOLOGY),
              "span_prior": [[t, c, n] for (t, c), n in sorted(span_prior.items())], "class_prior": dict(prior), "plugins": plugins}
     (out / "vocab.json").write_text(json.dumps(vocab, ensure_ascii=False))
     print(f"{len(gestures)} gesture phrases, {len(phrases)} parameter phrases, {len(targets)} target phrases, "
