@@ -29,7 +29,7 @@ Parameters of the catch-all classes `other`, `system` and `unsafe` complete by n
 | Field | `plugin/synthexis/src/sentence.rs`, placed in `editor.rs`; settings in `params.rs` |
 | Pinning | `plugin/parser/src/pin.rs`, called in `plugin/synthexis/src/assistant.rs` after decoding |
 
-The plugin reads the data from `$SYNTHEXIS_COMPLETION_DIR`, else `~/Library/Application Support/synthexis/completion` (`plugin/install.sh` ends with `plugin/assistant/install.sh`, which links `data/mapping/completion/` and the parser runs in `data/mapping/runtime/` there in a checkout with `data/`, else copies the tracked completion data and downloads the parser release; `SYNTHEXIS_DATA` points it at another `data/`). Without data the field still works as a plain sentence line.
+The plugin reads the data from `$SYNTHEXIS_COMPLETION_DIR`, else `~/Library/Application Support/synthexis/completion` (`plugin/install.sh` ends with `plugin/assistant/install.sh`, which links `data/mapping/completion/` and the parser runs in `data/mapping/runtime/` there when it finds `data/` in the checkout or, from a worktree, in the main checkout, else copies the tracked completion data and downloads the parser release; `SYNTHEXIS_DATA` points it at another `data/`). Without data the field still works as a plain sentence line.
 
 ## Engine
 

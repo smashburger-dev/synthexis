@@ -12,7 +12,7 @@ The parser weights stay out of git: GitHub refuses files over 100 MB, and every 
 
 ## Install
 
-`plugin/assistant/install.sh`, from any directory. In a checkout with `data/mapping/runtime` and `data/mapping/completion` it links both dirs there. In a fresh clone it copies `completion/` and downloads the release asset. The download runs through `gh` when it is logged in (needed while the repository is private), otherwise through `curl` with resume. Then the script checks the sha256 from `parser.release`, unpacks into a temporary dir and swaps it in with two renames. A failed download or a wrong checksum leaves the installed parser as it was. A second run with the parser already in place does nothing. `SYNTHEXIS_ASSISTANT=release` forces the release path in a dev checkout.
+`plugin/assistant/install.sh`, from any directory. In a checkout with `data/mapping/runtime` and `data/mapping/completion` it links both dirs there. A worktree without `data/` uses the main checkout's `data/` (found through git's common dir), so every session links to the same live exports; `SYNTHEXIS_DATA` overrides it. Links that point to an existing dir are never replaced by copies when no `data/` is found. In a fresh clone it copies `completion/` and downloads the release asset. The download runs through `gh` when it is logged in (needed while the repository is private), otherwise through `curl` with resume. Then the script checks the sha256 from `parser.release`, unpacks into a temporary dir and swaps it in with two renames. A failed download or a wrong checksum leaves the installed parser as it was. A second run with the parser already in place does nothing. `SYNTHEXIS_ASSISTANT=release` forces the release path in a dev checkout.
 
 ## New parser version
 
