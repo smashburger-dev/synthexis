@@ -50,7 +50,7 @@ features:
   - {id: F32, text: "Tempo and position come from the DAW transport", nodes: [midi.transport]}
   - {id: F33, text: "Everything live and recorded: MIDI into the DAW, parameters as automation", nodes: [rec.midi, rec.automation]}
   - {id: F34, text: "Demo built for FL Studio first", nodes: [demo]}
-  - {id: F35, text: "Real-time perception without per-use cost: own small student model", nodes: [perc.seg, perc.hand, train.*]}
+  - {id: F35, text: "Real-time perception on the device: own small student model", nodes: [perc.seg, perc.hand, train.*]}
   - {id: F36, text: "Multi-camera, including iPhone, to film other places as extra sources", nodes: [src.camera]}
   - {id: F37, text: "Runs in real time on low-end Apple Silicon", nodes: [budget.latency]}
   - {id: F38, text: "Small model that knows what plugin parameters mean, for mapping", nodes: [bridge.harvest, map.param_sense]}
@@ -66,7 +66,7 @@ features:
 # ---------------------------------------------------------------------------
 sig.contract:
   sample: {value: "f32 in 0..1", confidence: "f32 in 0..1", t_capture: "host-monotonic ns of the camera frame or sensor sample", present: bool}
-  ids: "<source>.<entity>.<feature>, e.g. cam0.hand.L.finger.index, cam0.face.mouth.open, hp.head.yaw, hr.bpm, cam1.object.2.angle"
+  ids: "<source>.<entity>.<feature>, e.g. cam0.hand.L.finger.index, cam0.mouth.open, hp.head.yaw, hr.bpm, cam1.object.2.angle (cam0. + the ontology source id, the side after its first segment: the face ids are cam0.mouth.open, cam0.face.smile, cam0.eye.L.open / .closed, cam0.eye.R.open / .closed, cam0.head.yaw / .pitch / .roll)"
   rule: "Perception never runs on the audio thread. The audio thread reads the latest conditioned values from a lock-free snapshot once per block."
 
 # ---------------------------------------------------------------------------
@@ -100,7 +100,7 @@ perception:
   perc.vision.hand: {what: "Apple Vision hand pose, 2 hands x 21 keypoints", role: "eval baseline; optional live fallback at reduced rate; never a training teacher (Apple DPLA 3.2, probes/licence-check)", status: planned}
   perc.teacher.hand: {what: "Merged keypoint teacher for synthexis-hand: per SAM 3.1 hand the MediaPipe Hand Landmarker (Apache-2.0) keypoints, else SAM 3D Body's; chirality from SAM 3D Body where it saw the hand", role: "keypoint targets in data/keypoints/<s>/cam0/keypoints_teacher.jsonl (38,004 hands, S4 7,185 held out); only SAM-matched hands", status: done, see: probes/hand-keypoints/RESULT.md}
   perc.teacher.hand_sam3d: {what: "SAM 3D Body (facebook/sam-3d-body-dinov3, SAM License) hand decoder on Modal A10G, prompted with the SAM person box, every second SAM-hand frame", role: "fills SAM hands MediaPipe misses (fists, occlusion, objects); chirality 99.7-100 % vs protocol; fingertips end short of MediaPipe's", status: done, cost: "5.36 $ (Modal billing 2026-11-02)", see: probes/hand-keypoints/RESULT.md}
-  perc.vision.face: {what: "Apple Vision face landmarks + yaw/pitch/roll", role: "offline eval baseline for face features", status: planned}
+  perc.vision.face: {what: "Apple Vision face landmarks + yaw/pitch/roll", role: "live face source of backend hybrid (landmarks on the seg student's face box, perception.rs LandmarkWorker) and offline eval baseline; Vision's own yaw/roll come in 45 / 30 degree steps, its yaw and pitch signs were flipped to the ontology 2026-11-04", status: building, see: docs/session-2026-11-04-head.md}
   perc.vision.body: {what: "Apple Vision body pose, 19 joints", role: "eval baseline for a later body head (v2); not a teacher (Apple terms)", status: planned}
   perc.seg:
     what: "synthexis-seg student: semantic masks [background, person, face, eye, mouth, hand, object], CoreML FP16 on the Neural Engine"
@@ -126,8 +126,20 @@ derived_features:
   feat.hand.openness: "mean finger extension, or mask solidity (area / convex hull area) from perc.seg"
   feat.hand.spread: "angle between index and pinky rays, normalized"
   feat.hand.position: "palm centre x, y in frame; depth proxy from hand size"
-  feat.face: "eye openness L/R (eyelid distance / eye width), mouth openness (inner lip distance / mouth width), smile"
-  feat.head: "yaw, pitch, roll"
+  feat.face: {what: "eye openness L/R (eyelid distance / eye width), mouth openness (inner lip distance / mouth width), smile", status: "building 2026-11-04 (hybrid): mouth.open and both eyes pass their rules on S1 and S3; winks fail in S2 (glasses) and S1 (right eye), a smile opens the mouth signal to p90 0.32 to 0.59 (docs/session-2026-11-04-head.md)"}
+  feat.head: {what: "yaw, pitch, roll", status: "building 2026-11-04: weak-perspective pose (POS) from 7 rigid Vision landmarks against the running neutral pose, gated by the fit residual (geom.rs HeadPose); each axis spans 0..1 in its own sweep on S1-S3, a head tilt still moves yaw and pitch (docs/session-2026-11-04-head.md)"}
+  feat.face_head.signals:
+    note: "2026-11-04, backend hybrid, block C of S1-S3 and S4 held out (probes/head-signals/score.py); parser and completion DE and EN (plugin/parser/tests/head_live.rs, plugin/complete/tests/head_vocab.rs)"
+    cam0.mouth.open: {status: building, verdict: "passes on S1-S4 except a smile, which opens it to p90 0.32..0.59"}
+    cam0.eye.L.open: {status: building, verdict: "closed 0.00 and blink everywhere; wink_L leaves the left eye at 0.64 in S2 (glasses)"}
+    cam0.eye.R.open: {status: building, verdict: "closed 0.00 except S2 (1.00, glasses); wink_R reads 0.48 in S1"}
+    cam0.eye.L.closed: {status: building, verdict: "1 - eye.L.open"}
+    cam0.eye.R.closed: {status: building, verdict: "1 - eye.R.open"}
+    cam0.head.yaw: {status: building, verdict: "sweep 0..1 (S3 0.80), neutral 0.43..0.51; a head tilt moves it by 0.73..0.98 (roll sweep)"}
+    cam0.head.pitch: {status: building, verdict: "sweep 0..1, neutral 0.45..0.62; a head tilt moves it by 0.57..0.61"}
+    cam0.head.roll: {status: building, verdict: "sweep 0.85..1.00, neutral 0.45..0.52, 0.17..0.51 in the yaw sweep"}
+    cam0.face.smile: {status: building, verdict: "not re-measured in this session"}
+    parser: {status: building, verdict: "head sentences with the completion's chip 34/34, typed DE 17/17 EN 15/17; completion offers tilt (to a shoulder, roll) and turn (up, down, left, right) in DE and EN; German direction words in the target (senkt, sinkt, nimmt raus) 7/12 right, English 11/12"}
   feat.object: "per tracked object: x, y, area, angle (second moments), velocity"
   feat.body: "arm raise L/R, lean, shoulder width proxy"
 
@@ -139,7 +151,7 @@ cond.chain:
   cond.filter: "One Euro filter (min_cutoff, beta, d_cutoff) against jitter with low lag"
   cond.occlusion: "on present=false or confidence < c_min: hold last value for hold_ms (default 600), then glide to rest value over decay_ms (default 800) or freeze (per route)"
   cond.reacquire: "on return: slew-limit to max_rate units/s (default 2.0) or crossfade over reacquire_ms (default 150) from held to live value"
-  cond.hysteresis: "discrete states: on_threshold / off_threshold + min_dwell_ms (default 60)"
+  cond.hysteresis: {what: "discrete states: on_threshold / off_threshold + min_dwell_ms (default 60)", status: "built 2026-11-04 for MIDI triggers: route.rs Edge (0.55 / 0.45, 60 ms, 600 ms occlusion hold), engine ShapeGate for finger states (0.6 / 0.4, 60 ms)"}
   cond.quantize: "optional steps or scale degrees"
 
 route.matrix: "many-to-many: any signal to any target with depth -1..1; one signal may drive many targets, one target may sum many signals (clamped)"
@@ -151,12 +163,13 @@ targets:
   tgt.macro: "32 host-automatable synthexis parameters (Signal 1..32). Host records them as automation and links them to any plugin parameter."
   tgt.anchor_params: "8 anchor slots x 4 parameters (enabled, mix 0..100 %, transpose, gate) exposed to the host"
   tgt.midi_cc: "MIDI CC out on a chosen channel"
-  tgt.midi_notes: "notes from patterns, chords and contour melodies"
+  tgt.midi_notes: {what: "notes from patterns, chords and contour melodies", status: "built 2026-11-04 for patterns, chords in key and single notes (midi.rs, route Target::Part); contour melodies not built"}
   tgt.fl_param: "direct value of any FL plugin parameter through the FL bridge script"
 
 bridge:
   bridge.macros: {what: "Route A, universal: macros + host linking (FL: Link to controller / Multilink)", status: planned}
-  bridge.midi_out: {what: "Route B: plugin MIDI out to other channels (FL: MIDI output port -> channel input port)", status: probe}
+  bridge.midi_out: {what: "Route B: plugin MIDI out to other channels (FL: MIDI output port -> channel input port)", status: "not needed: it needs wrapper port settings by hand; notes go through bridge.fl_notes (probes/fl-midi-notes, 2026-11-04)"}
+  bridge.fl_notes: {what: "notes to the FL channel a part names, through the bridge script (protocol 5): JSON 'notes' batches, the script plays them with channels.midiNoteOn; no MIDI or wrapper settings", status: "measured 2026-11-04: plays on the named channel while another is selected, 16/16 recorded into its pattern, delivery p95 0.42 ms, 30 notes/s with 0 lost pings and no hanging note (probes/fl-midi-notes/RESULT.md)"}
   bridge.fl_script:
     what: "Route C, FL deep bridge: FL Python MIDI controller script + CoreMIDI virtual ports. Script lists plugins and parameter names (plugins.getParamName), sends them to synthexis via SysEx, sets values on request (plugins.setParamValue)."
     evidence: "P3 passed on the probe VST3. Open bug: on the synthexis skeleton FL never forwards plugins.setParamValue to the plugin (nih-plug wrapper log shows no setParamNormalized, no process change; FL's getParamValue answers from its own mirror). general.processRECEvent(getRecEventId(ch) + REC_Chan_Plugin_First + idx, v * 2^30, REC_MIDIController) works and is the bridge set path. Rejected by test: missing MIDI input, own edits blocking. Untested candidates: SAMPLE_ACCURATE_AUTOMATION (probe true, synthexis false), parameter count or flags, the host_context_available patch (docs/session-2026-10-28-hillclimb.md, Open 1). Not pursued further (roadmap, 2026-11-03): REC events are the set path, the remaining candidates stay untested and the cause unknown."
@@ -172,13 +185,13 @@ bridge:
 
 recording:
   rec.automation: "macro and anchor params changed through the host parameter API (begin/perform/end edit) on the main thread, so FL records automation with the plugin window open or closed (P2). Gate passed in FL with the skeleton: camera-driven Signal 1/2 and a test triangle on Signal 32 recorded and played back (range 0.744, empty pattern flat)"
-  rec.midi: "notes emitted on the plugin MIDI out are recorded by FL into the target channel's pattern"
+  rec.midi: {what: "notes synthexis plays are recorded by FL into the target channel's pattern", status: "measured 2026-11-04 for bridge.fl_notes: 16 of 16 per path, arrival positions, no quantizing (probes/fl-midi-notes)"}
   rec.latency_comp: "planned feature: FL compensates audio, not plugin automation (FL manual, audio settings). The plugin records takes with t_capture timestamps and exports them shifted by the measured latency (automation clip or .mid drag-out); live, note triggers can snap to the host grid; motion prediction 50-100 ms ahead is a hypothesis"
 
 # ---------------------------------------------------------------------------
 # 8. Gestures and MIDI engine
 # ---------------------------------------------------------------------------
-gest.finger_states: "per hand a 5-bit mask (thumb..pinky extended) after hysteresis; 32 states per hand; user names states and assigns them"
+gest.finger_states: {what: "per hand a 5-bit mask (thumb..pinky extended) after hysteresis; 32 states per hand; user names states and assigns them", status: "built 2026-11-04: signal cam0.hand.<side>.shape = mask / 31 from the student's finger probabilities (engine/geom.rs ShapeGate); 12 named shapes plus any mask in the finger editor"}
 gest.hand_role: "Noa 2026-10-27: each hand (and each tracked object) has a role chosen in the plugin UI: MIDI (finger states -> notes, chords, patterns), Parameter (continuous features -> routes), Motion (primitives and presets below) or Off. Roles can be mixed per feature (e.g. finger state -> chord while openness -> cutoff). The role is a host-visible setting stored with the project."
 gest.presets:
   preset.chord_hand: "hand role MIDI: finger states pick chords in the project key and scale (midi.chord), spread drives voicing or arp rate"
@@ -186,10 +199,10 @@ gest.presets:
   preset.pattern_hand: "hand role MIDI: finger states trigger pattern slots (midi.patterns), quantized to the host grid"
   note: "basic presets are core scope; preset.pong and preset.orb are extras for the demo (Noa 2026-10-27)"
 midi:
-  midi.transport: "tempo, PPQ position and play state from the host every block"
-  midi.patterns: "pattern slot = clip (step grid or piano roll, 1..8 bars, note, velocity, channel). Plays while its finger state is active; starts quantized to the next 1/16 or 1/4; stops at state end or at clip end (per slot)"
-  midi.chord: "finger count / spread -> chord size and voicing within key and scale; spread can drive arp rate"
-  midi.scale: "key + scale (major, minor, dorian, phrygian, harmonic minor, pentatonics, custom)"
+  midi.transport: {what: "tempo, PPQ position and play state from the host every block", status: "built 2026-11-04: process() publishes it lock-free, the player maps the host clock to beats; with the host stopped it runs on its own clock at the last tempo"}
+  midi.patterns: {what: "pattern slot = clip (step grid or piano roll, 1..8 bars, note, velocity, channel). Plays while its finger state is active; starts quantized to the next 1/16 or 1/4; stops at state end or at clip end (per slot)", status: "built 2026-11-04 (midi.rs): bar-aligned clips with ratchets and nudge, start now / 1/16 / beat / bar, modes while shown / on-off / once, templates hi-hat basic, trap roll, snare fill, kick, clap"}
+  midi.chord: {what: "finger count / spread -> chord size and voicing within key and scale; spread can drive arp rate", status: "partly built 2026-11-04: chords on scale degrees with size, octave, strum and progressions per bar; finger count and spread do not drive them yet"}
+  midi.scale: {what: "key + scale (major, minor, dorian, phrygian, harmonic minor, pentatonics, custom)", status: "built 2026-11-04 without custom scales"}
   midi.contour_melody: "contour polyline resampled over N steps; y -> scale degree, x -> time; result is a pattern clip"
 
 # ---------------------------------------------------------------------------
@@ -217,6 +230,9 @@ motion:
     hit_note: "a hit on a note segment plays a note: position quantized to the scale, velocity from speed"
     options: "grid quantization of hits, max bounces, projectile speed and gravity"
     scope: "border zones and hit ramps live only inside this preset for now (Noa 2026-10-27)"
+    changed: "Noa 2026-11-04 night: the shot is pointing (index shown, middle, ring and pinky folded; flick as an option), not a throw; four sides, each one action (a MIDI part once per hit, or a parameter or Signal macro: ramp up and glide back, position, toggle), not user-sized segments; overlapping ramps on a side take the maximum, not the sum; no gravity, no position-to-pitch yet"
+    status: "built 2026-11-04 night (plugin/synthexis/src/pong/, pong_ui.rs, docs/session-2026-11-04-pong.md); shot measured on S2 to S4 (probes/pong-shot/RESULT.md); FL test with Noa open"
+  preset.library: {what: "named presets apart from the project: snapshot of sentence routes, MIDI parts and binds, Pong setup and picked plugin; save, load with undo, delete; built-ins listed first and protected", status: "built 2026-11-04 night (plugin/synthexis/src/preset.rs, files in ~/Library/Application Support/synthexis/presets/); built-in Pong stress test"}
   preset.orb:
     what: "two_hand.orb drawn between the palms; size, x, y, rotation -> 4 signals"
     throw: "fast separation releases the orb as a projectile into preset.pong; it bounces and hits border zones"
@@ -254,7 +270,7 @@ map:
   map.voice: "optional, online: push-to-talk through Muse Voice Transcribe realtime ($0.18 per hour of audio) feeding map.parser; ask Noa (same online question)"
 
 # ---------------------------------------------------------------------------
-# 11. Data engine and distillation
+# 11. Data engine and student training
 # ---------------------------------------------------------------------------
 train:
   train.protocol: "scripted recording sessions: each segment is one known finger state / face action / object, so gesture labels come from the script. Built-in camera + iPhone, two lighting setups, held-out session on another day."
@@ -270,7 +286,7 @@ train:
     preflight: "free local run before every paid run: 64 samples, 20 steps on the Mac, checks shapes, label ranges, falling loss and CoreML export"
     guards: "same as labelling: pilot epoch with re-estimate and abort above the cap, runtime spend guard, checkpoint per epoch to the volume, resumable, function timeout"
     runs: "one line per run in docs/hillclimb.tsv, one change per run; seed spread decides: accept a change only above max(1 point, 2 standard errors) over 3 seeds, and test data effects against a control with the same step count"
-    eval: "per-class IoU against the teacher and per-class recall plus confusion matrix for finger states; distilled students can inherit a teacher's class skew, so thresholds are calibrated on dev"
+    eval: "per-class IoU against the teacher and per-class recall plus confusion matrix for finger states; students trained on teacher labels can inherit a teacher's class skew, so thresholds are calibrated on dev"
     lessons: "from kleinhirn K24 (FINDINGS §20, §22, §24, §28): fixed container start cost matters (Qwen job: 0.12 $ per start, 229 s to model ready), so batch work per container; more steps alone can fake a data effect, so run matched controls; a distilled student skewed toward one class was fixed by calibration, not retraining"
   train.eval: "held-out session only. Gate before shipping a student (see budget.quality)"
 
@@ -301,7 +317,7 @@ plugin:
   gui: "egui via nih_plug_egui; design language: design-glass skill"
   ui.canvas: "camera view with masks, keypoints, live values, anchors; multi-camera picture-in-picture"
   ui.panel: "below the canvas: routes, conditioners, targets, selected element parameters"
-  ui.pattern_editor: "step grid / piano roll per pattern slot"
+  ui.pattern_editor: {what: "step grid / piano roll per pattern slot", status: "built 2026-11-04 (fingers.rs, Noa's pick A+B of docs/design/midi-editor-sketches.html): dither hands to pick a finger or shape, single and total view, drum lanes or scale piano roll, templates, Fill (Euclid), chords as notes"}
   ui.target_picker:
     what: "Names the plugin that new moves, presets and sentences are about. Default 'Follow FL': the last plugin window focused in FL (bridge.fl_script focus), never synthexis' own window; focus on a non-plugin window keeps the last plugin. Manual pick or 'Pin' freezes the target, 'Follow FL' or 'Unpin' releases it. The list shows only the open project by mixer track, never synthexis itself: a track with one plugin is one row, a track with two or more folds into a group with Sound (generators routed to the track) above FX (its effect slots). Effects are named by track and slot ('Portal, Master slot 1'), generators by channel ('Serum 2, Channel 1'); a binding stores (track, slot or channel, plugin name) and is dropped when that slot holds another plugin. The picked plugin scopes the resolver of the mapping assistant, the parameter list of new rows and the target of presets; existing rows keep their targets. Planned (docs/ux-plugin.md): 'Whole project' entry, search field, breadcrumb in the top bar."
     evidence: "measured: resolver top-1 0.676 against the picked plugin, 0.580 against 6 plugins, 0.538 against 30 (probes/open-vocab-mapping/picker.py); FL reports focus, track and slot at once with FL in front (P7). Built and tested in FL with Noa on 2026-11-03: plugin/synthexis/src/fl.rs, sentence.rs, sense.rs; parameter names load on pick in 1-14 ms, classes from labels, else param-sense"
@@ -318,7 +334,7 @@ decisions:
   D5: {topic: gesture labels, chosen: "labels from the recording script; Muse Spark Open only checks synthetic data", status: proposed}
   D6: {topic: parameter bridge, chosen: "macros + MIDI out everywhere; FL Python script for discovery and direct control", status: proposed}
   D7: {topic: repo license, chosen: "MIT for all source in this repo", note: "VST3 binaries built with nih-plug's VST3 wrapper link GPLv3 bindings, so those release binaries are GPLv3 combined works; CLAP builds and a later clap-wrapper VST3/AU (MIT VST3 SDK) stay MIT. Noa holds the copyright and can relicense.", status: decided, decided: 2026-10-26}
-  D9: {topic: proxy teacher, chosen: "two-step distillation: SAM 3.1 masks train a mid-size proxy (about 20-30M params, higher input resolution); the proxy labels every recorded frame at 30 fps with soft per-pixel probabilities, and those train the tiny students together with the SAM masks", why: "EUPE (Meta, arXiv 2603.22387, ablation Table 2): direct distillation from huge teachers into small students loses signal, an intermediate proxy recovers it; the proxy also labels frames SAM never saw at no Modal SAM cost", status: proposed}
+  D9: {topic: proxy teacher, chosen: "two-step teacher labelling: SAM 3.1 masks train a mid-size proxy (about 20-30M params, higher input resolution); the proxy labels every recorded frame at 30 fps with soft per-pixel probabilities, and those train the tiny students together with the SAM masks", why: "EUPE (Meta, arXiv 2603.22387, ablation Table 2): direct distillation from huge teachers into small students loses signal, an intermediate proxy recovers it; the proxy also labels frames SAM never saw at no Modal SAM cost", status: proposed}
   D10: {topic: resolution and crops, chosen: "full frame at low resolution (384x216) for person, hand, object; face crop (about 128 px, from the full-res frame) for eye and mouth, the same way hands use 128 px crops", why: "at 384x216 an eye is about 10 px wide, too small for a reliable mask; crops keep compute low and detail high (MediaPipe-style detector + ROI)", status: proposed}
   D11: {topic: temporal prior, chosen: "the seg student gets the previous frame's mask as an extra input channel (or a small recurrent state) and a temporal-consistency loss between neighbouring frames", why: "MobileSAM2 (arXiv 2607.12297) distils SAM2's temporal knowledge explicitly; recurrent matting nets reach stable masks at small size. Reimplemented, no code copied.", status: proposed}
   D12: {topic: backbone family, chosen: "CNNs that map well to the Neural Engine: MobileNetV4-Conv-Small (measured, probe B) first, RepViT-M0.9 as challenger; EfficientViT-B0 dropped: it fails to convert to CoreML (attention context module; probes/coreml-student-latency/RESULT.md, D10-D12 export check). MobileNetV4-Conv-Small, its 0.5 variant and RepViT-M0.9 convert at 384x216 and 320x180 with and without a previous-mask channel; latency and quality pick after the first trained student", why: "EfficientSAM3 (arXiv 2511.15833) distils SAM3 into RepViT, TinyViT and EfficientViT students from 0.7M to 21M params; YOLO26-seg excluded (AGPL-3.0)", status: proposed}
@@ -338,7 +354,7 @@ probes:
   H1: {what: "camera latency, light to callback, screen-flash judge", status: done, result: "built-in camera 154 / 178 ms (median / p95); four one-change levers rejected; iPhone via Continuity 100 / 116 ms; two delivery states about 65 ms apart, mechanism open", see: probes/camera-latency/RESULT.md}
   P4: {what: "CMHeadphoneMotionManager with Powerbeats Pro 2 on macOS 27", status: planned}
   P5: {what: "BLE heart rate from Powerbeats Pro 2 while connected as audio device", status: planned}
-  P6: {what: "plugin MIDI out reaches another FL channel and gets recorded", status: planned}
+  P6: {what: "plugin MIDI out reaches another FL channel and gets recorded", status: "answered by probes/fl-midi-notes (2026-11-04): notes reach the channel and get recorded through the bridge script instead of the plugin's MIDI out"}
 
 process.figjam_roundtrip: "Noa edits the FigJam board; the agent reads it with get_figjam, updates this file, regenerates diagrams and tasks"
 demo: "3-minute video in an FL Studio demo project; see docs/plan.md"

@@ -18,6 +18,7 @@ use std::sync::OnceLock;
 use std::time::{Duration, Instant};
 
 use crossbeam_channel::{bounded, Receiver, Sender, TrySendError};
+use objc2::rc::autoreleasepool;
 
 use super::coreml::{F16Array, Frame, Input, Model, PixelBuf};
 use super::geom::*;
@@ -183,8 +184,20 @@ fn run(rx: &Receiver<Job>) {
     while rx.try_recv().is_ok() {}
     let mut emitter = Emitter::default();
     let mut stats = Stats::default();
+    // One autorelease pool per frame: CoreML and Vision autorelease their
+    // results, and a thread without a pool keeps them until it ends. The
+    // release build returns most of them without the pool (S4 bench: peak
+    // footprint 49 MB after 1,140 frames, 52 MB after 3,239); a debug build
+    // grew by 1.2 MB a frame until CoreML could not allocate an output
+    // buffer and threw (docs/session-2026-11-04-head.md).
     for job in rx {
-        let Some(b) = backend.as_mut() else { continue };
+        autoreleasepool(|_| frame(&mut backend, &mut emitter, &mut stats, job));
+    }
+}
+
+fn frame(backend: &mut Option<Box<dyn Backend>>, emitter: &mut Emitter, stats: &mut Stats, job: Job) {
+    {
+        let Some(b) = backend.as_mut() else { return };
         let start = Instant::now();
         let mut stages = Vec::new();
         let percept = b.process(&job.frame, job.t_capture_ns, &mut stages);
@@ -272,7 +285,7 @@ impl Stats {
 /// `present = false` (cond.occlusion then holds or glides).
 #[derive(Default)]
 struct Emitter {
-    hand: [[f32; 20]; 2],
+    hand: [[f32; 21]; 2],
     face: [f32; 9],
     object: [f32; 5],
     distance: f32,
@@ -288,15 +301,28 @@ fn sender(t_ns: u64) -> impl Fn(&str, f32, f32, bool) {
 impl Emitter {
     /// Hands, hand distance and object.
     fn emit_body(&mut self, p: &Percept, t_ns: u64) {
-        let send = sender(t_ns);
+        self.body(p, t_ns, &sender(t_ns));
+    }
+
+    fn body(&mut self, p: &Percept, t_ns: u64, send: &dyn Fn(&str, f32, f32, bool)) {
         for (s, ids) in [HAND_L, HAND_R].iter().enumerate() {
             let seen = p.hands[s].as_ref();
+            let settled = seen.is_some_and(|(f, _)| f.shape_settled);
             if let Some((f, _)) = seen {
+                let shape = self.hand[s][SHAPE_AT];
                 self.hand[s] = f.values();
+                super::SKELETON.lock()[s] = Some((f.joints, t_ns));
+                if settled {
+                    super::MASKS.lock()[s] = Some((crate::route::shape_mask(f.shape), t_ns));
+                } else {
+                    self.hand[s][SHAPE_AT] = shape;
+                }
             }
             let conf = seen.map_or(0.0, |h| h.1);
-            for (id, v) in ids.iter().zip(self.hand[s]) {
-                send(id, v, conf, seen.is_some());
+            for (i, (id, v)) in ids.iter().zip(self.hand[s]).enumerate() {
+                // a hand back in view has no finger mask for its first
+                // 60 ms (ShapeGate): its shape counts as unseen till then
+                send(id, v, conf, seen.is_some() && (i != SHAPE_AT || settled));
             }
         }
         let both = match (&p.hands[0], &p.hands[1]) {
@@ -332,18 +358,24 @@ impl Emitter {
                     self.face[i] = v[i];
                 }
             }
-            if f.seen_eye[0] && f.seen_eye[1] {
+            if f.seen_head {
                 self.face[6..9].copy_from_slice(&v[6..9]);
             }
         }
+        let mut seen = [false; 9];
         for (i, id) in FACE_IDS.iter().enumerate() {
             let part_seen = face.is_some_and(|(f, _)| match i {
                 0 | 1 => f.seen_mouth,
                 2 | 4 => f.seen_eye[0],
                 3 | 5 => f.seen_eye[1],
-                _ => f.seen_eye[0] && f.seen_eye[1],
+                _ => f.seen_head,
             });
+            seen[i] = part_seen;
             send(id, self.face[i], if part_seen { face.map_or(0.0, |f| f.1) } else { 0.0 }, part_seen);
+        }
+        if let Some((f, _)) = face {
+            *super::FACE.lock() = Some(((self.face, seen), t_ns));
+            *super::FACE_GEOM.lock() = Some((f.geom, t_ns));
         }
     }
 }
@@ -395,7 +427,8 @@ impl LandmarkWorker {
                 let mut lm = FaceLandmarks::new();
                 for (buf, seed, t_ns, hand_on_face) in jobs {
                     let t0 = Instant::now();
-                    let face = lm.run(&buf, &seed, t_ns, hand_on_face);
+                    // a pool per face, as the perception thread has per frame
+                    let face = autoreleasepool(|_| lm.run(&buf, &seed, t_ns, hand_on_face));
                     if done.send((buf, (face, t0.elapsed().as_secs_f64() * 1e3, lm.failing))).is_err() {
                         break;
                     }
@@ -445,6 +478,12 @@ pub struct Students {
     labels: Vec<u32>,
     lut: [u16; N_SEG],
     tracker: HandTracker,
+    shapes: [super::geom::ShapeGate; 2],
+    /// The last mask each hand's skeleton templates picked
+    /// (super::MASK_TEMPLATES), so a pose between two templates holds.
+    picked: [Option<u8>; 2],
+    /// Each hand's gliding openness and its frame time (`OPEN_TAU_S`).
+    open_glide: [Option<(f32, u64)>; 2],
     sides: SideTracker,
     object_track: PointTrack,
     /// Hand crop and hand model time of the current frame, ms.
@@ -485,6 +524,9 @@ impl Students {
             labels: Vec::new(),
             lut,
             tracker: HandTracker::default(),
+            shapes: Default::default(),
+            picked: [None; 2],
+            open_glide: [None; 2],
             sides: SideTracker::default(),
             object_track: PointTrack::default(),
             hand_ms: [0.0; 2],
@@ -566,6 +608,24 @@ impl Students {
         let (kp, ext, _) = pts;
         let mut f = hand_features(&kp, side, fw, fh, Some(ext));
         f.speed = self.tracker.update(side, f.palm, fh, t_ns);
+        let vals = super::geom::trigger_fingers(&f);
+        let thr = super::FINGER_THR.lock()[side as usize];
+        match self.shapes[side as usize].update(vals, thr, t_ns) {
+            Some(mask) => {
+                let picked = &mut self.picked[side as usize];
+                let mask = super::MASK_TEMPLATES.lock()[side as usize].pick(mask, &bones(&f.joints), *picked);
+                *picked = Some(mask);
+                f.shape = crate::route::shape_value(mask);
+            }
+            None => f.shape_settled = false,
+        }
+        let g = &mut self.open_glide[side as usize];
+        let o = glide(*g, f.openness(), t_ns);
+        *g = Some((o, t_ns));
+        f.open_glide = Some(o);
+        super::FINGER_VALUES.lock()[side as usize] = Some((vals, t_ns));
+        super::HAND_SPEED.lock()[side as usize] = Some((f.speed, t_ns));
+        super::FINGER_RAW.lock()[side as usize] = Some(([f.ext, f.finger], t_ns));
         (f, conf)
     }
 
@@ -589,7 +649,9 @@ impl Students {
                 .find(|b| inside(b))
                 .map(Blob::shape);
             let fbox = [face.x0 as f32, face.y0 as f32, (face.x1 - face.x0 + 1) as f32, (face.y1 - face.y0 + 1) as f32];
-            return Some((face_features(fbox, &eyes, mouth, CAL_MASK), conf));
+            let mut f = face_features(fbox, &eyes, mouth, CAL_MASK);
+            f.geom = f.geom.map(|p| [1.0 - p[0] / SEG_W as f32, p[1] / SEG_H as f32]);
+            return Some((f, conf));
         };
         let (fw, fh) = (src.w as f32, src.h as f32);
         let (bx, by, bw, bh) = blob_box(face, fw, fh);
@@ -612,7 +674,10 @@ impl Students {
             .map(Blob::shape);
         let k = CROP as f32 / s;
         let fbox = [(bx - x0) * k, (by - y0) * k, bw * k, bh * k];
-        Some((face_features(fbox, &eyes, mouth, CAL_MASK), conf))
+        let mut f = face_features(fbox, &eyes, mouth, CAL_MASK);
+        // crop pixels to the mirrored preview (0..1)
+        f.geom = f.geom.map(|p| [1.0 - (x0 + p[0] / k) / fw.max(1.0), (y0 + p[1] / k) / fh.max(1.0)]);
+        Some((f, conf))
     }
 }
 
@@ -703,6 +768,14 @@ impl Backend for Students {
                     p.hands[side as usize] = Some(self.hand(&src, b, pt, side, t_ns));
                 }
             }
+            // a hand this frame has not seen starts its finger mask over:
+            // when it comes back, its old mask must not fire a trigger
+            for ((gate, picked), seen) in self.shapes.iter_mut().zip(&mut self.picked).zip(&p.hands) {
+                if seen.is_none() {
+                    *gate = Default::default();
+                    *picked = None;
+                }
+            }
             stage(stages, "hands");
             stages.push(("hand_crop", self.hand_ms[0]));
             stages.push(("hand_model", self.hand_ms[1]));
@@ -723,5 +796,73 @@ impl Backend for Students {
             Some(p)
         })
         .flatten()
+    }
+}
+
+/// Openness glides with this time constant (s): the hand student's
+/// keypoints snap between curled and straight, so a slow fist opening
+/// jumps from 0 to 1 in 0.2 s (probes/fist-glide/RESULT.md).
+const OPEN_TAU_S: f32 = 0.15;
+/// After this long without the hand the glide starts at the raw value.
+const OPEN_GAP_NS: u64 = 300_000_000;
+
+/// The next gliding openness after `last` (value, frame time) for the raw
+/// value `raw` at `t_ns`.
+fn glide(last: Option<(f32, u64)>, raw: f32, t_ns: u64) -> f32 {
+    match last {
+        Some((v, t)) if t_ns > t && t_ns - t <= OPEN_GAP_NS => {
+            let dt = (t_ns - t) as f32 / 1e9;
+            v + (raw - v) * (1.0 - (-dt / OPEN_TAU_S).exp())
+        }
+        Some((v, t)) if t_ns <= t => v,
+        _ => raw,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::cell::RefCell;
+
+    #[test]
+    fn a_shape_still_settling_goes_out_as_unseen() {
+        assert_eq!(crate::signal::HAND_FEATS[SHAPE_AT], "shape");
+        let index = crate::route::shape_value(0b01000);
+        let hand = |shape: f32, settled: bool| {
+            let f = HandFeatures { shape, shape_settled: settled, x: 0.3, ..Default::default() };
+            Percept { hands: [None, Some((f, 1.0))], ..Default::default() }
+        };
+        let sent = RefCell::new(Vec::new());
+        let send = |id: &str, v: f32, _c: f32, present: bool| sent.borrow_mut().push((id.to_string(), v, present));
+        let shape_and_x = |sent: &RefCell<Vec<(String, f32, bool)>>| {
+            let all = sent.take();
+            let get = |id: &str| all.iter().find(|s| s.0 == id).map(|s| (s.1, s.2));
+            (get("cam0.hand.R.shape"), get("cam0.hand.R.x"))
+        };
+        let mut e = Emitter::default();
+        e.body(&hand(index, true), 0, &send);
+        assert_eq!(shape_and_x(&sent), (Some((index, true)), Some((0.3, true))));
+        // the hand came back as a fist and its gate has no mask yet: the
+        // shape is unseen and keeps its old value, x is seen
+        e.body(&hand(0.0, false), 1, &send);
+        assert_eq!(shape_and_x(&sent), (Some((index, false)), Some((0.3, true))));
+    }
+
+    #[test]
+    fn openness_glides_from_a_fist_to_an_open_hand() {
+        let frame = 33_333_333u64;
+        let mut last = None;
+        let mut seen = Vec::new();
+        for k in 0..30u64 {
+            let raw = if k < 3 { 0.0 } else { 1.0 };
+            let v = super::glide(last, raw, k * frame);
+            last = Some((v, k * frame));
+            seen.push(v);
+        }
+        assert!(seen.windows(2).all(|w| w[1] - w[0] < 0.3), "{seen:?}");
+        assert!(seen[6] > 0.3 && seen[6] < 0.9, "{seen:?}");
+        assert!(seen[29] > 0.99);
+        // back after a gap: no glide from the old value
+        assert_eq!(super::glide(Some((0.0, 0)), 1.0, 400_000_000), 1.0);
     }
 }

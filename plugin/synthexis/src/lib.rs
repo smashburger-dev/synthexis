@@ -8,13 +8,24 @@
 mod alias;
 mod assign;
 mod assistant;
+mod backdrop;
+mod calib;
 mod cond;
+mod edges;
 mod editor;
 mod engine;
+mod fingers;
 mod fl;
+mod glass;
+mod head_ui;
 mod i18n;
 mod log;
+mod midi;
+mod param_find;
 mod params;
+mod pong;
+mod pong_ui;
+mod preset;
 mod route;
 mod saved;
 mod sense;
@@ -208,24 +219,45 @@ impl Plugin for Synthexis {
         // they no longer wait for the first camera frame) and opens the FL
         // bridge, so focus is tracked with the editor closed. The parser
         // loads when the sentence field is used (assistant.rs).
+        engine::set_finger_thresholds(settings::store().get().fingers);
         engine::perception::start();
-        fl::bridge();
+        self.writer.follow_channels(fl::bridge());
         saved::run(&saved::load(&self.params.routes.read()), &self.writer);
+        let store = midi::Store::load(&self.params.midi.read());
+        self.writer.set_midi(store);
+        // after the store: set_setup gives it the walls
+        let setup = pong::setup::Setup::load(&self.params.pong.read());
+        self.writer.pong.set_setup(setup);
+        // a window open before this shows the kept lines and parts now
+        self.writer.bump_state();
         true
+    }
+
+    fn deactivate(&mut self) {
+        // nothing may hang while FL does not call process(); no shots
+        // until it does again
+        self.writer.pong.suspend();
+        self.writer.player.stop_all();
     }
 
     fn process(
         &mut self,
         buffer: &mut Buffer<'_>,
         _aux: &mut AuxiliaryBuffers,
-        _context: &mut impl ProcessContext<Self>,
+        context: &mut impl ProcessContext<Self>,
     ) -> ProcessStatus {
-        // Snapshot once per block (spec rule); silence for now.
+        // Snapshot once per block (spec rule); silence for now. The host
+        // transport goes to the MIDI player without locks (midi.rs).
         self.writer.read_snapshot(&mut self.macro_block);
+        self.writer.pong.resume();
+        let t = context.transport();
+        self.writer.player.transport.store(t.playing, t.tempo, t.pos_beats(), midi::now_ns());
         buffer.iter_samples().for_each(|mut s| {
             s.iter_mut().for_each(|v| *v = 0.0);
         });
-        ProcessStatus::Normal
+        // a silent generator may be switched off by FL's Smart Disable;
+        // the transport has to keep coming while parts play
+        ProcessStatus::KeepAlive
     }
 }
 

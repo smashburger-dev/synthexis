@@ -17,6 +17,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::align;
 use crate::pin::{Frame, Part};
+use crate::verb;
 use crate::{Item, Tagged};
 
 /// Words a user puts around a parameter name (resolve.py FILLER).
@@ -92,12 +93,15 @@ pub struct Route {
     /// shape tokens, e.g. ["G:hand.pinch", "side:left"].
     pub gates: Vec<Vec<String>>,
     /// The route's modifiers as the frame has them (lo:, hi:, amt:, mode:,
-    /// curve:, smooth:, hold:, quantize:, delta:, BIP), in frame order.
+    /// curve:, smooth:, hold:, quantize:, delta:, BIP, grid:), in frame
+    /// order, then the values a MIDI target needs: the source's shape
+    /// (shape:peace) and the pointer values after NOTE and CHORD (note:g2,
+    /// chord:Am).
     pub mods: Vec<String>,
     pub targets: Vec<Target>,
 }
 
-const MODS: [&str; 10] = ["lo:", "hi:", "amt:", "mode:", "curve:", "smooth:", "hold:", "quantize:", "delta:", "BIP"];
+const MODS: [&str; 11] = ["lo:", "hi:", "amt:", "mode:", "curve:", "smooth:", "hold:", "quantize:", "delta:", "BIP", "grid:"];
 
 /// G: tokens with the side:/shape: tokens right after them.
 fn gates(items: &[Item]) -> Vec<Vec<String>> {
@@ -205,6 +209,24 @@ pub fn alias_key(phrase: &str) -> String {
     content(phrase).join(" ")
 }
 
+/// INV as the sentence's verb says it: a lowering verb on the target
+/// ("pinch my fingers decrease the filter", "Filter runter") inverts the
+/// route, unless the movement is said falling too ("close my fist to lower
+/// the drive": the fist is the openness inverted already, so the route is
+/// straight). A raising verb or none keeps the parser's INV. Only for
+/// continuous targets: a MIDI part or a toggle has no direction.
+fn verb_inv(parsed: bool, sentence: &str, src: &[(usize, usize)], source: &str, targets: &[Target], anchors: &[(usize, usize)]) -> bool {
+    let continuous = |t: &Target| ["T:param:", "T:macro:", "T:midi.cc:"].iter().any(|p| t.token.starts_with(p));
+    if source.is_empty() || source == "hand.shape" || targets.is_empty() || !targets.iter().all(continuous) {
+        return parsed;
+    }
+    let names: Vec<String> = targets.iter().filter_map(|t| t.bound.as_ref()).flat_map(|b| words(&b.name)).collect();
+    match verb::target_dir(sentence, src, anchors, &names) {
+        Some(verb::Dir::Down) => !verb::source_falls(sentence, source),
+        _ => parsed,
+    }
+}
+
 fn is_param_target(t: &str) -> bool {
     t.starts_with("T:param:") || t.starts_with("T:toggle:")
 }
@@ -221,6 +243,16 @@ fn cut(sentence: &str, b: (usize, usize), spans: &[Tagged]) -> String {
         }
     }
     s.split_whitespace().collect::<Vec<_>>().join(" ")
+}
+
+/// The text of a pointer value as the sentence writes it ("Am", where the
+/// span's text is the normalised "am"); the span's own text when it has
+/// no bytes (rules.rs). None for a token.
+fn span_text(it: &Item, sentence: &str, spans: &[Tagged]) -> Option<String> {
+    let Item::Span { text, bytes } = it else { return None };
+    let s = cut(sentence, *bytes, spans);
+    let s = s.trim_matches(|c: char| ".,;:!?\"'()".contains(c));
+    Some(if s.is_empty() { text.clone() } else { s.to_string() })
 }
 
 /// The PNAME span text that belongs to the target at `item`: the PNAME
@@ -353,21 +385,25 @@ pub fn resolve(
         Part::Route(_) => None,
     });
     let al = align::align(frame, sentence, spans);
+    let edits = frame.frame().iter().any(|t| matches!(t.as_str(), "I:map" | "I:modify" | "I:replace"));
+    let src: Vec<(usize, usize)> = spans.iter().filter(|t| t.tag == "SRC").map(|t| t.bytes).collect();
     let texts: Vec<String> = al.groups.iter().map(|b| cut(sentence, *b, spans)).collect();
     frame
         .routes()
         .zip(&al.routes)
         .map(|(route, ra)| {
             let find = |p: &str| route.items.iter().find_map(|it| tok(it).strip_prefix(p).map(str::to_string));
-            // the side that follows the S: token, not a gate's
-            let side = route
+            // the side and shape that follow the S: token, not a gate's
+            let after_source: Vec<&str> = route
                 .items
                 .iter()
                 .map(tok)
                 .skip_while(|t| !t.starts_with("S:"))
                 .skip(1)
                 .take_while(|t| ["side:", "shape:", "object:"].iter().any(|p| t.starts_with(p)))
-                .find_map(|t| t.strip_prefix("side:").map(str::to_string));
+                .collect();
+            let side = after_source.iter().find_map(|t| t.strip_prefix("side:").map(str::to_string));
+            let shape = after_source.iter().find(|t| t.starts_with("shape:")).map(|t| t.to_string());
             let mut targets = Vec::new();
             let mut k = 0;
             while k < ra.slots.len() {
@@ -418,15 +454,39 @@ pub fn resolve(
             Route {
                 source: find("S:").unwrap_or_default(),
                 side: side.or_else(|| shared.clone()),
-                inv: route.items.iter().any(|it| tok(it) == "INV"),
+                inv: {
+                    let parsed = route.items.iter().any(|it| tok(it) == "INV");
+                    let source = find("S:").unwrap_or_default();
+                    let pnames = route.items.windows(2).filter(|w| tok(&w[0]) == "PNAME").filter_map(|w| match &w[1] {
+                        Item::Span { bytes, .. } => Some(*bytes),
+                        Item::Token(_) => None,
+                    });
+                    let anchors: Vec<(usize, usize)> = ra
+                        .slots
+                        .iter()
+                        .filter_map(|s| s.group)
+                        .chain(ra.extra.iter().copied())
+                        .filter_map(|g| al.groups.get(g).copied())
+                        .chain(pnames)
+                        .collect();
+                    if edits { verb_inv(parsed, sentence, &src, &source, &targets, &anchors) } else { parsed }
+                },
                 gates: gates(&route.items),
-                mods: route
-                    .items
-                    .iter()
-                    .map(tok)
-                    .filter(|t| MODS.iter().any(|m| t.starts_with(m)))
-                    .map(str::to_string)
-                    .collect(),
+                mods: {
+                    let toks: Vec<&str> = route.items.iter().map(tok).collect();
+                    let mut m: Vec<String> =
+                        toks.iter().filter(|t| MODS.iter().any(|p| t.starts_with(p))).map(|t| t.to_string()).collect();
+                    m.extend(shape);
+                    // the value after NOTE and CHORD is a pointer span
+                    for w in route.items.windows(2) {
+                        match (tok(&w[0]), span_text(&w[1], sentence, spans)) {
+                            ("NOTE", Some(v)) => m.push(format!("note:{v}")),
+                            ("CHORD", Some(v)) => m.push(format!("chord:{v}")),
+                            _ => {}
+                        }
+                    }
+                    m
+                },
                 targets,
             }
         })
@@ -722,6 +782,29 @@ mod tests {
         assert_eq!(r[0].describe("Topos"), "hand pinch -> midi.note, fx.bitcrush (no parameter)");
     }
 
+    /// The parser's NOTE and CHORD values are pointer spans with normalised
+    /// text: the mods take the words as the sentence writes them.
+    #[test]
+    fn note_and_chord_values_go_into_the_mods() {
+        let text = "right pinch plays G2 and left index plays Am.";
+        let span = |s: &str, end: usize| {
+            let b = text.find(s).unwrap_or(0);
+            Item::Span { text: s.to_lowercase(), bytes: (b, b + end) }
+        };
+        let t = |s: &str| Item::Token(s.into());
+        let it = vec![
+            t("I:map"), t("<route>"), t("S:hand.pinch"), t("side:right"), t("T:midi.note:"), t("NOTE"), span("G2", 2), t("</route>"),
+            t("<route>"), t("S:hand.finger.index"), t("side:left"), t("T:midi.chord:"), t("CHORD"), span("Am.", 3), t("</route>"),
+        ];
+        let r = resolve(&pin(&it, &[]), text, &[], "fx:0:0:Topos", &cands(&topos()), &HashMap::new());
+        assert_eq!(r[0].mods, ["note:G2"]);
+        assert_eq!(r[1].mods, ["chord:Am"]);
+        // a span without bytes (rules.rs) keeps its own text
+        let it = vec![t("I:map"), t("<route>"), t("S:hand.pinch"), t("T:midi.note:"), t("NOTE"), Item::Span { text: "f#3".into(), bytes: (0, 0) }, t("</route>")];
+        let r = resolve(&pin(&it, &[]), text, &[], "fx:0:0:Topos", &cands(&topos()), &HashMap::new());
+        assert_eq!(r[0].mods, ["note:f#3"]);
+    }
+
     #[test]
     fn modifiers_show_in_the_line() {
         let text = "fist steps the tone only up to 80 percent, snappy";
@@ -732,5 +815,46 @@ mod tests {
         let ps = cands(&topos());
         let r = resolve(&pin(&it, &[]), text, &[tgt(text, "the tone")], "fx:0:0:Topos", &ps, &HashMap::new());
         assert_eq!(r[0].describe("Topos"), "hand openness inverted -> Topos / Tone (range 0-80 %, steps, snappy)");
+    }
+
+    /// A lowering verb inverts the route the parser left straight (plugin
+    /// log 2026-11-04: "pinch my fingers decrease Filter 1 Freq" came
+    /// without INV); a raising verb keeps it.
+    #[test]
+    fn a_lowering_verb_inverts_the_route() {
+        let ps = cands(&topos());
+        let run = |frame: &[&str], text: &str, name: &str| {
+            let r = resolve(&pin(&items(frame, text), &[]), text, &[tgt(text, name)], "fx:0:0:Topos", &ps, &HashMap::new());
+            r.first().map(|r| (r.inv, r.describe("Topos")))
+        };
+        let pinch = ["I:map", "<route>", "S:hand.pinch", "side:left", "T:param:filter.cutoff", "</route>"];
+        let (inv, line) = run(&pinch, "pinch my fingers decrease the filter", "the filter").unwrap_or_default();
+        assert!(inv);
+        assert_eq!(line, "left hand pinch inverted -> Topos / Tone");
+        assert_eq!(run(&pinch, "pinch to increase the filter", "the filter").map(|r| r.0), Some(false));
+        let fist = ["I:map", "<route>", "S:hand.openness", "T:param:fx.reverb", "</route>"];
+        assert_eq!(run(&fist, "when I open my fist decrease the reverb", "the reverb").map(|r| r.0), Some(true));
+        let de = ["I:map", "<route>", "S:hand.pinch", "T:param:filter.cutoff", "</route>"];
+        assert_eq!(run(&de, "wenn ich die Finger zusammendrücke, Filter runter", "Filter").map(|r| r.0), Some(true));
+        // the parser's INV stays, a raising verb keeps the parser's reading
+        let inv = ["I:map", "<route>", "S:hand.y", "T:param:filter.cutoff", "INV", "</route>"];
+        assert_eq!(run(&inv, "raise my hand to lower the filter", "the filter").map(|r| r.0), Some(true));
+        assert_eq!(run(&inv, "pinch to increase the filter", "the filter").map(|r| r.0), Some(true));
+        // a closing fist is the openness inverted: lowering with it is straight
+        let closed = ["I:map", "<route>", "S:hand.openness", "T:param:filter.cutoff", "INV", "</route>"];
+        assert_eq!(run(&closed, "make a fist to lower the filter", "the filter").map(|r| r.0), Some(false));
+    }
+
+    /// A MIDI part, a toggle and an unmap have no direction to invert.
+    #[test]
+    fn a_lowering_verb_leaves_parts_toggles_and_unmaps() {
+        let ps = cands(&topos());
+        let run = |frame: &[&str], text: &str| {
+            let r = resolve(&pin(&items(frame, text), &[]), text, &[], "fx:0:0:Topos", &ps, &HashMap::new());
+            r.first().map(|r| r.inv)
+        };
+        assert_eq!(run(&["I:map", "<route>", "S:hand.pinch", "T:midi.note:", "</route>"], "pinch plays a lower note"), Some(false));
+        assert_eq!(run(&["I:map", "<route>", "S:hand.pinch", "T:toggle:distortion", "</route>"], "pinch turns the drive down"), Some(false));
+        assert_eq!(run(&["I:unmap", "<route>", "S:hand.pinch", "T:param:filter.cutoff", "</route>"], "pinch no longer lowers the filter"), Some(false));
     }
 }

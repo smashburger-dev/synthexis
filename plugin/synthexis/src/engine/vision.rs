@@ -107,6 +107,11 @@ impl Place {
     }
 }
 
+/// Frame pixels to the mirrored preview (0..1).
+fn to_preview(g: &FaceGeom, w: f32, h: f32) -> FaceGeom {
+    g.map(|p| [1.0 - p[0] / w.max(1.0), p[1] / h.max(1.0)])
+}
+
 fn region(r: Option<Retained<VNFaceLandmarkRegion2D>>, at: Place) -> Option<Vec<[f32; 2]>> {
     let r = r?;
     unsafe {
@@ -139,16 +144,21 @@ fn face(obs: &VNFaceObservation, at: Place) -> Option<(FaceFeatures, f32)> {
             f.smile = (lift - SMILE_LIFT.0) / (SMILE_LIFT.1 - SMILE_LIFT.0);
             f.smile = f.smile.clamp(0.0, 1.0);
         }
-        // Vision's own angles (radians) where it has them.
+        // Vision's own angles (radians) where it has them. Its yaw and
+        // pitch run against the ontology: on S1-S3 block C its yaw
+        // correlates +0.91 with the nose tip's offset towards image right
+        // (turned to the person's left, yaw 0) and its pitch +0.83 with the
+        // tip's drop below the eyes (looking down, pitch 0); its roll
+        // agrees with the eye line (probes/head-signals/headlab.py).
         let quarter = std::f32::consts::FRAC_PI_4;
         if let Some(y) = obs.yaw() {
-            f.yaw = 0.5 + 0.5 * (y.floatValue() / quarter).clamp(-1.0, 1.0);
+            f.yaw = 0.5 - 0.5 * (y.floatValue() / quarter).clamp(-1.0, 1.0);
         }
         if let Some(r) = obs.roll() {
             f.roll = 0.5 + 0.5 * (r.floatValue() / quarter).clamp(-1.0, 1.0);
         }
         if let Some(p) = obs.pitch() {
-            f.pitch = 0.5 - 0.5 * (p.floatValue() / quarter).clamp(-1.0, 1.0);
+            f.pitch = 0.5 + 0.5 * (p.floatValue() / quarter).clamp(-1.0, 1.0);
         }
         Some((f, lm.confidence()))
     }
@@ -165,6 +175,8 @@ pub struct Seed {
     y0: f32,
     side: f32,
     rect: [f32; 4],
+    /// The camera frame's size in pixels.
+    frame: [f32; 2],
 }
 
 /// Side of the square face crop handed to Vision, and its padding around
@@ -177,7 +189,7 @@ const LM_PAD: f32 = 1.4;
 pub fn face_crop(src: &Bgra, fbox: [f32; 4], buf: &PixelBuf) -> Seed {
     let (x0, y0, side) = square(fbox[0], fbox[1], fbox[2], fbox[3], LM_PAD);
     buf.write(|d, ds| super::vimage::crop_square(src, x0, y0, side, d, ds, LM_CROP));
-    Seed { x0, y0, side, rect: [(fbox[0] - x0) / side, (fbox[1] - y0) / side, fbox[2] / side, fbox[3] / side] }
+    Seed { x0, y0, side, rect: [(fbox[0] - x0) / side, (fbox[1] - y0) / side, fbox[2] / side, fbox[3] / side], frame: [src.w as f32, src.h as f32] }
 }
 
 /// Face landmarks only, on a face crop seeded with the seg face box, so
@@ -190,11 +202,18 @@ pub struct FaceLandmarks {
     errors: u64,
     /// Consecutive failed requests (Vision error, not "no face").
     pub failing: u32,
+    head: HeadPose,
 }
 
 impl FaceLandmarks {
     pub fn new() -> Self {
-        Self { req: unsafe { VNDetectFaceLandmarksRequest::new() }, adapt: FaceAdapt::default(), errors: 0, failing: 0 }
+        Self {
+            req: unsafe { VNDetectFaceLandmarksRequest::new() },
+            adapt: FaceAdapt::default(),
+            errors: 0,
+            failing: 0,
+            head: HeadPose::default(),
+        }
     }
 
     pub fn run(&mut self, buf: &PixelBuf, seed: &Seed, t_ns: u64, hand_on_face: bool) -> Option<(FaceFeatures, f32)> {
@@ -205,6 +224,10 @@ impl FaceLandmarks {
                 origin: CGPoint { x: fx as f64, y: (1.0 - fy - fh) as f64 },
                 size: CGSize { width: fw as f64, height: fh as f64 },
             };
+            // No roll on the seed: the last frame's eye-line angle as its
+            // roll fitted tilted faces better (pose fit p90 0.030 against
+            // 0.037 in the S1 roll sweep), but Vision then threw an
+            // Objective-C exception in S4 at 219 s, which aborts the process.
             let obs = VNFaceObservation::faceObservationWithRequestRevision_boundingBox_roll_yaw(
                 VNDetectFaceRectanglesRequestRevision3,
                 rect,
@@ -229,6 +252,7 @@ impl FaceLandmarks {
             self.failing = 0;
             let obs = self.req.results()?.firstObject()?;
             let mut f = face(&obs, Place { w: n, h: n, x0: seed.x0, y0: seed.y0, k: seed.side / n })?;
+            f.0.geom = to_preview(&f.0.geom, seed.frame[0], seed.frame[1]);
             if let Some(lm) = obs.landmarks() {
                 let crop = Place::frame(n, n);
                 let mut eyes: Vec<Vec<[f32; 2]>> = [region(lm.leftEye(), crop), region(lm.rightEye(), crop)].into_iter().flatten().collect();
@@ -247,6 +271,18 @@ impl FaceLandmarks {
                         [p.iter().map(|q| q[0]).sum::<f32>() / n, p.iter().map(|q| q[1]).sum::<f32>() / n]
                     };
                     let (a, b) = (centre(&eyes[0]), centre(&eyes[1]));
+                    let crest = region(lm.noseCrest(), crop).unwrap_or_default();
+                    let nose = region(lm.nose(), crop).unwrap_or_default();
+                    let median = region(lm.medianLine(), crop).unwrap_or_default();
+                    // a frame the pose does not take keeps the last pose,
+                    // as the emitter does with seen_head false
+                    let head = head_points([a, b], &crest, &nose, &median).map(|pts| (pts, self.head.update(&pts, t_ns)));
+                    if let Some((pts, (_, fit))) = head {
+                        f.0.head_pts = pts;
+                        f.0.head_fit = fit;
+                    }
+                    f.0.seen_head = head.is_some_and(|h| h.1 .0.is_some());
+                    [f.0.yaw, f.0.pitch, f.0.roll] = self.head.last();
                     let eye_d = ((a[0] - b[0]).powi(2) + (a[1] - b[1]).powi(2)).sqrt().max(1.0);
                     if let Some(outer) = region(lm.outerLips(), crop) {
                         let (lo, hi) = outer.iter().fold((f32::MAX, f32::MIN), |(lo, hi), q| (lo.min(q[0]), hi.max(q[0])));
@@ -289,7 +325,10 @@ impl Backend for VisionBackend {
         let mut p = Percept::default();
         let faces = unsafe { self.faces.results() };
         if let Some(obs) = faces.as_ref().and_then(|a| a.firstObject()) {
-            p.face = face(&obs, Place::frame(w, h));
+            p.face = face(&obs, Place::frame(w, h)).map(|(mut f, c)| {
+                f.geom = to_preview(&f.geom, w, h);
+                (f, c)
+            });
         }
         let face_cx = faces
             .as_ref()

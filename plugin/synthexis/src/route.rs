@@ -3,6 +3,9 @@
 //! lines and clamps to 0..1. A line is what one sentence made (Route::line);
 //! its routes on one target average ("both hands" is one line of two
 //! routes and stays inside its range), a route of line 0 counts alone.
+//! A route to a MIDI part (midi.rs) has no value: its trigger goes on and
+//! off, after hysteresis and a minimum dwell (spec cond.hysteresis), and
+//! each edge lands in `Values::events` for the player.
 
 use std::collections::HashMap;
 
@@ -21,6 +24,97 @@ pub enum Target {
     /// A parameter of a plugin in the project, written through the FL
     /// script (bridge.fl_script, REC events).
     Param { plugin: fl::Key, index: u32 },
+    /// A synthexis MIDI part, started and stopped by `trigger`.
+    Part { id: u64, trigger: Trigger },
+}
+
+/// When a route to a MIDI part is on.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Trigger {
+    /// The source reads above 0.55; off again below 0.45 (pinch, mouth).
+    #[default]
+    Above,
+    /// The hand's finger mask (signal hand.shape) has the bits of `mask`
+    /// on the fingers in `care`: one finger shown is care = mask = its bit,
+    /// a named shape cares about all five.
+    Shape { mask: u8, care: u8 },
+}
+
+/// hand.shape carries the 5-bit finger mask (thumb = 0b10000 .. pinky =
+/// 0b00001, the ontology's "shapes" order) as mask / 31.
+pub fn shape_value(mask: u8) -> f32 {
+    f32::from(mask & 31) / 31.0
+}
+
+pub fn shape_mask(v: f32) -> u8 {
+    (v.clamp(0.0, 1.0) * 31.0).round() as u8
+}
+
+/// The bit of finger `f` (0 thumb .. 4 pinky) in a shape mask.
+pub fn finger_bit(f: usize) -> u8 {
+    1 << (4 - f.min(4))
+}
+
+/// A value trigger must hold its new state this long (spec
+/// cond.hysteresis min_dwell); shapes are debounced by the engine.
+const DWELL_S: f64 = 0.060;
+/// A trigger whose source is lost stays on this long (cond.rs occlusion
+/// hold), then goes off; also when its source sends nothing at all.
+const LOST_S: f64 = 0.6;
+
+/// Trigger state of one route.
+#[derive(Clone, Copy, Debug, Default)]
+pub struct Edge {
+    pub on: bool,
+    raw: bool,
+    since: f64,
+    lost: Option<f64>,
+    /// Time of the last sample of the route's own signal.
+    heard: f64,
+}
+
+impl Edge {
+    /// The new state when it changed. `invert` (INV, the flip button):
+    /// a value trigger is on below its threshold, a shape trigger while
+    /// the shape is not shown.
+    fn step(&mut self, trigger: Trigger, s: &Sample, t: f64, open: bool, invert: bool) -> Option<bool> {
+        self.heard = t;
+        if !s.present || s.confidence < GATE_MIN_CONF {
+            let lost = *self.lost.get_or_insert(t);
+            if self.on && t - lost >= LOST_S {
+                (self.on, self.raw) = (false, false);
+                return Some(false);
+            }
+            return None;
+        }
+        self.lost = None;
+        let (raw, dwell) = match trigger {
+            Trigger::Above => {
+                let v = if invert { 1.0 - s.value } else { s.value };
+                (v > if self.raw { 0.45 } else { 0.55 }, DWELL_S)
+            }
+            Trigger::Shape { mask, care } => ((shape_mask(s.value) & care == mask & care) != invert, 0.0),
+        };
+        let raw = raw && open;
+        if raw != self.raw {
+            (self.raw, self.since) = (raw, t);
+        }
+        (self.raw != self.on && t - self.since >= dwell).then(|| {
+            self.on = self.raw;
+            self.on
+        })
+    }
+
+    /// Off when the route's own signal has sent nothing for LOST_S (the
+    /// camera stopped, perception gives no percept): the occlusion hold
+    /// above needs samples to end. `t` is another signal's sample time.
+    fn quiet(&mut self, t: f64) -> Option<bool> {
+        (self.on && t - self.heard >= LOST_S).then(|| {
+            (self.on, self.raw) = (false, false);
+            false
+        })
+    }
 }
 
 #[derive(Debug)]
@@ -52,6 +146,8 @@ pub struct Route {
     /// Last conditioned output; a macro's value is the clamped sum of all
     /// enabled routes' last_v*depth (many-to-many fan-in).
     pub last_v: f32,
+    /// Trigger state of a route to a MIDI part.
+    pub edge: Edge,
 }
 
 impl Route {
@@ -74,6 +170,7 @@ impl Route {
             test: false,
             pending: false,
             last_v: 0.0,
+            edge: Edge::default(),
         }
     }
 
@@ -97,6 +194,12 @@ pub struct Values {
     /// Hands [L, R] the routes of the other plugin instances use (writer.rs
     /// fills it before a hand x sample); `fit_hand_x` adds this table's own.
     pub hands_used: [bool; 2],
+    /// Trigger edges of routes to MIDI parts since the writer last took
+    /// them: (route id, part id, on).
+    pub events: Vec<(u64, u64, bool)>,
+    /// Hands [L, R] that shoot in Pong mode with their fingers paused: the
+    /// gate of every route to a MIDI part on that hand is closed.
+    pub paused: [bool; 2],
 }
 
 impl Values {
@@ -170,6 +273,17 @@ pub const HAND_X_GAP: f32 = 0.08;
 /// shift the split slowly instead of shaking both x routes.
 const CENTRE_TAU_S: f64 = 1.0;
 
+/// The hand (0 = L, 1 = R) a signal belongs to.
+pub fn hand_of(signal: &str) -> Option<usize> {
+    if signal.starts_with("cam0.hand.L.") {
+        Some(0)
+    } else if signal.starts_with("cam0.hand.R.") {
+        Some(1)
+    } else {
+        None
+    }
+}
+
 /// Hands [L, R] the enabled assigned routes use, as source or gate. Test
 /// routes do not count.
 pub fn hands_used(routes: &[Route]) -> [bool; 2] {
@@ -230,10 +344,27 @@ pub fn apply_sample(
     }
     let mut touched: Vec<Target> = Vec::new();
     for r in routes.iter_mut() {
-        if !r.enabled || r.signal != signal {
+        if !r.enabled {
             continue;
         }
-        if r.gates.iter().any(|g| current.last.get(g).is_none_or(|v| *v <= GATE_OPEN)) {
+        if r.signal != signal {
+            // the test triangle keeps coming at 30 Hz when the camera stops
+            if let (Target::Part { id, .. }, Some(on)) = (&r.target, r.edge.quiet(t_s)) {
+                current.events.push((r.id, *id, on));
+            }
+            continue;
+        }
+        let open = !r.gates.iter().any(|g| current.last.get(g).is_none_or(|v| *v <= GATE_OPEN));
+        if let Target::Part { id, trigger } = r.target {
+            // a closed gate ends the note instead of holding a value; a
+            // paused hand (Pong) plays no part
+            let open = open && !hand_of(signal).is_some_and(|h| current.paused[h]);
+            if let Some(on) = r.edge.step(trigger, sample, t_s, open, r.cond.range.invert) {
+                current.events.push((r.id, id, on));
+            }
+            continue;
+        }
+        if !open {
             continue;
         }
         r.last_v = r.cond.step(sample, t_s);
@@ -258,7 +389,7 @@ pub fn apply_sample(
         let new: f32 = lines.iter().map(|l| l.1 / l.2 as f32).sum::<f32>().clamp(0.0, 1.0);
         let old = match &t {
             Target::Macro(i) => &mut current.macros[*i],
-            Target::Param { .. } => current.params.entry(t.clone()).or_insert(f32::NAN),
+            Target::Param { .. } | Target::Part { .. } => current.params.entry(t.clone()).or_insert(f32::NAN),
         };
         if old.is_nan() || (new - *old).abs() > f32::EPSILON {
             *old = new;
@@ -501,6 +632,136 @@ mod tests {
         fit_hand_x(&mut routes, &cur3, r);
         let rg = routes[1].cond.range;
         assert!(rg.in_max - rg.in_min > 0.05, "{rg:?}");
+    }
+
+    #[test]
+    fn a_finger_shown_starts_and_ends_its_part_once() {
+        let index = finger_bit(1);
+        let mut r = Route::to("cam0.hand.R.shape", Target::Part { id: 9, trigger: Trigger::Shape { mask: index, care: index } }, 1.0);
+        r.id = 4;
+        let mut routes = vec![r];
+        let mut cur = Values::default();
+        let shape = |m: u8| s(shape_value(m));
+        // index + middle shown: the index part is on, once
+        for i in 0..5 {
+            apply_sample(&mut routes, &mut cur, "cam0.hand.R.shape", &shape(0b01100), i as f64 / 30.0);
+        }
+        assert_eq!(cur.events, vec![(4, 9, true)]);
+        // the index folds: off; a lost hand holds 600 ms, then nothing more
+        apply_sample(&mut routes, &mut cur, "cam0.hand.R.shape", &shape(0b00100), 0.2);
+        assert_eq!(cur.events, vec![(4, 9, true), (4, 9, false)]);
+        cur.events.clear();
+        apply_sample(&mut routes, &mut cur, "cam0.hand.R.shape", &shape(0b01000), 0.3);
+        let gone = Sample { present: false, ..shape(0b01000) };
+        apply_sample(&mut routes, &mut cur, "cam0.hand.R.shape", &gone, 0.4);
+        apply_sample(&mut routes, &mut cur, "cam0.hand.R.shape", &gone, 0.8);
+        assert_eq!(cur.events, vec![(4, 9, true)], "held through a short loss");
+        apply_sample(&mut routes, &mut cur, "cam0.hand.R.shape", &gone, 1.01);
+        assert_eq!(cur.events, vec![(4, 9, true), (4, 9, false)]);
+        assert!(cur.macros.iter().all(|v| *v == 0.0) && cur.params.is_empty(), "a part target has no value");
+    }
+
+    #[test]
+    fn a_value_trigger_does_not_chatter_around_its_threshold() {
+        let mut r = Route::to("cam0.hand.R.pinch", Target::Part { id: 1, trigger: Trigger::Above }, 1.0);
+        r.id = 2;
+        let mut routes = vec![r];
+        let mut cur = Values::default();
+        // 0.5 +- 0.04 noise never crosses 0.55 / 0.45
+        for i in 0..60 {
+            let v = if i % 2 == 0 { 0.54 } else { 0.46 };
+            apply_sample(&mut routes, &mut cur, "cam0.hand.R.pinch", &s(v), i as f64 / 30.0);
+        }
+        assert!(cur.events.is_empty());
+        // a pinch held for one frame only is not a note; held 60 ms it is
+        apply_sample(&mut routes, &mut cur, "cam0.hand.R.pinch", &s(0.9), 2.0);
+        apply_sample(&mut routes, &mut cur, "cam0.hand.R.pinch", &s(0.3), 2.033);
+        assert!(cur.events.is_empty());
+        for i in 0..4 {
+            apply_sample(&mut routes, &mut cur, "cam0.hand.R.pinch", &s(0.9), 3.0 + i as f64 / 30.0);
+        }
+        assert_eq!(cur.events, vec![(2, 1, true)]);
+    }
+
+    #[test]
+    fn an_inverted_trigger_plays_on_the_other_side() {
+        // "closing my mouth plays the snare": S:mouth.open INV
+        let mut r = Route::to("cam0.mouth.open", Target::Part { id: 1, trigger: Trigger::Above }, 1.0);
+        (r.id, r.cond.range.invert) = (2, true);
+        let mut routes = vec![r];
+        let mut cur = Values::default();
+        let mut feed = |v: f32, t0: f64, cur: &mut Values| {
+            for i in 0..4 {
+                apply_sample(&mut routes, cur, "cam0.mouth.open", &s(v), t0 + i as f64 / 30.0);
+            }
+        };
+        feed(0.9, 0.0, &mut cur);
+        assert!(cur.events.is_empty(), "open mouth: nothing");
+        feed(0.1, 1.0, &mut cur);
+        assert_eq!(cur.events, vec![(2, 1, true)]);
+        // the hysteresis turns round with it: 0.5 holds, 0.6 ends it
+        feed(0.5, 2.0, &mut cur);
+        assert_eq!(cur.events, vec![(2, 1, true)]);
+        feed(0.6, 3.0, &mut cur);
+        assert_eq!(cur.events, vec![(2, 1, true), (2, 1, false)]);
+        // a flipped finger line plays while the finger is not shown
+        let index = finger_bit(1);
+        let mut r = Route::to("cam0.hand.R.shape", Target::Part { id: 9, trigger: Trigger::Shape { mask: index, care: index } }, 1.0);
+        (r.id, r.cond.range.invert) = (4, true);
+        let mut routes = vec![r];
+        let mut cur = Values::default();
+        apply_sample(&mut routes, &mut cur, "cam0.hand.R.shape", &s(shape_value(index)), 0.0);
+        assert!(cur.events.is_empty());
+        apply_sample(&mut routes, &mut cur, "cam0.hand.R.shape", &s(shape_value(0)), 0.1);
+        assert_eq!(cur.events, vec![(4, 9, true)]);
+    }
+
+    #[test]
+    fn a_trigger_ends_when_its_source_sends_nothing_more() {
+        let index = finger_bit(1);
+        let mut r = Route::to("cam0.hand.R.shape", Target::Part { id: 9, trigger: Trigger::Shape { mask: index, care: index } }, 1.0);
+        r.id = 4;
+        let mut routes = vec![r, Route::new(SIG_TRIANGLE, 31, 1.0)];
+        let mut cur = Values::default();
+        for i in 0..3 {
+            apply_sample(&mut routes, &mut cur, "cam0.hand.R.shape", &s(shape_value(index)), i as f64 / 30.0);
+        }
+        assert_eq!(cur.events, vec![(4, 9, true)]);
+        // the camera stops: no hand sample comes, present or not; the
+        // triangle still does
+        for i in 0..30 {
+            apply_sample(&mut routes, &mut cur, SIG_TRIANGLE, &s(0.5), 0.1 + i as f64 / 60.0);
+        }
+        assert_eq!(cur.events, vec![(4, 9, true)], "held for {LOST_S} s");
+        for i in 0..10 {
+            apply_sample(&mut routes, &mut cur, SIG_TRIANGLE, &s(0.5), 0.7 + i as f64 / 30.0);
+        }
+        assert_eq!(cur.events, vec![(4, 9, true), (4, 9, false)]);
+        // frames come back with the finger still up: it plays again
+        apply_sample(&mut routes, &mut cur, "cam0.hand.R.shape", &s(shape_value(index)), 2.0);
+        assert_eq!(cur.events, vec![(4, 9, true), (4, 9, false), (4, 9, true)]);
+    }
+
+    #[test]
+    fn a_paused_hand_plays_no_part_and_keeps_its_parameter_routes() {
+        let index = finger_bit(1);
+        let mut part = Route::to("cam0.hand.R.shape", Target::Part { id: 9, trigger: Trigger::Shape { mask: index, care: index } }, 1.0);
+        part.id = 4;
+        let mut left = Route::to("cam0.hand.L.shape", Target::Part { id: 8, trigger: Trigger::Shape { mask: index, care: index } }, 1.0);
+        left.id = 5;
+        let mut routes = vec![part, left, Route::new("cam0.hand.R.pinch", 0, 1.0)];
+        let mut cur = Values { paused: [false, true], ..Values::default() };
+        for i in 0..30 {
+            let t = i as f64 / 30.0;
+            apply_sample(&mut routes, &mut cur, "cam0.hand.R.shape", &s(shape_value(index)), t);
+            apply_sample(&mut routes, &mut cur, "cam0.hand.L.shape", &s(shape_value(index)), t);
+            apply_sample(&mut routes, &mut cur, "cam0.hand.R.pinch", &s(0.8), t);
+        }
+        assert_eq!(cur.events, vec![(5, 8, true)], "only the left hand plays");
+        assert!(cur.macros[0] > 0.7, "the right pinch still moves its macro: {}", cur.macros[0]);
+        cur.paused = [false, false];
+        apply_sample(&mut routes, &mut cur, "cam0.hand.R.shape", &s(shape_value(index)), 1.1);
+        assert_eq!(cur.events, vec![(5, 8, true), (4, 9, true)]);
     }
 
     #[test]

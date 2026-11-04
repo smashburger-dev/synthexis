@@ -23,6 +23,7 @@ pub mod pin;
 pub mod resolve;
 mod rules;
 mod text;
+pub mod verb;
 
 use std::path::Path;
 use std::time::Instant;

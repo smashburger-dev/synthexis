@@ -18,10 +18,11 @@ const ARTICLES: &[&str] = &[
 /// head ..."), a list or a manner ("pinch und drehen", "indem ich").
 const POSSESSIVES: &[&str] = &["my", "mein", "meine", "meiner", "meinem", "meinen"];
 const WEAK_AFTER: &[&str] = &["and", "und", "then", "dann", "indem ich", "dass ich"];
-/// Side words, skipped like articles ("wenn ich die linke Faust").
+/// Side words, skipped like articles ("wenn ich die linke Faust", "wenn
+/// ich links zwinkere"). No gesture phrase starts with one.
 const SIDES: &[&str] = &[
-    "left", "right", "linke", "linken", "linker", "linkes", "rechte", "rechten", "rechter",
-    "rechtes",
+    "left", "right", "linke", "linken", "linker", "linkes", "links", "rechte", "rechten",
+    "rechter", "rechtes", "rechts",
 ];
 const SWITCH_WORDS: &[&str] = &[
     "on", "off", "toggle", "toggles", "switch", "switches", "enable", "enables", "disable",
@@ -30,7 +31,9 @@ const SWITCH_WORDS: &[&str] = &[
     "umschalten", "aktivieren", "deaktivieren", "toggeln", "stumm", "stummschalten", "muten",
 ];
 const CLAUSE_END: &[char] = &['.', ',', ';', '!', '?', ':'];
-const MAX_WORDS: usize = 3;
+/// Words a query may span: "Kopf nach rechts dre" is four, "tilt my head
+/// to the le" six; 963 of the 2,751 gesture phrases have four to six.
+const MAX_WORDS: usize = 6;
 
 /// The hand side the words name, the last one winning: "with my left
 /// hand" -> left, "die rechte" -> right, "beide Hände" -> both.
@@ -71,7 +74,7 @@ pub fn clause_start(text: &str, cursor: usize, floor: usize) -> usize {
         .map_or(floor, |i| floor + i + 1)
 }
 
-/// The last 1..=3 words before the cursor inside its clause; none when the
+/// The last 1..=MAX_WORDS words before the cursor inside its clause; none when the
 /// cursor follows a space (nothing typed yet) or `floor` (a chip's end).
 pub fn queries(text: &str, cursor: usize, floor: usize) -> Vec<QuerySpan> {
     let lo = clause_start(text, cursor, floor);

@@ -10,7 +10,7 @@
 ## Map
 
 - `spec/synthexis.yaml`: single source of truth for features, signals, conditioners, targets and decisions. FigJam diagrams and task lists are generated from it.
-- `docs/`: judging analysis, architecture, distillation design, credit texts.
+- `docs/`: judging analysis, architecture, student model design, credit texts.
 - `probes/`: feasibility probes, one folder each, with a `RESULT.md` holding the measured numbers and the exact command.
 - `private/`: gated hackathon material (git-ignored).
 

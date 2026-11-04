@@ -113,8 +113,8 @@ pub struct SynthexisParams {
     #[id = "hand_role_r"]
     pub hand_role_right: EnumParam<HandRole>,
 
-    /// Editor state (window size + user state across opens).
-    #[persist = "editor-state"]
+    /// Editor state (the window's size). Not persisted (v3 2.8): the window
+    /// has one fixed size, and a project saved at 1200 x 820 opens at it.
     pub editor_state: Arc<EguiState>,
 
     /// Pinned plugin picker target (fl::Key id); empty follows FL focus.
@@ -123,6 +123,21 @@ pub struct SynthexisParams {
     /// Kept routes of the sentence field (saved.rs JSON).
     #[persist = "routes"]
     pub routes: Arc<RwLock<String>>,
+    /// MIDI parts, key and binds (midi::Store JSON).
+    #[persist = "midi"]
+    pub midi: Arc<RwLock<String>>,
+    /// Pong mode (pong::setup::Setup JSON).
+    #[persist = "pong"]
+    pub pong: Arc<RwLock<String>>,
+    /// The open sections and the picked preset (preset::top::View JSON);
+    /// empty in projects from before the redesign.
+    #[persist = "view"]
+    pub view: Arc<RwLock<String>>,
+    /// The profiles 1 2 3 and the active one (preset::profile::Profiles
+    /// JSON); empty in older projects, which open on profile 1 holding
+    /// their setup.
+    #[persist = "profiles"]
+    pub profiles: Arc<RwLock<String>>,
 }
 
 impl SynthexisParams {
@@ -170,9 +185,15 @@ impl Default for SynthexisParams {
             test_signal: BoolParam::new("Test signal", test_on),
             hand_role_left: EnumParam::new("Hand role left", HandRole::Parameter),
             hand_role_right: EnumParam::new("Hand role right", HandRole::Parameter),
-            editor_state: EguiState::from_size(700, 760),
+            // the one fixed size (ui-redesign.md v3 2.8); not saved with the
+            // project, so an old project opens at it too
+            editor_state: EguiState::from_size(crate::editor::WIN_W, crate::editor::WIN_H),
             target_pin: Arc::new(RwLock::new(String::new())),
             routes: Arc::new(RwLock::new(String::new())),
+            midi: Arc::new(RwLock::new(String::new())),
+            pong: Arc::new(RwLock::new(String::new())),
+            view: Arc::new(RwLock::new(String::new())),
+            profiles: Arc::new(RwLock::new(String::new())),
         }
     }
 }

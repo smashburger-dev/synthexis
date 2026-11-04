@@ -224,6 +224,27 @@ impl Route {
         self.items.iter().any(|it| tok(it).starts_with("S:"))
     }
 
+    fn has_target(&self) -> bool {
+        self.items.iter().any(|it| tok(it).starts_with("T:"))
+    }
+
+    /// Drops a TRACK token whose span lies inside `b` and returns the
+    /// span's text: a target chip on those words names what plays, not the
+    /// channel.
+    fn drop_track_in(&mut self, b: (usize, usize)) -> Option<String> {
+        let i = (0..self.items.len().saturating_sub(1)).find(|&i| {
+            tok(&self.items[i]) == "TRACK"
+                && matches!(&self.items[i + 1], Item::Span { bytes, .. } if b.0 <= bytes.0 && bytes.1 <= b.1)
+        })?;
+        let text = match &self.items[i + 1] {
+            Item::Span { text, .. } => text.clone(),
+            Item::Token(_) => String::new(),
+        };
+        self.remove(i + 1);
+        self.remove(i);
+        Some(text)
+    }
+
     /// Position after the leading source tokens.
     fn after_source(&self) -> usize {
         self.items
@@ -526,8 +547,21 @@ pub fn pin_spans(items: &[Item], text: &str, spans: &[Tagged], pins: &[Pin]) -> 
             .iter_mut()
             .filter_map(|r| r.target_for_kind(kind).map(|(i, same)| (r, i, same)))
             .min_by_key(|(r, _, same)| (!same, r.gap(p.bytes)));
-        match near {
-            Some((r, i, _)) => r.set_target(Some(i), kind, p.bytes),
+        if let Some((r, i, _)) = near {
+            r.set_target(Some(i), kind, p.bytes);
+            continue;
+        }
+        // no free target token: the nearest route with a source and no
+        // target takes it ("blink left to play the kick": the parser read
+        // "the kick" as a channel, TRACK =kick), else a route of its own
+        let bare = routes.iter_mut().filter(|r| r.has_source() && !r.has_target()).min_by_key(|r| r.gap(p.bytes));
+        match bare {
+            Some(r) => {
+                // a pattern keeps the name the parser read as the channel
+                let named = r.drop_track_in(p.bytes).filter(|_| kind == "midi.pattern");
+                let kind = named.map_or_else(|| kind.clone(), |n| format!("{kind}:{n}"));
+                r.set_target(None, &kind, p.bytes);
+            }
             None => {
                 let mut r = Route::default();
                 r.set_target(None, kind, p.bytes);
@@ -682,6 +716,14 @@ mod tests {
         let t = "Akkord spielen";
         let out = run(t, &["I:none"], &[target(t, "Akkord spielen", "midi.chord")]);
         assert_eq!(out, ["I:map", "<route>", "T:midi.chord:", "</route>"]);
+    }
+
+    #[test]
+    fn target_chip_joins_the_route_whose_source_has_no_target() {
+        let t = "blink left to play the kick";
+        let fr = ["I:map", "<route>", "S:eye.open", "side:left", "TRACK", "=kick", "INV", "</route>"];
+        let out = run(t, &fr, &[target(t, "kick", "midi.pattern")]);
+        assert_eq!(out, ["I:map", "<route>", "S:eye.open", "side:left", "T:midi.pattern:kick", "INV", "</route>"]);
     }
 
     #[test]

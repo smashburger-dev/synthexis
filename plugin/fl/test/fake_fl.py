@@ -12,6 +12,10 @@ synthexis; channel 0 Sampler (no plugin), channel 1 Serum 2 with 2,700
 named parameters, own CC names and FL's CC entries from 4096. The focus
 script clicks Portal, the mixer, synthexis, Serum 2, then adds Pro-Q 3 to
 track 3 slot 0 and clicks it.
+
+--check [script]: no frames, no plugin. Runs the script's channel rules
+against a rack with an automation clip, an audio clip and a group filter
+that renumbers the plain channel index; exits 1 when one breaks.
 """
 
 import json
@@ -25,9 +29,27 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 SCRIPT = os.path.join(HERE, "..", "device_synthexis_bridge.py")
 
 FX = {(0, 0): "ValhallaSupermassive", (0, 1): "Portal", (2, 0): "synthexis"}
-GENS = {0: ("Sampler", None), 1: ("Serum 2", "Serum 2")}
+GENS = {0: ("Sampler", None), 1: ("Serum 2", "Serum 2")}  # global index -> (name, plugin)
+TYPES = {}  # global index -> midi.CT_*, when not Sampler / plugin channel
 TRACKS = ["Master", "Insert 1", "Insert 2", "Insert 3"]
 FOCUS = {"name": "", "fx": None, "form": -1}
+# global indices the channel rack's group filter shows, None = "All"; the
+# plain (group) index counts these only
+RACK = {"group": None}
+NOTES = []  # (global channel, note, velocity) as midiNoteOn got them
+SETS = []  # (index, slot, param, value) as setParamValue got them
+CT_SAMPLER, CT_HYBRID, CT_GENPLUG, CT_LAYER, CT_AUDIOCLIP, CT_AUTOCLIP = range(6)
+
+
+def rack(i, glob):
+    """Global channel index of channel `i`, a group index unless `glob`."""
+    if glob or RACK["group"] is None:
+        if i not in GENS:
+            raise TypeError("channel index out of range")
+        return i
+    if not 0 <= i < len(RACK["group"]):
+        raise TypeError("channel index out of range")
+    return RACK["group"][i]
 
 
 def params_of(plugin):
@@ -41,9 +63,9 @@ def params_of(plugin):
     return names
 
 
-def plugin_at(index, slot):
+def plugin_at(index, slot, glob=False):
     if slot == -1:
-        return GENS.get(index, (None, None))[1]
+        return GENS[rack(index, glob)][1]
     return FX.get((index, slot))
 
 
@@ -65,29 +87,57 @@ def install_fakes():
     midi.HW_Dirty_FocusedWindow = 32
     midi.REC_Plug_Plugin_First = 1879080960
     midi.REC_MIDIController = 4
+    midi.PIM_None = 0
+    (midi.CT_Sampler, midi.CT_Hybrid, midi.CT_GenPlug, midi.CT_Layer, midi.CT_AudioClip,
+     midi.CT_AutoClip) = range(6)
     mixer.getTrackPluginId = lambda t, s: (t << 22) + (s << 16)
     general.processRECEvent = lambda eid, v, flags: log("fake: rec", eid, v) or v
-    plugins.setParamValue = lambda v, p, index, slot=-1, *_: log("fake: set", index, slot, p, v)
+
+    def set_param(v, p, index, slot=-1, pickup=0, glob=False):
+        at = rack(index, glob) if slot == -1 else index
+        SETS.append((at, slot, p, v))
+        log("fake: set", at, slot, p, v)
+
+    plugins.setParamValue = set_param
     mixer.trackCount = lambda: len(TRACKS)
     mixer.getTrackName = lambda t: TRACKS[t]
     mixer.getActiveEffectIndex = lambda: FOCUS["fx"]
-    channels.channelCount = lambda: len(GENS)
-    channels.getChannelName = lambda i: GENS[i][0]
-    channels.getTargetFxTrack = lambda i: 0
+    channels.channelCount = lambda glob=False: len(GENS) if glob or RACK["group"] is None else len(RACK["group"])
+    channels.getChannelName = lambda i, glob=False: GENS[rack(i, glob)][0]
+    channels.getChannelIndex = lambda i: rack(i, False)
 
-    def valid(index, slot=-1, *_):
-        return plugin_at(index, slot) is not None
+    def target_fx(i, glob=False):
+        rack(i, glob)  # raises for a channel outside the rack, like FL
+        return 0
 
-    def name(index, slot=-1, user=False, *_):
-        p = plugin_at(index, slot)
+    def channel_type(i, glob=False):
+        g = rack(i, glob)
+        return TYPES.get(g, CT_SAMPLER if GENS[g][1] is None else CT_GENPLUG)
+
+    def note_on(c, n, v, *_):
+        NOTES.append((c, n, v))
+        log("fake: note", c, n, v)
+
+    channels.getTargetFxTrack = target_fx
+    channels.getChannelType = channel_type
+    channels.midiNoteOn = note_on
+
+    def valid(index, slot=-1, glob=False):
+        try:
+            return plugin_at(index, slot, glob) is not None
+        except TypeError:
+            return False
+
+    def name(index, slot=-1, user=False, glob=False):
+        p = plugin_at(index, slot, glob)
         if p is None:
             raise TypeError("no plugin")
         return "" if user else p
 
     plugins.isValid = valid
     plugins.getPluginName = name
-    plugins.getParamCount = lambda index, slot=-1, *_: 4240
-    plugins.getParamName = lambda p, index, slot=-1, *_: params_of(plugin_at(index, slot)).get(p, "")
+    plugins.getParamCount = lambda index, slot=-1, glob=False: 4240
+    plugins.getParamName = lambda p, index, slot=-1, glob=False: params_of(plugin_at(index, slot, glob)).get(p, "")
     ui.getFocusedPluginName = lambda: FOCUS["name"]
     ui.getFocusedFormID = lambda: FOCUS["form"]
     for mod in (device, midi, mixer, plugins, channels, ui, general):
@@ -114,10 +164,67 @@ STEPS = [
 ]
 
 
+def load(script):
+    bridge = types.ModuleType("bridge")
+    exec(compile(open(script).read(), script, "exec"), bridge.__dict__)
+    return bridge
+
+
+def check(script):
+    install_fakes()
+    sys.modules["device"].midiOutSysex = lambda data: None
+    GENS.clear()
+    GENS.update({0: ("Kick", None), 1: ("Filter Cutoff", None), 2: ("3x Osc", "3x Osc"), 3: ("Loop", None),
+                 4: ("Perc", None)})
+    TYPES.update({1: CT_AUTOCLIP, 3: CT_AUDIOCLIP})
+    bridge = load(script)
+    bridge.OnInit()
+    failed = []
+
+    def expect(rule, got, want):
+        ok = got == want
+        log(("ok  " if ok else "FAIL"), rule, "" if ok else "got %r, want %r" % (got, want))
+        if not ok:
+            failed.append(rule)
+
+    def rows():
+        return [r[:3] for r in bridge._handle({"cmd": "inv"})["rows"] if r[0] != "fx"]
+
+    every = [["ch", 0, "Kick"], ["gen", 2, "3x Osc"], ["ch", 4, "Perc"]]
+    expect("note channels: the clips are left out", rows(), every)
+    bridge._handle({"cmd": "notes", "e": [[2, 60, 100]]})
+    # a group without 3x Osc: its plain index 2 is Perc
+    RACK["group"] = [0, 1, 4]
+    expect("inventory: the group filter changes no index", rows(), every)
+    bridge._handle({"cmd": "notes", "e": [[2, 60, 0], [2, 62, 100]]})
+    expect("an off after a filter switch reaches its on's channel", NOTES[:2], [(2, 60, 100), (2, 60, 0)])
+    expect("a note under a group filter plays on the global channel", NOTES[2:], [(2, 62, 100)])
+    bridge._handle({"cmd": "alloff"})
+    expect("alloff ends it there, nothing held", (NOTES[3:], sorted(bridge._held)), ([(2, 62, 0)], []))
+    expect("rec on a generator by global index",
+           (bridge._handle({"cmd": "rec", "ch": 2, "p": "3x Osc", "i": 0, "v": 0.5}), SETS),
+           ({"ok": True}, [(2, -1, 0, 0.5)]))
+    expect("plist of a generator by global index",
+           bridge._handle({"cmd": "plist", "index": 2, "slot": -1}).get("plugin"), "3x Osc")
+    RACK["group"] = [0, 4]
+    FOCUS.update(name="3x Osc", fx=None, form=2)
+    expect("focus on a generator outside the group", bridge._focus().get("ch"), 2)
+    # a channel above a sounding note is deleted: the off follows the name
+    RACK["group"] = None
+    del NOTES[:]
+    bridge._handle({"cmd": "notes", "e": [[2, 64, 100]]})
+    moved = {i - 1 if i > 0 else i: v for i, v in GENS.items() if i != 0}
+    GENS.clear()
+    GENS.update(moved)
+    bridge._handle({"cmd": "notes", "e": [[2, 64, 0]]})
+    expect("an off after a deleted channel above reaches the moved channel", NOTES, [(2, 64, 100), (1, 64, 0)])
+    expect("nothing held after it", dict(bridge._held), {})
+    return 1 if failed else 0
+
+
 def main():
     install_fakes()
-    bridge = types.ModuleType("bridge")
-    exec(compile(open(SCRIPT).read(), SCRIPT, "exec"), bridge.__dict__)
+    bridge = load(SCRIPT)
     bridge.OnInit()
     t0, step, served, biggest = time.time(), 0, 0, 0
     while True:
@@ -138,6 +245,8 @@ def main():
 
 
 if __name__ == "__main__":
+    if sys.argv[1:2] == ["--check"]:
+        sys.exit(check(sys.argv[2] if len(sys.argv) > 2 else SCRIPT))
     real_out = out
 
     def counting(data):
