@@ -249,8 +249,10 @@ pub struct Engine {
     prior: Vec<f32>,
     plugin: Option<Plugin>,
     recent: Vec<String>,
-    /// (kind, phrase) of the non-parameter targets.
+    /// (kind, phrase) of the non-parameter targets; the first `base` come
+    /// from the vocabulary, the rest are the user's own (set_user_targets).
     targets: Vec<(String, String)>,
+    base: usize,
     tindex: Index,
     /// Folded training span texts, sorted, with their class and count.
     spans: Vec<(Vec<char>, String, u32)>,
@@ -312,6 +314,7 @@ impl Engine {
             plugin: None,
             recent: Vec::new(),
             targets: Vec::new(),
+            base: 0,
             tindex: Index::new(std::iter::empty()),
             spans: Vec::new(),
             span_weight: SPAN_PRIOR,
@@ -337,6 +340,9 @@ impl Engine {
     /// The plugin's language setting: English shows English items only,
     /// German every item with German ones first; None shows every item.
     pub fn set_lang(&mut self, lang: Option<Lang>) {
+        for l in self.target_lang.iter_mut().skip(self.base) {
+            *l = lang;
+        }
         self.lang = lang;
     }
 
@@ -398,8 +404,23 @@ impl Engine {
     /// Targets that are no plugin parameter, as (kind, phrase).
     pub fn with_targets(mut self, targets: Vec<(String, String)>) -> Self {
         self.tindex = Index::new(targets.iter().map(|(_, p)| p.as_str()));
+        self.base = targets.len();
         self.targets = targets;
         self
+    }
+
+    /// The user's own targets, as (kind, phrase): the names of their MIDI
+    /// patterns, the chords of their key, the notes they play. They show in
+    /// both languages and replace the previous user targets.
+    pub fn set_user_targets(&mut self, user: Vec<(String, String)>) {
+        if self.targets.get(self.base..).is_some_and(|t| t == user.as_slice()) {
+            return;
+        }
+        self.targets.truncate(self.base);
+        self.target_lang.resize(self.base, None);
+        self.target_lang.extend(std::iter::repeat_n(self.lang, user.len()));
+        self.targets.extend(user);
+        self.tindex = Index::new(self.targets.iter().map(|(_, p)| p.as_str()));
     }
 
     /// The plugin whose parameters complete (the target picker's choice).

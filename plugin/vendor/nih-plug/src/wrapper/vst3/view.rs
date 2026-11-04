@@ -147,10 +147,16 @@ impl<P: Vst3Plugin> WrapperView<P> {
                     mem::transmute(&self.__iplugviewvptr as *const *const _);
                 let result = plug_frame.resize_view(plug_view, &mut size);
 
-                debug_assert_eq!(
-                    result, kResultOk,
-                    "The host denied the resize, we currently don't handle this for VST3 plugins"
-                );
+                // synthexis patch: a denied resize is logged instead of panicking in debug
+                // builds; the caller still gets false (vendor/PATCHES.md).
+                if result != kResultOk {
+                    nih_log!(
+                        "The host denied the resize to {}x{} (result {}), the view keeps its size",
+                        size.right,
+                        size.bottom,
+                        result
+                    );
+                }
 
                 result == kResultOk
             }

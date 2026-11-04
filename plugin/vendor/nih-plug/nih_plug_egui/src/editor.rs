@@ -107,20 +107,21 @@ where
             move |egui_ctx, queue, state| {
                 let setter = ParamSetter::new(context.as_ref());
 
-                // If the window was requested to resize
-                if let Some(new_size) = egui_state.requested_size.swap(None) {
-                    // Ask the plugin host to resize to self.size()
-                    if context.request_resize() {
-                        // Resize the content of egui window
-                        queue.resize(PhySize::new(new_size.0, new_size.1));
-                        egui_ctx.send_viewport_cmd(ViewportCommand::InnerSize(Vec2::new(
-                            new_size.0 as f32,
-                            new_size.1 as f32,
-                        )));
-
-                        // Update the state
-                        egui_state.size.store(new_size);
-                    }
+                // If the window was requested to resize, ask the plugin host to resize to
+                // self.size(). synthexis patch: see `take_resize_request` (vendor/PATCHES.md).
+                if let Some(new_size) =
+                    take_resize_request(&egui_state, || context.request_resize())
+                {
+                    // Resize the content of egui window. The queue takes physical pixels, the
+                    // viewport command logical ones.
+                    let pixels_per_point = egui_ctx
+                        .native_pixels_per_point()
+                        .unwrap_or_else(|| egui_ctx.pixels_per_point());
+                    queue.resize(physical_size(new_size, pixels_per_point));
+                    egui_ctx.send_viewport_cmd(ViewportCommand::InnerSize(Vec2::new(
+                        new_size.0 as f32,
+                        new_size.1 as f32,
+                    )));
                 }
 
                 // For now, just always redraw. Most plugin GUIs have meters, and those almost always
@@ -175,6 +176,36 @@ where
     }
 }
 
+/// Takes a pending resize request and runs `request_resize` for it. Returns the new size when the
+/// request succeeded, `None` without a request or when it failed.
+///
+/// synthexis patch: the new size is stored before `request_resize` runs, because the wrappers read
+/// [`Editor::size()`] from inside it (the VST3 wrapper on macOS calls the host synchronously when
+/// it is on the GUI thread, the standalone queues `GuiTask::Resize(size())`). Upstream stored the
+/// size only afterwards, so both resized to the old size. A failed request restores the old size.
+fn take_resize_request(
+    egui_state: &EguiState,
+    request_resize: impl FnOnce() -> bool,
+) -> Option<(u32, u32)> {
+    let new_size = egui_state.requested_size.swap(None)?;
+    let old_size = egui_state.size.swap(new_size);
+    if request_resize() {
+        Some(new_size)
+    } else {
+        egui_state.size.store(old_size);
+        None
+    }
+}
+
+/// A logical size in physical pixels, at least one pixel per side.
+///
+/// synthexis patch: upstream passed the logical size to `Queue::resize`, which expects physical
+/// pixels, so a Retina window laid out at half its size until the next `Resized` event.
+fn physical_size(logical: (u32, u32), pixels_per_point: f32) -> PhySize {
+    let scale = |v: u32| (v as f32 * pixels_per_point).round().max(1.0) as u32;
+    PhySize::new(scale(logical.0), scale(logical.1))
+}
+
 /// The window handle used for [`EguiEditor`].
 struct EguiEditorHandle {
     egui_state: Arc<EguiState>,
@@ -190,5 +221,79 @@ impl Drop for EguiEditorHandle {
         self.egui_state.open.store(false, Ordering::Release);
         // XXX: This should automatically happen when the handle gets dropped, but apparently not
         self.window.close();
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::cell::Cell;
+
+    fn editor(state: &Arc<EguiState>) -> EguiEditor<()> {
+        EguiEditor {
+            egui_state: state.clone(),
+            user_state: Arc::new(RwLock::new(())),
+            build: Arc::new(|_, _| {}),
+            update: Arc::new(|_, _, _| {}),
+            scaling_factor: AtomicCell::new(Some(1.0)),
+        }
+    }
+
+    #[test]
+    fn size_reports_the_requested_size_while_the_request_runs() {
+        let state = EguiState::from_size(1000, 640);
+        let editor = editor(&state);
+        state.set_requested_size((1200, 820));
+        // The request is pending: size() already answers with it.
+        assert_eq!(editor.size(), (1200, 820));
+
+        let seen = Cell::new((0, 0));
+        let taken = take_resize_request(&state, || {
+            seen.set(editor.size());
+            true
+        });
+        assert_eq!(seen.get(), (1200, 820));
+        assert_eq!(taken, Some((1200, 820)));
+        assert_eq!(editor.size(), (1200, 820));
+        assert_eq!(state.size(), (1200, 820));
+    }
+
+    #[test]
+    fn a_failed_request_restores_the_old_size() {
+        let state = EguiState::from_size(1000, 640);
+        let editor = editor(&state);
+        state.set_requested_size((1200, 900));
+
+        let seen = Cell::new((0, 0));
+        let taken = take_resize_request(&state, || {
+            seen.set(editor.size());
+            false
+        });
+        assert_eq!(seen.get(), (1200, 900));
+        assert_eq!(taken, None);
+        assert_eq!(editor.size(), (1000, 640));
+    }
+
+    #[test]
+    fn no_request_means_no_call() {
+        let state = EguiState::from_size(1000, 640);
+        let called = Cell::new(false);
+        let taken = take_resize_request(&state, || {
+            called.set(true);
+            true
+        });
+        assert_eq!(taken, None);
+        assert!(!called.get());
+        assert_eq!(state.size(), (1000, 640));
+    }
+
+    #[test]
+    fn the_queue_gets_physical_pixels() {
+        let retina = physical_size((1200, 820), 2.0);
+        assert_eq!((retina.width, retina.height), (2400, 1640));
+        let odd = physical_size((1201, 721), 1.5);
+        assert_eq!((odd.width, odd.height), (1802, 1082));
+        let flat = physical_size((0, 0), 1.0);
+        assert_eq!((flat.width, flat.height), (1, 1));
     }
 }

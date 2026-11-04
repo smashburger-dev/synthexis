@@ -1,0 +1,35 @@
+# lang	sentence	source	side	inv	target kind (param | macro | midi)	chip words (the gesture the completion offers)	target chip (words=kind), the pattern the completion offers
+de	wenn ich den Mund öffne, öffne den Filter	mouth.open	-	0	param	Mund öffne
+en	when I open my mouth the filter opens	mouth.open	-	0	param	open my mouth
+de	Mund auf macht den Reverb lauter	mouth.open	-	0	param	Mund auf
+en	open my mouth to raise the reverb mix	mouth.open	-	0	param	open my mouth
+de	wenn ich den Mund aufmache, geht der Cutoff hoch	mouth.open	-	0	param	Mund aufmache
+en	mouth open drives signal 3	mouth.open	-	0	macro	mouth open
+de	wenn ich den Mund aufmache, spiel eine Snare	mouth.open	-	0	midi	Mund aufmache
+en	open my mouth to play a snare	mouth.open	-	0	midi	open my mouth
+de	wenn ich das linke Auge schließe, spiel die Kick	eye.open	left	1	midi	Auge schließe
+en	blink left to play the kick	eye.open	left	1	midi	blink	kick=midi.pattern
+de	zwinker rechts für die Hi-Hat	eye.open	right	1	midi	zwinker
+en	wink right to play the hi-hat	eye.open	right	1	midi	wink	hi-hat=midi.pattern
+de	linkes Auge zu steuert die Lautstärke	eye.open	left	1	param	Auge zu
+en	closing my right eye lowers the volume	eye.open	right	0	param	closing my right eye
+de	das rechte Auge steuert Signal 5	eye.open	right	0	macro	Auge
+en	my left eye opens the filter	eye.open	left	0	param	left eye
+de	wenn ich den Kopf drehe, pann nach links und rechts	head.yaw	-	0	param	Kopf drehe
+en	turn my head to pan left and right	head.yaw	-	0	param	turn my head
+de	Kopf drehen steuert den Cutoff	head.yaw	-	0	param	Kopf drehen
+en	head turn controls signal 4	head.yaw	-	0	macro	head turn
+de	wenn ich nicke, spiel einen Akkord	head.pitch	-	0	midi	nicke
+en	nod my head to play a chord	head.pitch	-	0	midi	nod my head
+de	Kopf nach oben öffnet den Filter	head.pitch	-	0	param	Kopf nach oben
+en	looking up raises the resonance	head.pitch	-	0	param	looking up
+de	wenn ich den Kopf neige, fahr den Cutoff	head.roll	-	0	param	Kopf neige
+en	tilt my head to sweep the cutoff	head.roll	-	0	param	tilt my head
+de	Kopf zur Seite neigen steuert Signal 6	head.roll	-	0	macro	Kopf zur Seite neigen
+en	tilt my head to play an A minor chord	head.roll	-	0	midi	tilt my head
+de	wenn ich lächle, mehr Reverb	face.smile	-	0	param	lächle
+en	smile to open the filter	face.smile	-	0	param	smile
+en	tilt my head to the left to lower the cutoff	head.roll	-	0	param	tilt my head to the left
+de	wenn ich den Kopf zur Schulter neige, öffne den Filter	head.roll	-	0	param	Kopf zur Schulter
+en	turn my head up to open the filter	head.pitch	-	0	param	turn my head up
+de	wenn ich den Kopf nach oben drehe, öffne den Filter	head.pitch	-	0	param	Kopf nach oben drehe

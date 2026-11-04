@@ -183,8 +183,9 @@ fn work<P>(
     }
 }
 
-/// Parses, pins, resolves; logs the frame and returns the reply.
-fn parse(parser: &Parser, text: &str, pins: &[Pin], scope: Option<&Scope>) -> Reply {
+/// Parses, pins, resolves; logs the frame and returns the reply (also the
+/// tests' path to real parser output, assign.rs).
+pub(crate) fn parse(parser: &Parser, text: &str, pins: &[Pin], scope: Option<&Scope>) -> Reply {
     let t0 = Instant::now();
     let p = match parser.parse(text) {
         Ok(p) => p,

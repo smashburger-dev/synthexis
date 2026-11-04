@@ -3,9 +3,10 @@
 //! person, not the project, so a project saved in German opens in English
 //! for someone else). JSON in ~/Library/Application Support/synthexis/
 //! settings.json, $SYNTHEXIS_SETTINGS overrides the path. A missing or
-//! broken file gives the defaults (English, completion on); every change is
-//! written at once, through a temp file and a rename, and keys this build
-//! does not know are kept.
+//! broken file gives the defaults (English, completion on, every face
+//! overlay box and its value shown); every change is written at once,
+//! through a temp file and a rename, and keys this build does not know are
+//! kept.
 
 use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
@@ -21,11 +22,54 @@ pub struct Settings {
     pub lang: Lang,
     /// Suggestions in the sentence field.
     pub completion: bool,
+    /// Per hand (L, R) and finger (thumb..pinky) the value between this
+    /// person's folded and extended finger (calib.rs); None: 0.5.
+    pub fingers: Option<[[f32; 5]; 2]>,
+    /// Which tracking boxes the camera shows over a face (head_ui.rs
+    /// crt_boxes).
+    pub face: FaceOverlay,
 }
 
 impl Default for Settings {
     fn default() -> Self {
-        Self { lang: Lang::En, completion: true }
+        Self { lang: Lang::En, completion: true, fingers: None, face: FaceOverlay::default() }
+    }
+}
+
+/// The face overlay's boxes (head, eyes, mouth) and whether their labels
+/// carry the value; all on by default, and a file without the key (older
+/// builds) reads as the default.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct FaceOverlay {
+    pub head: bool,
+    pub eyes: bool,
+    pub mouth: bool,
+    pub values: bool,
+}
+
+impl Default for FaceOverlay {
+    fn default() -> Self {
+        Self { head: true, eyes: true, mouth: true, values: true }
+    }
+}
+
+impl FaceOverlay {
+    /// The JSON keys, in the order of the fields.
+    const KEYS: [&'static str; 4] = ["head", "eyes", "mouth", "values"];
+
+    fn fields(&self) -> [bool; 4] {
+        [self.head, self.eyes, self.mouth, self.values]
+    }
+
+    /// Reads each key on its own: a missing or broken one keeps its default.
+    fn read(v: Option<&Value>) -> Self {
+        let d = Self::default().fields();
+        let [head, eyes, mouth, values] = std::array::from_fn(|i| v.and_then(|o| o.get(Self::KEYS[i])).and_then(Value::as_bool).unwrap_or(d[i]));
+        Self { head, eyes, mouth, values }
+    }
+
+    fn json(&self) -> Value {
+        Value::Object(Self::KEYS.iter().zip(self.fields()).map(|(k, b)| ((*k).to_string(), json!(b))).collect())
     }
 }
 
@@ -91,7 +135,14 @@ fn read(path: &Path) -> (Settings, Option<String>) {
     };
     let lang = v.get("lang").and_then(Value::as_str).and_then(Lang::from_code);
     let completion = v.get("completion").and_then(Value::as_bool);
-    let s = Settings { lang: lang.unwrap_or(d.lang), completion: completion.unwrap_or(d.completion) };
+    let side = |k: &str| -> Option<[f32; 5]> {
+        let a = v.get("finger_thresholds")?.get(k)?.as_array()?;
+        let f: Vec<f32> = a.iter().filter_map(Value::as_f64).map(|x| (x as f32).clamp(0.05, 0.95)).collect();
+        f.try_into().ok()
+    };
+    let fingers = side("L").zip(side("R")).map(|(l, r)| [l, r]);
+    let face = FaceOverlay::read(v.get("face_overlay"));
+    let s = Settings { lang: lang.unwrap_or(d.lang), completion: completion.unwrap_or(d.completion), fingers, face };
     let note = (lang.is_none() && v.get("lang").is_some()).then(|| format!("unknown language {}", v["lang"]));
     (s, note)
 }
@@ -104,6 +155,15 @@ fn write(path: &Path, s: &Settings) -> Result<(), String> {
         .unwrap_or_default();
     obj.insert("lang".into(), json!(s.lang.code()));
     obj.insert("completion".into(), json!(s.completion));
+    obj.insert("face_overlay".into(), s.face.json());
+    match s.fingers {
+        Some([l, r]) => {
+            obj.insert("finger_thresholds".into(), json!({"L": l, "R": r}));
+        }
+        None => {
+            obj.remove("finger_thresholds");
+        }
+    }
     if let Some(dir) = path.parent() {
         std::fs::create_dir_all(dir).map_err(|e| format!("{}: {e}", dir.display()))?;
     }
@@ -126,7 +186,7 @@ mod tests {
     #[test]
     fn missing_file_gives_english_and_completion_on() {
         let s = Store::open(dir("missing").join("settings.json"));
-        assert_eq!(s.get(), Settings { lang: Lang::En, completion: true });
+        assert_eq!(s.get(), Settings::default());
     }
 
     #[test]
@@ -135,7 +195,10 @@ mod tests {
         let s = Store::open(p.clone());
         s.update(|x| x.lang = Lang::De);
         s.update(|x| x.completion = false);
-        assert_eq!(Store::open(p.clone()).get(), Settings { lang: Lang::De, completion: false });
+        s.update(|x| x.fingers = Some([[0.4, 0.5, 0.55, 0.5, 0.45], [0.5; 5]]));
+        s.update(|x| x.face = FaceOverlay { eyes: false, values: false, ..FaceOverlay::default() });
+        let face = FaceOverlay { head: true, eyes: false, mouth: true, values: false };
+        assert_eq!(Store::open(p.clone()).get(), Settings { lang: Lang::De, completion: false, fingers: Some([[0.4, 0.5, 0.55, 0.5, 0.45], [0.5; 5]]), face });
         assert!(!p.with_extension("json.tmp").exists());
     }
 
@@ -146,14 +209,28 @@ mod tests {
         let p = d.join("settings.json");
         std::fs::write(&p, "{\"lang\": \"fr\", \"completion\": false}")?;
         let (s, note) = read(&p);
-        assert_eq!(s, Settings { lang: Lang::En, completion: false });
+        assert_eq!(s, Settings { lang: Lang::En, completion: false, fingers: None, face: FaceOverlay::default() });
         assert!(note.is_some_and(|n| n.contains("fr")));
         std::fs::write(&p, "{not json")?;
         assert_eq!(read(&p).0, Settings::default());
         // a broken file is replaced by the next change
         let s = Store::open(p.clone());
         s.update(|x| x.lang = Lang::De);
-        assert_eq!(read(&p), (Settings { lang: Lang::De, completion: true }, None));
+        assert_eq!(read(&p), (Settings { lang: Lang::De, completion: true, ..Settings::default() }, None));
+        Ok(())
+    }
+
+    /// A file from before the face overlay setting shows every box and
+    /// value; a broken key keeps its default, the others are read.
+    #[test]
+    fn the_face_overlay_defaults_to_all_on() -> Result<(), Box<dyn std::error::Error>> {
+        let d = dir("face");
+        std::fs::create_dir_all(&d)?;
+        let p = d.join("settings.json");
+        std::fs::write(&p, "{\"lang\": \"de\", \"completion\": true}")?;
+        assert_eq!(read(&p).0.face, FaceOverlay { head: true, eyes: true, mouth: true, values: true });
+        std::fs::write(&p, "{\"face_overlay\": {\"mouth\": false, \"eyes\": \"no\"}}")?;
+        assert_eq!(read(&p).0.face, FaceOverlay { mouth: false, ..FaceOverlay::default() });
         Ok(())
     }
 

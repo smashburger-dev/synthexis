@@ -1,0 +1,27 @@
+# Direction probe: the route's INV after the conv fold (eye.closed -> eye.open
+# with INV flipped). expected inv = (gesture lowers its source) xor (target goes down).
+# lang	sentence	source	inv
+de	wenn ich den Mund aufmache, wird der Filter heller	mouth.open	0
+de	wenn ich den Mund aufmache, wird der Hall leiser	mouth.open	1
+de	Mund auf dreht die Resonanz runter	mouth.open	1
+de	Mund zu dreht die Resonanz runter	mouth.open	0
+de	wenn ich die Augen zumache, steigt der Hall	eye.open	1
+de	wenn ich die Augen zumache, sinkt der Cutoff	eye.open	0
+de	rechtes Auge zu nimmt den Drive raus	eye.open	0
+de	linkes Auge auf macht den Filter auf	eye.open	0
+de	Kopf nach oben dreht den Cutoff auf	head.pitch	0
+de	Kopf nach unten dreht den Cutoff auf	head.pitch	1
+de	Kopf hoch senkt die Lautstärke	head.pitch	1
+de	wenn ich den Mund schließe, wird es lauter	mouth.open	1
+en	when I open my mouth the filter gets brighter	mouth.open	0
+en	opening my mouth turns the reverb down	mouth.open	1
+en	open mouth lowers the resonance	mouth.open	1
+en	closed mouth lowers the resonance	mouth.open	0
+en	when I close my eyes the reverb rises	eye.open	1
+en	closing my eyes drops the cutoff	eye.open	0
+en	right eye shut pulls the drive down	eye.open	0
+en	left eye open opens the filter	eye.open	0
+en	looking up turns the cutoff up	head.pitch	0
+en	looking down turns the cutoff up	head.pitch	1
+en	head up lowers the volume	head.pitch	1
+en	when I close my mouth it gets louder	mouth.open	1

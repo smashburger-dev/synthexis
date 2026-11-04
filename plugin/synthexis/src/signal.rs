@@ -38,7 +38,7 @@ sided!(HAND_FEATS, HAND_L, HAND_R, "hand", [
     "spread", "x", "y", "depth", "pinch", "speed", "roll",
     "finger.thumb.tilt", "finger.index.tilt", "finger.middle.tilt",
     "finger.ring.tilt", "finger.pinky.tilt",
-    "finger_count",
+    "finger_count", "shape",
 ]);
 
 pub const SIG_HANDS_DISTANCE: &str = "cam0.hands.distance";

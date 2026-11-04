@@ -112,8 +112,10 @@ impl EguiState {
         self.open.load(Ordering::Acquire)
     }
 
-    /// Set the new size that will be used to resize the window if the host allows.
-    fn set_requested_size(&self, new_size: (u32, u32)) {
+    /// Set the new size that will be used to resize the window if the host allows. The size is in
+    /// logical pixels. The editor picks it up at the start of its next frame.
+    // synthexis patch: `pub` so a plugin can resize its own window (vendor/PATCHES.md).
+    pub fn set_requested_size(&self, new_size: (u32, u32)) {
         self.requested_size.store(Some(new_size));
     }
 }

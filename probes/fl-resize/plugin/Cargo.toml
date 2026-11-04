@@ -1,0 +1,30 @@
+[package]
+name = "fl-resize-probe"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+
+# nih_plug_xtask looks for the package name with underscores.
+[[bin]]
+name = "fl_resize_probe"
+path = "src/main.rs"
+
+[lints]
+workspace = true
+
+[dependencies]
+# The vendored nih-plug of the synthexis plug-in, with the resize patches of
+# plugin/vendor/PATCHES.md.
+nih_plug = { path = "../../../plugin/vendor/nih-plug", features = ["standalone"] }
+nih_plug_egui = { path = "../../../plugin/vendor/nih-plug/nih_plug_egui" }
+objc2 = "0.6"
+objc2-foundation = { version = "0.3", default-features = false, features = [
+    "std",
+    "NSGeometry",
+    "objc2-core-foundation",
+] }
+objc2-core-foundation = { version = "=0.3.2", default-features = false, features = ["std", "CFCGTypes"] }
+parking_lot = "0.12"

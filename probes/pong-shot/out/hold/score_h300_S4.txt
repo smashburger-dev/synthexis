@@ -1,0 +1,50 @@
+### gate
+
+(a) index-alone segments with a shot: 2/3 = 67% -> FAIL (>= 80 %)
+  S4 A_R_01000 R: 1 shot(s), first at -0.07 s; turns without a shot: 10.63s lost proj=1.143
+  S4 A_L_01000 L: 1 shot(s), first at +0.23 s; turns without a shot: 71.57s short proj=0.795
+  S4 A_both_01000_00000 R: 0 shot(s), none
+  info, thumb+index (11000), block A: 1/3 with a shot
+  info, index alone in B counts (2 s): 0/0 with a shot
+(b) false shots: 12 in 9.5 min = 1.26/min -> FAIL (<= 1/min)
+  per block: A 1, E 1, F 3, G 2, H 5
+  S4 A_both_10001_01001 L t=148.70 (+1.39 s in) label=01001 at=[0.4, 0.534] dir=[0.467, -0.884]
+  S4 E_pen R t=310.57 (+1.78 s in) label=['pen'] at=[0.556, 0.467] dir=[-0.798, -0.603]
+  S4 F_hand_over_face R t=337.77 (+7.90 s in) label=hand_over_face at=[0.505, 0.305] dir=[-0.671, -0.742]
+  S4 F_fast_moves L t=348.93 (+1.03 s in) label=fast_moves at=[0.34, 0.289] dir=[0.323, -0.946]
+  S4 F_backlit L t=381.03 (+7.48 s in) label=backlit at=[0.353, 0.332] dir=[0.377, -0.926]
+  S4 H_throw_bottom R t=414.10 (+1.09 s in) label=throw_bottom at=[0.579, 0.493] dir=[0.991, -0.137]
+  S4 H_throw_bottom R t=416.73 (+3.73 s in) label=throw_bottom at=[0.719, 0.512] dir=[1.0, 0.003]
+  S4 H_pinch_drag R t=485.27 (+1.93 s in) label=pinch_drag at=[0.474, 0.323] dir=[-0.837, -0.547]
+  S4 H_grab_release R t=490.63 (+0.26 s in) label=grab_release at=[0.648, 0.701] dir=[-0.501, -0.865]
+  S4 H_grab_release R t=492.77 (+2.39 s in) label=grab_release at=[0.81, 0.429] dir=[0.138, -0.99]
+  S4 G_free_hands R t=539.60 (+14.10 s in) label=free_hands at=[0.538, 0.339] dir=[-0.713, -0.701]
+  S4 G_free_hands R t=540.47 (+14.97 s in) label=free_hands at=[0.497, 0.312] dir=[-0.733, -0.681]
+
+### plain
+
+(a) index-alone segments with a shot: 2/3 = 67% -> FAIL (>= 80 %)
+  S4 A_R_01000 R: 2 shot(s), first at -0.31 s; turns without a shot: 10.50s short proj=0.713, 11.93s short proj=1.067, 14.83s short proj=1.043
+  S4 A_L_01000 L: 1 shot(s), first at +0.16 s; turns without a shot: 71.50s short proj=0.669
+  S4 A_both_01000_00000 R: 0 shot(s), none
+  info, thumb+index (11000), block A: 3/3 with a shot
+  info, index alone in B counts (2 s): 0/0 with a shot
+(b) false shots: 16 in 9.5 min = 1.68/min -> FAIL (<= 1/min)
+  per block: A 3, E 2, F 4, G 1, H 6
+  S4 A_R_01100 R t=20.23 (-0.91 s in) label=01100 at=[0.247, 0.282] dir=[0.012, -1.0]
+  S4 A_both_10001_01001 L t=148.63 (+1.33 s in) label=01001 at=[0.403, 0.528] dir=[0.523, -0.852]
+  S4 A_both_10001_01001 L t=149.20 (+1.89 s in) label=01001 at=[0.344, 0.515] dir=[0.404, -0.915]
+  S4 E_phone L t=289.10 (+1.39 s in) label=['phone'] at=[0.409, 0.418] dir=[0.313, -0.95]
+  S4 E_pen R t=310.57 (+1.78 s in) label=['pen'] at=[0.556, 0.467] dir=[-0.798, -0.603]
+  S4 F_hands_overlap R t=337.90 (-0.97 s in) label=hands_overlap at=[0.492, 0.273] dir=[-0.652, -0.758]
+  S4 F_fast_moves L t=348.77 (+0.86 s in) label=fast_moves at=[0.353, 0.286] dir=[0.311, -0.951]
+  S4 F_backlit L t=374.17 (+0.61 s in) label=backlit at=[0.384, 0.397] dir=[0.337, -0.942]
+  S4 F_backlit L t=380.93 (+7.38 s in) label=backlit at=[0.346, 0.292] dir=[0.249, -0.968]
+  S4 H_throw_bottom R t=414.07 (+1.06 s in) label=throw_bottom at=[0.577, 0.489] dir=[0.985, -0.172]
+  S4 H_throw_bottom R t=416.73 (+3.73 s in) label=throw_bottom at=[0.719, 0.512] dir=[1.0, 0.003]
+  S4 H_throw_bottom R t=417.13 (+4.13 s in) label=throw_bottom at=[0.789, 0.618] dir=[0.959, 0.285]
+  S4 H_grab_release R t=490.63 (+0.26 s in) label=grab_release at=[0.648, 0.701] dir=[-0.501, -0.865]
+  S4 H_grab_release R t=492.70 (+2.32 s in) label=grab_release at=[0.812, 0.427] dir=[0.113, -0.994]
+  S4 H_grab_release R t=494.87 (+4.49 s in) label=grab_release at=[0.217, 0.58] dir=[-0.68, -0.733]
+  S4 G_free_hands R t=539.60 (+14.10 s in) label=free_hands at=[0.538, 0.339] dir=[-0.713, -0.701]
+

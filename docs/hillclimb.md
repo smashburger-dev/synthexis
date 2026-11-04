@@ -37,6 +37,6 @@ Model
 6. Width multiplier and depth of the backbone; MobileNetV4 small vs. MobileNetV3 small vs. a custom tiny encoder.
 7. One merged model with a shared encoder and both heads (seg + keypoints) instead of two models.
 8. Weight palettization (6 and 4 bit) and 8-bit quantization with coremltools; pruning.
-9. Better training to buy back quality after shrinking: distillation from SAM 3.1 mask logits, more Muse Image data, augmentation for light and blur.
+9. Better training to buy back quality after shrinking: SAM 3.1 mask logits as soft training targets, more training data, augmentation for light and blur.
 
 Each lever is one run. Combine only what survived on its own.

@@ -1,0 +1,367 @@
+<title>synthexis MIDI editor sketches</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Geist+Mono:wght@400&display=swap">
+<style>
+/* Layout: one column of three plugin-window mocks (1000 pt wide, scaled), each with a short note; glass over a dark camera frame. Single dark look, as the plugin. */
+:root {
+  color-scheme: dark;
+  --window: #1e1e1e;
+  --work: #141518;
+  --tint: rgba(30, 30, 30, 0.55);
+  --edge: rgba(255, 255, 255, 0.20);
+  --field: rgba(255, 255, 255, 0.05);
+  --field-edge: rgba(255, 255, 255, 0.13);
+  --inset: rgba(255, 255, 255, 0.03);
+  --sep: rgba(255, 255, 255, 0.10);
+  --t1: rgba(255, 255, 255, 1);
+  --t80: rgba(255, 255, 255, 0.80);
+  --t56: rgba(255, 255, 255, 0.56);
+  --t40: rgba(255, 255, 255, 0.40);
+  --t25: rgba(255, 255, 255, 0.25);
+  --left: #f0a35e;     /* left hand: skeleton, rows, chips */
+  --right: #62c6e6;    /* right hand */
+  --sel: rgba(74, 144, 217, 0.15);
+  --sel-bar: rgba(74, 144, 217, 0.80);
+  --sans: "Inter", -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+html, body { background: var(--window); color: var(--t80); }
+body {
+  font: 13px/1.45 var(--sans);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 28px 64px;
+}
+main { max-width: 1040px; margin: 0 auto; display: grid; gap: 44px; }
+h1 { font: 500 20px/1.2 var(--sans); color: var(--t1); margin: 0; text-wrap: balance; }
+h2 { font: 500 15px/1.3 var(--sans); color: var(--t1); margin: 0; }
+p { margin: 0; max-width: 68ch; }
+.lead { display: grid; gap: 8px; color: var(--t56); }
+.lead strong { color: var(--t80); font-weight: 500; }
+section { display: grid; gap: 12px; }
+.note { display: grid; gap: 6px; color: var(--t56); }
+.note b { color: var(--t80); font-weight: 500; }
+.pick { border: 1px solid var(--sel-bar); background: linear-gradient(90deg, var(--sel), rgba(37,99,235,.04)); border-radius: 10px; padding: 14px 16px; display: grid; gap: 8px; }
+
+/* plugin window mock */
+.frame { overflow-x: auto; border-radius: 16px; }
+.win {
+  width: 1000px; height: 720px; position: relative; border-radius: 16px; overflow: hidden;
+  background: var(--window); font-size: 9.5px; color: var(--t80);
+  --camimg:
+    radial-gradient(60% 80% at 30% 45%, rgba(150, 110, 85, .75), transparent 70%),
+    radial-gradient(40% 70% at 74% 40%, rgba(70, 110, 150, .6), transparent 70%),
+    linear-gradient(180deg, #2c2824, #15161a 90%);
+}
+/* camera: top third, edge to edge; below it the same frame, heavily frosted, carries the panels */
+.cam { position: absolute; left: 0; right: 0; top: 0; height: 240px; background: var(--camimg); }
+.below { position: absolute; left: 0; right: 0; top: 240px; bottom: 0; overflow: hidden; }
+.below::before { content: ""; position: absolute; inset: -40px; background: var(--camimg); filter: blur(28px) saturate(.8); opacity: .55; }
+.below > * { position: relative; }
+.chatline { position: absolute; left: 0; right: 0; top: 240px; height: 34px; display: flex; align-items: center; gap: 8px; padding: 0 12px; border-width: 1px 0; }
+.chatline .field { flex: 1; height: 22px; border-radius: 4px; background: var(--field); border: 1px solid var(--field-edge); display: flex; align-items: center; gap: 4px; padding: 0 8px; color: var(--t80); }
+.chatline .field .ghost { color: var(--t40); }
+.chatline .hl-r { background: rgba(98,198,230,.28); border-radius: 3px; padding: 0 3px; }
+.chatline .hl-t { background: rgba(190,140,255,.25); border-radius: 3px; padding: 0 3px; }
+.sects { position: absolute; left: 0; right: 0; top: 34px; bottom: 0; padding: 8px 12px; display: grid; align-content: start; gap: 6px; }
+.sect { display: flex; align-items: center; gap: 8px; height: 24px; padding: 0 10px; border-radius: 6px; background: var(--tint); border: 1px solid var(--edge); color: var(--t56); }
+.sect b { color: var(--t80); font-weight: 500; }
+.open { background: var(--tint); border: 1px solid var(--edge); border-radius: 6px; padding: 10px 12px; display: grid; gap: 8px; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+.top.fade { opacity: .9; }
+.hide-hint { color: var(--t40); font-size: 8.5px; }
+.glass {
+  position: absolute; background: var(--tint); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  border: 1px solid var(--edge);
+}
+.top { left: 0; right: 0; top: 0; height: 30px; border-width: 0 0 1px; display: flex; align-items: center; gap: 14px; padding: 0 14px; }
+.top .name { color: var(--t1); font-size: 10.5px; font-weight: 500; }
+.chip { display: inline-flex; align-items: center; gap: 5px; height: 18px; padding: 0 7px; border-radius: 6px; background: var(--field); border: 1px solid var(--field-edge); color: var(--t80); white-space: nowrap; }
+.chip.l { box-shadow: inset 0 -2px 0 var(--left); }
+.chip.r { box-shadow: inset 0 -2px 0 var(--right); }
+.tog { height: 18px; padding: 0 8px; border-radius: 6px; border: 1px solid var(--field-edge); display: inline-flex; align-items: center; color: var(--t56); cursor: pointer; user-select: none; }
+.tog.on { color: var(--t1); background: linear-gradient(90deg, rgba(98,198,230,.35), transparent); border-color: rgba(98,198,230,.45); }
+.tog.lon { color: var(--t1); background: linear-gradient(90deg, rgba(240,163,94,.35), transparent); border-color: rgba(240,163,94,.45); }
+.sp { flex: 1; }
+.dim { color: var(--t40); }
+.mono { font-family: var(--mono); }
+
+/* skeleton drawn on the camera */
+svg.skel { position: absolute; left: 0; top: 0; width: 1000px; height: 240px; pointer-events: none; }
+
+/* bottom panel */
+.panel { display: grid; gap: 8px; }
+.ph { display: flex; align-items: center; gap: 8px; color: var(--t1); font-size: 10px; }
+.ph .dim { font-size: 9px; }
+.row { display: flex; align-items: center; gap: 6px; }
+.lane { display: grid; grid-template-columns: repeat(16, 1fr); gap: 3px; }
+.lane.b2 { grid-template-columns: repeat(32, 1fr); }
+.step { height: 18px; border-radius: 3px; background: var(--inset); border: 1px solid rgba(255,255,255,.07); cursor: pointer; position: relative; }
+.step:nth-child(4n+1) { border-color: rgba(255,255,255,.16); }
+.step.on { background: linear-gradient(180deg, var(--right), rgba(98,198,230,.55)); border-color: transparent; }
+.step.on.soft { opacity: .55; }
+.step.ph-now { outline: 1px solid rgba(255,255,255,.8); outline-offset: 1px; }
+.lane.left .step.on { background: linear-gradient(180deg, var(--left), rgba(240,163,94,.55)); }
+.vel { display: grid; grid-template-columns: repeat(16, 1fr); gap: 3px; height: 22px; align-items: end; }
+.vel i { display: block; background: rgba(98,198,230,.5); border-radius: 1px; }
+.tmpl { display: flex; gap: 5px; flex-wrap: wrap; }
+.tmpl span { cursor: pointer; }
+.tmpl span:hover { background: rgba(255,255,255,.08); }
+
+/* sketch B: lanes table */
+.tbl { display: grid; grid-template-columns: 150px 120px 1fr; gap: 4px 10px; align-items: center; }
+.tbl .hd { display: flex; align-items: center; gap: 6px; color: var(--t56); }
+.tbl .hd.live { color: var(--t1); }
+.dot { width: 7px; height: 7px; border-radius: 50%; border: 1px solid var(--t40); flex: none; }
+.dot.r { background: var(--right); border-color: var(--right); }
+.dot.l { background: var(--left); border-color: var(--left); }
+.chords { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3px; }
+.cell { height: 18px; border-radius: 3px; display: flex; align-items: center; padding: 0 6px; background: var(--inset); border: 1px solid rgba(255,255,255,.07); color: var(--t56); }
+.cell.on { color: #1b1208; background: linear-gradient(90deg, var(--left), rgba(240,163,94,.6)); border-color: transparent; }
+
+/* sketch C: rings and wheel */
+.ringwrap { position: absolute; }
+.ringlbl { position: absolute; transform: translate(-50%, 0); text-align: center; color: var(--t56); white-space: nowrap; }
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+
+<main>
+  <div class="lead">
+    <h1>What each finger plays: three sketches</h1>
+    <p>Mock-ups of the synthexis window at its fixed width (1000 × 720 pt) in Noa's layout of 11-04: the camera fills the top third edge to edge, the top bar is frosted and fades out on its own, the chat line sits right under the camera, and everything else folds out below it over a heavily frosted copy of the camera frame. Colour only on values, amber for the left hand and cyan for the right. The three sketches differ only in the open "What fingers play" section. Steps are clickable, so the click count of each sketch can be tried. Example set-up in all three: <strong>right hand plays drum patterns on FPC (channel 3)</strong>, <strong>left hand plays chords in A minor on Serum 2 (channel 1)</strong>.</p>
+  </div>
+
+  <!-- A -->
+  <section>
+    <h2>A · Hand map</h2>
+    <div class="frame"><div class="win" id="wa">
+      <div class="cam"><svg class="skel" viewBox="0 0 1000 260" aria-label="two hands with what each finger plays"><g id="handL"></g><g id="handR"></g></svg></div>
+      <div class="glass top fade"><span class="name">synthexis</span><span class="chip">Pad › Serum 2</span><span class="tog on">Live</span><span class="hide-hint">fades after 2 s, comes back on hover</span><span class="sp"></span><span class="chip">A minor</span><span class="chip mono">120 BPM · 1.3.2</span><span class="chip">⚙</span></div>
+      <div class="below"><div class="sects"><div class="open"><div class="ph">▾ What fingers play <span class="dim">· click a fingertip on the camera</span></div><div class="panel">
+        <div class="ph"><span class="dot r"></span>Right index <span class="dim">· shown</span><span class="chip r">FPC › Closed hat F#3 (42)</span><span class="chip">plays while held</span><span class="chip">starts on 1/16</span><span class="sp"></span><span class="dim">1 bar</span><span class="chip">+ bar</span></div>
+        <div class="lane" id="laneA"></div>
+        <div class="vel" id="velA"></div>
+        <div class="row"><span class="dim">Templates</span><div class="tmpl" id="tmplA"></div><span class="sp"></span><span class="dim">Fill</span><span class="chip mono" id="eucA">8 of 16</span></div>
+      </div></div><div class="sect">▸ <b>Moves</b> 3 rows · left fist → Filter 1 Freq</div><div class="sect">▸ <b>Signals 1–32</b> for Link to controller</div><div class="sect">▸ <b>Advanced</b> key, scale, start grid, latency</div></div></div>
+      <div class="glass chatline"><div class="field"><span class="hl-r">right index</span> plays the <span class="hl-t">trap roll</span><span class="ghost">&nbsp;on FPC</span></div><span class="chip">in: FPC (ch 3)</span><span class="chip">undo</span></div>
+    </div></div>
+    <div class="note">
+      <p><b>Idea.</b> The hands are the menu. Each fingertip on the live skeleton carries what it plays: a 16-step ring for a pattern, a chord symbol for a chord. Shapes (peace, rock, any mask) sit as chips under the hand. A click on a fingertip opens its lane in the panel; templates fill it in one click, the Fill number sets an even spread of hits (Euclid) and every step stays clickable.</p>
+      <p><b>Fast because</b> the thing you show the camera and the thing you click are the same picture, and the ring lights up when the finger fires, so Noa sees why a note played.</p>
+      <p><b>Weak spot.</b> Only one lane is open at a time; comparing two fingers' rhythms means switching.</p>
+    </div>
+  </section>
+
+  <!-- B -->
+  <section>
+    <h2>B · Lanes, like the channel rack</h2>
+    <div class="frame"><div class="win" id="wb">
+      <div class="cam"><svg class="skel" viewBox="0 0 1000 260"><g id="handLb"></g><g id="handRb"></g></svg></div>
+      <div class="glass top fade"><span class="name">synthexis</span><span class="chip">Pad › Serum 2</span><span class="tog on">Live</span><span class="hide-hint">fades after 2 s, comes back on hover</span><span class="sp"></span><span class="chip">A minor</span><span class="chip mono">120 BPM · 1.3.2</span><span class="chip">⚙</span></div>
+      <div class="below"><div class="sects"><div class="open"><div class="ph">▾ What fingers play <span class="dim">· a row lights up while its finger is shown</span></div><div class="tbl" id="tblB"></div></div><div class="sect">▸ <b>Moves</b> 3 rows · left fist → Filter 1 Freq</div><div class="sect">▸ <b>Signals 1–32</b> for Link to controller</div><div class="sect">▸ <b>Advanced</b> key, scale, start grid, latency</div></div></div>
+      <div class="glass chatline"><div class="field"><span class="hl-r">right index</span> plays the <span class="hl-t">trap roll</span><span class="ghost">&nbsp;on FPC</span></div><span class="chip">in: FPC (ch 3)</span><span class="chip">undo</span></div>
+    </div></div>
+    <div class="note">
+      <p><b>Idea.</b> One row per action, 16 steps per bar, the way FL's channel rack shows a beat. Pattern rows hold steps; chord rows hold one chord per beat (a progression that advances while held) or a single chord. The row head names the finger and the FL channel; a row's ⋯ opens a piano roll for rows with several pitches.</p>
+      <p><b>Fast because</b> everything is visible at once and FL users read it without learning anything new.</p>
+      <p><b>Weak spot.</b> It is a table, not the hand: the link between a finger and its row is a label, and ten rows take most of the space under the chat line.</p>
+    </div>
+  </section>
+
+  <!-- C -->
+  <section>
+    <h2>C · Rings and a chord wheel</h2>
+    <div class="frame"><div class="win" id="wc">
+      <div class="cam"><svg class="skel" viewBox="0 0 1000 260"><g id="handLc"></g><g id="handRc"></g></svg></div>
+      <div class="glass top fade"><span class="name">synthexis</span><span class="chip">Pad › Serum 2</span><span class="tog on">Live</span><span class="hide-hint">fades after 2 s, comes back on hover</span><span class="sp"></span><span class="chip">A minor</span><span class="chip mono">120 BPM · 1.3.2</span><span class="chip">⚙</span></div>
+      <div class="below"><div class="sects"><div class="open"><div class="ph">▾ What fingers play</div><div style="position:relative; height:262px">
+        <div class="ph">Right hand <span class="dim">· drag a ring outward for more hits, around to shift them</span><span class="sp"></span><span class="tog on">● capture next bar</span></div>
+        <svg id="ringsC" viewBox="0 0 560 250" width="540" height="240" style="position:absolute; left:0; top:22px"></svg>
+        <div class="ph" style="position:absolute; left:580px; top:0">Left hand <span class="dim">· drop a finger on a chord</span></div>
+        <svg id="wheelC" viewBox="0 0 380 250" width="370" height="240" style="position:absolute; left:580px; top:22px"></svg>
+      </div></div><div class="sect">▸ <b>Moves</b> 3 rows · left fist → Filter 1 Freq</div><div class="sect">▸ <b>Signals 1–32</b> for Link to controller</div><div class="sect">▸ <b>Advanced</b> key, scale, start grid, latency</div></div></div>
+      <div class="glass chatline"><div class="field"><span class="hl-r">right index</span> plays the <span class="hl-t">trap roll</span><span class="ghost">&nbsp;on FPC</span></div><span class="chip">in: FPC (ch 3)</span><span class="chip">undo</span></div>
+    </div></div>
+    <div class="note">
+      <p><b>Idea.</b> Each right-hand finger owns a step ring (the ring-knob language turned into a loop): drag outward for more hits, drag around to shift them, click single dots. The left hand gets a wheel of the seven chords in the key; fingers are chips you drop on a wedge, so a chord can never leave the scale. "Capture next bar" records what you tap (mouse or keys) into the selected ring, quantized.</p>
+      <p><b>Fast because</b> two drags make a usable rhythm and one drop makes a chord; no step counting.</p>
+      <p><b>Weak spot.</b> Rings hide exact positions past 16 steps; longer clips (2 to 8 bars) need the lane from A or B anyway.</p>
+    </div>
+  </section>
+
+  <div class="pick">
+    <h2>My pick: A, with B's lane as its editor and C's Fill</h2>
+    <p>The hand map is the overview and the assignment path (click a fingertip), the panel under it is one lane at 16 steps per bar for 1 to 8 bars, with templates and a Fill number from C. Chord fingers open a row of chords in the key instead of steps. Capture by tapping comes after the demo.</p>
+  </div>
+</main>
+
+<script>
+(() => {
+  const R = getComputedStyle(document.documentElement);
+  const col = { l: R.getPropertyValue('--left').trim(), r: R.getPropertyValue('--right').trim() };
+  const NS = 'http://www.w3.org/2000/svg';
+  const el = (tag, attrs, parent) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); parent && parent.appendChild(e); return e; };
+
+  const templates = {
+    'Hi-hat basic': [1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0],
+    'Trap roll':    [1,1,1,1,1,0,1,1,1,1,1,1,1,0,1,1],
+    'Snare fill':   [0,0,0,0,1,0,0,0,0,0,1,0,1,1,1,1],
+    'Kick':         [1,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0],
+  };
+  const euclid = (k, n) => { const out = []; for (let i = 0; i < n; i++) out.push(Math.floor((i + 1) * k / n) - Math.floor(i * k / n)); return out.slice(-1).concat(out.slice(0, -1)); };
+
+  // A: hands with fingertip contents
+  const fingersR = [
+    { name: 'thumb', kind: 'ring', steps: templates['Hi-hat basic'] },
+    { name: 'index', kind: 'ring', steps: templates['Trap roll'], sel: true },
+    { name: 'middle', kind: 'ring', steps: templates['Snare fill'] },
+    { name: 'ring', kind: 'ring', steps: templates['Kick'] },
+    { name: 'pinky', kind: 'none' },
+  ];
+  const fingersL = [
+    { name: 'thumb', kind: 'chord', text: 'Am' }, { name: 'index', kind: 'chord', text: 'F' },
+    { name: 'middle', kind: 'chord', text: 'C' }, { name: 'ring', kind: 'chord', text: 'G' },
+    { name: 'pinky', kind: 'chord', text: 'Em' },
+  ];
+  function hand(g, cx, mirror, c, fingers, label) {
+    const palm = [[-34, 40], [34, 40], [40, 100], [-40, 100]];
+    const pts = palm.map(([x, y]) => [cx + (mirror ? -x : x), y]);
+    el('path', { d: 'M' + pts.map(p => p.join(',')).join(' L') + ' Z', fill: 'none', stroke: c, 'stroke-width': 1.5, opacity: .8 }, g);
+    const tips = [[-62, 30], [-30, -38], [0, -48], [28, -40], [52, -16]];
+    const roots = [[-34, 82], [-22, 40], [-2, 38], [16, 40], [32, 44]];
+    tips.forEach(([tx, ty], i) => {
+      const sx = mirror ? -1 : 1;
+      const [rx, ry] = roots[i];
+      el('line', { x1: cx + sx * rx, y1: ry, x2: cx + sx * tx, y2: ty + 60, stroke: c, 'stroke-width': 1.5, opacity: .8 }, g);
+      el('circle', { cx: cx + sx * tx, cy: ty + 60, r: 2.5, fill: c }, g);
+      const f = fingers[i];
+      const ox = cx + sx * tx * 1.55, oy = ty + 60 - 28;
+      if (f.kind === 'ring') {
+        f.steps.forEach((on, k) => {
+          const a = -Math.PI / 2 + k * Math.PI / 8;
+          el('circle', { cx: ox + 15 * Math.cos(a), cy: oy + 15 * Math.sin(a), r: on ? 2.4 : 1.4, fill: on ? c : 'rgba(255,255,255,.25)' }, g);
+        });
+        if (f.sel) el('circle', { cx: ox, cy: oy, r: 21, fill: 'none', stroke: 'rgba(255,255,255,.7)', 'stroke-width': 1 }, g);
+      } else if (f.kind === 'chord') {
+        el('rect', { x: ox - 14, y: oy - 9, width: 28, height: 18, rx: 6, fill: 'rgba(30,30,30,.6)', stroke: c, 'stroke-width': 1 }, g);
+        const t = el('text', { x: ox, y: oy + 3.5, 'text-anchor': 'middle', fill: 'rgba(255,255,255,.92)', 'font-size': 10, 'font-family': 'Inter, sans-serif' }, g);
+        t.textContent = f.text;
+      } else if (f.kind === 'none') {
+        const t = el('text', { x: ox, y: oy + 3, 'text-anchor': 'middle', fill: 'rgba(255,255,255,.4)', 'font-size': 9, 'font-family': 'Inter, sans-serif' }, g);
+        t.textContent = '+';
+      }
+    });
+    const t = el('text', { x: cx, y: 250, 'text-anchor': 'middle', fill: 'rgba(255,255,255,.56)', 'font-size': 9.5, 'font-family': 'Inter, sans-serif' }, g);
+    t.textContent = label;
+  }
+  hand(document.getElementById('handL'), 300, true, col.l, fingersL, 'Left · chords in A minor → Serum 2 (ch 1)   [peace: Dm]  [+ shape]');
+  hand(document.getElementById('handR'), 700, false, col.r, fingersR, 'Right · patterns → FPC (ch 3)   [rock: snare fill]  [+ shape]');
+  const plain = fingersR.map(() => ({ kind: 'blank' }));
+  for (const sfx of ['b', 'c']) {
+    hand(document.getElementById('handL' + sfx), 300, true, col.l, plain, '');
+    hand(document.getElementById('handR' + sfx), 700, false, col.r, plain, '');
+  }
+
+  function laneUI(lane, vel, steps) {
+    lane.innerHTML = ''; vel && (vel.innerHTML = '');
+    steps.forEach((on, k) => {
+      const s = document.createElement('div');
+      s.className = 'step' + (on ? ' on' : '');
+      s.addEventListener('click', () => { steps[k] = steps[k] ? 0 : 1; laneUI(lane, vel, steps); });
+      lane.appendChild(s);
+      if (vel) { const i = document.createElement('i'); i.style.height = on ? (k % 4 === 0 ? 100 : 62) + '%' : '0'; vel.appendChild(i); }
+    });
+  }
+  const stepsA = templates['Trap roll'].slice();
+  const laneA = document.getElementById('laneA'), velA = document.getElementById('velA');
+  laneUI(laneA, velA, stepsA);
+  const tmplA = document.getElementById('tmplA');
+  Object.keys(templates).concat(['Clear']).forEach(name => {
+    const s = document.createElement('span'); s.className = 'chip'; s.textContent = name;
+    s.addEventListener('click', () => { const src = templates[name] || new Array(16).fill(0); src.forEach((v, i) => stepsA[i] = v); laneUI(laneA, velA, stepsA); });
+    tmplA.appendChild(s);
+  });
+  const eucA = document.getElementById('eucA'); let kA = 8;
+  eucA.style.cursor = 'ns-resize'; eucA.title = 'click: more hits, shift-click: fewer';
+  eucA.addEventListener('click', e => { kA = Math.max(1, Math.min(16, kA + (e.shiftKey ? -1 : 1))); euclid(kA, 16).forEach((v, i) => stepsA[i] = v); eucA.textContent = kA + ' of 16'; laneUI(laneA, velA, stepsA); });
+
+  // B: lanes table
+  const tbl = document.getElementById('tblB');
+  const rowsB = [
+    { who: 'R thumb', side: 'r', target: 'FPC · Hat 42', steps: templates['Hi-hat basic'].slice() },
+    { who: 'R index', side: 'r', target: 'FPC · Hat 42', steps: templates['Trap roll'].slice(), live: true },
+    { who: 'R middle', side: 'r', target: 'FPC · Snare 38', steps: templates['Snare fill'].slice() },
+    { who: 'R ring', side: 'r', target: 'FPC · Kick 36', steps: templates['Kick'].slice() },
+    { who: 'R shape rock', side: 'r', target: 'FPC · Clap 39', steps: [0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0] },
+    { who: 'L thumb', side: 'l', target: 'Serum 2 · chords', chords: ['Am', '', '', ''] },
+    { who: 'L index', side: 'l', target: 'Serum 2 · chords', chords: ['F', '', 'G', ''] },
+    { who: 'L middle', side: 'l', target: 'Serum 2 · chords', chords: ['C', 'G', 'Am', 'F'], live: true },
+    { who: 'L ring', side: 'l', target: 'Serum 2 · chords', chords: ['G', '', '', ''] },
+    { who: 'L pinky', side: 'l', target: 'Serum 2 · arp', chords: ['Em arp ↑ 1/16', '', '', ''] },
+  ];
+  rowsB.forEach(r => {
+    const hd = document.createElement('div'); hd.className = 'hd' + (r.live ? ' live' : '');
+    hd.innerHTML = `<span class="dot ${r.live ? r.side : ''}"></span>${r.who}`;
+    const tg = document.createElement('div'); tg.innerHTML = `<span class="chip ${r.side}">${r.target}</span>`;
+    const body = document.createElement('div');
+    if (r.steps) { body.className = 'lane'; laneUI(body, null, r.steps); }
+    else {
+      body.className = 'chords';
+      r.chords.forEach(c => { const d = document.createElement('div'); d.className = 'cell' + (c ? ' on' : ''); d.textContent = c || '·'; body.appendChild(d); });
+    }
+    tbl.append(hd, tg, body);
+  });
+
+  // C: rings
+  const rings = document.getElementById('ringsC');
+  const namesR = ['thumb', 'index', 'middle', 'ring', 'pinky'];
+  const ringSteps = [templates['Hi-hat basic'], templates['Trap roll'], templates['Snare fill'], templates['Kick'], euclid(3, 8).concat(euclid(3, 8))].map(s => s.slice());
+  function drawRings() {
+    rings.innerHTML = '';
+    ringSteps.forEach((steps, i) => {
+      const cx = 60 + i * 110, cy = 120 - Math.abs(i - 2) * 22 + (i === 0 ? 40 : 0);
+      el('circle', { cx, cy, r: 38, fill: 'none', stroke: 'rgba(255,255,255,.15)' }, rings);
+      steps.forEach((on, k) => {
+        const a = -Math.PI / 2 + k * Math.PI / 8;
+        const d = el('circle', { cx: cx + 38 * Math.cos(a), cy: cy + 38 * Math.sin(a), r: on ? 5 : 2.6, fill: on ? col.r : 'rgba(255,255,255,.22)', style: 'cursor:pointer' }, rings);
+        d.addEventListener('click', () => { steps[k] = steps[k] ? 0 : 1; drawRings(); });
+      });
+      const hits = steps.reduce((a, b) => a + b, 0);
+      const t = el('text', { x: cx, y: cy + 4, 'text-anchor': 'middle', fill: 'rgba(255,255,255,.8)', 'font-size': 11, 'font-family': 'Inter, sans-serif' }, rings); t.textContent = hits;
+      const n = el('text', { x: cx, y: cy + 58, 'text-anchor': 'middle', fill: 'rgba(255,255,255,.56)', 'font-size': 9.5, 'font-family': 'Inter, sans-serif' }, rings); n.textContent = namesR[i];
+    });
+  }
+  drawRings();
+
+  // C: chord wheel in A minor
+  const wheel = document.getElementById('wheelC');
+  const degrees = ['i Am', 'ii° B°', 'III C', 'iv Dm', 'v Em', 'VI F', 'VII G'];
+  const on = { 'i Am': 'thumb', 'VI F': 'index', 'III C': 'middle', 'VII G': 'ring', 'v Em': 'pinky' };
+  const wx = 125, wy = 122, r0 = 40, r1 = 105;
+  degrees.forEach((d, i) => {
+    const a0 = -Math.PI / 2 + (i - .5) * 2 * Math.PI / 7, a1 = a0 + 2 * Math.PI / 7;
+    const p = (r, a) => [wx + r * Math.cos(a), wy + r * Math.sin(a)];
+    const [x0, y0] = p(r1, a0), [x1, y1] = p(r1, a1), [x2, y2] = p(r0, a1), [x3, y3] = p(r0, a0);
+    const taken = on[d];
+    el('path', { d: `M${x0},${y0} A${r1},${r1} 0 0 1 ${x1},${y1} L${x2},${y2} A${r0},${r0} 0 0 0 ${x3},${y3} Z`, fill: taken ? 'rgba(240,163,94,.28)' : 'rgba(255,255,255,.03)', stroke: 'rgba(255,255,255,.14)' }, wheel);
+    const [tx, ty] = p((r0 + r1) / 2, (a0 + a1) / 2);
+    const t = el('text', { x: tx, y: ty + 2, 'text-anchor': 'middle', fill: 'rgba(255,255,255,.85)', 'font-size': 10, 'font-family': 'Inter, sans-serif' }, wheel); t.textContent = d;
+    if (taken) { const s = el('text', { x: tx, y: ty + 14, 'text-anchor': 'middle', fill: col.l, 'font-size': 8.5, 'font-family': 'Inter, sans-serif' }, wheel); s.textContent = taken; }
+  });
+  const key = el('text', { x: wx, y: wy + 4, 'text-anchor': 'middle', fill: 'rgba(255,255,255,.6)', 'font-size': 10, 'font-family': 'Inter, sans-serif' }, wheel); key.textContent = 'A minor';
+  const opts = [['voicing', 'close'], ['octave', '3'], ['size', '3 notes'], ['arp', 'off']];
+  opts.forEach(([k, v], i) => {
+    const t = el('text', { x: 262, y: 60 + i * 30, fill: 'rgba(255,255,255,.5)', 'font-size': 9, 'font-family': 'Inter, sans-serif' }, wheel); t.textContent = k;
+    el('rect', { x: 262, y: 66 + i * 30, width: 100, height: 16, rx: 4, fill: 'rgba(255,255,255,.05)', stroke: 'rgba(255,255,255,.13)' }, wheel);
+    const vtx = el('text', { x: 268, y: 77.5 + i * 30, fill: 'rgba(255,255,255,.8)', 'font-size': 9, 'font-family': 'Inter, sans-serif' }, wheel); vtx.textContent = v;
+  });
+
+  // playheads: 120 BPM, 1/16 = 125 ms
+  let step = 0;
+  if (!matchMedia('(prefers-reduced-motion: reduce)').matches) setInterval(() => {
+    step = (step + 1) % 16;
+    document.querySelectorAll('.lane').forEach(l => [...l.children].forEach((c, k) => c.classList.toggle('ph-now', k === step)));
+  }, 125);
+})();
+</script>

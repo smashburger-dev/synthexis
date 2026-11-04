@@ -36,8 +36,6 @@ use objc2_foundation::{NSDictionary, NSNumber, NSObjectProtocol, NSString};
 use crate::log;
 use crate::signal::{Sample, SIG_BRIGHTNESS, SIG_MOTION};
 
-const PREVIEW_W: usize = 320;
-const PREVIEW_H: usize = 180;
 const MOTION_W: usize = 64;
 const MOTION_H: usize = 36;
 /// Scaled so casual hand waving lands around 0.5-1.0.
@@ -58,7 +56,8 @@ pub struct EngineShared {
     pub running: std::sync::atomic::AtomicBool,
     pub drop_count: AtomicUsize,
     pub auth_status: parking_lot::Mutex<String>,
-    pub preview: parking_lot::Mutex<Option<Arc<[u8]>>>,
+    /// The newest mirrored frame for the window (only while one is open).
+    pub preview: parking_lot::Mutex<Option<Arc<Preview>>>,
     pub sync_clock: parking_lot::Mutex<Option<Retained<CMClock>>>,
     /// Rolling stage stats (ms): pts->cb, cb->features.
     pub pts_to_cb_ms: parking_lot::Mutex<VecDeque<f64>>,
@@ -184,18 +183,41 @@ unsafe fn luma_downscale(
     }
 }
 
-/// Nearest downscale BGRA -> RGBA preview (the only per-frame allocation),
-/// mirrored so the user sees themselves as in a mirror.
-unsafe fn preview_bgra(base: *const u8, stride: usize, w: usize, h: usize) -> Arc<[u8]> {
-    let mut out = Vec::with_capacity(PREVIEW_W * PREVIEW_H * 4);
-    for y in 0..PREVIEW_H {
-        let row = base.add(y * h / PREVIEW_H * stride);
-        for x in 0..PREVIEW_W {
-            let px = row.add((PREVIEW_W - 1 - x) * w / PREVIEW_W * 4);
-            out.extend_from_slice(&[*px.add(2), *px.add(1), *px, 255]);
+/// The camera frame for the window: source size, mirrored, RGBA with
+/// alpha 255. No egui type, so the engine stays UI-free.
+pub struct Preview {
+    pub w: usize,
+    pub h: usize,
+    pub rgba: Vec<u8>,
+}
+
+/// BGRA rows of `stride` bytes -> a mirrored RGBA preview at the source
+/// size (the only per-frame allocation). Rows missing from `src` stay
+/// black, so a short buffer never reads out of bounds.
+fn mirror_to_rgba(src: &[u8], stride: usize, w: usize, h: usize) -> Preview {
+    let mut rgba = Vec::with_capacity(w * h * 4);
+    for y in 0..h {
+        let row = y.checked_mul(stride).and_then(|a| src.get(a..a + w * 4));
+        match row {
+            Some(row) => {
+                for &[b, g, r, _] in row.as_chunks::<4>().0.iter().rev() {
+                    rgba.extend_from_slice(&[r, g, b, 255]);
+                }
+            }
+            None => rgba.extend(std::iter::repeat_n([0, 0, 0, 255], w).flatten()),
         }
     }
-    out.into()
+    Preview { w, h, rgba }
+}
+
+/// The preview of a locked pixel buffer: `base` points at `h` rows of
+/// `stride` bytes, each at least `w * 4` long.
+unsafe fn preview_rgba(base: *const u8, stride: usize, w: usize, h: usize) -> Preview {
+    let len = stride * h.saturating_sub(1) + w * 4;
+    // SAFETY: the caller checked base non-null, w, h > 0 and stride >= w * 4
+    // on a locked CVPixelBuffer, whose data holds h rows of stride bytes.
+    let src = std::slice::from_raw_parts(base, len);
+    mirror_to_rgba(src, stride, w, h)
 }
 
 fn push(v: &mut VecDeque<f64>, x: f64) {
@@ -257,7 +279,7 @@ fn handle_frame(shared: Arc<EngineShared>, sample_buffer: &CMSampleBuffer) {
                 PREV = Some(Box::new(small));
                 // the preview only for an open window
                 if crate::editor::OPEN_EDITORS.load(Ordering::Acquire) > 0 {
-                    *shared.preview.lock() = Some(preview_bgra(base, stride, w, h));
+                    *shared.preview.lock() = Some(Arc::new(preview_rgba(base, stride, w, h)));
                 }
             }
             let _ = CVPixelBufferUnlockBaseAddress(&image, CVPixelBufferLockFlags::ReadOnly);
@@ -471,4 +493,33 @@ pub fn start() -> &'static Arc<EngineShared> {
         log::log("camera engine thread started");
         shared
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn mirror_to_rgba_flips_and_swizzles() {
+        // 4x2 BGRA, stride 20: 4 bytes of padding after each row
+        let mut src = Vec::new();
+        for y in 0..2u8 {
+            for x in 0..4u8 {
+                src.extend_from_slice(&[10 * y + x, 100 + x, 200 + y, 7]);
+            }
+            src.extend_from_slice(&[99; 4]);
+        }
+        let p = mirror_to_rgba(&src, 20, 4, 2);
+        assert_eq!((p.w, p.h, p.rgba.len()), (4, 2, 32));
+        for y in 0..2u8 {
+            for x in 0..4u8 {
+                let at = (usize::from(y) * 4 + usize::from(x)) * 4;
+                let sx = 3 - x;
+                assert_eq!(&p.rgba[at..at + 4], &[200 + y, 100 + sx, 10 * y + sx, 255], "pixel {x},{y}");
+            }
+        }
+        // a buffer one row short: the missing row is black, nothing panics
+        let p = mirror_to_rgba(&src[..20], 20, 4, 2);
+        assert_eq!(&p.rgba[16..20], &[0, 0, 0, 255]);
+    }
 }

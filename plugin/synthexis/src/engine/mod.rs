@@ -51,6 +51,60 @@ impl Demand {
 
 static ENGINE: OnceLock<Engine> = OnceLock::new();
 
+/// The last skeleton of each hand (L, R) with its capture time, in preview
+/// coordinates, for the window's hand map; perception writes it.
+pub static SKELETON: Mutex<[Option<Seen<[[f32; 2]; 21]>>; 2]> = Mutex::new([None, None]);
+
+/// A value with the capture time (ns) of the frame it came from.
+pub type Seen<T> = (T, u64);
+
+/// The face values in `signal::FACE_IDS` order as the emitter sends them
+/// (a part not seen keeps its last value) and which ones this frame saw,
+/// with the capture time: the window's Head section draws them.
+pub static FACE: Mutex<Option<Seen<FaceSeen>>> = Mutex::new(None);
+
+/// The face values and which of them the frame saw.
+pub type FaceSeen = ([f32; 9], [bool; 9]);
+
+/// The face's tracking boxes (face, eyes, mouth) in preview coordinates
+/// (0..1, mirrored like the preview) with the capture time: the window
+/// draws them over the camera.
+pub static FACE_GEOM: Mutex<Option<Seen<geom::FaceGeom>>> = Mutex::new(None);
+
+/// The debounced finger mask of each hand (L, R) the triggers see, with its
+/// capture time: the window shows which fingers count as shown.
+pub static MASKS: Mutex<[Option<(u8, u64)>; 2]> = Mutex::new([None, None]);
+
+/// The smoothed palm speed (HandFeatures::speed, 0..1) of each hand with
+/// its capture time: the Pong point shoots only from a hand held still.
+pub static HAND_SPEED: Mutex<[Option<Seen<f32>>; 2]> = Mutex::new([None, None]);
+
+/// The trigger values per finger of each hand (geom::trigger_fingers) with
+/// their capture time, for the finger calibration.
+pub static FINGER_VALUES: Mutex<[Option<Seen<[f32; 5]>>; 2]> = Mutex::new([None, None]);
+
+/// The two sources behind FINGER_VALUES per hand: the student's finger
+/// probabilities and the geometric extension, for the calibration log.
+pub static FINGER_RAW: Mutex<[Option<Seen<[[f32; 5]; 2]>>; 2]> = Mutex::new([None, None]);
+
+/// Per hand and finger the threshold the triggers use (settings `fingers`,
+/// calib.rs); 0.5 until the person calibrates.
+pub static FINGER_THR: Mutex<[[f32; 5]; 2]> = Mutex::new([[0.5; 5]; 2]);
+
+/// Per hand the person's skeleton templates from the finger calibration
+/// (geom::MaskTemplates); empty until a calibration found poses it can
+/// tell apart. Not kept in settings: a restart needs a new calibration.
+pub static MASK_TEMPLATES: Mutex<[geom::MaskTemplates; 2]> = Mutex::new([geom::MaskTemplates::EMPTY, geom::MaskTemplates::EMPTY]);
+
+/// The thresholds the triggers use; None (Reset) also drops the
+/// skeleton templates.
+pub fn set_finger_thresholds(t: Option<[[f32; 5]; 2]>) {
+    if t.is_none() {
+        *MASK_TEMPLATES.lock() = [geom::MaskTemplates::EMPTY, geom::MaskTemplates::EMPTY];
+    }
+    *FINGER_THR.lock() = t.unwrap_or([[0.5; 5]; 2]);
+}
+
 pub struct Engine {
     pub subscribers: Mutex<Vec<Weak<dyn SignalSubscriber>>>,
     pub camera: &'static Arc<camera::EngineShared>,

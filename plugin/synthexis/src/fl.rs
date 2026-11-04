@@ -3,13 +3,15 @@
 //!
 //! The plugin owns a CoreMIDI virtual source and destination, both named
 //! "synthexis", which FL binds to the "synthexis bridge" device script
-//! (plugin/fl/device_synthexis_bridge.py, protocol 4). Frames both ways are
+//! (plugin/fl/device_synthexis_bridge.py, protocol 5). Frames both ways are
 //! F0 7D <ASCII JSON> F7. One worker thread owns the ports, sends requests
 //! and pages through replies; the script pushes focus and inventory events
 //! on its own. The GUI reads a snapshot (`View`) and asks for parameter
 //! names with `want`; the route writer sends parameter values with `write`
 //! (fire and forget, the worker keeps only the latest value per parameter);
-//! nothing here runs on the audio thread.
+//! the MIDI player sends notes with `notes`, straight to the port, so a
+//! request the worker waits on never delays a note. Nothing here runs on
+//! the audio thread.
 //!
 //! Setup without MIDI settings (probes/fl-midi-autolink/RESULT.md): FL asks
 //! every MIDI device it has never seen who it is (Universal Device Inquiry,
@@ -44,7 +46,7 @@ use crate::log::log;
 const PORT: &str = "synthexis";
 const SOURCE_UID: i32 = 0x5359_4E01;
 const DEST_UID: i32 = 0x5359_4E02;
-const PROTO: u64 = 4;
+const PROTO: u64 = 5;
 /// Our reply to FL's device inquiry: manufacturer 7D (non-commercial),
 /// family "SX", model "FL", version = protocol. The script's
 /// `# supportedHardwareIds=7D 53 58 46 4C` is a prefix of it.
@@ -65,7 +67,8 @@ const SELF_NAME: &str = "synthexis";
 pub enum At {
     /// Mixer track (0 = Master) and effect slot (0..9).
     Fx { track: u32, slot: u32 },
-    /// Channel rack generator.
+    /// Channel rack generator, by FL's global channel index (the rack's
+    /// group filter changes no index).
     Gen { ch: u32 },
 }
 
@@ -177,6 +180,26 @@ pub enum Link {
     Down(String),
 }
 
+/// A channel rack channel that can play notes: a generator plugin or a
+/// Sampler/Layer channel (plugin ""). `index` is FL's global channel index.
+#[derive(Clone, Debug, PartialEq)]
+pub struct ChannelRow {
+    pub index: u32,
+    pub name: String,
+    pub plugin: String,
+}
+
+impl ChannelRow {
+    /// "FPC", "Serum 2 · Pad", "Kick".
+    pub fn label(&self) -> String {
+        match (self.plugin.as_str(), self.name.trim()) {
+            ("", n) => n.to_string(),
+            (p, n) if n.is_empty() || n == p => p.to_string(),
+            (p, n) => format!("{p} · {n}"),
+        }
+    }
+}
+
 /// Parameter names (index, name) of one plugin, or why FL sent none.
 pub type Params = Result<Vec<(u32, String)>, String>;
 
@@ -186,6 +209,9 @@ pub struct View {
     pub link: Link,
     /// Plugins in the project, mixer slots first, synthexis left out.
     pub targets: Vec<Target>,
+    /// Channel rack channels in rack order, every group, synthexis left
+    /// out: where notes can go.
+    pub channels: Vec<ChannelRow>,
     /// The inventory arrived at least once since the link came up.
     pub loaded: bool,
     /// Last plugin window focused in FL (never synthexis, kept when a
@@ -201,6 +227,14 @@ pub type Names = (Key, Vec<(u32, String)>);
 
 pub struct Bridge {
     view: Mutex<View>,
+    /// The source, once open, for notes; `up` mirrors Link::Up.
+    source: Mutex<Option<Arc<VirtualSource>>>,
+    up: std::sync::atomic::AtomicBool,
+    /// Notes on as the players sent them, (channel, pitch, velocity,
+    /// owners), also while the link is down; `come_up` plays them again.
+    /// Owners count the ons of every instance on that note. Locks after
+    /// `view`, before `source`.
+    held: Mutex<Vec<Held>>,
     want: Sender<Key>,
     /// Gets every parameter list as it arrives (on_names).
     names: Mutex<Vec<Sender<Names>>>,
@@ -220,7 +254,7 @@ pub fn bridge() -> &'static Bridge {
         {
             log(&format!("fl: worker not started: {e}"));
         }
-        Bridge { view: Mutex::new(View::default()), want, names: Mutex::new(Vec::new()), writes }
+        Bridge { view: Mutex::new(View::default()), source: Mutex::new(None), up: Default::default(), held: Mutex::new(Vec::new()), want, names: Mutex::new(Vec::new()), writes }
     })
 }
 
@@ -238,6 +272,55 @@ impl Bridge {
     /// FL records it as automation while it records.
     pub fn write(&self, key: &Key, index: u32, v: f32) {
         let _ = self.writes.send((key.clone(), index, v));
+    }
+
+    /// Plays notes (FL channel, pitch, velocity; 0 = off) through the
+    /// script. Called by the MIDI players of every instance. A note on that
+    /// another instance holds re-strikes it (off, then on); an off goes out
+    /// only with the note's last owner, so two instances on one note never
+    /// cut each other or leave it hanging. While the link is down the ons
+    /// stay here, and `come_up` plays them once it is up; offs still go
+    /// out, in case FL hears them.
+    pub fn notes(&self, ev: &[(u32, u8, u8)]) {
+        self.notes_to(ev, |out| {
+            let Some(src) = self.source.lock().clone() else { return };
+            if let Err(e) = src.received(&PacketBuffer::new(0, &frame(&notes_msg(out)))) {
+                log(&format!("fl: notes not sent: {e}"));
+            }
+        });
+    }
+
+    /// `notes` with the port as `send`.
+    fn notes_to(&self, ev: &[(u32, u8, u8)], send: impl FnOnce(&[(u32, u8, u8)])) {
+        if ev.is_empty() {
+            return;
+        }
+        // held while sending, so come_up never runs between the two
+        let mut held = self.held.lock();
+        let out = hold(&mut held, ev, self.up.load(std::sync::atomic::Ordering::Acquire));
+        if !out.is_empty() {
+            send(&out);
+        }
+    }
+
+    /// The link came up, or the script started over (its OnDeInit ended
+    /// its notes): `send` gets `alloff`, which ends what a previous life of
+    /// the plugin left on and the notes whose off was dropped while the
+    /// link was down, then the notes the players still hold, so a latched
+    /// chord sounds again instead of staying silent while the window shows
+    /// it playing. Under the view and notes locks, so no note of a player
+    /// goes out between them or gets lost.
+    fn come_up(&self, mut send: impl FnMut(&Value)) {
+        let mut v = self.view.lock();
+        let held = self.held.lock();
+        send(&json!({"cmd": "alloff"}));
+        if !held.is_empty() {
+            let on: Vec<(u32, u8, u8)> = held.iter().map(|h| (h.ch, h.pitch, h.vel)).collect();
+            send(&notes_msg(&on));
+        }
+        v.link = Link::Up;
+        v.gen += 1;
+        self.up.store(true, std::sync::atomic::Ordering::Release);
     }
 
     /// Sends `tx` every parameter list FL sends from now on, and the
@@ -269,13 +352,14 @@ impl Bridge {
         let (want, rx) = unbounded();
         let (writes, wrx) = unbounded();
         std::mem::forget((rx, wrx));
-        Box::leak(Box::new(Bridge { view: Mutex::new(View::default()), want, names: Mutex::new(Vec::new()), writes }))
+        Box::leak(Box::new(Bridge { view: Mutex::new(View::default()), source: Mutex::new(None), up: Default::default(), held: Mutex::new(Vec::new()), want, names: Mutex::new(Vec::new()), writes }))
     }
 
     pub(crate) fn update(&self, f: impl FnOnce(&mut View)) {
         let mut v = self.view.lock();
         f(&mut v);
         v.gen += 1;
+        self.up.store(v.link == Link::Up, std::sync::atomic::Ordering::Release);
     }
 }
 
@@ -299,6 +383,59 @@ impl Deframer {
             self.buf.drain(..=end);
         }
     }
+}
+
+/// The "notes" request for a batch.
+fn notes_msg(ev: &[(u32, u8, u8)]) -> Value {
+    let e: Vec<[u32; 3]> = ev.iter().map(|&(c, n, v)| [c, u32::from(n & 0x7F), u32::from(v.min(127))]).collect();
+    json!({"cmd": "notes", "e": e})
+}
+
+/// A note on, as `Bridge::held` keeps it.
+#[derive(Clone, Copy, Debug, PartialEq)]
+struct Held {
+    ch: u32,
+    pitch: u8,
+    /// The newest on's velocity.
+    vel: u8,
+    /// Ons not ended yet, over every instance.
+    owners: u32,
+}
+
+/// Applies a batch to the notes on and returns what goes out: an on adds
+/// an owner (one already held is struck again, off then on, keeping the
+/// newest velocity); an off removes one and goes out with the last, or at
+/// once for a note not held. Ons go out only while `up`, offs always.
+fn hold(held: &mut Vec<Held>, ev: &[(u32, u8, u8)], up: bool) -> Vec<(u32, u8, u8)> {
+    let mut out = Vec::new();
+    for &(c, n, v) in ev {
+        let n = n & 0x7F;
+        let i = held.iter().position(|h| (h.ch, h.pitch) == (c, n));
+        match (v > 0, i) {
+            (true, Some(i)) => {
+                held[i].vel = v.min(127);
+                held[i].owners += 1;
+                if up {
+                    out.extend([(c, n, 0), (c, n, v.min(127))]);
+                }
+            }
+            (true, None) => {
+                held.push(Held { ch: c, pitch: n, vel: v.min(127), owners: 1 });
+                if up {
+                    out.push((c, n, v.min(127)));
+                }
+            }
+            (false, Some(i)) => {
+                held[i].owners -= 1;
+                if held[i].owners == 0 {
+                    held.remove(i);
+                    out.push((c, n, 0));
+                }
+            }
+            (false, None) => out.push((c, n, 0)),
+        }
+    }
+    out
 }
 
 /// The JSON of an F0 7D ... F7 frame.
@@ -388,6 +525,7 @@ fn run(want: Receiver<Key>, writes: Receiver<(Key, u32, f32)>) {
         }
     };
     log("fl: MIDI ports open");
+    *b.source.lock() = Some(Arc::clone(&ports.source));
     let mut w = Worker {
         b,
         ports,
@@ -396,6 +534,7 @@ fn run(want: Receiver<Key>, writes: Receiver<(Key, u32, f32)>) {
         next_id: 1,
         hash: None,
         sync: true,
+        hello: false,
         cache: HashMap::new(),
         unsent: Vec::new(),
     };
@@ -437,6 +576,9 @@ struct Worker {
     /// Inventory hash the targets were loaded at.
     hash: Option<i64>,
     sync: bool,
+    /// The script said hello since the last ping: it started over, and its
+    /// OnDeInit ended every note.
+    hello: bool,
     cache: HashMap<Key, Vec<(u32, String)>>,
     /// Latest value per parameter not sent yet (the link was down).
     unsent: Vec<(Key, u32, f32)>,
@@ -481,7 +623,10 @@ impl Worker {
 
     fn on_event(&mut self, v: &Value) {
         match v.get("ev").and_then(Value::as_str) {
-            Some("hello") => self.sync = true,
+            Some("hello") => {
+                self.sync = true;
+                self.hello = true;
+            }
             Some("inv") => {
                 if v.get("h").and_then(Value::as_i64) != self.hash {
                     self.hash = None; // reloaded by the main loop
@@ -517,9 +662,11 @@ impl Worker {
     fn connect(&mut self) {
         match self.call(json!({"cmd": "ping"})) {
             Ok(r) if r.get("proto").and_then(Value::as_u64) == Some(PROTO) => {
-                if self.b.view().link != Link::Up {
-                    log("fl: script answered, protocol 4");
-                    self.b.update(|v| v.link = Link::Up);
+                let hello = std::mem::take(&mut self.hello);
+                if self.b.view().link != Link::Up || hello {
+                    log("fl: script answered, protocol 5");
+                    let b = self.b;
+                    b.come_up(|m| self.send(m));
                     self.flush();
                 }
                 if r.get("h").and_then(Value::as_i64) != self.hash {
@@ -558,13 +705,14 @@ impl Worker {
     fn load_inventory(&mut self) {
         for _ in 0..3 {
             match self.inventory_once() {
-                Ok(Some((h, targets))) => {
+                Ok(Some((h, targets, chans))) => {
                     self.hash = Some(h);
                     self.cache.retain(|k, _| targets.iter().any(|t| t.key == *k));
                     self.b.update(|v| {
                         let at = v.focus.as_ref().map(|f| f.at);
                         v.focus = at.and_then(|at| targets.iter().find(|t| t.key.at == at).map(|t| t.key.clone()));
                         v.targets = targets;
+                        v.channels = chans;
                         v.loaded = true;
                     });
                     return;
@@ -575,8 +723,9 @@ impl Worker {
         }
     }
 
-    fn inventory_once(&mut self) -> Result<Option<(i64, Vec<Target>)>, String> {
-        let (mut out, mut start, mut hash) = (Vec::new(), 0u64, None);
+    #[allow(clippy::type_complexity)]
+    fn inventory_once(&mut self) -> Result<Option<(i64, Vec<Target>, Vec<ChannelRow>)>, String> {
+        let (mut out, mut chans, mut start, mut hash) = (Vec::new(), Vec::new(), 0u64, None);
         loop {
             let r = self.call(json!({"cmd": "inv", "start": start, "budget": PAGE}))?;
             let h = r.get("h").and_then(Value::as_i64);
@@ -588,10 +737,13 @@ impl Worker {
                 if let Some(k) = parse_row(row) {
                     out.push(k);
                 }
+                if let Some(c) = parse_channel(row) {
+                    chans.push(c);
+                }
             }
             match r.get("next").and_then(Value::as_u64) {
                 Some(n) => start = n,
-                None => return Ok(Some((hash.unwrap_or(0), out))),
+                None => return Ok(Some((hash.unwrap_or(0), out, chans))),
             }
         }
     }
@@ -692,6 +844,18 @@ fn parse_row(row: &Value) -> Option<Target> {
     (!t.key.plugin.is_empty() && !is_self(&t.key.plugin)).then_some(t)
 }
 
+/// A channel that plays notes: a "gen" row or a "ch" row (no plugin).
+fn parse_channel(row: &Value) -> Option<ChannelRow> {
+    let s = |i: usize| row.get(i).and_then(Value::as_str).unwrap_or("").to_string();
+    let index = row.get(1).and_then(Value::as_u64)? as u32;
+    let c = match row.get(0).and_then(Value::as_str)? {
+        "gen" => ChannelRow { index, name: s(4), plugin: s(2) },
+        "ch" => ChannelRow { index, name: s(2), plugin: String::new() },
+        _ => return None,
+    };
+    (!is_self(&c.plugin)).then_some(c)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -729,6 +893,75 @@ mod tests {
     }
 
     #[test]
+    fn channel_rows_for_notes() {
+        let gen = parse_channel(&json!(["gen", 2, "FPC", "", "FPC", 4, "Drums"]));
+        assert_eq!(gen.as_ref().map(ChannelRow::label).as_deref(), Some("FPC"));
+        let serum = parse_channel(&json!(["gen", 1, "Serum 2", "", "Pad", 3, "Pads"]));
+        assert_eq!(serum.map(|c| (c.index, c.label())), Some((1, "Serum 2 · Pad".into())));
+        let kick = parse_channel(&json!(["ch", 0, "Kick", 1, "Insert 1"]));
+        assert_eq!(kick.map(|c| (c.index, c.label())), Some((0, "Kick".into())));
+        assert_eq!(parse_channel(&json!(["gen", 5, "synthexis", "", "synthexis", 0, ""])), None);
+        assert_eq!(parse_channel(&json!(["fx", 0, 1, "Portal", "", "Master"])), None);
+        // the parameter picker ignores channel rows
+        assert_eq!(parse_row(&json!(["ch", 0, "Kick", 1, "Insert 1"])), None);
+    }
+
+    #[test]
+    fn held_notes_sound_again_when_the_link_comes_up() {
+        let b = Bridge::detached();
+        // a latched chord struck while FL did not answer: nothing went out
+        b.notes(&[(2, 60, 100), (2, 64, 100), (2, 67, 100)]);
+        b.notes(&[(2, 64, 0), (2, 67, 0), (2, 67, 80)]);
+        let mut sent = Vec::new();
+        b.come_up(|m| sent.push(m.clone()));
+        assert_eq!(sent, vec![json!({"cmd": "alloff"}), json!({"cmd": "notes", "e": [[2, 60, 100], [2, 67, 80]]})]);
+        assert_eq!(b.view().link, Link::Up);
+        assert!(b.up.load(std::sync::atomic::Ordering::Acquire));
+        // a second restart (the script said hello) strikes them again;
+        // ended notes stay ended
+        b.notes(&[(2, 60, 0)]);
+        sent.clear();
+        b.come_up(|m| sent.push(m.clone()));
+        assert_eq!(sent, vec![json!({"cmd": "alloff"}), json!({"cmd": "notes", "e": [[2, 67, 80]]})]);
+        b.notes(&[(2, 67, 0)]);
+        sent.clear();
+        b.come_up(|m| sent.push(m.clone()));
+        assert_eq!(sent, vec![json!({"cmd": "alloff"})]);
+    }
+
+    #[test]
+    fn an_off_goes_out_while_the_link_is_down() {
+        let b = Bridge::detached();
+        b.come_up(|_| {});
+        let mut sent = Vec::new();
+        b.notes_to(&[(2, 60, 100)], |e| sent.extend_from_slice(e));
+        b.update(|v| v.link = Link::Down(NO_ANSWER.into()));
+        b.notes_to(&[(2, 60, 0), (2, 62, 90)], |e| sent.extend_from_slice(e));
+        assert_eq!(sent, vec![(2, 60, 100), (2, 60, 0)], "the off out, the new on waits");
+        let mut msgs = Vec::new();
+        b.come_up(|m| msgs.push(m.clone()));
+        assert_eq!(msgs, vec![json!({"cmd": "alloff"}), json!({"cmd": "notes", "e": [[2, 62, 90]]})]);
+    }
+
+    #[test]
+    fn two_instances_on_one_note_share_it_until_the_last_off() {
+        let b = Bridge::detached();
+        b.come_up(|_| {});
+        let mut sent = Vec::new();
+        let mut step = |ev: &[(u32, u8, u8)]| {
+            let mut s = Vec::new();
+            b.notes_to(ev, |e| s.extend_from_slice(e));
+            sent.push(s);
+        };
+        step(&[(2, 60, 100)]);
+        step(&[(2, 60, 90)]);
+        step(&[(2, 60, 0)]);
+        step(&[(2, 60, 0)]);
+        assert_eq!(sent, vec![vec![(2, 60, 100)], vec![(2, 60, 0), (2, 60, 90)], vec![], vec![(2, 60, 0)]]);
+        assert!(b.held.lock().is_empty());
+    }
+
+    #[test]
     fn deframer_splits_and_joins_packets() {
         let mut d = Deframer::default();
         let mut got = Vec::new();
@@ -741,7 +974,7 @@ mod tests {
     #[test]
     fn answers_device_inquiry_only() {
         // FL sent exactly this in probes/fl-midi-autolink (M1)
-        let want = [0xF0, 0x7E, 0x7F, 0x06, 0x02, 0x7D, 0x53, 0x58, 0x46, 0x4C, 0x04, 0, 0, 0, 0xF7];
+        let want = [0xF0, 0x7E, 0x7F, 0x06, 0x02, 0x7D, 0x53, 0x58, 0x46, 0x4C, 0x05, 0, 0, 0, 0xF7];
         assert_eq!(identity_reply(&[0xF0, 0x7E, 0x7F, 0x06, 0x01, 0xF7]).as_deref(), Some(&want[..]));
         assert_eq!(identity_reply(&[0xF0, 0x7E, 0x00, 0x06, 0x01, 0xF7]).as_deref(), Some(&want[..]));
         assert!(IDENTITY.iter().all(|b| *b < 0x80));

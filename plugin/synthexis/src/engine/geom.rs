@@ -415,6 +415,15 @@ impl Shape {
         Some(Self::from_cov([mx, my], cxx / n / 2.0, cyy / n / 2.0, cxy / n / 2.0))
     }
 
+    /// The box around the ellipse [x0, y0, x1, y1].
+    pub fn bounds(&self) -> [f32; 4] {
+        let (a, b) = (self.major / 2.0, self.minor / 2.0);
+        let (s, c) = self.angle.sin_cos();
+        let ex = ((a * c).powi(2) + (b * s).powi(2)).sqrt();
+        let ey = ((a * s).powi(2) + (b * c).powi(2)).sqrt();
+        [self.centre[0] - ex, self.centre[1] - ey, self.centre[0] + ex, self.centre[1] + ey]
+    }
+
     pub fn ratio(&self) -> f32 {
         if self.major <= f32::EPSILON {
             0.0
@@ -473,8 +482,22 @@ pub struct HandFeatures {
     pub roll: f32,
     pub tilt: [f32; 5],
     pub finger_count: f32,
+    /// Debounced finger mask for triggers as mask / 31 (`ShapeGate`,
+    /// route::shape_mask reads it back).
+    pub shape: f32,
+    /// False while the hand's ShapeGate has no mask yet (the hand just
+    /// came back): `shape` is then the plain mask and goes out as unseen.
+    pub shape_settled: bool,
+    /// The 21 joints in preview coordinates (0..1, mirrored like the
+    /// preview, so x is the person's view), for the window's skeleton.
+    pub joints: [[f32; 2]; 21],
+    /// The student's finger probabilities thumb..pinky (the geometric
+    /// finger values when it has none), for the bench.
+    pub ext: [f32; 5],
     /// Palm centre in frame pixels (tracking, hands.distance).
     pub palm: [f32; 2],
+    /// Openness after the perception's glide; `values` sends it when set.
+    pub open_glide: Option<f32>,
 }
 
 /// Finger mean that reads 0 and 1 as openness: the p75 of fist frames and
@@ -484,18 +507,21 @@ pub struct HandFeatures {
 const OPEN_LO: f32 = 0.079;
 const OPEN_HI: f32 = 0.910;
 
+/// Where `HandFeatures::values` has `shape`.
+pub const SHAPE_AT: usize = 20;
+
 impl HandFeatures {
     pub fn openness(&self) -> f32 {
         lin(self.finger.iter().sum::<f32>() / 5.0, OPEN_LO, OPEN_HI)
     }
 
-    pub fn values(&self) -> [f32; 20] {
-        let o = self.openness();
+    pub fn values(&self) -> [f32; 21] {
+        let o = self.open_glide.unwrap_or_else(|| self.openness());
         let f = self.finger;
         let t = self.tilt;
         [
             o, 1.0 - o, f[0], f[1], f[2], f[3], f[4], self.spread, self.x, self.y, self.depth,
-            self.pinch, self.speed, self.roll, t[0], t[1], t[2], t[3], t[4], self.finger_count,
+            self.pinch, self.speed, self.roll, t[0], t[1], t[2], t[3], t[4], self.finger_count, self.shape,
         ]
     }
 }
@@ -520,6 +546,9 @@ pub fn hand_features(kp: &[[f32; 2]; 21], side: Side, fw: f32, fh: f32, fingers_
         (wrist[1] + index_mcp[1] + middle_mcp[1] + pinky_mcp[1]) / 4.0,
     ];
     let mut f = HandFeatures { palm, ..Default::default() };
+    for (j, p) in f.joints.iter_mut().zip(kp) {
+        *j = [1.0 - (p[0] / fw).clamp(0.0, 1.0), (p[1] / fh).clamp(0.0, 1.0)];
+    }
     for (n, ch) in FINGERS.iter().enumerate() {
         // Bend summed over the three joints of the chain; straight = 0.
         let segs = [sub(kp[ch[0]], wrist), sub(kp[ch[1]], kp[ch[0]]), sub(kp[ch[2]], kp[ch[1]]), sub(kp[ch[3]], kp[ch[2]])];
@@ -552,9 +581,128 @@ pub fn hand_features(kp: &[[f32; 2]; 21], side: Side, fw: f32, fh: f32, fingers_
     let signed = if side == Side::R { -across } else { across };
     f.roll = 0.5 + 0.5 * (signed / 0.8).clamp(-1.0, 1.0);
     let ext = fingers_ext.unwrap_or(f.finger);
+    f.ext = ext;
     f.finger_count = ext.iter().filter(|&&e| e > 0.5).count() as f32 / 5.0;
+    // without a gate (bench, tests) the plain mask at 0.5
+    let mask = ext.iter().enumerate().filter(|(_, &e)| e > 0.5).fold(0u8, |m, (i, _)| m | (1 << (4 - i)));
+    f.shape = crate::route::shape_value(mask);
+    f.shape_settled = true;
     f
 }
+
+/// The value per finger (thumb..pinky) the MIDI triggers threshold: the
+/// mean of the student's finger probability and the geometric extension.
+/// Of the four candidates in probes/finger-shapes/RESULT.md it read the
+/// most exact masks on the dev frames (0.880) with the least flicker, and
+/// 0.895 on S4; geometry judges each finger by its own joints, so it also
+/// carries the combinations no recording has.
+pub fn trigger_fingers(f: &HandFeatures) -> [f32; 5] {
+    let mut v = [0.0; 5];
+    for (i, x) in v.iter_mut().enumerate() {
+        *x = (f.ext[i] + f.finger[i]) / 2.0;
+    }
+    v
+}
+
+/// Finger states for triggers (spec gest.finger_states, cond.hysteresis):
+/// a finger counts as shown above its threshold + 0.1 and as folded below
+/// its threshold - 0.1 (0.5 each, or the person's own from the finger
+/// calibration, calib.rs), and a new mask holds for 60 ms before it
+/// replaces the old one, so a finger near its threshold does not chatter
+/// notes. Bits: thumb 0b10000 .. pinky 0b00001. A new gate has no mask
+/// until the first one held its 60 ms; perception starts a hand's gate
+/// over on every frame without that hand, so a hand coming back never
+/// replays the mask it left with.
+#[derive(Debug, Default, Clone, Copy)]
+pub struct ShapeGate {
+    lit: u8,
+    /// The mask waiting out its dwell, and since when.
+    cand: Option<(u8, u64)>,
+    mask: Option<u8>,
+}
+
+pub const SHAPE_BAND: f32 = 0.1;
+const SHAPE_DWELL_NS: u64 = 60_000_000;
+
+impl ShapeGate {
+    pub fn update(&mut self, ext: [f32; 5], thr: [f32; 5], t_ns: u64) -> Option<u8> {
+        for (f, (&p, &th)) in ext.iter().zip(&thr).enumerate() {
+            let bit = 1 << (4 - f);
+            if p > th + SHAPE_BAND {
+                self.lit |= bit;
+            } else if p < th - SHAPE_BAND {
+                self.lit &= !bit;
+            }
+        }
+        let (cand, since) = match self.cand {
+            Some((c, since)) if c == self.lit => (c, since),
+            _ => (self.lit, t_ns),
+        };
+        self.cand = Some((cand, since));
+        if self.mask != Some(cand) && t_ns.saturating_sub(since) >= SHAPE_DWELL_NS {
+            self.mask = Some(cand);
+        }
+        self.mask
+    }
+}
+
+/// A hand's skeleton (21 joints, x and y), wrist at 0, wrist to middle
+/// base pointing up (0, -1), in that length.
+pub type Bones = [f32; 42];
+
+/// `j` (preview coordinates, y down) as `Bones`.
+pub fn bones(j: &[[f32; 2]; 21]) -> Bones {
+    let up = [j[9][0] - j[0][0], j[9][1] - j[0][1]];
+    let len = (up[0] * up[0] + up[1] * up[1]).sqrt().max(1e-6);
+    let (c, s) = (-up[1] / len, -up[0] / len);
+    let mut out = [0.0; 42];
+    for (k, p) in j.iter().enumerate() {
+        let (x, y) = ((p[0] - j[0][0]) / len, (p[1] - j[0][1]) / len);
+        out[2 * k] = c * x - s * y;
+        out[2 * k + 1] = s * x + c * y;
+    }
+    out
+}
+
+pub fn bones_dist(a: &Bones, b: &Bones) -> f32 {
+    a.iter().zip(b).map(|(a, b)| (a - b) * (a - b)).sum::<f32>().sqrt()
+}
+
+/// Per-person skeleton templates from the finger calibration (calib.rs)
+/// for poses the hand student reads as one mask: middle alone and ring
+/// alone read as the index (Noa, FL 11-04). The finger values cannot
+/// tell them apart; the student's skeleton may still differ (where the
+/// raised chain starts, how the folded fingers lie). A set holds, for a
+/// read mask, the person's mean skeleton of each pose read as it; the
+/// calibration only adds a pose whose skeletons it told apart from the
+/// read pose's in at least `calib::MIN_APART` of held-out frames.
+#[derive(Debug, Clone)]
+pub struct MaskTemplates {
+    pub sets: Vec<(u8, Vec<(u8, Bones)>)>,
+}
+
+impl MaskTemplates {
+    pub const EMPTY: Self = Self { sets: Vec::new() };
+
+    /// The mask for a hand the gate reads as `read` with skeleton `b`:
+    /// the nearest template's pose when it is nearer than
+    /// `TEMPLATE_MARGIN` times the next one, else `last` (the previous
+    /// pick of this hand) when that is a pose of the same set, else
+    /// `read`. Masks without a set pass through.
+    pub fn pick(&self, read: u8, b: &Bones, last: Option<u8>) -> u8 {
+        let Some((_, cands)) = self.sets.iter().find(|(r, _)| *r == read) else { return read };
+        let mut d: Vec<(f32, u8)> = cands.iter().map(|(m, c)| (bones_dist(b, c), *m)).collect();
+        d.sort_by(|a, b| a.0.total_cmp(&b.0));
+        match d.as_slice() {
+            [(d0, m0), (d1, _), ..] if *d0 <= TEMPLATE_MARGIN * d1 => *m0,
+            _ => last.filter(|m| cands.iter().any(|c| c.0 == *m)).unwrap_or(read),
+        }
+    }
+}
+
+/// A template wins only this clearly; between, the hand keeps its last
+/// pick, so a point held between the two does not flicker.
+const TEMPLATE_MARGIN: f32 = 0.8;
 
 /// Face features. `values()` follows `signal::FACE_IDS`.
 #[derive(Debug, Clone, Copy, Default)]
@@ -576,6 +724,39 @@ pub struct FaceFeatures {
     /// Mouth cues: outer-lip width / eye distance, corner lift, outer and
     /// inner lip height across the eye line / eye distance.
     pub mouth_px: [f32; 4],
+    /// Yaw, pitch and roll are this frame's (else they keep the last ones).
+    pub seen_head: bool,
+    /// The head pose's points (`head_points`, crop pixels) and its fit
+    /// residual, for the bench.
+    pub head_pts: [[f32; 2]; 7],
+    pub head_fit: f32,
+    /// Where the face, the eyes [L, R] and the mouth are, in the input's
+    /// pixels from `face_features`; the producer maps it to the preview
+    /// (`FaceGeom::map`) for the window's tracking boxes.
+    pub geom: FaceGeom,
+}
+
+/// Axis-aligned boxes [x0, y0, x1, y1] of the face, the eyes [L, R] (the
+/// person's) and the mouth; None for a part not seen.
+#[derive(Debug, Clone, Copy, Default, PartialEq)]
+pub struct FaceGeom {
+    pub face: Option<[f32; 4]>,
+    pub eyes: [Option<[f32; 4]>; 2],
+    pub mouth: Option<[f32; 4]>,
+}
+
+impl FaceGeom {
+    /// Every box through the point map `f` (corners mapped, then sorted
+    /// again, so a mirror keeps x0 < x1).
+    pub fn map(&self, f: impl Fn([f32; 2]) -> [f32; 2]) -> FaceGeom {
+        let m = |b: Option<[f32; 4]>| {
+            b.map(|[x0, y0, x1, y1]| {
+                let (a, c) = (f([x0, y0]), f([x1, y1]));
+                [a[0].min(c[0]), a[1].min(c[1]), a[0].max(c[0]), a[1].max(c[1])]
+            })
+        };
+        FaceGeom { face: m(self.face), eyes: [m(self.eyes[0]), m(self.eyes[1])], mouth: m(self.mouth) }
+    }
 }
 
 impl FaceFeatures {
@@ -782,6 +963,7 @@ pub fn lip_corner_lift(outer: &[[f32; 2]]) -> Option<f32> {
 pub fn face_features(face: [f32; 4], eyes: &[Shape], mouth: Option<Shape>, cal: FaceCal) -> FaceFeatures {
     let mut f = FaceFeatures { yaw: 0.5, pitch: 0.5, roll: 0.5, ..Default::default() };
     let [fx, fy, fw, fh] = face;
+    f.geom.face = Some([fx, fy, fx + fw, fy + fh]);
     // Image-left eye is the person's right eye.
     let mut sorted: Vec<Shape> = eyes.iter().copied().take(2).collect();
     sorted.sort_by(|a, b| a.centre[0].total_cmp(&b.centre[0]));
@@ -801,6 +983,7 @@ pub fn face_features(face: [f32; 4], eyes: &[Shape], mouth: Option<Shape>, cal: 
             f.raw[s] = e.ratio();
             f.eye_open[s] = lin(e.ratio(), cal.eye.0, cal.eye.1);
             f.seen_eye[s] = true;
+            f.geom.eyes[s] = Some(e.bounds());
         }
     }
     if let (Some(l), Some(r)) = (eye_by_side[0], eye_by_side[1]) {
@@ -812,6 +995,7 @@ pub fn face_features(face: [f32; 4], eyes: &[Shape], mouth: Option<Shape>, cal: 
         // Tilt to the left shoulder lowers the person's left (image-right) eye.
         let a = (l.centre[1] - r.centre[1]).atan2(l.centre[0] - r.centre[0]);
         f.roll = 0.5 - 0.5 * (a / (PI / 6.0)).clamp(-1.0, 1.0);
+        f.seen_head = true;
     }
     if let Some(m) = mouth {
         f.raw[2] = m.ratio();
@@ -819,8 +1003,211 @@ pub fn face_features(face: [f32; 4], eyes: &[Shape], mouth: Option<Shape>, cal: 
         f.mouth_open = lin(m.ratio(), cal.mouth.0, cal.mouth.1);
         f.smile = lin(m.major / fw.max(1.0), cal.smile.0, cal.smile.1);
         f.seen_mouth = true;
+        f.geom.mouth = Some(m.bounds());
     }
     f
+}
+
+/// Rigid points of the head pose model in eye distances: x to the
+/// person's left (image right when they face the camera), y down the face,
+/// z into the head. Eyes (image-left, image-right), nose tip, bridge, nose
+/// wings (image-left, image-right), subnasale. A generic face, not fitted;
+/// no mouth or chin point, so speaking and smiling leave the pose alone.
+const HEAD_MODEL: [[f32; 3]; 7] = [
+    [-0.5, 0.0, 0.0],
+    [0.5, 0.0, 0.0],
+    [0.0, 0.62, -0.45],
+    [0.0, 0.0, -0.20],
+    [-0.28, 0.70, -0.12],
+    [0.28, 0.70, -0.12],
+    [0.0, 0.74, -0.25],
+];
+/// RMS fit residual (eye distances) above which a frame's pose does not
+/// count: the landmarks have left the face's shape (a nod far down, a hand
+/// over the nose). Neutral frames fit to 0.008; frames whose yaw jumps by
+/// 40 to 60 degrees in the pitch sweeps sit at 0.1 to 0.5. Swept on S1-S3
+/// block C (probes/head-signals/poselab.py): 0.05.
+pub const HEAD_FIT_MAX: f32 = 0.05;
+/// Degrees from the neutral pose for value 0 and 1: yaw, pitch, roll.
+pub const HEAD_FULL_DEG: [f32; 3] = [45.0, 30.0, 35.0];
+/// Seconds of poses the neutral pose is the median of: absorbs where the
+/// camera sits (above, below, to the side); a pose held this long half
+/// becomes the new neutral.
+pub const HEAD_NEUTRAL_S: f32 = 30.0;
+
+type Mat3 = [[f32; 3]; 3];
+
+fn dot3(a: [f32; 3], b: [f32; 3]) -> f32 {
+    a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
+}
+
+fn cross3(a: [f32; 3], b: [f32; 3]) -> [f32; 3] {
+    [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]
+}
+
+fn unit3(a: [f32; 3]) -> Option<[f32; 3]> {
+    let n = dot3(a, a).sqrt();
+    (n > 1e-9).then(|| [a[0] / n, a[1] / n, a[2] / n])
+}
+
+/// Rows of a rotation from its first two rows, made orthonormal.
+fn orthonormal(r1: [f32; 3], r2: [f32; 3]) -> Option<Mat3> {
+    let r1 = unit3(r1)?;
+    let r3 = unit3(cross3(r1, r2))?;
+    Some([r1, cross3(r3, r1), r3])
+}
+
+fn inv3(m: Mat3) -> Option<Mat3> {
+    let [[a, b, c], [d, e, f], [g, h, i]] = m;
+    let det = a * (e * i - f * h) - b * (d * i - f * g) + c * (d * h - e * g);
+    if det.abs() < 1e-9 {
+        return None;
+    }
+    let k = 1.0 / det;
+    Some([
+        [(e * i - f * h) * k, (c * h - b * i) * k, (b * f - c * e) * k],
+        [(f * g - d * i) * k, (a * i - c * g) * k, (c * d - a * f) * k],
+        [(d * h - e * g) * k, (b * g - a * h) * k, (a * e - b * d) * k],
+    ])
+}
+
+/// (A^T A)^-1 A^T of the model points: maps image offsets to a scaled row.
+fn model_pinv() -> Option<[[f32; 7]; 3]> {
+    let mut ata = [[0f32; 3]; 3];
+    for p in &HEAD_MODEL {
+        for r in 0..3 {
+            for c in 0..3 {
+                ata[r][c] += p[r] * p[c];
+            }
+        }
+    }
+    let k = inv3(ata)?;
+    let mut out = [[0f32; 7]; 3];
+    for (r, row) in out.iter_mut().enumerate() {
+        for (n, p) in HEAD_MODEL.iter().enumerate() {
+            row[n] = dot3(k[r], *p);
+        }
+    }
+    Some(out)
+}
+
+/// The model's points from Vision's landmark regions, all in one image
+/// space: eye centres (image-left, image-right), nose crest, nose outline,
+/// median line. Each is picked in the eye-line frame, so a tilted head
+/// picks the same points: the tip is the crest point on the median line
+/// furthest down the face, the bridge the crest's top, the wings the
+/// nose outline's outer points in its bottom quarter, the subnasale the
+/// median line's next point below the tip.
+pub fn head_points(eyes: [[f32; 2]; 2], crest: &[[f32; 2]], nose: &[[f32; 2]], median: &[[f32; 2]]) -> Option<[[f32; 2]; 7]> {
+    let [a, b] = eyes;
+    let d = dist(a, b);
+    if d <= 1.0 || crest.is_empty() || nose.len() < 4 {
+        return None;
+    }
+    let ex = [(b[0] - a[0]) / d, (b[1] - a[1]) / d];
+    let along = |p: &[f32; 2]| p[0] * ex[0] + p[1] * ex[1];
+    let down = |p: &[f32; 2]| -p[0] * ex[1] + p[1] * ex[0];
+    let on_median: Vec<[f32; 2]> =
+        crest.iter().copied().filter(|p| median.iter().any(|m| (p[0] - m[0]).abs() + (p[1] - m[1]).abs() < 0.5)).collect();
+    let ridge = if on_median.is_empty() { crest } else { &on_median };
+    let tip = *ridge.iter().max_by(|p, q| down(p).total_cmp(&down(q)))?;
+    let bridge = *crest.iter().min_by(|p, q| down(p).total_cmp(&down(q)))?;
+    let (lo, hi) = nose.iter().map(down).fold((f32::MAX, f32::MIN), |(lo, hi), v| (lo.min(v), hi.max(v)));
+    let low: Vec<[f32; 2]> = nose.iter().copied().filter(|p| down(p) >= lo + 0.75 * (hi - lo)).collect();
+    let wing_l = *low.iter().min_by(|p, q| along(p).total_cmp(&along(q)))?;
+    let wing_r = *low.iter().max_by(|p, q| along(p).total_cmp(&along(q)))?;
+    let below = median.iter().filter(|m| down(m) > down(&tip) + 0.5);
+    let sub = below.min_by(|p, q| down(p).total_cmp(&down(q))).copied().unwrap_or(tip);
+    Some([a, b, tip, bridge, wing_l, wing_r, sub])
+}
+
+/// Weak-perspective head rotation (POS: least squares of the model's
+/// scaled rows on the points' offsets from the eye midpoint) and the RMS
+/// residual of the fit per eye distance. Rows map model to image (y down).
+fn head_rotation(pinv: &[[f32; 7]; 3], pts: &[[f32; 2]; 7]) -> Option<(Mat3, f32)> {
+    let o = [(pts[0][0] + pts[1][0]) / 2.0, (pts[0][1] + pts[1][1]) / 2.0];
+    let d = dist(pts[0], pts[1]).max(1.0);
+    let row = |k: usize| -> [f32; 3] { std::array::from_fn(|r| (0..7).map(|n| pinv[r][n] * (pts[n][k] - o[k])).sum()) };
+    let (i, j) = (row(0), row(1));
+    let err: f32 = HEAD_MODEL.iter().zip(pts).map(|(m, p)| (dot3(i, *m) - (p[0] - o[0])).powi(2) + (dot3(j, *m) - (p[1] - o[1])).powi(2)).sum();
+    Some((orthonormal(i, j)?, (err / 7.0).sqrt() / d))
+}
+
+fn mat_mul_t(a: &Mat3, b: &Mat3) -> Mat3 {
+    // a^T b
+    std::array::from_fn(|r| std::array::from_fn(|c| (0..3).map(|k| a[k][r] * b[k][c]).sum()))
+}
+
+/// Yaw to the person's left, pitch up, roll to the left shoulder (radians)
+/// of a head rotation: yaw and pitch from where the face points, roll as
+/// the head's x axis turned around that direction, against the same axis
+/// without roll.
+fn head_angles(r: &Mat3) -> Option<[f32; 3]> {
+    let col = |c: usize| [r[0][c], r[1][c], r[2][c]];
+    let z = col(2);
+    let f = [-z[0], -z[1], -z[2]];
+    let u = col(0);
+    let yaw = f[0].atan2(-f[2]);
+    let pitch = (-f[1]).atan2(f[0].hypot(f[2]));
+    let h0 = unit3(cross3([0.0, -1.0, 0.0], f))?;
+    let roll = -dot3(cross3(h0, u), f).atan2(dot3(h0, u));
+    Some([yaw, pitch, roll])
+}
+
+/// Head yaw, pitch and roll from the rigid landmarks against the running
+/// neutral pose (the elementwise median of the poses of the last
+/// `HEAD_NEUTRAL_S`, made a rotation again). Values follow the ontology: yaw 0
+/// turned to the person's left, pitch 0 looking down, roll 0 tilted to the
+/// left shoulder, 0.5 neutral.
+#[derive(Debug, Default)]
+pub struct HeadPose {
+    hist: VecDeque<(u64, Mat3)>,
+    n: u64,
+    scratch: Vec<f32>,
+    last: Option<[f32; 3]>,
+}
+
+impl HeadPose {
+    /// The last values `update` gave, neutral before the first.
+    pub fn last(&self) -> [f32; 3] {
+        self.last.unwrap_or([0.5; 3])
+    }
+
+    /// The values for `pts` (`head_points`) and the fit residual; None for
+    /// the values when the fit is past `HEAD_FIT_MAX`.
+    pub fn update(&mut self, pts: &[[f32; 2]; 7], t_ns: u64) -> (Option<[f32; 3]>, f32) {
+        let Some((r, fit)) = model_pinv().and_then(|p| head_rotation(&p, pts)) else { return (None, f32::MAX) };
+        if fit > HEAD_FIT_MAX {
+            return (None, fit);
+        }
+        // every third frame: 300 poses over 30 s at 30 fps
+        if self.n.is_multiple_of(3) || self.hist.is_empty() {
+            self.hist.push_back((t_ns, r));
+        }
+        self.n += 1;
+        let win = (HEAD_NEUTRAL_S * 1e9) as u64;
+        while self.hist.front().is_some_and(|h| t_ns.saturating_sub(h.0) > win) {
+            self.hist.pop_front();
+        }
+        let (Some(neutral), Some(_)) = (self.neutral(), self.hist.back()) else { return (None, fit) };
+        let Some(a) = head_angles(&mat_mul_t(&neutral, &r)) else { return (None, fit) };
+        let v = |k: usize, sign: f32| 0.5 + 0.5 * sign * (a[k].to_degrees() / HEAD_FULL_DEG[k]).clamp(-1.0, 1.0);
+        self.last = Some([v(0, -1.0), v(1, 1.0), v(2, -1.0)]);
+        (self.last, fit)
+    }
+
+    fn neutral(&mut self) -> Option<Mat3> {
+        let mut m = [[0f32; 3]; 3];
+        for (i, row) in m.iter_mut().enumerate() {
+            for (j, x) in row.iter_mut().enumerate() {
+                self.scratch.clear();
+                self.scratch.extend(self.hist.iter().map(|h| h.1[i][j]));
+                let k = self.scratch.len().checked_sub(1)? / 2;
+                *x = *self.scratch.select_nth_unstable_by(k, |a, b| a.total_cmp(b)).1;
+            }
+        }
+        orthonormal(m[0], m[1])
+    }
 }
 
 /// Object features from its blob in seg pixels. `values()` order is
@@ -946,11 +1333,12 @@ pub fn side_vote(lean: f32, handed: Option<f32>) -> f32 {
 }
 
 /// Side assignment for the seg student's hand blobs. Each blob belongs to
-/// an identity track (nearest live track within a quarter frame width);
-/// a track sums the `side_vote` of its frames, capped, starting from a
-/// small prior from its position against the face (else frame) centre.
-/// Two hands split by image side; one hand takes its track's sign.
-/// Tracks expire after `EXPIRE_NS` unseen.
+/// an identity track (nearest track within a quarter frame width that was
+/// seen in the last `SIDE_GAP_NS`); a track sums the `side_vote` of its
+/// frames, capped at `SIDE_CAP`, starting from a small prior from its
+/// position against the face (else frame) centre. Two hands split by
+/// image side; one hand takes its track's sign. Tracks expire after
+/// `EXPIRE_NS` unseen.
 #[derive(Debug, Default)]
 pub struct SideTracker {
     tracks: Vec<SideTrack>,
@@ -961,10 +1349,28 @@ struct SideTrack {
     pos: [f32; 2],
     t_ns: u64,
     lean: f32,
+    /// The side this track read last as a single hand.
+    side: Option<Side>,
 }
 
 const SIDE_PRIOR: f32 = 0.3;
-const SIDE_CAP: f32 = 40.0;
+/// A track's summed vote stays within +-3, about two frames of a typical
+/// vote (median |vote| 1.15 to 1.43 on S1 to S4 block A). At the old cap
+/// of 40 a hand that took the other hand's place inherited its side for
+/// a second (hand switch at the same spot, probes/finger-shapes/sides.md,
+/// S1 to S3: median 30 wrong frames, max 50); at 3 and with `SIDE_GAP_NS`
+/// the new hand reads right after a median of 1 frame (S4, scored once:
+/// p90 2, max 6), and one-hand frames keep their wrong-side share (S1 to
+/// S3 0.25%, was 0.20%; S4 0.28%, was 0.37%).
+const SIDE_CAP: f32 = 3.0;
+/// A track unseen for longer than this is not taken over by a new blob:
+/// a hand that went out and one that came in are two hands.
+const SIDE_GAP_NS: u64 = 150_000_000;
+/// A single hand keeps the side its track had until the summed vote
+/// passes this against it: a fist's handedness vote wavers around 0 and
+/// flipped the hand to the other side for a few frames (Noa, FL 11-04;
+/// probes/fist-glide/RESULT.md).
+const SIDE_FLIP: f32 = 1.0;
 
 impl SideTracker {
     /// `hands`: blob centre in frame px and its `side_vote` (0 without
@@ -974,7 +1380,13 @@ impl SideTracker {
         let mut pairs: Vec<(f32, usize, usize)> = hands
             .iter()
             .enumerate()
-            .flat_map(|(i, h)| self.tracks.iter().enumerate().map(move |(j, t)| (dist(h.0, t.pos), i, j)))
+            .flat_map(|(i, h)| {
+                self.tracks
+                    .iter()
+                    .enumerate()
+                    .filter(|(_, t)| t_ns.saturating_sub(t.t_ns) <= SIDE_GAP_NS)
+                    .map(move |(j, t)| (dist(h.0, t.pos), i, j))
+            })
             .collect();
         pairs.sort_by(|a, b| a.0.total_cmp(&b.0));
         let mut track_of: Vec<Option<usize>> = vec![None; hands.len()];
@@ -992,7 +1404,7 @@ impl SideTracker {
             .map(|(h, m)| {
                 m.unwrap_or_else(|| {
                     let prior = SIDE_PRIOR * ((h.0[0] - reference) / (0.25 * fw)).clamp(-1.0, 1.0);
-                    self.tracks.push(SideTrack { pos: h.0, t_ns, lean: prior });
+                    self.tracks.push(SideTrack { pos: h.0, t_ns, lean: prior, side: None });
                     self.tracks.len() - 1
                 })
             })
@@ -1011,7 +1423,17 @@ impl SideTracker {
                     vec![Side::L, Side::R]
                 }
             }
-            [_] => vec![if self.tracks[idx[0]].lean > 0.0 { Side::L } else { Side::R }],
+            [_] => {
+                let t = &mut self.tracks[idx[0]];
+                let side = match t.side {
+                    Some(Side::L) if t.lean > -SIDE_FLIP => Side::L,
+                    Some(Side::R) if t.lean < SIDE_FLIP => Side::R,
+                    _ if t.lean > 0.0 => Side::L,
+                    _ => Side::R,
+                };
+                t.side = Some(side);
+                vec![side]
+            }
             _ => vec![],
         };
         // Keep the two newest tracks.
@@ -1041,6 +1463,44 @@ pub fn blob_box(b: &Blob, fw: f32, fh: f32) -> (f32, f32, f32, f32) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn shape_gate_debounces_finger_states() {
+        let mut g = ShapeGate::default();
+        let ms = |m: u64| m * 1_000_000;
+        // index shown: the mask follows after 60 ms, not on the first frame
+        assert_eq!(g.update([0.1, 0.9, 0.1, 0.1, 0.1], [0.5; 5], ms(0)), None);
+        assert_eq!(g.update([0.1, 0.9, 0.1, 0.1, 0.1], [0.5; 5], ms(33)), None);
+        assert_eq!(g.update([0.1, 0.9, 0.1, 0.1, 0.1], [0.5; 5], ms(66)), Some(0b01000));
+        // a probability wandering around 0.5 changes nothing
+        for (i, p) in [0.45, 0.55, 0.42, 0.58].iter().enumerate() {
+            assert_eq!(g.update([0.1, *p, 0.1, 0.1, 0.1], [0.5; 5], ms(100 + 33 * i as u64)), Some(0b01000));
+        }
+        // a one-frame flicker of the middle finger is no new shape
+        assert_eq!(g.update([0.1, 0.9, 0.9, 0.1, 0.1], [0.5; 5], ms(300)), Some(0b01000));
+        assert_eq!(g.update([0.1, 0.9, 0.1, 0.1, 0.1], [0.5; 5], ms(333)), Some(0b01000));
+        assert_eq!(g.update([0.1, 0.9, 0.1, 0.1, 0.1], [0.5; 5], ms(400)), Some(0b01000));
+        // thumb up held: 0b10000 + the index still up
+        assert_eq!(g.update([0.9, 0.9, 0.1, 0.1, 0.1], [0.5; 5], ms(500)), Some(0b01000));
+        assert_eq!(g.update([0.9, 0.9, 0.1, 0.1, 0.1], [0.5; 5], ms(566)), Some(0b11000));
+    }
+
+    #[test]
+    fn a_hand_that_comes_back_waits_out_its_first_mask() {
+        let ms = |m: u64| m * 1_000_000;
+        let (index, fist) = ([0.1, 0.9, 0.1, 0.1, 0.1], [0.1; 5]);
+        let mut g = ShapeGate::default();
+        for t in [0, 33, 66, 100] {
+            g.update(index, [0.5; 5], ms(t));
+        }
+        assert_eq!(g.update(index, [0.5; 5], ms(133)), Some(0b01000));
+        // the hand leaves; perception starts its gate over. It comes back
+        // as a fist: neither the old index nor a fist before 60 ms
+        let mut g = ShapeGate::default();
+        assert_eq!(g.update(fist, [0.5; 5], ms(2000)), None);
+        assert_eq!(g.update(fist, [0.5; 5], ms(2033)), None);
+        assert_eq!(g.update(fist, [0.5; 5], ms(2066)), Some(0));
+    }
 
     /// Synthetic right hand, palm facing the camera, fingers up, in a
     /// 1280x720 frame. `curl` 0 = straight fingers, 1 = curled.
@@ -1168,6 +1628,116 @@ mod tests {
         let m = Shape { centre: [150.0, 190.0], major: 40.0, minor: 30.0, angle: 0.0 };
         let f = face_features(face, &[], Some(m), CAL_MASK);
         assert!(f.mouth_open > 0.9 && f.seen_mouth);
+        assert_eq!(f.geom.mouth, Some([130.0, 175.0, 170.0, 205.0]));
+        assert_eq!(f.geom.face, Some([100.0, 100.0, 200.0, 220.0]));
+    }
+
+    /// The tracking boxes: an ellipse's bounds, the person's eyes by side,
+    /// and a mirrored map keeps every box ordered.
+    #[test]
+    fn face_boxes_follow_the_parts() {
+        let tilted = Shape { centre: [0.0, 0.0], major: 20.0, minor: 10.0, angle: PI / 2.0 };
+        let b = tilted.bounds();
+        assert!((b[0] + 5.0).abs() < 1e-3 && (b[1] + 10.0).abs() < 1e-3, "{b:?}");
+        let face = [100.0, 100.0, 100.0, 120.0];
+        let eye = |cx: f32| Shape { centre: [cx, 148.0], major: 20.0, minor: 8.0, angle: 0.0 };
+        let f = face_features(face, &[eye(130.0), eye(170.0)], None, CAL_MASK);
+        // the image-right eye is the person's left
+        assert_eq!(f.geom.eyes[Side::L as usize], Some([160.0, 144.0, 180.0, 152.0]));
+        assert_eq!(f.geom.eyes[Side::R as usize], Some([120.0, 144.0, 140.0, 152.0]));
+        assert_eq!(f.geom.mouth, None);
+        let m = f.geom.map(|p| [1.0 - p[0] / 400.0, p[1] / 300.0]);
+        let l = m.eyes[Side::L as usize].unwrap_or_default();
+        assert!(l[0] < l[2] && (l[0] - 0.55).abs() < 1e-4 && (l[2] - 0.6).abs() < 1e-4, "{l:?}");
+    }
+
+    /// The model's points seen through rotation `r` (rows, model to
+    /// image), scaled to an eye distance of 100 px.
+    fn head_image(r: [[f32; 3]; 3]) -> [[f32; 2]; 7] {
+        HEAD_MODEL.map(|p| [300.0 + 100.0 * dot3(r[0], p), 200.0 + 100.0 * dot3(r[1], p)])
+    }
+
+    fn rot(axis: usize, deg: f32) -> [[f32; 3]; 3] {
+        let (s, c) = deg.to_radians().sin_cos();
+        match axis {
+            // yaw: the face turns to the person's left (towards image right)
+            0 => [[c, 0.0, -s], [0.0, 1.0, 0.0], [s, 0.0, c]],
+            // pitch: the face turns up
+            1 => [[1.0, 0.0, 0.0], [0.0, c, s], [0.0, -s, c]],
+            // roll: the person's left eye (image right) goes down
+            _ => [[c, -s, 0.0], [s, c, 0.0], [0.0, 0.0, 1.0]],
+        }
+    }
+
+    fn settled(pose: &mut HeadPose, r: [[f32; 3]; 3]) {
+        for i in 0..30 {
+            pose.update(&head_image(r), i * 33_000_000);
+        }
+    }
+
+    #[test]
+    fn head_pose_follows_the_ontology_directions() {
+        let id = rot(0, 0.0);
+        for (axis, deg, want_low) in [(0, 30.0, true), (0, -30.0, false), (1, 20.0, false), (1, -20.0, true), (2, 25.0, true), (2, -25.0, false)] {
+            let mut pose = HeadPose::default();
+            settled(&mut pose, id);
+            let (v, fit) = pose.update(&head_image(rot(axis, deg)), 1_000_000_000);
+            assert!(fit < 1e-4, "axis {axis}: fit {fit}");
+            let v = v.unwrap_or([0.5; 3]);
+            assert_eq!(v[axis] < 0.5, want_low, "axis {axis} {deg} deg: {v:?}");
+            for other in (0..3).filter(|o| *o != axis) {
+                assert!((v[other] - 0.5).abs() < 0.02, "axis {axis} leaks into {other}: {v:?}");
+            }
+            let full = 0.5 * deg.abs() / HEAD_FULL_DEG[axis];
+            assert!(((v[axis] - 0.5).abs() - full).abs() < 0.02, "axis {axis}: {v:?}");
+        }
+    }
+
+    #[test]
+    fn head_pose_takes_the_camera_out() {
+        // camera above and to the side: every pose seen through it
+        let mul = |a: [[f32; 3]; 3], b: [[f32; 3]; 3]| -> [[f32; 3]; 3] {
+            std::array::from_fn(|i| std::array::from_fn(|j| (0..3).map(|k| a[i][k] * b[k][j]).sum()))
+        };
+        let cam = mul(rot(1, -20.0), rot(0, 15.0));
+        let mut pose = HeadPose::default();
+        settled(&mut pose, cam);
+        let (v, _) = pose.update(&head_image(cam), 1_000_000_000);
+        let v = v.unwrap_or([0.0; 3]);
+        assert!(v.iter().all(|x| (x - 0.5).abs() < 0.01), "neutral through the camera: {v:?}");
+        // a pure tilt through the camera reads as a tilt
+        let (v, _) = pose.update(&head_image(mul(cam, rot(2, 20.0))), 1_033_000_000);
+        let v = v.unwrap_or([0.5; 3]);
+        assert!(v[2] < 0.3 && (v[0] - 0.5).abs() < 0.03 && (v[1] - 0.5).abs() < 0.03, "{v:?}");
+    }
+
+    #[test]
+    fn a_misfit_holds_the_head() {
+        let mut pose = HeadPose::default();
+        settled(&mut pose, rot(0, 0.0));
+        let mut pts = head_image(rot(0, 0.0));
+        // the tip lands on an eye: no face has that shape
+        pts[2] = pts[0];
+        let (v, fit) = pose.update(&pts, 1_000_000_000);
+        assert!(v.is_none() && fit > HEAD_FIT_MAX, "fit {fit}");
+    }
+
+    #[test]
+    fn head_points_pick_in_the_eye_line_frame() {
+        // Vision's regions of a face tilted 40 degrees: crest (ridge and
+        // two side points), nose outline, median line
+        let (s, c) = 40f32.to_radians().sin_cos();
+        let t = |x: f32, y: f32| [300.0 + c * x - s * y, 200.0 + s * x + c * y];
+        let eyes = [t(-50.0, 0.0), t(50.0, 0.0)];
+        let crest = [t(0.0, 0.0), t(0.0, 20.0), t(0.0, 40.0), t(0.0, 60.0), t(-20.0, 61.0), t(20.0, 63.0)];
+        let nose = [t(0.0, 20.0), t(-28.0, 46.0), t(-29.0, 71.0), t(-14.0, 72.0), t(0.0, 75.0), t(13.0, 73.0), t(26.0, 73.0), t(27.0, 48.0)];
+        let median = [t(0.0, 0.0), t(0.0, 20.0), t(0.0, 40.0), t(0.0, 60.0), t(-1.0, 75.0), t(-1.0, 94.0)];
+        let p = head_points(eyes, &crest, &nose, &median).unwrap_or([[0.0; 2]; 7]);
+        let near = |a: [f32; 2], b: [f32; 2]| dist(a, b) < 0.01;
+        assert!(near(p[2], t(0.0, 60.0)), "tip {:?}", p[2]);
+        assert!(near(p[3], t(0.0, 0.0)), "bridge {:?}", p[3]);
+        assert!(near(p[4], t(-29.0, 71.0)) && near(p[5], t(26.0, 73.0)), "wings {:?} {:?}", p[4], p[5]);
+        assert!(near(p[6], t(-1.0, 75.0)), "subnasale {:?}", p[6]);
     }
 
     #[test]
@@ -1223,6 +1793,30 @@ mod tests {
         );
         // After the track expires a new hand starts from its own evidence.
         assert_eq!(t.assign(&[([640.0, 330.0], 0.6)], face, 1280.0, 2_000_000_000), vec![Side::L]);
+    }
+
+    #[test]
+    fn a_hand_taking_the_other_hands_place_gets_its_own_side() {
+        // Noa, FL 11-04: the right hand read as left until the left hand
+        // came back. The left hand is held 3 s (typical vote +1.3), goes
+        // out, and the right hand (vote -1.3) comes in at the same spot.
+        const FRAME: u64 = 33_000_000;
+        let face = Some(640.0);
+        for gap_frames in [3u64, 9] {
+            let mut t = SideTracker::default();
+            for k in 0..90u64 {
+                assert_eq!(t.assign(&[([600.0, 500.0], 1.3)], face, 1280.0, k * FRAME), vec![Side::L]);
+            }
+            let start = 90 + gap_frames;
+            let sides: Vec<Side> = (start..start + 10)
+                .map(|k| t.assign(&[([600.0, 500.0], -1.3)], face, 1280.0, k * FRAME)[0])
+                .collect();
+            // at most the first three frames keep the old side
+            assert!(sides[3..].iter().all(|s| *s == Side::R), "gap {gap_frames}: {sides:?}");
+            if gap_frames * FRAME > SIDE_GAP_NS {
+                assert_eq!(sides[0], Side::R, "a hand after a gap is a new hand");
+            }
+        }
     }
 
     #[test]

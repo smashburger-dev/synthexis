@@ -183,6 +183,30 @@ A preset (Filter hand, Chord hand, Pattern hand; Pong and Orb as extras) arrives
 
 Roles and presets belong to the profile.
 
+### 5b. What fingers play (built 11-04, `plugin/synthexis/src/fingers.rs`)
+
+> Historical layout: superseded 11-04 afternoon by the redesign, `docs/design/ui-redesign.md` (v2) and `docs/session-2026-11-04-redesign.md`.
+
+Noa's layout and choices of 11-04, from the sketches in `docs/design/midi-editor-sketches.html` (A hand map plus B lanes; C dropped):
+
+- Window: the camera fills the top third edge to edge with both hand skeletons on it in their hand colours; the top bar (name, Live, key, host position, Settings) is frosted, fades out 2.5 s after the window opens or the pointer leaves it and comes back when the pointer nears the top; the sentence field sits right under the camera; "What fingers play", the 32 signal sliders and the advanced controls (Test signal, hand roles, camera status) fold out below, over a frosted, darkened copy of the camera frame. Transparency to FL behind the plugin window is not possible: the plugin view is an opaque child view in FL's window.
+- Hand map: two hands in dither art, white dots that dissolve at the wrist; each finger with a part shows it in a chip at its tip ("Trap roll", "Am"); a click on a finger or a chip picks it; "+ shape" adds a named shape (fist, peace, rock and the other ontology shapes) of either hand. A finger playing now turns white.
+- Single view: what the picked finger or shape plays: Pattern, Chord or Note; its FL channel from the live inventory (generators and Sampler channels; the default is the hand's other parts' channel, else the generator FL has in focus); when it starts (at once, next 1/16, next beat, next bar); how it plays (while shown, on / off, once). Patterns are drum lanes (one row per used pitch, GM names for FPC) or, with "Piano roll", the scale's rows over about two octaves; click sets, drag paints, shift-drag lengthens, right-click cycles a roll (2, 3, 4 hits), alt-click pushes a note later by 1/24 step. Templates: Hi-hat basic, Trap roll, Snare fill, Kick, Clap; Fill spreads k hits evenly; bars 1 to 8. Chords: the scale's degrees with their chord names, click holds one, shift-click appends the next bar of a progression; notes per chord, octave, strum (1/96 beat between notes), velocity; the piano roll shows the chord's notes, "Edit as notes" turns them into a pattern to move or draw an arp into.
+- Total view ("All"): one row per bound finger or shape with its channel and a lane or its chords; a click opens it in the single view.
+- Saved with the project (plugin state `midi`: parts, key, binds).
+
+### 5c. Pong and presets (built 11-04 night, `plugin/synthexis/src/pong_ui.rs`)
+
+> Historical layout: superseded 11-04 afternoon by the redesign, `docs/design/ui-redesign.md` (v2) and `docs/session-2026-11-04-redesign.md`.
+
+Noa's request of 11-04 (`docs/design/pong-presets.md`):
+
+- Section "Pong" under "What fingers play". First row: presets (dropdown with the built-ins first, Load, a name field with Save or Overwrite, Delete with a second click, Undo load after a load). Then Pong on, the shooting hand (left, right, both), the shot (point, flick), speed, bounces (1 to 32, never), time limit, at most N at once, velocity from the shot, faster with a harder shot, pause the shooting hand's fingers, Test shot and Burst x16, and a live line (flying, hits, dropped).
+- Side view: the 16:9 frame as a dotted outline in the dither style of the hands, each side clickable, each with a chip naming what it does; a hit flashes its side in the hand colour. Under it the selected side's editor: Off, MIDI (the finger editor's part editor for a wall part: no mode picker, "a hit plays" at once, on 1/16, beat or bar), Parameter (the picked plugin's parameters, then Signal 1 to 32; ramp, position or toggle; rest and peak; depth from the shot; glide time).
+- Canvas: with Pong on the whole frame shows (contain fit, frosted wings), the four walls are drawn on it, projectiles as white dots with a short trail; a click in a band along a wall selects that side. All bands start under the top bar, so the bar and its Settings button keep working.
+- Sentence field while a side is selected: a chip "-> top wall"; a sentence without a source assigns that side (a parameter of the picked plugin with its range, a Signal macro, or a MIDI part from `T:midi.*`) as a pending row with Keep and Discard; the scope ends after a Keep.
+- Presets are snapshots apart from the project (`~/Library/Application Support/synthexis/presets/`); a load also lands in the project state, so FL saves it with the project. Profiles (section 7) are planned as presets kept in the project with a tab each, on the same capture and apply.
+
 ### 6. Objects (`ui.objects`, new)
 
 Each row: a thumbnail cut from the mask, the name (editable), the state (tracked, lost 3 s, not seen), the track id, and how many moves use it.

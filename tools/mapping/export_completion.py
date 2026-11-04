@@ -58,6 +58,27 @@ ONTOLOGY = Path(__file__).resolve().parent / "ontology.yaml"
 # word in both languages, so one item per language
 GENERIC = [{"source": "hand.finger.index", "p": "Finger", "lang": "de", "pol": 1},
            {"source": "hand.finger.index", "p": "finger", "lang": "en", "pol": 1}]
+# Head words as Noa uses them (11-04): turn is up, down, left, right (yaw,
+# pitch), tilt and neigen are the head to a shoulder (roll). The glossary
+# had no "tilt my head to the left", so the completion offered a turn.
+# pol: +1 towards the source's 1 (yaw and roll 1 = the right, pitch 1 = up).
+HEAD = [
+    ("head.roll", "en", -1, "tilt my head to the left"), ("head.roll", "en", 1, "tilt my head to the right"),
+    ("head.roll", "en", -1, "tilt my head left"), ("head.roll", "en", 1, "tilt my head right"),
+    ("head.roll", "en", 1, "tilt my head to my shoulder"),
+    ("head.roll", "en", -1, "head to my left shoulder"), ("head.roll", "en", 1, "head to my right shoulder"),
+    ("head.roll", "en", -1, "when I tilt my head to the left"), ("head.roll", "en", 1, "when I tilt my head to the right"),
+    ("head.roll", "de", -1, "Kopf nach links neigen"), ("head.roll", "de", 1, "Kopf nach rechts neigen"),
+    ("head.roll", "de", 1, "Kopf an die Schulter"),
+    ("head.roll", "de", -1, "Kopf zur linken Schulter"), ("head.roll", "de", 1, "Kopf zur rechten Schulter"),
+    ("head.roll", "de", -1, "wenn ich den Kopf nach links neige"), ("head.roll", "de", 1, "wenn ich den Kopf nach rechts neige"),
+    ("head.yaw", "en", -1, "turn my head left"), ("head.yaw", "en", 1, "turn my head right"),
+    ("head.yaw", "en", -1, "turn my head to the left"), ("head.yaw", "en", 1, "turn my head to the right"),
+    ("head.pitch", "en", 1, "turn my head up"), ("head.pitch", "en", -1, "turn my head down"),
+    ("head.pitch", "de", 1, "Kopf nach oben drehen"), ("head.pitch", "de", -1, "Kopf nach unten drehen"),
+]
+# glossary rows that mix the two: "neigen" is a tilt, not a turn
+HEAD_DROP = {("head.yaw", "Kopf nach rechts neigen drehen")}
 # a harvested phrase gets every language with at least this share and
 # HARVEST_MIN of its occurrences in rows that are not code-switched
 LANG_SHARE = 0.25
@@ -202,7 +223,9 @@ def main() -> None:
     for text, target, _, _ in train_targets(data / TRAIN):
         cls = target[6:] if target.startswith("param:") else "ctl.switch" if target == "toggle" else target
         span_prior[(" ".join(text.casefold().split()), cls)] += 1
-    gestures += [g for g in GENERIC if (g["source"], g["p"].casefold(), g["lang"]) not in
+    gestures = [g for g in gestures if (g["source"], g["p"]) not in HEAD_DROP]
+    head = [{"source": s, "p": p, "lang": lang, "pol": pol} for s, lang, pol, p in HEAD]
+    gestures += [g for g in GENERIC + head if (g["source"], g["p"].casefold(), g["lang"]) not in
                  {(x["source"], x["p"].casefold(), x["lang"]) for x in gestures}]
     known = {t["p"].casefold() for t in targets}
     harvested = harvest_targets(data / TRAIN, known)
