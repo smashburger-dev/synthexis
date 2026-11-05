@@ -19,7 +19,7 @@ It goes beyond knobs:
 
 Every plugin works. synthexis ships with readable parameter names for 887 plugins (107,350 labelled parameters), and for any plugin it has never seen, a small model running inside the plugin works out what each parameter does from its name.
 
-Everything runs on your Mac, in real time, with no cloud and no extra hardware. The camera picture never leaves the machine. From your movement to the parameter in FL takes about a tenth of a second.
+Everything runs on your Mac, in real time, with no cloud and no extra hardware. From your movement to the parameter in FL takes about a tenth of a second.
 
 The result: plugins you have used for years feel new again, you can perform them wherever you are with a laptop, and your expression is no longer limited to what fits under a mouse pointer.
 
@@ -50,4 +50,4 @@ Understanding plugins. There are thousands of plugins, each with its own naming.
 
 Understanding people. Musicians do not speak in parameter IDs. They say "open the filter when I spread my fingers" or "Filter runter, wenn ich die Faust mache". Muse Spark Open wrote the varied, realistic sentences our parser learned from, in two languages, and was the benchmark we measured it against. The result is a parser small enough to live in the plugin and run offline.
 
-Open weights matter as much as quality. Because SAM 3.1, SAM 3D Body and Muse Spark Open are open, we could build our own models from them, run everything locally, and keep the camera picture on the user's machine. A musician gets a private, instant instrument with no subscription and no upload, and the plugins they already own become playable with their hands, face and voice.
+Open weights matter as much as quality. Because SAM 3.1, SAM 3D Body and Muse Spark Open are open, we could build our own models from them, and run everything locally inside the plugin. A musician gets an instant instrument with no subscription and no extra hardware, and the plugins they already own become playable with their hands, their face and a typed sentence.
