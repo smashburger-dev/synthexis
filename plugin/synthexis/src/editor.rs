@@ -898,8 +898,11 @@ impl UiState {
     /// stand-in camera with the face's tracking boxes), u (i in the Routes
     /// view with the first target box's search open), v (Pong with three
     /// stand-in projectiles and their trails), w (Pong with the left wall's
-    /// Parameter search open), x (Pong with the bottom wall's chord editor) or
-    /// the chat routes of h, i, j and l (`shot_routes`),
+    /// Parameter search open), x (Pong with the bottom wall's chord editor),
+    /// twin (Hands with two Serum 2 instances on tracks 3 and 10, the left
+    /// thumb's tilt on one's Filter 1 Freq, the right hand's left-right on
+    /// the other's, the right hand picked) or twin-routes (the same in the
+    /// Routes view) or the chat routes of h, i, j and l (`shot_routes`),
     /// once. b, c, f and u to x show the stand-in camera picture. `SYNTHEXIS_UI_SCROLL` scrolls the panel area to that many
     /// points ("end": the bottom), `SYNTHEXIS_UI_SCROLL_X` the plugin
     /// picker's columns.
@@ -913,7 +916,7 @@ impl UiState {
             "c" | "v" | "w" | "x" => (vec![Section::Pong], Some("Pong")),
             "d" => (vec![Section::Hands, Section::Pong], Some("Hands")),
             "f" | "g" | "m" | "n" | "o" => (vec![Section::Head], Some("Head")),
-            "i" | "j" | "k" | "u" => (vec![Section::Hands], Some("Hands")),
+            "i" | "j" | "k" | "u" | "twin" | "twin-routes" => (vec![Section::Hands], Some("Hands")),
             "y" | "z" | "t" => (vec![Section::Hands, Section::Pong, Section::Head], Some("Hands")),
             _ => (Vec::new(), None),
         };
@@ -938,7 +941,7 @@ impl UiState {
         if let Some(p) = popup {
             ctx.memory_mut(|m| m.open_popup(Id::new(p).with("popup")));
         }
-        if matches!(shot.as_str(), "b" | "c" | "d" | "f" | "p" | "q" | "r" | "o" | "u" | "v" | "w" | "x") {
+        if matches!(shot.as_str(), "b" | "c" | "d" | "f" | "p" | "q" | "r" | "o" | "u" | "v" | "w" | "x" | "twin" | "twin-routes") {
             // a stand-in camera picture so the frost shows its blur
             *self.shared.preview.lock() = Some(Arc::new(shot_frame()));
         }
@@ -947,6 +950,15 @@ impl UiState {
             crate::fl::bridge().update(|v| {
                 v.targets = targets;
                 v.channels = channels;
+                v.loaded = true;
+            });
+        }
+        if shot == "twin" || shot == "twin-routes" {
+            let (lead, bass) = shot_twins();
+            let target = |key: crate::fl::Key, track: u32| crate::fl::Target { key, track, track_name: String::new() };
+            let eq = crate::fl::Key { at: crate::fl::At::Fx { track: 3, slot: 0 }, plugin: "Pro-Q 3".into() };
+            crate::fl::bridge().update(|v| {
+                v.targets = vec![target(eq, 3), target(lead, 3), target(bass, 10)];
                 v.loaded = true;
             });
         }
@@ -1077,6 +1089,16 @@ impl UiState {
                 self.sentence.shot_said(vec![route("arm.raise", Some("left"), vec![filter])], &serum, "when i rise my hands up i want the filter", false);
             }
             "w" => self.pong.shot_find(crate::pong::arena::Side::Left),
+            "twin" | "twin-routes" => {
+                let (lead, bass) = shot_twins();
+                let freq = || target("T:param:filter.cutoff", "filter 1 freq", 12, "Filter 1 Freq");
+                self.sentence.shot_said(vec![route("hand.finger.thumb.tilt", Some("left"), vec![freq()])], &lead, "tilting my left thumb moves the filter", true);
+                self.sentence.shot_said(vec![route("hand.x", Some("right"), vec![freq()])], &bass, "my right hand left and right moves the bass filter", true);
+                self.fingers.shot_hand(1);
+                if shot == "twin-routes" {
+                    self.fingers.shot_routes();
+                }
+            }
             "x" => self.pong.select(crate::pong::arena::Side::Bottom),
             "i" | "u" => {
                 self.sentence.shot_said(vec![route("hand.openness", Some("left"), vec![cutoff()])], &serum, "open my left hand opens the cutoff", true);
@@ -1222,6 +1244,13 @@ fn shot_param_names() -> Vec<(u32, String)> {
 /// six effects, ten mixer tracks with one instrument and two to four
 /// effects each, and the channel rack. Plugin names from Noa's demo
 /// project (4.11.26 - synthexis demo.flp), the rest realistic.
+/// The two Serum 2 instances of the twin captures: channel 3 on mixer
+/// track 3, channel 10 on track 10 (Noa's project, 11-05).
+fn shot_twins() -> (crate::fl::Key, crate::fl::Key) {
+    let serum = |ch| crate::fl::Key { at: crate::fl::At::Gen { ch }, plugin: "Serum 2".into() };
+    (serum(2), serum(9))
+}
+
 fn shot_inventory() -> (Vec<crate::fl::Target>, Vec<crate::fl::ChannelRow>) {
     use crate::fl::{At, ChannelRow, Key, Target};
     let fx = |track: u32, slot: u32, plugin: &str, name: &str| Target { key: Key { at: At::Fx { track, slot }, plugin: plugin.into() }, track, track_name: name.into() };

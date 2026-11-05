@@ -522,16 +522,29 @@ impl HandNode {
 
 /// The hand node of `canvas`, `w` wide: in the canvas' empty corner beside
 /// the wrist, lower right of the right hand and lower left of the left
-/// (mirror), reaching out past the canvas up to `clip`. The line runs from
-/// the contour dot nearest the node down, then across to the node's near
-/// edge.
+/// (mirror), reaching out past the canvas up to `clip`. A text wider than
+/// that moves the node in under the wrist as far as no dot of the hand
+/// sits in its row and not past the middle, so a long name ("Serum 2 (Track 10) · Filter 1 Freq")
+/// keeps its end. The line runs from the contour dot nearest the node
+/// down, then across to the node's near edge.
 fn hand_node(canvas: Rect, mirror: bool, art: &Art, w: f32, clip: egui::Rangef) -> HandNode {
     let bottom = canvas.bottom() - HAND_LOW;
+    // the hand's dots in the node's row: how far in the node may move,
+    let row: Vec<f32> = (0..CANVAS * CANVAS)
+        .filter(|i| art.region.get(*i).copied().unwrap_or(0) != 0 || art.outline.get(*i).copied().unwrap_or(0) != 0)
+        .map(|i| on_canvas(canvas, [(i % CANVAS) as f32 + 0.5, (i / CANVAS) as f32 + 0.5], mirror))
+        .filter(|p| p.y >= bottom - NODE_H - 2.0 && p.y <= bottom + 2.0)
+        .map(|p| p.x)
+        .collect();
+    // and never past the middle, where the other hand's node is
+    let mid = clip.center();
     let node = if mirror {
-        let right = canvas.left() + HAND_IN;
+        let reach = (row.iter().copied().fold(f32::INFINITY, f32::min) - 2.0).min(mid - Tok::GAP);
+        let right = (canvas.left() + HAND_IN).max((clip.min + w).min(reach));
         Rect::from_min_max(pos2((right - w).max(clip.min).min(right - NODE_H), bottom - NODE_H), pos2(right, bottom))
     } else {
-        let left = canvas.right() - HAND_IN;
+        let reach = (row.iter().copied().fold(f32::NEG_INFINITY, f32::max) + 2.0).max(mid + Tok::GAP);
+        let left = (canvas.right() - HAND_IN).min((clip.max - w).max(reach));
         Rect::from_min_max(pos2(left, bottom - NODE_H), pos2((left + w).min(clip.max).max(left + NODE_H), bottom))
     };
     let near = pos2(if mirror { node.right() } else { node.left() }, node.center().y);
@@ -2423,6 +2436,12 @@ impl Fingers {
         self.sel = None;
     }
 
+    /// The Routes view (the window captures, shot twin-routes).
+    pub fn shot_routes(&mut self) {
+        self.view = View::Routes;
+        self.route.manual = true;
+    }
+
     /// The Routes view with the first kept target box's search open (the
     /// window captures, shot u).
     pub fn shot_routes_find(&mut self) {
@@ -3137,11 +3156,11 @@ impl Fingers {
         };
         let (items, current, note) = match &f {
             graph::Finding::Target(tg) => {
-                let plugin = match tg {
-                    NodeTarget::Param { plugin, .. } if !plugin.is_empty() => Some(plugin.as_str()),
+                let inst = match tg {
+                    NodeTarget::Param { inst, .. } if !inst.is_empty() => Some(inst.as_str()),
                     _ => None,
                 };
-                let key = param_find::plugin_key(plugin, fl::Key::parse(writer.params.target_pin.read().trim()));
+                let key = param_find::plugin_key(inst, fl::Key::parse(writer.params.target_pin.read().trim()));
                 let (names, note) = match param_find::names(key.as_ref(), &mut self.route_edit.wanted, t) {
                     Ok(n) => (n, None),
                     Err(e) => (Vec::new(), Some(e)),
@@ -5646,8 +5665,8 @@ mod tests {
     /// pick another view; Discard goes back where it was.
     #[test]
     fn keep_leaves_the_view_on_routes() {
-        let freq = |pending| EdgeIn { signal: "cam0.hand.L.openness".into(), target: NodeTarget::Param { plugin: "Serum 2".into(), name: "Filter 1 Freq".into() }, pending };
-        let res = EdgeIn { signal: "cam0.hand.R.y".into(), target: NodeTarget::Param { plugin: "Serum 2".into(), name: "Filter 1 Res".into() }, pending: true };
+        let freq = |pending| EdgeIn { signal: "cam0.hand.L.openness".into(), target: NodeTarget::Param { plugin: "Serum 2".into(), name: "Filter 1 Freq".into(), inst: "gen:0:Serum 2".into() }, pending };
+        let res = EdgeIn { signal: "cam0.hand.R.y".into(), target: NodeTarget::Param { plugin: "Serum 2".into(), name: "Filter 1 Res".into(), inst: "gen:0:Serum 2".into() }, pending: true };
         let mut w = Win::new(Play::Note { pitch: 60, vel: 100 }, false);
         w.routing = Routing { edges: vec![freq(true)], focus: true, batch: 3 };
         w.frame(vec![]);
@@ -5685,7 +5704,7 @@ mod tests {
     /// movements; a pick asks the window to retarget, the x to remove.
     #[test]
     fn routes_boxes_retarget_and_the_x_removes() {
-        let target = NodeTarget::Param { plugin: "Serum 2".into(), name: "Filter 1 Freq".into() };
+        let target = NodeTarget::Param { plugin: "Serum 2".into(), name: "Filter 1 Freq".into(), inst: "gen:0:Serum 2".into() };
         let sig = "cam0.hand.L.openness";
         let mut w = Win::new(Play::Note { pitch: 60, vel: 100 }, false);
         w.routing = Routing { edges: vec![EdgeIn { signal: sig.into(), target: target.clone(), pending: false }], focus: false, batch: 0 };
@@ -5860,7 +5879,7 @@ mod tests {
     }
 
     fn param(plugin: &str, name: &str) -> NodeTarget {
-        NodeTarget::Param { plugin: plugin.into(), name: name.into() }
+        NodeTarget::Param { plugin: plugin.into(), name: name.into(), inst: format!("gen:0:{plugin}") }
     }
 
     /// The hands' canvases as `hands` places them in a content `width` wide.

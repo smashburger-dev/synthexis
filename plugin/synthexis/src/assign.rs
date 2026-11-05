@@ -595,6 +595,22 @@ pub(crate) mod tests {
         assert_eq!(rs[0].gates, ["cam0.hand.R.pinch"]);
     }
 
+    /// With two Serum 2 in the project a route binds to the instance the
+    /// picker shows, or to the one its chip came from, never to the other
+    /// one of that name.
+    #[test]
+    fn a_route_binds_to_the_picked_instance_of_twins() {
+        let serum = |ch| fl::Key { at: fl::At::Gen { ch }, plugin: "Serum 2".into() };
+        let r = resolved("hand.x", Some("right"), &[], Vec::new(), true);
+        let (rs, _) = routes(&r, Some(&serum(9)));
+        assert_eq!(rs.iter().map(|x| x.target.clone()).collect::<Vec<_>>(), [Target::Param { plugin: serum(9), index: 12 }]);
+        let mut chip = r.clone();
+        if let Some(b) = chip.targets[0].bound.as_mut() {
+            b.plugin = Some(serum(2).id());
+        }
+        assert_eq!(targets(&chip, Some(&serum(9))), [Target::Param { plugin: serum(2), index: 12 }]);
+    }
+
     #[test]
     fn no_side_no_route_and_unsided_sources_work() {
         let (rs, note) = routes(&resolved("hand.openness", None, &[], vec![], true), None);

@@ -82,7 +82,7 @@ use synthexis_parser::{Pin, PinWhat};
 use crate::alias;
 use crate::assign;
 use crate::assistant;
-use crate::edges::{EdgeIn, NodeTarget, Routing};
+use crate::edges::{EdgeIn, Names, NodeTarget, Routing};
 use crate::fl::{self, Link};
 use crate::glass::{self, white, Tok};
 use crate::i18n::{self, fill, Text};
@@ -478,9 +478,23 @@ impl Mapped {
     }
 
     fn line(&self, t: &Text) -> String {
+        self.line_in(&Names::default(), t)
+    }
+
+    /// `line` with two instances of a plugin told apart (`names`):
+    /// "... -> Serum 2 (Track 3) / Filter 1 Freq".
+    fn line_in(&self, names: &Names, t: &Text) -> String {
         let plugin = self.key.as_ref().map_or("", |k| k.plugin.as_str());
         let w = t.words();
         let mut l = self.route.describe_in(plugin, &w);
+        for (_, tg) in &self.keys {
+            if let Target::Param { plugin: k, index } = tg {
+                if names.is_twin(&k.plugin) {
+                    let name = param_name(&self.route, *index);
+                    l = l.replacen(&format!("{} / {name}", k.plugin), &format!("{} / {name}", names.label(k, t)), 1);
+                }
+            }
+        }
         // a stand-in names what runs: "hand height (both hands) -> ..."
         if let Some(live) = assign::stand_in_label(&self.route.source, self.route.side.as_deref(), t) {
             if let Some(rest) = l.strip_prefix(&self.route.source_label_in(&w)) {
@@ -1882,6 +1896,7 @@ impl Sentence {
     /// unfolded.
     fn inline_rows(&mut self, ui: &mut Ui) {
         let t = i18n::text(self.lang);
+        let names = self.names();
         let line = |ui: &mut Ui, text: &str, a: f32| {
             ui.add(egui::Label::new(RichText::new(text).size(Tok::BODY).color(white(a))).wrap());
         };
@@ -1895,7 +1910,7 @@ impl Sentence {
                 if !m.ids.is_empty() && m.parts.is_empty() && glass::quiet(ui, "⇅").on_hover_text(t.flip_hover).clicked() {
                     flip = Some(i);
                 }
-                line(ui, &m.line(t), if m.keys.is_empty() { Tok::HINT } else { Tok::STRONG });
+                line(ui, &m.line_in(&names, t), if m.keys.is_empty() { Tok::HINT } else { Tok::STRONG });
             });
         }
         if let (Some(w), false) = (&self.writer, self.walls.is_empty()) {
@@ -1939,7 +1954,7 @@ impl Sentence {
                 if glass::quiet(ui, "×").on_hover_text(t.remove_hover).clicked() {
                     gone = Some(i);
                 }
-                line(ui, &m.line(t), Tok::VALUE);
+                line(ui, &m.line_in(&names, t), Tok::VALUE);
             });
         }
         if let Some(i) = gone.filter(|i| *i < self.kept.len()) {
@@ -2440,14 +2455,25 @@ impl Sentence {
         self.routing_of(crate::preset::head_signal)
     }
 
+    /// The plugin names two instances share, among FL's inventory and the
+    /// pending and kept lines' targets (edges.rs Names).
+    fn names(&self) -> Names {
+        let keys = self.pending.iter().chain(&self.kept).flat_map(|m| &m.keys).filter_map(|(_, tg)| match tg {
+            Target::Param { plugin, .. } => Some(plugin),
+            _ => None,
+        });
+        Names::new(keys, &self.targets)
+    }
+
     /// What `target` of line `m` is in the node view and the drives
-    /// lists; `store` caches the MIDI store a part's name comes from.
-    fn node_target(&self, m: &Mapped, target: &Target, store: &mut Option<Option<crate::midi::Store>>) -> NodeTarget {
+    /// lists; `store` caches the MIDI store a part's name comes from,
+    /// `names` tells two instances of a plugin apart.
+    fn node_target(&self, m: &Mapped, target: &Target, store: &mut Option<Option<crate::midi::Store>>, names: &Names) -> NodeTarget {
         match target {
-            Target::Param { plugin, index } => NodeTarget::Param {
-                plugin: m.key.as_ref().map_or_else(|| plugin.plugin.clone(), |k| k.plugin.clone()),
-                name: param_name(&m.route, *index),
-            },
+            Target::Param { plugin, index } => {
+                let shown = fl::Key { at: plugin.at, plugin: m.key.as_ref().map_or_else(|| plugin.plugin.clone(), |k| k.plugin.clone()) };
+                NodeTarget::Param { plugin: names.label(&shown, i18n::text(self.lang)), name: param_name(&m.route, *index), inst: plugin.id() }
+            }
             Target::Macro(n) => NodeTarget::Macro(*n),
             Target::Part { id, .. } => {
                 let s = store.get_or_insert_with(|| self.writer.as_ref().map(|w| w.player.store()));
@@ -2478,10 +2504,11 @@ impl Sentence {
     /// them from the writer.
     fn take_kept(&mut self, signal: &str, target: &NodeTarget) -> Vec<Mapped> {
         let mut store = None;
+        let names = self.names();
         let mut hits: Vec<(String, Target)> = Vec::new();
         for m in &self.kept {
             for (sig, tg) in m.keys.iter().filter(|(s, _)| s == signal) {
-                if self.node_target(m, tg, &mut store) == *target {
+                if self.node_target(m, tg, &mut store, &names).same(target) {
                     hits.push((sig.clone(), tg.clone()));
                 }
             }
@@ -2586,11 +2613,12 @@ impl Sentence {
     /// `routing` over the signals `from` takes.
     fn routing_of(&self, from: impl Fn(&str) -> bool) -> Routing {
         let mut store = None;
+        let names = self.names();
         let mut edges: Vec<EdgeIn> = Vec::new();
         let lines = self.pending.iter().map(|m| (m, true)).chain(self.kept.iter().map(|m| (m, false)));
         for (m, pending) in lines {
             for (signal, target) in m.keys.iter().filter(|(s, _)| from(s)) {
-                let target = self.node_target(m, target, &mut store);
+                let target = self.node_target(m, target, &mut store, &names);
                 if !edges.iter().any(|e| e.signal == *signal && e.target == target) {
                     edges.push(EdgeIn { signal: signal.clone(), target, pending });
                 }
@@ -4055,7 +4083,7 @@ mod tests {
         h.s.keep_now();
         assert_eq!(writer.assigned().len(), 2);
         let edges = |h: &Harness| h.s.routing().edges.into_iter().map(|e| (e.signal, e.target, e.pending)).collect::<Vec<_>>();
-        let p = |name: &str| NodeTarget::Param { plugin: "Topos".into(), name: name.into() };
+        let p = |name: &str| NodeTarget::Param { plugin: "Topos".into(), name: name.into(), inst: topos.id() };
         let left = "cam0.hand.L.openness";
         // a parameter of the same plugin
         let to = Found::Param { key: topos.id(), index: 30, name: "Filter 1 Freq".into() };
@@ -4087,6 +4115,54 @@ mod tests {
         // nothing kept there: nothing changes
         assert_eq!(h.s.retarget_kept("cam0.hand.L.y", &p("P12"), &Found::Macro(2)), 0);
         assert_eq!(edges(&h).len(), 2);
+    }
+
+    /// Noa's demo bug: two Serum 2 (tracks 3 and 10), the same movement on
+    /// Filter 1 Freq of each. Kept, they are two engine routes and two
+    /// edges; the x of one, or a new parameter for one, leaves the other
+    /// instance's route alone, also when the picker showed the other
+    /// instance; a reload runs both on their own instance.
+    #[test]
+    fn two_instances_of_one_plugin_stay_two_routes_through_unmap_retarget_and_reload() {
+        use crate::param_find::Found;
+        let serum = |ch| fl::Key { at: fl::At::Gen { ch }, plugin: "Serum 2".into() };
+        let (a, b) = (serum(2), serum(9));
+        let store = Arc::new(RwLock::new(String::new()));
+        let writer = Writer::new(Arc::new(crate::params::SynthexisParams::default()));
+        let mut h = Harness::new();
+        h.s.writer = Some(writer.clone());
+        h.s.store = Some(store.clone());
+        let left = "cam0.hand.L.openness";
+        let keep_on = |h: &mut Harness, k: &fl::Key| {
+            h.s.apply(reply("map", &[], vec![hand_route("left", 30)]), Some(k));
+            h.s.keep_now();
+        };
+        keep_on(&mut h, &a);
+        keep_on(&mut h, &b);
+        let running = |w: &Writer| -> Vec<Target> {
+            let lines: Vec<u64> = (1..=w.max_line()).collect();
+            lines.iter().flat_map(|l| w.line_routes(*l)).map(|r| r.2).collect()
+        };
+        let param = |k: &fl::Key, index| Target::Param { plugin: k.clone(), index };
+        assert_eq!(running(&writer), [param(&a, 30), param(&b, 30)]);
+        let edge = |h: &Harness, k: &fl::Key| h.s.routing().edges.into_iter().find(|e| e.signal == left && matches!(&e.target, NodeTarget::Param { inst, .. } if *inst == k.id()));
+        let (Some(ea), Some(eb)) = (edge(&h, &a), edge(&h, &b)) else { return assert!(edge(&h, &a).is_some() && edge(&h, &b).is_some(), "two edges: {:?}", h.s.routing()) };
+        assert_ne!(ea.target, eb.target);
+        // a new parameter for b, picked while the picker showed a
+        assert_eq!(h.s.retarget_kept(left, &eb.target, &Found::Param { key: a.id(), index: 31, name: "Filter 1 Res".into() }), 1);
+        assert_eq!(running(&writer), [param(&a, 30), param(&b, 31)]);
+        // the x of a: b's route stays
+        assert_eq!(h.s.unmap_kept(left, &ea.target), 1);
+        assert_eq!(running(&writer), [param(&b, 31)]);
+        assert!(edge(&h, &a).is_none() && edge(&h, &b).is_some());
+        // both again, saved and run by a reloaded instance
+        keep_on(&mut h, &a);
+        h.frame(vec![]);
+        let fresh = Writer::new(Arc::new(crate::params::SynthexisParams::default()));
+        saved::run(&saved::load(&store.read()), &fresh);
+        let mut got = running(&fresh);
+        got.sort_by_key(|t| format!("{t:?}"));
+        assert_eq!(got, [param(&a, 30), param(&b, 31)]);
     }
 
     /// A pending line that cannot run (a source the camera does not
@@ -4230,7 +4306,7 @@ mod tests {
         assert_eq!(h.s.routing(), Routing::default());
         h.s.apply(reply("map", &[], vec![hand_route("left", 12)]), Some(&topos));
         let r = h.s.routing();
-        let p12 = NodeTarget::Param { plugin: "Topos".into(), name: "P12".into() };
+        let p12 = NodeTarget::Param { plugin: "Topos".into(), name: "P12".into(), inst: topos.id() };
         assert_eq!(r.edges.iter().map(|e| (e.target.clone(), e.pending)).collect::<Vec<_>>(), [(p12.clone(), true)]);
         assert!(r.edges.iter().all(|e| e.signal.starts_with("cam0.hand.") && e.signal.ends_with("openness")), "{:?}", r.edges);
         assert!(r.focus && r.batch != 0, "{r:?}");
@@ -4249,6 +4325,31 @@ mod tests {
         assert!(h.s.routing().focus);
     }
 
+    /// Two instances of one plugin (Noa's two Serum 2, 11-05) are two
+    /// targets, each named by its track, in the node view and the line;
+    /// one instance keeps the bare name.
+    #[test]
+    fn two_instances_are_two_targets_named_by_their_track() {
+        let a = fl::Key { at: fl::At::Gen { ch: 2 }, plugin: "Serum 2".into() };
+        let b = fl::Key { at: fl::At::Gen { ch: 9 }, plugin: "Serum 2".into() };
+        let mut h = Harness::new();
+        h.s.writer = Some(Writer::new(Arc::new(crate::params::SynthexisParams::default())));
+        h.s.apply(reply("map", &[], vec![hand_route("left", 12)]), Some(&a));
+        let p = |plugin: &str, k: &fl::Key| NodeTarget::Param { plugin: plugin.into(), name: "P12".into(), inst: k.id() };
+        let targets = |h: &Harness| h.s.routing().edges.into_iter().map(|e| e.target).collect::<Vec<_>>();
+        assert_eq!(targets(&h), [p("Serum 2", &a)], "one instance: the bare name");
+        assert!(h.s.pending[0].line_in(&h.s.names(), &i18n::EN).contains("-> Serum 2 / P12"));
+        h.s.targets = vec![fl::Target { key: a.clone(), track: 3, track_name: String::new() }, fl::Target { key: b.clone(), track: 10, track_name: String::new() }];
+        h.s.apply(reply("map", &[], vec![hand_route("right", 12)]), Some(&b));
+        assert_eq!(targets(&h), [p("Serum 2 (Track 3)", &a), p("Serum 2 (Track 10)", &b)], "two boxes, two names");
+        let lines: Vec<String> = h.s.pending.iter().map(|m| m.line_in(&h.s.names(), &i18n::EN)).collect();
+        assert!(lines.len() == 2 && lines[0].contains("Serum 2 (Track 3) / P12") && lines[1].contains("Serum 2 (Track 10) / P12"), "{lines:?}");
+        // the label does not decide which routes go: the instance does
+        h.s.keep();
+        assert_eq!(h.s.unmap_kept("cam0.hand.R.openness", &p("Serum 2", &b)), 1);
+        assert_eq!(targets(&h), [p("Serum 2 (Track 3)", &a)], "the other instance stays");
+    }
+
     /// The Head section's edges: only the face and head signals, pending
     /// and then kept, never a hand's.
     #[test]
@@ -4264,7 +4365,7 @@ mod tests {
         let r = h.s.face_routing();
         let sigs: Vec<(&str, bool)> = r.edges.iter().map(|e| (e.signal.as_str(), e.pending)).collect();
         assert_eq!(sigs, [("cam0.mouth.open", true), ("cam0.eye.L.closed", true), ("cam0.eye.R.closed", true)], "{:?}", r.edges);
-        assert_eq!(r.edges[0].target, NodeTarget::Param { plugin: "Topos".into(), name: "P14".into() });
+        assert_eq!(r.edges[0].target, NodeTarget::Param { plugin: "Topos".into(), name: "P14".into(), inst: topos.id() });
         assert!(r.focus && r.batch != 0);
         assert!(h.s.routing().edges.iter().all(|e| e.signal.starts_with("cam0.hand.")), "Hands keeps only its own");
         h.s.keep();

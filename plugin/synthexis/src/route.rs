@@ -529,6 +529,31 @@ mod tests {
         assert!((cur.params[&t] - 0.8).abs() < 0.02, "{}", cur.params[&t]);
     }
 
+    /// Two instances of one plugin with the same parameter (Noa's two
+    /// Serum 2 on tracks 3 and 10, both on Filter 1 Freq) are two targets:
+    /// each route drives only its own instance and never sums into the other.
+    #[test]
+    fn two_instances_of_one_plugin_are_two_targets() {
+        let serum = |ch| fl::Key { at: fl::At::Gen { ch }, plugin: "Serum 2".into() };
+        let (a, b) = (Target::Param { plugin: serum(3), index: 30 }, Target::Param { plugin: serum(10), index: 30 });
+        assert_ne!(a, b);
+        let mk = |sig: &str, t: &Target, line| {
+            let mut r = Route::to(sig, t.clone(), 1.0);
+            r.line = line;
+            r
+        };
+        let mut routes = vec![mk("thumb", &a, 1), mk("x", &b, 2)];
+        let mut cur = Values::default();
+        let mut moved = Vec::new();
+        for i in 0..90 {
+            moved.extend(apply_sample(&mut routes, &mut cur, "thumb", &s(1.0), i as f64 / 30.0).into_iter().map(|(t, _)| t));
+            moved.extend(apply_sample(&mut routes, &mut cur, "x", &s(0.0), i as f64 / 30.0).into_iter().map(|(t, _)| t));
+        }
+        assert!((cur.params[&a] - 1.0).abs() < 0.02, "{:?}", cur.params);
+        assert!(cur.params[&b].abs() < 0.02, "{:?}", cur.params);
+        assert!(moved.iter().all(|t| *t == a || *t == b) && moved.contains(&a) && moved.contains(&b));
+    }
+
     /// Feeds `vals` [(signal, value)] for 3 s from `t0` (s).
     fn feed(routes: &mut [Route], cur: &mut Values, t0: f64, vals: &[(&str, f32)]) {
         for i in 0..90 {

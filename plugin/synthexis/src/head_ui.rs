@@ -1145,7 +1145,7 @@ mod tests {
     }
 
     fn param(plugin: &str, name: &str) -> NodeTarget {
-        NodeTarget::Param { plugin: plugin.into(), name: name.into() }
+        NodeTarget::Param { plugin: plugin.into(), name: name.into(), inst: format!("gen:0:{plugin}") }
     }
 
     fn edge(signal: &str, target: NodeTarget, pending: bool) -> EdgeIn {

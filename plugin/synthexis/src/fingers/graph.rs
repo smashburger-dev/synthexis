@@ -248,7 +248,7 @@ fn target_text(t: &NodeTarget) -> String {
 /// a part's name.
 pub fn target_label(t: &NodeTarget) -> String {
     match t {
-        NodeTarget::Param { plugin, name } if !plugin.is_empty() => format!("{plugin} · {name}"),
+        NodeTarget::Param { plugin, name, .. } if !plugin.is_empty() => format!("{plugin} · {name}"),
         _ => target_text(t),
     }
 }
@@ -496,11 +496,24 @@ mod tests {
     use crate::i18n::EN;
 
     fn param(plugin: &str, name: &str) -> NodeTarget {
-        NodeTarget::Param { plugin: plugin.into(), name: name.into() }
+        NodeTarget::Param { plugin: plugin.into(), name: name.into(), inst: format!("gen:0:{plugin}") }
     }
 
     fn e(signal: &str, target: NodeTarget, pending: bool) -> EdgeIn {
         EdgeIn { signal: signal.into(), target, pending }
+    }
+
+    /// Noa's two Serum 2 (11-05): the same parameter of two instances is
+    /// two boxes, each under its own plugin label.
+    #[test]
+    fn two_instances_are_two_boxes_under_their_labels() {
+        let freq = |plugin: &str, inst: &str| NodeTarget::Param { plugin: plugin.into(), name: "Filter 1 Freq".into(), inst: inst.into() };
+        let edges = vec![e("cam0.hand.L.finger.thumb.tilt", freq("Serum 2 (Track 3)", "gen:2:Serum 2"), false), e("cam0.hand.R.x", freq("Serum 2 (Track 10)", "gen:9:Serum 2"), false)];
+        let g = layout(&edges, 1176.0, &EN);
+        let count = |k: NodeKind, s: &str| g.nodes.iter().filter(|n| n.kind == k && n.text == s).count();
+        assert_eq!(count(NodeKind::Target, "Filter 1 Freq"), 2);
+        assert_eq!((count(NodeKind::Group, "Serum 2 (Track 3)"), count(NodeKind::Group, "Serum 2 (Track 10)")), (1, 1));
+        assert_eq!(target_label(&edges[1].target), "Serum 2 (Track 10) · Filter 1 Freq");
     }
 
     #[test]
