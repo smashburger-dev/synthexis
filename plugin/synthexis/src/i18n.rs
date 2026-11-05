@@ -170,6 +170,9 @@ texts! {
     fl_old_script: "FL runs an old bridge script ({}). Copy plugin/fl/device_synthexis_bridge.py into FL's Hardware folder.",
         "FL nutzt ein altes Bridge-Skript ({}). plugin/fl/device_synthexis_bridge.py in FLs Hardware-Ordner kopieren.";
     fl_no_plugins: "No plugins in the project", "Keine Plugins im Projekt";
+    // the place after a plugin's name when two instances share it (edges.rs Names)
+    place_track: "Track {}", "Spur {}";
+    place_ch: "Ch {}", "Kanal {}";
     fl_click_plugin: "Click a plugin window in FL", "Klicke in FL ein Plugin-Fenster an";
     // sentence field
     placeholder: "When I spread my fingers, open the filter", "Wenn ich die Finger spreize, Filter auf";

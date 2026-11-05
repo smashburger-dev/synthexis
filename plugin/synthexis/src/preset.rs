@@ -934,6 +934,31 @@ mod tests {
         assert!(matches!(&running[0].2, crate::route::Target::Param { plugin, index: 12 } if *plugin == topos(3, 1)));
     }
 
+    /// Two Serum 2 (tracks 3 and 10) on the same parameter from the same
+    /// movement: capture and apply keep two lines, each on its own
+    /// instance; neither follows the other because they share a name.
+    #[test]
+    fn twins_of_one_plugin_keep_their_own_lines_through_capture_and_apply() {
+        let serum = |ch| fl::Key { at: fl::At::Gen { ch }, plugin: "Serum 2".into() };
+        let bridge = fl::Bridge::detached();
+        bridge.update(|v| {
+            v.loaded = true;
+            v.targets = vec![fl::Target { key: serum(2), track: 3, track_name: String::new() }, fl::Target { key: serum(9), track: 10, track_name: String::new() }];
+        });
+        let a = writer();
+        let lines = vec![line(&serum(2), 4), line(&serum(9), 9)];
+        *a.params.routes.write() = saved::store(&lines);
+        saved::run(&lines, &a);
+        let snap = capture(&a);
+        let b = writer();
+        assert!(apply_on(&b, &snap, bridge).is_ok());
+        let got = capture(&b);
+        assert_eq!(got.routes.iter().map(|s| s.key.clone()).collect::<Vec<_>>(), [Some(serum(2).id()), Some(serum(9).id())]);
+        let running: Vec<crate::route::Target> = [1, 2].iter().flat_map(|l| b.line_routes(*l)).map(|r| r.2).collect();
+        let param = |k| crate::route::Target::Param { plugin: k, index: 12 };
+        assert_eq!(running, [param(serum(2)), param(serum(9))]);
+    }
+
     #[test]
     fn a_load_before_the_inventory_moves_lines_walls_and_pin_on_the_first_one() {
         let bridge = fl::Bridge::detached();

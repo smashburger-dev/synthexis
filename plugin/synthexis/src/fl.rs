@@ -755,11 +755,8 @@ impl Worker {
     /// names the plugin, and the script writes only when that plugin still
     /// sits in the slot (a route never drives a plugin that replaced it).
     fn write(&mut self, first: (Key, u32, f32), more: &Receiver<(Key, u32, f32)>) {
-        for (k, i, v) in std::iter::once(first).chain(more.try_iter()) {
-            match self.unsent.iter_mut().find(|(uk, ui, _)| *uk == k && *ui == i) {
-                Some(slot) => slot.2 = v,
-                None => self.unsent.push((k, i, v)),
-            }
+        for w in std::iter::once(first).chain(more.try_iter()) {
+            queue(&mut self.unsent, w);
         }
         self.flush();
     }
@@ -769,12 +766,7 @@ impl Worker {
             return;
         }
         for (k, i, v) in std::mem::take(&mut self.unsent) {
-            let mut msg = json!({"cmd": "rec", "p": k.plugin, "i": i, "v": (v * 10_000.0).round() / 10_000.0});
-            match k.at {
-                At::Fx { track, slot } => msg["fx"] = json!([track, slot]),
-                At::Gen { ch } => msg["ch"] = json!(ch),
-            }
-            self.send(&msg);
+            self.send(&rec_msg(&k, i, v));
         }
     }
 
@@ -827,6 +819,26 @@ impl Worker {
     }
 }
 
+/// Queues write `w` as the latest value of its parameter: one entry per
+/// plugin instance (the full key, place and name) and parameter index.
+fn queue(unsent: &mut Vec<(Key, u32, f32)>, w: (Key, u32, f32)) {
+    match unsent.iter_mut().find(|(k, i, _)| *k == w.0 && *i == w.1) {
+        Some(slot) => slot.2 = w.2,
+        None => unsent.push(w),
+    }
+}
+
+/// The "rec" frame that sets parameter `i` of `k` to `v`, with the place
+/// of that instance.
+fn rec_msg(k: &Key, i: u32, v: f32) -> Value {
+    let mut msg = json!({"cmd": "rec", "p": k.plugin, "i": i, "v": (v * 10_000.0).round() / 10_000.0});
+    match k.at {
+        At::Fx { track, slot } => msg["fx"] = json!([track, slot]),
+        At::Gen { ch } => msg["ch"] = json!(ch),
+    }
+    msg
+}
+
 /// ["fx", track, slot, plugin, user, track name] or
 /// ["gen", channel, plugin, user, channel name, target track, track name].
 fn parse_row(row: &Value) -> Option<Target> {
@@ -873,6 +885,24 @@ mod tests {
         assert_eq!(t.label(), "Portal, Track 3 slot 0");
         assert_eq!(Key::parse("Xfer Records/Serum 2"), None);
         assert_eq!(Key::parse(""), None);
+    }
+
+    /// Two Serum 2 on one parameter index: each write keeps its own queue
+    /// entry and goes out to its own place; only a newer value of the same
+    /// instance replaces one.
+    #[test]
+    fn writes_to_two_instances_of_one_plugin_stay_apart() {
+        let (a, b) = (Key { at: At::Gen { ch: 3 }, plugin: "Serum 2".into() }, Key { at: At::Fx { track: 10, slot: 0 }, plugin: "Serum 2".into() });
+        let mut unsent = Vec::new();
+        queue(&mut unsent, (a.clone(), 30, 0.25));
+        queue(&mut unsent, (b.clone(), 30, 0.75));
+        queue(&mut unsent, (a.clone(), 30, 0.5));
+        assert_eq!(unsent, vec![(a.clone(), 30, 0.5), (b.clone(), 30, 0.75)]);
+        let sent: Vec<Value> = unsent.iter().map(|(k, i, v)| rec_msg(k, *i, *v)).collect();
+        assert_eq!(
+            sent,
+            vec![json!({"cmd": "rec", "p": "Serum 2", "i": 30, "v": 0.5, "ch": 3}), json!({"cmd": "rec", "p": "Serum 2", "i": 30, "v": 0.75, "fx": [10, 0]})]
+        );
     }
 
     #[test]

@@ -888,12 +888,23 @@ fn side_name(side: Side, t: &Text) -> &'static str {
 }
 
 /// What a side's chip says: "Off", "Signal 11 · Ramp", "Cutoff ·
-/// Position", "Pong top · Note".
+/// Position", "Pong top · Note"; with two instances of the plugin in the
+/// project its place first: "Serum 2 (Track 3) · Cutoff · Ramp".
 pub(crate) fn action_name(a: &Action, store: &midi::Store, t: &Text) -> String {
     match a {
         Action::Off => t.p_off.into(),
         Action::Macro { index, how } => format!("{} · {}", fill(t.p_signal, &[&(index + 1)]), mode_name(how.mode, t)),
-        Action::Param { name, index, how, .. } => format!("{} · {}", param_label(name, *index), mode_name(how.mode, t)),
+        Action::Param { key, name, index, how } => {
+            let what = param_label(name, *index);
+            let what = match crate::fl::Key::parse(key) {
+                Some(k) => {
+                    let names = crate::edges::Names::now([&k]);
+                    if names.is_twin(&k.plugin) { format!("{} · {what}", names.label(&k, t)) } else { what }
+                }
+                None => what,
+            };
+            format!("{what} · {}", mode_name(how.mode, t))
+        }
         Action::Part { id } => match store.get(*id) {
             Some(p) => {
                 let kind = match p.play {

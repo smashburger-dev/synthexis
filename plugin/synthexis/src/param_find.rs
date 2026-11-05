@@ -106,15 +106,13 @@ pub fn moves(t: &Text) -> Vec<(Found, String)> {
     MOVES.iter().map(|f| (Found::Move((*f).to_string()), crate::fingers::graph::signal_label(&format!("cam0.hand.L.{f}"), t))).collect()
 }
 
-/// The plugin a target list shows: with `plugin` (a route's plugin name)
-/// the pin, FL's focused plugin or else the first instance in the project
-/// that has that name; without one the pin, else the focus.
-pub fn plugin_key(plugin: Option<&str>, pin: Option<fl::Key>) -> Option<fl::Key> {
-    let view = fl::bridge().view();
-    let mut near = pin.into_iter().chain(view.focus.clone());
-    match plugin {
-        Some(p) => near.find(|k| k.plugin == p).or_else(|| view.targets.iter().find(|x| x.key.plugin == p).map(|x| x.key.clone())),
-        None => near.next(),
+/// The plugin a target list shows: with `inst` (a route's instance, an
+/// fl::Key id) that instance, so each of two instances of one plugin lists
+/// its own; without one the pin, else FL's focused plugin.
+pub fn plugin_key(inst: Option<&str>, pin: Option<fl::Key>) -> Option<fl::Key> {
+    match inst.and_then(fl::Key::parse) {
+        Some(k) => Some(k),
+        None => pin.or_else(|| fl::bridge().view().focus.clone()),
     }
 }
 
@@ -133,7 +131,7 @@ pub fn names(key: Option<&fl::Key>, wanted: &mut Option<String>, t: &Text) -> Re
             bridge.want(k);
             *wanted = Some(k.id());
         }
-        Err(fill(t.p_loading, &[&k.plugin]))
+        Err(fill(t.p_loading, &[&crate::edges::Names::now([k]).label(k, t)]))
     })
 }
 
