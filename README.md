@@ -15,6 +15,13 @@ You set it up in plain English or German: type "when I spread my fingers, open t
 > [!NOTE]
 > Built for the **Meta Global AI Developer Hackathon** (Oct 26 to Nov 4, 2026), Indie track, theme "Build for Your World". Everything in this repository was created during the event; the commit history starts on Oct 26. One asset is older: the mapping parser's encoder (see [Carried over from earlier work](#carried-over-from-earlier-work)).
 
+## Download
+
+> [!TIP]
+> **[synthexis for macOS (VST3 and CLAP)](https://github.com/smashburger-dev/synthexis/releases/latest)**: Apple Silicon, FL Studio. Quit FL Studio, unzip, double-click `install.command` (if macOS blocks it: right-click, Open). It installs the plug-ins, the camera models and the FL Studio device script, and downloads the sentence parser once (about 450 MB). Then add synthexis in FL Studio and allow camera access.
+
+The plug-ins are signed ad hoc, not notarized by Apple; the installer clears the download flag so FL Studio can load them. To build from source instead, see [plugin/README.md](plugin/README.md).
+
 ## What you can play
 
 The camera gives synthexis 57 live signals, each a value from 0 to 1 with a confidence. The list is `perception_ids()` in [`plugin/synthexis/src/signal.rs`](plugin/synthexis/src/signal.rs).
@@ -250,7 +257,8 @@ Nov 4, 2026.
 **Open**
 
 - [ ] Orb, recording latency compensation, the shot as a bindable movement
-- [ ] Demo video, signed download release, final install test
+- [x] Download release for macOS (VST3 and CLAP, ad-hoc signed)
+- [ ] Notarized release, Windows
 
 Planning board with every diagram: [FigJam](https://www.figma.com/board/WJIE59w34hCSTXuq3XpKGH).
 
