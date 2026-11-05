@@ -35,7 +35,9 @@
 #          measured in probes/fl-target-picker and probes/fl-script-bridge).
 #          Nothing is written when another plugin sits there now. Sent
 #          without an id by the route writer, up to 30 times a second per
-#          parameter, so it gets no reply.
+#          parameter, so it gets no reply. Route values come on the 128
+#          steps of a MIDI CC and only when they moved a step (route.rs,
+#          thin), so FL records as few points as from a hardware knob.
 #   nmap   {"m": {"<slot>": channel}}: which channel plays the notes of
 #          each slot (MIDI channel 0..15 of the plain notes below); replaces
 #          the whole map and ends the notes the old one started
