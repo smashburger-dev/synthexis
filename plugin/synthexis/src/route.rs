@@ -321,8 +321,28 @@ fn fit_hand_x(routes: &mut [Route], current: &Values, signal: &str) {
     }
 }
 
+/// Steps of every value a route writes: the 0..127 of a MIDI CC, what a
+/// hardware knob sends and FL records from it. Finer writes made FL record
+/// up to 30 automation points a second per parameter, camera jitter
+/// included, and the recorded clips stuttered on playback (Noa, FL tests
+/// 11-05); clips drawn in coarse steps played clean.
+pub const WRITE_STEPS: f32 = 127.0;
+
+/// What a target that last wrote `old` writes for its new value `new`:
+/// `new` on the WRITE_STEPS grid once it is a full step away from `old`,
+/// None before. A knob that stops sends nothing, so a hand held still
+/// writes nothing either; a full sweep writes at most 128 values, and 0
+/// and 1 are always reached. The first value (old NaN) always goes out.
+fn thin(old: f32, new: f32) -> Option<f32> {
+    let q = (new * WRITE_STEPS).round() / WRITE_STEPS;
+    // a little under one step, so float error never holds back 0 or 1
+    let moved = old.is_nan() || (new - old).abs() * WRITE_STEPS >= 1.0 - 1e-3;
+    (moved && q != old).then_some(q)
+}
+
 /// Apply one incoming sample to the route table; returns the changed
-/// targets with their new values (after summing/clamping).
+/// targets with their new values (after summing/clamping), on the
+/// WRITE_STEPS grid (`thin`).
 pub fn apply_sample(
     routes: &mut [Route],
     current: &mut Values,
@@ -391,9 +411,9 @@ pub fn apply_sample(
             Target::Macro(i) => &mut current.macros[*i],
             Target::Param { .. } | Target::Part { .. } => current.params.entry(t.clone()).or_insert(f32::NAN),
         };
-        if old.is_nan() || (new - *old).abs() > f32::EPSILON {
-            *old = new;
-            changed.push((t, new));
+        if let Some(v) = thin(*old, new) {
+            *old = v;
+            changed.push((t, v));
         }
     }
     changed
@@ -797,5 +817,58 @@ mod tests {
             apply_sample(&mut routes, &mut cur, "x", &s(1.0), i as f64 / 30.0);
         }
         assert_eq!(cur.macros[0], 0.0);
+    }
+
+    #[test]
+    fn thin_writes_each_step_of_a_sweep_once_and_reaches_both_ends() {
+        let mut old = f32::NAN;
+        let mut writes = Vec::new();
+        let ramp = (0..=1000).map(|i| i as f32 / 1000.0).chain((0..=1000).rev().map(|i| i as f32 / 1000.0));
+        for v in ramp {
+            if let Some(w) = thin(old, v) {
+                writes.push(w);
+                old = w;
+            }
+        }
+        assert_eq!(writes.len(), 128 + 127, "up 0..=127, down 126..=0");
+        assert_eq!(writes[127], 1.0);
+        assert_eq!(writes.last(), Some(&0.0));
+        for w in &writes {
+            let level = w * WRITE_STEPS;
+            assert!((level - level.round()).abs() < 1e-4, "{w} is on the grid");
+        }
+    }
+
+    #[test]
+    fn thin_holds_jitter_under_a_step() {
+        let first = thin(f32::NAN, 0.5).unwrap_or(f32::NAN);
+        assert!((first - 64.0 / WRITE_STEPS).abs() < 1e-6);
+        let step = 1.0 / WRITE_STEPS;
+        for i in 0..300 {
+            let jitter = 0.9 * step * ((i as f32 * 1.7).sin());
+            assert_eq!(thin(first, first + jitter), None, "{i}");
+        }
+        assert!(thin(first, first + step).is_some());
+    }
+
+    #[test]
+    fn a_param_route_on_a_still_hand_stops_writing() {
+        let key = fl::Key { at: fl::At::Fx { track: 0, slot: 0 }, plugin: "Serum 2".into() };
+        let target = Target::Param { plugin: key, index: 3 };
+        let mut routes = vec![Route::to("x", target.clone(), 1.0)];
+        let mut cur = Values::default();
+        let mut writes = 0;
+        // 10 s at 30 Hz around 0.6 with camera jitter of +-0.15 % (a hand
+        // held still), counted after 3 s of settling; before the step grid
+        // every frame wrote
+        for i in 0..300 {
+            let jitter = 0.0015 * ((i as f32 * 2.3).sin());
+            let n = apply_sample(&mut routes, &mut cur, "x", &s(0.6 + jitter), i as f64 / 30.0).len();
+            if i >= 90 {
+                writes += n;
+            }
+        }
+        assert!(writes <= 3, "{writes} writes");
+        assert!((cur.params[&target] - 0.6).abs() < 1.0 / WRITE_STEPS, "{}", cur.params[&target]);
     }
 }
