@@ -10,7 +10,7 @@
 <p align="center">
   <a href="https://github.com/smashburger-dev/synthexis/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/smashburger-dev/synthexis?style=flat-square&label=release"></a>
   <img alt="macOS on Apple Silicon" src="https://img.shields.io/badge/macOS-Apple_Silicon-111111?style=flat-square&logo=apple&logoColor=white">
-  <img alt="Plugin formats VST3 and CLAP" src="https://img.shields.io/badge/plugin-VST3_%7C_CLAP-555555?style=flat-square">
+  <img alt="Plugin formats VST3, CLAP and Audio Unit" src="https://img.shields.io/badge/plugin-VST3_%7C_CLAP_%7C_AU-555555?style=flat-square">
   <img alt="Runs offline" src="https://img.shields.io/badge/runs-offline_on_your_Mac-2E7D32?style=flat-square">
   <a href="LICENSE"><img alt="MIT licence" src="https://img.shields.io/badge/license-MIT-1565C0?style=flat-square"></a>
 </p>
@@ -31,9 +31,9 @@ synthexis has no synth of its own. It plays the instruments and effects already 
 ## Download
 
 > [!TIP]
-> **[synthexis for macOS (VST3 and CLAP)](https://github.com/smashburger-dev/synthexis/releases/latest)**, Apple Silicon, FL Studio. Quit FL Studio, unzip, double-click `install.command` (if macOS blocks it: right-click, Open). It installs the plug-ins, the camera models and the FL Studio bridge script, and downloads the sentence parser once (about 450 MB). Then add synthexis in FL Studio and allow camera access.
+> **[synthexis for macOS (VST3, CLAP and Audio Unit)](https://github.com/smashburger-dev/synthexis/releases/latest)**, Apple Silicon. Quit FL Studio and Logic Pro, unzip, double-click `install.command` (if macOS blocks it: right-click, Open). It installs the three plug-in formats, the camera models and the FL Studio bridge script, and downloads the sentence parser once (about 450 MB). Then add synthexis in FL Studio and allow camera access.
 
-The plug-ins are signed ad hoc, not notarized by Apple; the installer clears the download flag so FL Studio can load them. To build from source, see [plugin/README.md](plugin/README.md).
+FL Studio is the tested host. The Audio Unit for Logic Pro passes Apple's `auval` but has not been opened in Logic yet (see [DAW support](#daw-support)). The plug-ins are signed ad hoc, not notarized by Apple; the installer clears the download flag so the hosts can load them. What changed in each version: [CHANGELOG.md](CHANGELOG.md). To build from source, see [plugin/README.md](plugin/README.md).
 
 ## DAW support
 
