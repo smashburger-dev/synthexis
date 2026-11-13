@@ -22,6 +22,7 @@ Writes probes/fl-target-picker/param_counts.md (or --out).
 import argparse
 import json
 import re
+import unicodedata
 from collections import Counter, defaultdict
 from pathlib import Path
 
@@ -44,15 +45,17 @@ FL_MEASURED = {
 
 
 def placeholder(name: str) -> str | None:
-    """Family of a placeholder name, or None for a real parameter."""
-    if any(ord(c) < 32 or ord(c) == 127 for c in name):
+    """Family of a placeholder name, or None for a real parameter: the rule
+    of is_placeholder in plugin/synthexis/src/fl.rs (test_mapping.py runs
+    the fl.rs test cases through it). export_paramsense.py uses it too."""
+    if any(unicodedata.category(c) == "Cc" for c in name):  # char::is_control
         return "control chars"
     n = name.strip().lower()
     if re.match(r"midi cc($|[ #0-9])", n) or re.match(r"cc[ #0-9]", n):
         return "midi cc"
-    if re.search(r" chan \d+$", n):
+    if re.search(r" chan [0-9]+$", n):
         return "midi chan"
-    if re.fullmatch(r"reserved ?\d*", n) or "(reserved)" in n:
+    if re.fullmatch(r"reserved\s*[0-9]*", n) or "(reserved)" in n:
         return "reserved"
     if n in ("unused", "internal"):
         return n

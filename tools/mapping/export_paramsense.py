@@ -42,6 +42,7 @@ import torch
 import torch.nn.functional as F
 
 import stock
+from fl_param_counts import placeholder  # is_placeholder of fl.rs
 
 ROOT = Path(__file__).resolve().parents[2]
 DATA = ROOT / "data" / "mapping"
@@ -51,16 +52,6 @@ LABEL_RUNS = ["label-vst3-prio-v1", "label-vst3-bulk-v1", "label-prio-v1", "labe
 PARITY_PLUGINS = ["Xfer Records/Serum 2", "Output/Portal", "FabFilter/Pro-Q 3",
                   "Valhalla DSP, LLC/ValhallaDelay", "Arturia/Pigments", "u-he/Diva",
                   "Native Instruments/Massive", "Surge Synth Team/Surge XT"]
-
-
-def placeholder(name: str) -> bool:
-    """Same rule as is_placeholder in plugin/synthexis/src/fl.rs."""
-    if any(ord(c) < 32 or ord(c) == 127 for c in name):
-        return True
-    n = name.strip().lower()
-    return bool(re.match(r"midi cc($|[ #0-9])", n) or re.match(r"cc[ #0-9]", n)
-                or re.search(r" chan \d+$", n) or re.fullmatch(r"reserved ?\d*", n)
-                or "(reserved)" in n or n in ("unused", "internal"))
 
 
 # Features as train_paramsense.py builds them, with the bucket count of the

@@ -1040,11 +1040,12 @@ mod tests {
     #[test]
     fn placeholders() {
         for n in ["CC 74", "CC0 Chan 1", "MIDI CC 7", "MIDI CC 7|0", "MIDI CC", "Midi CC 64 (Sustain Pedal)",
-            "Reserved4", "Reserved", "X (Reserved)", "Aftertouch Chan 16", "Internal", "unused", "\u{13}", "p\u{17}"]
+            "Reserved4", "Reserved", "Reserved  4", "X (Reserved)", "Aftertouch Chan 16", "Internal", "unused", "\u{13}", "p\u{17}",
+            "x\u{85}"]
         {
             assert!(is_placeholder(n), "{n}");
         }
-        for n in ["Cutoff", "CCW Rotation", "Chan 1 Level", "Receive Midi", "Param 3", "1", "MIDI Octaves"] {
+        for n in ["Cutoff", "CCW Rotation", "Chan 1 Level", "Receive Midi", "Param 3", "1", "MIDI Octaves", "Reserved \u{664}"] {
             assert!(!is_placeholder(n), "{n}");
         }
     }

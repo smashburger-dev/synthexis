@@ -100,11 +100,6 @@ pub fn median_p95(v: &VecDeque<f64>) -> (f64, f64) {
     (med, p95)
 }
 
-pub struct Engine {
-    pub shared: Arc<EngineShared>,
-    pub subs: &'static crate::engine::Engine,
-}
-
 struct DelegateIvars {
     shared: Arc<EngineShared>,
 }

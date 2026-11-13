@@ -28,11 +28,12 @@ def known() -> dict:
     out, cur = defaultdict(dict), ""
     for line in open(MAP / "completion" / "known.tsv"):
         line = line.rstrip("\n")
-        if line.startswith("#"):
-            cur = line[1:]
-        elif "\t" in line:
+        # a parameter can be named "#000" too (Kontakt): a plugin line has no tab
+        if "\t" in line:
             n, c = line.split("\t", 1)
             out[cur][n] = c
+        elif line.startswith("#"):
+            cur = line[1:]
     return out
 
 
