@@ -11,11 +11,11 @@ Changed:
 - The VST3 declares a MIDI input, because Live 12 refuses a VST3 instrument without one. synthexis ignores incoming MIDI.
 - Before it asks for the camera, synthexis checks whether the host declares camera use. Logic 12.4 does not, so synthexis shows a message instead of asking, which could crash the host. Access granted earlier still works.
 - Kontakt, Kontakt 5, 7 and 8 and Quanta 2 keep their labels. Their parameters are named `#000`, `#001` and so on, and synthexis read each of those 5,122 lines as the start of a new plugin.
-- The code version goes from 0.1.2 to 0.1.4; 0.1.3 was only a label update and never set in the code.
+- The code version goes from 0.1.2 to 0.1.4; 0.1.3 was only a label update and never set in the code. The plugin now takes its version from `Cargo.toml`, and the log line at start says the real version instead of "v0.1.0".
 
 Known limits:
 - synthexis has not been opened in Logic or Live yet.
-- The VST3 with the new MIDI input has not been checked again in FL Studio. That check comes before the next release.
+- The VST3 with the new MIDI input has not been checked again in FL Studio.
 
 ## 0.1.3 (2026-11-13)
 
