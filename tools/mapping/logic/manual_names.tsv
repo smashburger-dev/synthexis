@@ -1,0 +1,1745 @@
+kind	plugin	section	name
+Effects	Amp Designer	Amplifier controls	Gain
+Effects	Amp Designer	Amplifier controls	Presence
+Effects	Amp Designer	Amplifier controls	Master
+Effects	Amp Designer	Amplifier controls	Output
+Effects	Amp Designer	Reverb effect	Reverb
+Effects	Amp Designer	Reverb effect	Level
+Effects	Amp Designer	Tremolo and vibrato	Trem/Vib
+Effects	Amp Designer	Tremolo and vibrato	Depth
+Effects	Amp Designer	Tremolo and vibrato	Speed
+Effects	Amp Designer	Tremolo and vibrato	Sync/Free
+Effects	Amp Designer	Microphone parameters	Microphone
+Effects	Amp Designer	Microphone parameters	Mic
+Effects	Bass Amp Designer	Amplifier controls	Channel I/II
+Effects	Bass Amp Designer	Amplifier controls	Bright
+Effects	Bass Amp Designer	Amplifier controls	Gain
+Effects	Bass Amp Designer	Amplifier controls	Master
+Effects	Bass Amp Designer	Amplifier controls	Output
+Effects	Bass Amp Designer	EQ	EQ on/off
+Effects	Bass Amp Designer	EQ	Bass
+Effects	Bass Amp Designer	EQ	Mids
+Effects	Bass Amp Designer	EQ	Treble
+Effects	Bass Amp Designer	EQ	Low
+Effects	Bass Amp Designer	EQ	1-2-3
+Effects	Bass Amp Designer	EQ	High
+Effects	Bass Amp Designer	Compressor	Compressor on/off
+Effects	Bass Amp Designer	Compressor	Hard/Soft
+Effects	Bass Amp Designer	Compressor	Comp(ression)
+Effects	Bass Amp Designer	Graphic EQ	Type
+Effects	Bass Amp Designer	Graphic EQ	Pre/Post
+Effects	Bass Amp Designer	Graphic EQ	Frequency
+Effects	Bass Amp Designer	Parametric EQ	kHz
+Effects	Bass Amp Designer	Parametric EQ	Q
+Effects	Bass Amp Designer	Microphone parameters	Microphone
+Effects	Bass Amp Designer	Microphone parameters	Mic
+Effects	Pedalboard	Utility pedals	Mix
+Effects	Pedalboard	Utility pedals	A/Mix/B
+Effects	Pedalboard	Utility pedals	Pan A/B
+Effects	Pedalboard	Utility pedals	Frequency
+Effects	Pedalboard	Utility pedals	Split/Freq mode
+Effects	Pedalboard	Delay pedals	Time
+Effects	Pedalboard	Delay pedals	Repeats
+Effects	Pedalboard	Delay pedals	Tone Cut
+Effects	Pedalboard	Delay pedals	Mute
+Effects	Pedalboard	Delay pedals	Sync
+Effects	Pedalboard	Delay pedals	Tone
+Effects	Pedalboard	Delay pedals	Style
+Effects	Pedalboard	Delay pedals	Feedback
+Effects	Pedalboard	Delay pedals	Bright/Dark
+Effects	Pedalboard	Delay pedals	Listen
+Effects	Pedalboard	Delay pedals	Norm/Reverse
+Effects	Pedalboard	Delay pedals	Lo/Hi Cut
+Effects	Pedalboard	Delay pedals	Dirt
+Effects	Pedalboard	Delay pedals	Flutter
+Effects	Pedalboard	Distortion pedals	Drive
+Effects	Pedalboard	Distortion pedals	Level
+Effects	Pedalboard	Distortion pedals	Input
+Effects	Pedalboard	Distortion pedals	Squash
+Effects	Pedalboard	Distortion pedals	Contour
+Effects	Pedalboard	Distortion pedals	Bright/Fat
+Effects	Pedalboard	Distortion pedals	Fuzz
+Effects	Pedalboard	Distortion pedals	Grind
+Effects	Pedalboard	Distortion pedals	Filter
+Effects	Pedalboard	Distortion pedals	Full/Scoop
+Effects	Pedalboard	Distortion pedals	Volume
+Effects	Pedalboard	Distortion pedals	Distortion
+Effects	Pedalboard	Distortion pedals	Treble/Full
+Effects	Pedalboard	Distortion pedals	Roar
+Effects	Pedalboard	Distortion pedals	Growl
+Effects	Pedalboard	Distortion pedals	Texture
+Effects	Pedalboard	Distortion pedals	Grain
+Effects	Pedalboard	Distortion pedals	Crunch
+Effects	Pedalboard	Distortion pedals	Fat
+Effects	Pedalboard	Distortion pedals	Low
+Effects	Pedalboard	Distortion pedals	Mid Freq
+Effects	Pedalboard	Distortion pedals	Mid Gain
+Effects	Pedalboard	Distortion pedals	High
+Effects	Pedalboard	Distortion pedals	Bias
+Effects	Pedalboard	Distortion pedals	Output
+Effects	Pedalboard	Dynamics pedals	Sustain
+Effects	Pedalboard	Dynamics pedals	Attack
+Effects	Pedalboard	Filter pedals	Sensitivity
+Effects	Pedalboard	Filter pedals	Cutoff
+Effects	Pedalboard	Filter pedals	BP/LP
+Effects	Pedalboard	Filter pedals	Hi/Lo
+Effects	Pedalboard	Filter pedals	Up/Down
+Effects	Pedalboard	Filter pedals	Q
+Effects	Pedalboard	Filter pedals	Mode
+Effects	Pedalboard	Modulation pedals	Rate
+Effects	Pedalboard	Modulation pedals	Depth
+Effects	Pedalboard	Modulation pedals	Reso
+Effects	Pedalboard	Modulation pedals	Wave
+Effects	Pedalboard	Modulation pedals	Symmetry
+Effects	Pedalboard	Modulation pedals	Curve
+Effects	Pedalboard	Modulation pedals	Manual
+Effects	Pedalboard	Modulation pedals	Bright
+Effects	Pedalboard	Modulation pedals	Density
+Effects	Pedalboard	Modulation pedals	LFO 1/2 Rate
+Effects	Pedalboard	Modulation pedals	LFO 1/2 Floor/Ceiling
+Effects	Pedalboard	Modulation pedals	LFO 1/2 Order
+Effects	Pedalboard	Modulation pedals	LFO 1/2 Feedback
+Effects	Pedalboard	Modulation pedals	LFO 1/2 Tone
+Effects	Pedalboard	Modulation pedals	LFO 1/2 Mix
+Effects	Pedalboard	Modulation pedals	Lin/Exp
+Effects	Pedalboard	Modulation pedals	Freq
+Effects	Pedalboard	Modulation pedals	Fine
+Effects	Pedalboard	Modulation pedals	FB (Feedback)
+Effects	Pedalboard	Modulation pedals	Intensity
+Effects	Pedalboard	Modulation pedals	Vintage/Modern
+Effects	Pedalboard	Modulation pedals	Cabinet
+Effects	Pedalboard	Modulation pedals	Fast Rate
+Effects	Pedalboard	Modulation pedals	Response
+Effects	Pedalboard	Modulation pedals	Slow/Brake/Fast
+Effects	Pedalboard	Modulation pedals	Type
+Effects	Pedalboard	Modulation pedals	Smooth
+Effects	Pedalboard	Modulation pedals	1/2 Speed
+Effects	Pedalboard	Modulation pedals	2x Speed
+Effects	Pedalboard	Modulation pedals	Speed Up
+Effects	Pedalboard	Modulation pedals	Slow Down
+Effects	Pedalboard	Pitch pedals	Octave 1/2
+Effects	Pedalboard	Pitch pedals	Direct
+Effects	Pedalboard	Pitch pedals	Tune
+Effects	Delay Designer	Tap parameter bar	Filter On/Off
+Effects	Delay Designer	Tap parameter bar	Cutoff HP/LP
+Effects	Delay Designer	Tap parameter bar	Slope
+Effects	Delay Designer	Tap parameter bar	Reso(nance)
+Effects	Delay Designer	Tap parameter bar	Tap Delay
+Effects	Delay Designer	Tap parameter bar	Pitch On/Off
+Effects	Delay Designer	Tap parameter bar	Transp(ose)
+Effects	Delay Designer	Tap parameter bar	Flip
+Effects	Delay Designer	Tap parameter bar	Pan
+Effects	Delay Designer	Tap parameter bar	Spread
+Effects	Delay Designer	Tap parameter bar	Mute
+Effects	Delay Designer	Tap parameter bar	Level
+Effects	Delay Designer	Master parameters	Feedback
+Effects	Delay Designer	Master parameters	Feedback Tap
+Effects	Delay Designer	Master parameters	Feedback Level
+Effects	Delay Designer	Master parameters	Mix
+Effects	Echo	Echo controls	Note
+Effects	Echo	Echo controls	Feedback
+Effects	Echo	Echo controls	Color
+Effects	Echo	Echo controls	Dry
+Effects	Echo	Echo controls	Wet
+Effects	Sample Delay	Sample Delay controls	Delay knob (L/R) and
+Effects	Sample Delay	Sample Delay controls	Link L & R
+Effects	Sample Delay	Sample Delay controls	Unit
+Effects	Stereo Delay	Stereo Delay controls	Input
+Effects	Stereo Delay	Stereo Delay controls	Delay Time
+Effects	Stereo Delay	Stereo Delay controls	Note
+Effects	Stereo Delay	Stereo Delay controls	Deviation
+Effects	Stereo Delay	Stereo Delay controls	Low/High Cut
+Effects	Stereo Delay	Stereo Delay controls	Feedback
+Effects	Stereo Delay	Stereo Delay controls	Feedback Phase
+Effects	Stereo Delay	Stereo Delay controls	Crossfeed Left to Right (Right to Left)
+Effects	Stereo Delay	Stereo Delay controls	Crossfeed Phase
+Effects	Stereo Delay	Stereo Delay controls	Routing
+Effects	Stereo Delay	Stereo Delay controls	Tempo Sync
+Effects	Stereo Delay	Stereo Delay controls	Stereo Link
+Effects	Stereo Delay	Stereo Delay controls	Output Mix
+Effects	Tape Delay	Tape Delay controls	Tempo Sync
+Effects	Tape Delay	Tape Delay controls	Delay Time
+Effects	Tape Delay	Tape Delay controls	Note
+Effects	Tape Delay	Tape Delay controls	Deviation
+Effects	Tape Delay	Tape Delay controls	Smoothing
+Effects	Tape Delay	Tape Delay controls	Clip Threshold
+Effects	Tape Delay	Tape Delay controls	Spread
+Effects	Tape Delay	Tape Delay controls	Tape Head Mode
+Effects	Tape Delay	Tape Delay controls	Low/High Cut
+Effects	Tape Delay	Tape Delay controls	LFO Rate
+Effects	Tape Delay	Tape Delay controls	LFO Intensity
+Effects	Tape Delay	Tape Delay controls	Flutter Rate/Intensity
+Effects	Tape Delay	Tape Delay controls	Feedback
+Effects	Tape Delay	Tape Delay controls	Freeze
+Effects	Tape Delay	Tape Delay controls	Dry/Wet
+Effects	Bitcrusher	Bitcrusher controls	Mode
+Effects	Bitcrusher	Bitcrusher controls	Fold
+Effects	Bitcrusher	Bitcrusher controls	Clip
+Effects	Bitcrusher	Bitcrusher controls	Wrap
+Effects	Bitcrusher	Bitcrusher controls	Drive
+Effects	Bitcrusher	Bitcrusher controls	Resolution
+Effects	Bitcrusher	Bitcrusher controls	Downsampling
+Effects	Bitcrusher	Bitcrusher controls	Mix
+Effects	Bitcrusher	Bitcrusher controls	Clip Level
+Effects	ChromaGlow	ChromaGlow controls	Model
+Effects	ChromaGlow	ChromaGlow controls	Style
+Effects	ChromaGlow	ChromaGlow controls	Drive
+Effects	ChromaGlow	ChromaGlow controls	Bypass Below
+Effects	ChromaGlow	ChromaGlow controls	Level In
+Effects	ChromaGlow	ChromaGlow controls	Level Out
+Effects	ChromaGlow	ChromaGlow controls	Mix
+Effects	ChromaGlow	ChromaGlow controls	Low Cut
+Effects	ChromaGlow	ChromaGlow controls	Slope
+Effects	ChromaGlow	ChromaGlow controls	Frequency
+Effects	ChromaGlow	ChromaGlow controls	Resonance
+Effects	ChromaGlow	ChromaGlow controls	Pre/Post
+Effects	ChromaGlow	ChromaGlow controls	High Cut
+Effects	Clip Distortion	Clip Distortion controls	Input Gain
+Effects	Clip Distortion	Clip Distortion controls	Drive
+Effects	Clip Distortion	Clip Distortion controls	Tone
+Effects	Clip Distortion	Clip Distortion controls	Symmetry
+Effects	Clip Distortion	Clip Distortion controls	Clip Filter
+Effects	Clip Distortion	Clip Distortion controls	Mix
+Effects	Clip Distortion	Clip Distortion controls	High Shelving
+Effects	Clip Distortion	Clip Distortion controls	LP Filter
+Effects	Clip Distortion	Clip Distortion controls	Gain
+Effects	Clip Distortion	Clip Distortion controls	Output Gain
+Effects	Distortion	Distortion effect controls	Drive
+Effects	Distortion	Distortion effect controls	Tone
+Effects	Distortion	Distortion effect controls	Output
+Effects	Distortion	Distortion effect controls	Level Compensation
+Effects	Distortion II	Distortion II controls	PreGain
+Effects	Distortion II	Distortion II controls	Drive
+Effects	Distortion II	Distortion II controls	Tone
+Effects	Distortion II	Distortion II controls	Type
+Effects	Distortion II	Distortion II controls	Distortion Output Level
+Effects	Distortion II	Distortion II controls	Mix
+Effects	Distortion II	Distortion II controls	Level Compensation
+Effects	Overdrive	Overdrive controls	Drive
+Effects	Overdrive	Overdrive controls	Tone
+Effects	Overdrive	Overdrive controls	Output
+Effects	Overdrive	Overdrive controls	Level Compensation
+Effects	Phase Distortion	Phase Distortion controls	Monitor
+Effects	Phase Distortion	Phase Distortion controls	Cutoff
+Effects	Phase Distortion	Phase Distortion controls	Resonance
+Effects	Phase Distortion	Phase Distortion controls	Intensity
+Effects	Phase Distortion	Phase Distortion controls	Phase Reverse
+Effects	Phase Distortion	Phase Distortion controls	Delay
+Effects	Phase Distortion	Phase Distortion controls	Mix
+Effects	Adaptive Limiter	Adaptive Limiter controls	Gain
+Effects	Adaptive Limiter	Adaptive Limiter controls	Out Ceiling
+Effects	Adaptive Limiter	Adaptive Limiter controls	Lookahead
+Effects	Adaptive Limiter	Adaptive Limiter controls	Remove DC Offset
+Effects	Adaptive Limiter	Adaptive Limiter controls	True Peak Detection
+Effects	Adaptive Limiter	Adaptive Limiter controls	Optimal Lookahead
+Effects	Compressor	Compressor main parameters	Circuit Type
+Effects	Compressor	Compressor main parameters	Side Chain
+Effects	Compressor	Compressor main parameters	Output
+Effects	Compressor	Compressor main parameters	Input Gain
+Effects	Compressor	Compressor main parameters	Threshold
+Effects	Compressor	Compressor main parameters	Ratio
+Effects	Compressor	Compressor main parameters	Make Up
+Effects	Compressor	Compressor main parameters	Auto Gain
+Effects	Compressor	Compressor main parameters	Knee
+Effects	Compressor	Compressor main parameters	Attack
+Effects	Compressor	Compressor main parameters	Release
+Effects	Compressor	Compressor main parameters	Auto Release
+Effects	Compressor	Compressor main parameters	Output Gain
+Effects	Compressor	Compressor output parameters	Limiter
+Effects	Compressor	Compressor output parameters	Limiter Threshold
+Effects	Compressor	Compressor output parameters	Distortion
+Effects	Compressor	Compressor output parameters	Mix
+Effects	Compressor	Compressor side chain parameters	Detection
+Effects	Compressor	Compressor side chain parameters	Max
+Effects	Compressor	Compressor side chain parameters	Sum
+Effects	Compressor	Compressor side chain parameters	Peak/RMS
+Effects	Compressor	Compressor side chain parameters	Filter
+Effects	Compressor	Compressor side chain parameters	Filter mode
+Effects	Compressor	Compressor side chain parameters	Frequency
+Effects	Compressor	Compressor side chain parameters	Q
+Effects	Compressor	Compressor side chain parameters	Gain
+Effects	DeEsser 2	DeEsser 2 controls	Detection max
+Effects	DeEsser 2	DeEsser 2 controls	Reduction max
+Effects	DeEsser 2	DeEsser 2 controls	Threshold
+Effects	DeEsser 2	DeEsser 2 controls	Max Reduction
+Effects	DeEsser 2	DeEsser 2 controls	Frequency
+Effects	DeEsser 2	DeEsser 2 controls	Mode
+Effects	DeEsser 2	DeEsser 2 controls	Range
+Effects	DeEsser 2	DeEsser 2 controls	Filter
+Effects	DeEsser 2	DeEsser 2 controls	Filter Solo
+Effects	Enveloper	Enveloper controls	Threshold
+Effects	Enveloper	Enveloper controls	(Attack) Gain
+Effects	Enveloper	Enveloper controls	Lookahead
+Effects	Enveloper	Enveloper controls	(Attack) Time
+Effects	Enveloper	Enveloper controls	(Release) Time
+Effects	Enveloper	Enveloper controls	(Release) Gain
+Effects	Enveloper	Enveloper controls	Out Level
+Effects	Expander	Expander controls	Threshold
+Effects	Expander	Expander controls	Ratio
+Effects	Expander	Expander controls	Gain
+Effects	Expander	Expander controls	Auto Gain
+Effects	Expander	Expander controls	Knee
+Effects	Expander	Expander controls	Attack
+Effects	Expander	Expander controls	Release
+Effects	Expander	Expander controls	Output Clip
+Effects	Expander	Expander controls	Peak/RMS
+Effects	Limiter	Limiter controls	Gain
+Effects	Limiter	Limiter controls	Release
+Effects	Limiter	Limiter controls	Output Level
+Effects	Limiter	Limiter controls	Lookahead
+Effects	Limiter	Limiter controls	Mode
+Effects	Multipressor	Multipressor display parameters	Crossover
+Effects	Multipressor	Multipressor display parameters	Gain Make-up
+Effects	Multipressor	Frequency band controls	Compression Threshold
+Effects	Multipressor	Frequency band controls	Compression Ratio
+Effects	Multipressor	Frequency band controls	Expansion Threshold
+Effects	Multipressor	Frequency band controls	Expansion Ratio
+Effects	Multipressor	Frequency band controls	Expansion Reduction
+Effects	Multipressor	Frequency band controls	Peak/RMS
+Effects	Multipressor	Frequency band controls	Attack
+Effects	Multipressor	Frequency band controls	Release
+Effects	Multipressor	Frequency band controls	Band on/off
+Effects	Multipressor	Frequency band controls	Bypass
+Effects	Multipressor	Frequency band controls	Solo
+Effects	Multipressor	Output parameters	Auto Gain
+Effects	Multipressor	Output parameters	Lookahead
+Effects	Multipressor	Output parameters	Out
+Effects	Channel EQ	Channel EQ parameters	Band 1 On/Off
+Effects	Channel EQ	Channel EQ parameters	Band 2 On/Off
+Effects	Channel EQ	Channel EQ parameters	Band 3 On/Off
+Effects	Channel EQ	Channel EQ parameters	Band 4 On/Off
+Effects	Channel EQ	Channel EQ parameters	Band 5 On/Off
+Effects	Channel EQ	Channel EQ parameters	Band 6 On/Off
+Effects	Channel EQ	Channel EQ parameters	Band 7 On/Off
+Effects	Channel EQ	Channel EQ parameters	Band 8 On/Off
+Effects	Channel EQ	Channel EQ parameters	Master Gain
+Effects	Channel EQ	Channel EQ parameters	Analyzer
+Effects	Channel EQ	Channel EQ parameters	Analyzer (Pre/Post)
+Effects	Channel EQ	Channel EQ parameters	Q-Couple
+Effects	Channel EQ	Channel EQ parameters	HQ
+Effects	Channel EQ	Channel EQ parameters	Processing
+Effects	Channel EQ	Channel EQ extended parameters	Analyzer Decay
+Effects	Linear Phase EQ	Linear Phase EQ parameters	Band 1 On/Off
+Effects	Linear Phase EQ	Linear Phase EQ parameters	Band 2 On/Off
+Effects	Linear Phase EQ	Linear Phase EQ parameters	Band 3 On/Off
+Effects	Linear Phase EQ	Linear Phase EQ parameters	Band 4 On/Off
+Effects	Linear Phase EQ	Linear Phase EQ parameters	Band 5 On/Off
+Effects	Linear Phase EQ	Linear Phase EQ parameters	Band 6 On/Off
+Effects	Linear Phase EQ	Linear Phase EQ parameters	Band 7 On/Off
+Effects	Linear Phase EQ	Linear Phase EQ parameters	Band 8 On/Off
+Effects	Linear Phase EQ	Linear Phase EQ parameters	Master Gain
+Effects	Linear Phase EQ	Linear Phase EQ parameters	Analyzer
+Effects	Linear Phase EQ	Linear Phase EQ parameters	Analyzer (Pre/Post)
+Effects	Linear Phase EQ	Linear Phase EQ parameters	Q-Couple
+Effects	Linear Phase EQ	Linear Phase EQ parameters	Processing
+Effects	Linear Phase EQ	Linear Phase EQ extended parameters	Analyzer Decay
+Effects	Match EQ	Match EQ parameters	Current
+Effects	Match EQ	Match EQ parameters	Reference
+Effects	Match EQ	Match EQ parameters	EQ Curve
+Effects	Match EQ	Match EQ parameters	Analyzer
+Effects	Match EQ	Match EQ parameters	Analyzer Pre/Post
+Effects	Match EQ	Match EQ parameters	Smoothing
+Effects	Match EQ	Match EQ parameters	Channel
+Effects	Match EQ	Match EQ parameters	Hide Others
+Effects	Match EQ	Match EQ parameters	Channel Link
+Effects	Match EQ	Match EQ parameters	LFE Handling
+Effects	Match EQ	Match EQ parameters	Current Learn
+Effects	Match EQ	Match EQ parameters	Reference Learn
+Effects	Match EQ	Match EQ parameters	EQ Curve Match
+Effects	Match EQ	Match EQ parameters	Apply
+Effects	Match EQ	Match EQ parameters	Ease-In/Ease-Out
+Effects	Match EQ	Match EQ parameters	Limit Boost
+Effects	Match EQ	Match EQ parameters	Limit Cut
+Effects	Match EQ	Match EQ parameters	Phase
+Effects	Single Band EQ	Single Band EQ controls	Mode
+Effects	Single Band EQ	Single Band EQ controls	Frequency
+Effects	Single Band EQ	Single Band EQ controls	Gain
+Effects	Single Band EQ	Single Band EQ controls	Slope
+Effects	Single Band EQ	Single Band EQ controls	Q Factor
+Effects	Vintage EQ Collection	Vintage Console EQ controls	In/Out
+Effects	Vintage EQ Collection	Vintage Console EQ controls	Low Cut
+Effects	Vintage EQ Collection	Vintage Console EQ controls	Low
+Effects	Vintage EQ Collection	Vintage Console EQ controls	Low Gain
+Effects	Vintage EQ Collection	Vintage Console EQ controls	Mid
+Effects	Vintage EQ Collection	Vintage Console EQ controls	Mid Gain
+Effects	Vintage EQ Collection	Vintage Console EQ controls	Mid Freq
+Effects	Vintage EQ Collection	Vintage Console EQ controls	High
+Effects	Vintage EQ Collection	Vintage Console EQ controls	High Gain
+Effects	Vintage EQ Collection	Vintage Graphic EQ controls	Tune
+Effects	Vintage EQ Collection	Vintage Graphic EQ controls	EQ band
+Effects	Vintage EQ Collection	Vintage Tube EQ controls	Low Boost
+Effects	Vintage EQ Collection	Vintage Tube EQ controls	Low Atten
+Effects	Vintage EQ Collection	Vintage Tube EQ controls	Low Freq
+Effects	Vintage EQ Collection	Vintage Tube EQ controls	High Boost
+Effects	Vintage EQ Collection	Vintage Tube EQ controls	High Bandwidth
+Effects	Vintage EQ Collection	Vintage Tube EQ controls	High Freq
+Effects	Vintage EQ Collection	Vintage Tube EQ controls	High Atten
+Effects	Vintage EQ Collection	Vintage Tube EQ controls	High Atten Sel
+Effects	Vintage EQ Collection	Vintage Tube EQ controls	Low Peak
+Effects	Vintage EQ Collection	Vintage Tube EQ controls	Dip Freq
+Effects	Vintage EQ Collection	Vintage Tube EQ controls	Dip
+Effects	Vintage EQ Collection	Vintage Tube EQ controls	High Peak
+Effects	AutoFilter	Filter controls	Resonance
+Effects	AutoFilter	Filter controls	State Variable
+Effects	AutoFilter	Filter controls	4-Pole Lowpass
+Effects	AutoFilter	Filter controls	Fatness
+Effects	AutoFilter	Filter controls	Spread
+Effects	AutoFilter	Filter controls	Envelope
+Effects	AutoFilter	Filter controls	LFO
+Effects	AutoFilter	Envelope controls	Threshold
+Effects	AutoFilter	Envelope controls	Dynamic
+Effects	AutoFilter	Envelope controls	Attack
+Effects	AutoFilter	Envelope controls	Decay
+Effects	AutoFilter	Envelope controls	Sustain
+Effects	AutoFilter	Envelope controls	Release
+Effects	AutoFilter	Distortion controls	Pre Filter
+Effects	AutoFilter	Distortion controls	Post Filter
+Effects	AutoFilter	Distortion controls	Mode
+Effects	AutoFilter	LFO controls	Sync
+Effects	AutoFilter	LFO controls	Rate
+Effects	AutoFilter	LFO controls	Sync Phase
+Effects	AutoFilter	LFO controls	Stereo Phase
+Effects	AutoFilter	LFO controls	Retrigger
+Effects	AutoFilter	LFO controls	Waveform
+Effects	AutoFilter	LFO controls	Pulse Width
+Effects	AutoFilter	Output controls	Dry Signal
+Effects	AutoFilter	Output controls	Main Out
+Effects	EVOC 20 Filterbank	Formant Filter controls	Formant Shift
+Effects	EVOC 20 Filterbank	Formant Filter controls	Bands
+Effects	EVOC 20 Filterbank	Formant Filter controls	Lowest
+Effects	EVOC 20 Filterbank	Formant Filter controls	Highest
+Effects	EVOC 20 Filterbank	Formant Filter controls	Resonance
+Effects	EVOC 20 Filterbank	Formant Filter controls	Boost A
+Effects	EVOC 20 Filterbank	Formant Filter controls	Boost B
+Effects	EVOC 20 Filterbank	Formant Filter controls	Slope
+Effects	EVOC 20 Filterbank	Formant Filter controls	Fade AB
+Effects	EVOC 20 Filterbank	Modulation controls	Shift LFO Intensity
+Effects	EVOC 20 Filterbank	Modulation controls	Rate
+Effects	EVOC 20 Filterbank	Modulation controls	Waveform
+Effects	EVOC 20 Filterbank	Modulation controls	Fade LFO Intensity
+Effects	EVOC 20 Filterbank	Output controls	Overdrive
+Effects	EVOC 20 Filterbank	Output controls	Level
+Effects	EVOC 20 Filterbank	Output controls	Stereo Mode
+Effects	EVOC 20 Filterbank	Output controls	Stereo Width
+Effects	EVOC 20 TrackOscillator	U/V detection controls	Sensitivity
+Effects	EVOC 20 TrackOscillator	U/V detection controls	Mode
+Effects	EVOC 20 TrackOscillator	U/V detection controls	Level
+Effects	EVOC 20 TrackOscillator	Synthesis In controls	Synthesis In
+Effects	EVOC 20 TrackOscillator	Synthesis In controls	Bands
+Effects	EVOC 20 TrackOscillator	Tracking oscillator controls	FM Ratio
+Effects	EVOC 20 TrackOscillator	Tracking oscillator controls	FM Int
+Effects	EVOC 20 TrackOscillator	Tracking oscillator controls	Coarse Tune
+Effects	EVOC 20 TrackOscillator	Tracking oscillator controls	Fine Tune
+Effects	EVOC 20 TrackOscillator	Tracking oscillator pitch controls	Pitch Quantize Strength
+Effects	EVOC 20 TrackOscillator	Tracking oscillator pitch controls	Pitch Quantize Glide
+Effects	EVOC 20 TrackOscillator	Tracking oscillator pitch controls	Root/Scale
+Effects	EVOC 20 TrackOscillator	Tracking oscillator pitch controls	Max Track
+Effects	EVOC 20 TrackOscillator	Formant filter controls	Lowest
+Effects	EVOC 20 TrackOscillator	Formant filter controls	Highest
+Effects	EVOC 20 TrackOscillator	Formant filter controls	Formant Stretch
+Effects	EVOC 20 TrackOscillator	Formant filter controls	Formant Shift
+Effects	EVOC 20 TrackOscillator	Formant filter controls	Resonance
+Effects	EVOC 20 TrackOscillator	Modulation controls	Shift Intensity
+Effects	EVOC 20 TrackOscillator	Modulation controls	Pitch Intensity
+Effects	EVOC 20 TrackOscillator	Modulation controls	Waveform
+Effects	EVOC 20 TrackOscillator	Modulation controls	LFO Rate
+Effects	EVOC 20 TrackOscillator	Output controls	Signal
+Effects	EVOC 20 TrackOscillator	Output controls	Stereo Mode
+Effects	EVOC 20 TrackOscillator	Output controls	Stereo Width
+Effects	EVOC 20 TrackOscillator	Extended parameters	Track Mode
+Effects	EVOC 20 TrackOscillator	Extended parameters	Oscillator Wave
+Effects	EVOC 20 TrackOscillator	Extended parameters	Fixed Note
+Effects	Fuzz-Wah	Auto Wah controls	Wah Type
+Effects	Fuzz-Wah	Auto Wah controls	Auto Gain
+Effects	Fuzz-Wah	Auto Wah controls	Relative Q
+Effects	Fuzz-Wah	Auto Wah controls	Wah Level
+Effects	Fuzz-Wah	Auto Wah controls	Depth
+Effects	Fuzz-Wah	Auto Wah controls	Attack
+Effects	Fuzz-Wah	Auto Wah controls	Release
+Effects	Fuzz-Wah	Auto Wah controls	Range
+Effects	Fuzz-Wah	Compressor controls	Ratio
+Effects	Fuzz-Wah	Fuzz parameters	Gain
+Effects	Fuzz-Wah	Fuzz parameters	Tone
+Effects	Arpeggiator	Arpeggiator control parameters	Play
+Effects	Arpeggiator	Arpeggiator control parameters	Capture live performance
+Effects	Arpeggiator	Arpeggiator control parameters	Latch
+Effects	Arpeggiator	Arpeggiator control parameters	Latch mode
+Effects	Arpeggiator	Arpeggiator control parameters	Delete Last
+Effects	Arpeggiator	Arpeggiator options parameters	Options
+Effects	Arpeggiator	Arpeggiator options parameters	Note Length
+Effects	Arpeggiator	Arpeggiator options parameters	Random
+Effects	Arpeggiator	Arpeggiator options parameters	Velocity
+Effects	Arpeggiator	Arpeggiator options parameters	Vel (Velocity Base)
+Effects	Arpeggiator	Arpeggiator options parameters	Crescendo/Random
+Effects	Arpeggiator	Arpeggiator options parameters	Swing
+Effects	Arpeggiator	Arpeggiator options parameters	Cycle Length
+Effects	Arpeggiator	Arpeggiator keyboard parameters	Input Snap
+Effects	Arpeggiator	Arpeggiator keyboard parameters	Root
+Effects	Arpeggiator	Arpeggiator keyboard parameters	Scale
+Effects	Modifier	Modifier controls	Input Thru
+Effects	Modifier	Modifier controls	Input Event
+Effects	Modifier	Modifier controls	Re-Assign To
+Effects	Modifier	Modifier controls	Scale
+Effects	Modifier	Modifier controls	Add
+Effects	Modulator	LFO controls	LFO on/off
+Effects	Modulator	LFO controls	Waveform Shape
+Effects	Modulator	LFO controls	Symmetry
+Effects	Modulator	LFO controls	Similarity
+Effects	Modulator	LFO controls	Trigger
+Effects	Modulator	LFO controls	Steps per LFO Cycle (Smoothing)
+Effects	Modulator	LFO controls	Rate
+Effects	Modulator	LFO controls	Sync
+Effects	Modulator	LFO controls	To
+Effects	Modulator	LFO controls	Output Level
+Effects	Modulator	LFO controls	Offset
+Effects	Modulator	Envelope controls	Envelope on/off
+Effects	Modulator	Envelope controls	Steps per Env(elope) Pass
+Effects	Modulator	Envelope controls	Env to LFO Rate
+Effects	Modulator	Envelope controls	Env to LFO Amp
+Effects	Note Repeater	Note Repeater controls	Input Thru
+Effects	Note Repeater	Note Repeater controls	Delay Sync
+Effects	Note Repeater	Note Repeater controls	Delay
+Effects	Note Repeater	Note Repeater controls	Repeats
+Effects	Note Repeater	Note Repeater controls	Transpose
+Effects	Note Repeater	Note Repeater controls	Velocity Ramp
+Effects	Randomizer	Randomizer controls	Event Type
+Effects	Randomizer	Randomizer controls	Input Range
+Effects	Randomizer	Randomizer controls	Amount
+Effects	Randomizer	Randomizer controls	Weight
+Effects	Randomizer	Randomizer controls	Output Offset
+Effects	Transposer	Transposer controls	Transpose
+Effects	Transposer	Transposer controls	Root
+Effects	Transposer	Transposer controls	Scale
+Effects	Velocity Processor	Compress/Expand mode	Threshold
+Effects	Velocity Processor	Compress/Expand mode	Ratio
+Effects	Velocity Processor	Compress/Expand mode	Make-up
+Effects	Velocity Processor	Compress/Expand mode	Auto (Gain)
+Effects	Velocity Processor	Value/Range mode	Value/Range
+Effects	Velocity Processor	Value/Range mode	Value
+Effects	Velocity Processor	Value/Range mode	Range
+Effects	Chorus	Chorus controls	Rate
+Effects	Chorus	Chorus controls	Intensity
+Effects	Chorus	Chorus controls	D-Mode
+Effects	Chorus	Chorus controls	Mix
+Effects	Ensemble	Ensemble controls	LFO1/LFO2/Random on/off
+Effects	Ensemble	Ensemble controls	Rate
+Effects	Ensemble	Ensemble controls	Intensity
+Effects	Ensemble	Ensemble controls	Voices
+Effects	Ensemble	Ensemble controls	Stereo Spread
+Effects	Ensemble	Ensemble controls	Phase
+Effects	Ensemble	Ensemble controls	Volume Compensation
+Effects	Ensemble	Ensemble controls	Output Mix
+Effects	Flanger	Flanger controls	Sync
+Effects	Flanger	Flanger controls	Rate
+Effects	Flanger	Flanger controls	Intensity
+Effects	Flanger	Flanger controls	Feedback
+Effects	Flanger	Flanger controls	Mix
+Effects	Microphaser	Microphaser controls	Sync
+Effects	Microphaser	Microphaser controls	Rate
+Effects	Microphaser	Microphaser controls	Intensity
+Effects	Microphaser	Microphaser controls	Feedback
+Effects	Modulation Delay	Modulation Delay controls	Mod Intensity
+Effects	Modulation Delay	Modulation Delay controls	Time
+Effects	Modulation Delay	Modulation Delay controls	Feedback
+Effects	Modulation Delay	Modulation Delay controls	De-Warble
+Effects	Modulation Delay	Modulation Delay controls	Constant Mod
+Effects	Modulation Delay	Modulation Delay controls	D-Mode
+Effects	Modulation Delay	Modulation Delay controls	LFO 1/2 Rate
+Effects	Modulation Delay	Modulation Delay controls	Link L & R
+Effects	Modulation Delay	Modulation Delay controls	Mix
+Effects	Modulation Delay	Modulation Delay controls	Phase
+Effects	Modulation Delay	Modulation Delay controls	Distribution
+Effects	Modulation Delay	Modulation Delay controls	Filter
+Effects	Modulation Delay	Modulation Delay controls	Low/High Cut
+Effects	Modulation Delay	Modulation Delay controls	Volume Mod
+Effects	Modulation Delay	Modulation Delay controls	Output Mix
+Effects	Phaser	Phaser controls	Stages
+Effects	Phaser	Phaser controls	Sweep Mode
+Effects	Phaser	Phaser controls	Ceiling/Floor
+Effects	Phaser	Phaser controls	Rate 1/2
+Effects	Phaser	Phaser controls	Sync
+Effects	Phaser	Phaser controls	Phase
+Effects	Phaser	Phaser controls	(LFO) Mix
+Effects	Phaser	Phaser controls	Distribution
+Effects	Phaser	Phaser controls	Level
+Effects	Phaser	Phaser controls	Warmth
+Effects	Phaser	Phaser controls	Low/High Cut
+Effects	Phaser	Phaser controls	Filter
+Effects	Phaser	Phaser controls	(Out) Mix
+Effects	Ringshifter	Oscillator parameters	Env Follow
+Effects	Ringshifter	Oscillator parameters	LFO
+Effects	Ringshifter	Delay parameters	Time
+Effects	Ringshifter	Delay parameters	Sync
+Effects	Ringshifter	Delay parameters	Level
+Effects	Ringshifter	Delay parameters	Delay Low/High Cut
+Effects	Ringshifter	Output parameters	Dry/Wet
+Effects	Ringshifter	Output parameters	Feedback
+Effects	Ringshifter	Output parameters	Stereo Width
+Effects	Rotor Cabinet	Motor parameters	Acceleration
+Effects	Rotor Cabinet	Motor parameters	Max Rate
+Effects	Rotor Cabinet	Motor parameters	Motor Control
+Effects	Rotor Cabinet	Mic processing controls	Mic Position
+Effects	Rotor Cabinet	Mic processing controls	Horn
+Effects	Rotor Cabinet	Mic processing controls	Drum
+Effects	Rotor Cabinet	Mic processing controls	Distance
+Effects	Rotor Cabinet	Mic processing controls	Angle
+Effects	Rotor Cabinet	Mic processing controls	Balance
+Effects	Scanner Vibrato	Scanner Vibrato controls	Type
+Effects	Scanner Vibrato	Scanner Vibrato controls	Depth
+Effects	Scanner Vibrato	Scanner Vibrato controls	Stereo Phase
+Effects	Scanner Vibrato	Scanner Vibrato controls	Rate Left
+Effects	Scanner Vibrato	Scanner Vibrato controls	Rate Right
+Effects	Spreader	Spreader controls	Rate
+Effects	Spreader	Spreader controls	Intensity
+Effects	Spreader	Spreader controls	Channel Delay
+Effects	Spreader	Spreader controls	Mix
+Effects	Tremolo	Tremolo controls	Sync
+Effects	Tremolo	Tremolo controls	Rate
+Effects	Tremolo	Tremolo controls	Depth
+Effects	Tremolo	Tremolo controls	Smoothing
+Effects	Tremolo	Tremolo controls	Distribution
+Effects	Tremolo	Tremolo controls	Offset
+Effects	Tremolo	Tremolo controls	Symmetry
+Effects	Tremolo	Tremolo controls	Phase
+Effects	Beat Breaker	Main Editor	Edit Mode
+Effects	Beat Breaker	Main Editor	Time
+Effects	Beat Breaker	Main Editor	Repeat
+Effects	Beat Breaker	Main Editor	Cutoff
+Effects	Beat Breaker	Main Editor	Resonance
+Effects	Beat Breaker	Main Editor	Volume
+Effects	Beat Breaker	Main Editor	Pan
+Effects	Beat Breaker	Main Editor	Length
+Effects	Beat Breaker	Main Editor	Bypass Below
+Effects	Beat Breaker	Main Editor	More
+Effects	Beat Breaker	Main Editor	Pattern
+Effects	Beat Breaker	Main Editor	Pattern Off
+Effects	Beat Breaker	Main Editor	Pattern Slot Edit
+Effects	Beat Breaker	Configure randomization settings	Mode
+Effects	Beat Breaker	Configure randomization settings	Clear All Values
+Effects	Phat FX	Phat FX processors	Type
+Effects	Phat FX	Phat FX processors	Low/High
+Effects	Phat FX	Phat FX processors	Low/High Res
+Effects	Phat FX	Phat FX processors	Reject Mix
+Effects	Phat FX	Phat FX processors	Cutoff
+Effects	Phat FX	Phat FX processors	Res
+Effects	Phat FX	Phat FX processors	Drive
+Effects	Phat FX	Phat FX processors	Mix
+Effects	Phat FX	Phat FX processors	Amount
+Effects	Phat FX	Phat FX processors	Rate
+Effects	Phat FX	Phat FX processors	Tune
+Effects	Phat FX	Phat FX processors	Release
+Effects	Phat FX	Phat FX modulators	Target
+Effects	Phat FX	Phat FX modulators	Attack
+Effects	Phat FX	Phat FX modulators	Depth
+Effects	Phat FX	Phat FX modulators	Waveform
+Effects	Phat FX	Phat FX modulators	LFO Rate
+Effects	Phat FX	Phat FX modulators	Sync
+Effects	Phat FX	Global controls	XY
+Effects	Phat FX	Global controls	Y Target
+Effects	Phat FX	Global controls	Y Depth
+Effects	Phat FX	Global controls	Limiter
+Effects	Phat FX	Global controls	Input
+Effects	Phat FX	Global controls	Output
+Effects	Remix FX	Remix FX	FX Lock
+Effects	Remix FX	Remix FX	Gater
+Effects	Remix FX	Remix FX	Downsampler
+Effects	Remix FX	Remix FX	Reverse
+Effects	Remix FX	Remix FX	Scratch
+Effects	Remix FX	Remix FX	Tape Stop
+Effects	Remix FX	Remix FX	Settings
+Effects	Remix FX	Remix FX	Combine effects on a locked
+Effects	Step FX	Step FX processors	Delay
+Effects	Step FX	Step FX processors	Rate
+Effects	Step FX	Step FX processors	Depth
+Effects	Step FX	Step FX processors	Feedback
+Effects	Step FX	Step FX processors	Mix
+Effects	Step FX	Step FX processors	Filter Type
+Effects	Step FX	Step FX processors	Cutoff
+Effects	Step FX	Step FX processors	Sync
+Effects	Step FX	Step FX processors	Time L/R
+Effects	Step FX	Step FX processors	Type
+Effects	Step FX	Step FX processors	Res
+Effects	Step FX	Step FX processors	Exciter
+Effects	Step FX	Step FX processors	Dirt
+Effects	Step FX	Step FX processors	Time
+Effects	Step FX	Step modulator global controls	Step modulator select
+Effects	Step FX	Step modulator global controls	Modulator Target
+Effects	Step FX	Step modulator playback controls	Swing
+Effects	Step FX	Step modulator playback controls	Attack
+Effects	Step FX	Step modulator playback controls	Hold
+Effects	Step FX	Step modulator playback controls	Release
+Effects	Step FX	Global controls	XY
+Effects	Step FX	Global controls	Y Target
+Effects	Step FX	Global controls	Y Depth
+Effects	Step FX	Global controls	Input
+Effects	Step FX	Global controls	Output
+Effects	Pitch Correction	Pitch Correction parameters	Root Note
+Effects	Pitch Correction	Pitch Correction parameters	Scale/Chord
+Effects	Pitch Correction	Pitch Correction parameters	Show Pitch
+Effects	Pitch Correction	Pitch Correction parameters	Edit Scale
+Effects	Pitch Correction	Pitch Correction parameters	Bypass Notes
+Effects	Pitch Correction	Pitch Correction parameters	Bypass All
+Effects	Pitch Correction	Pitch Correction parameters	Neural Pitch Detection
+Effects	Pitch Correction	Pitch Correction parameters	Pitch Range
+Effects	Pitch Correction	Pitch Correction parameters	Response
+Effects	Pitch Correction	Pitch Correction parameters	Tolerance
+Effects	Pitch Correction	Pitch Correction parameters	Global Tuning
+Effects	Pitch Correction	Pitch Correction parameters	Reference
+Effects	Pitch Correction	Pitch Correction parameters	Detune
+Effects	Vocal Transformer	Vocal Transformer parameters	Pitch
+Effects	Vocal Transformer	Vocal Transformer parameters	Robotize
+Effects	Vocal Transformer	Vocal Transformer parameters	Pitch Base
+Effects	Vocal Transformer	Vocal Transformer parameters	Tracking slider
+Effects	Vocal Transformer	Vocal Transformer parameters	field
+Effects	Vocal Transformer	Vocal Transformer parameters	and
+Effects	Vocal Transformer	Vocal Transformer parameters	Mix
+Effects	Vocal Transformer	Vocal Transformer parameters	Formant
+Effects	ChromaVerb	Main display and Damping EQ	Room Type
+Effects	ChromaVerb	Main display and Damping EQ	Frequency
+Effects	ChromaVerb	Main display and Damping EQ	Ratio
+Effects	ChromaVerb	Main display and Damping EQ	Q
+Effects	ChromaVerb	Main display and Damping EQ	Visualization on/off
+Effects	ChromaVerb	Main view controls	Attack
+Effects	ChromaVerb	Main view controls	Size
+Effects	ChromaVerb	Main view controls	Density
+Effects	ChromaVerb	Main view controls	Predelay
+Effects	ChromaVerb	Main view controls	Predelay sync
+Effects	ChromaVerb	Main view controls	Decay
+Effects	ChromaVerb	Main view controls	Decay sync
+Effects	ChromaVerb	Main view controls	Freeze
+Effects	ChromaVerb	Main view controls	Distance
+Effects	ChromaVerb	Main view controls	Dry/Wet
+Effects	ChromaVerb	Output EQ	Output EQ on/off
+Effects	ChromaVerb	Output EQ	Band 1 On/Off
+Effects	ChromaVerb	Output EQ	Band 2 On/Off
+Effects	ChromaVerb	Output EQ	Band 3 On/Off
+Effects	ChromaVerb	Output EQ	Band 4 On/Off
+Effects	ChromaVerb	Output EQ	Band 5 On/Off
+Effects	ChromaVerb	Output EQ	Band 6 On/Off
+Effects	ChromaVerb	Output EQ	Gain
+Effects	ChromaVerb	Output EQ	Order
+Effects	ChromaVerb	Details view controls	Quality
+Effects	ChromaVerb	Details view controls	Mod Speed
+Effects	ChromaVerb	Details view controls	Mod Depth
+Effects	ChromaVerb	Details view controls	Mod Source
+Effects	ChromaVerb	Details view controls	Smoothing
+Effects	ChromaVerb	Details view controls	Early/Late Mix
+Effects	ChromaVerb	Details view controls	Width
+Effects	ChromaVerb	Details view controls	Mono Maker on/off
+Effects	ChromaVerb	Details view controls	Mono Maker
+Effects	EnVerb	EnVerb controls	Attack
+Effects	EnVerb	EnVerb controls	Decay
+Effects	EnVerb	EnVerb controls	Sustain (Hold)
+Effects	EnVerb	EnVerb controls	Release
+Effects	EnVerb	EnVerb controls	Dry Signal Delay
+Effects	EnVerb	EnVerb controls	Predelay
+Effects	EnVerb	EnVerb controls	Hold (Sustain)
+Effects	EnVerb	EnVerb controls	Density
+Effects	EnVerb	EnVerb controls	Spread
+Effects	EnVerb	EnVerb controls	High Cut
+Effects	EnVerb	EnVerb controls	Crossover
+Effects	EnVerb	EnVerb controls	Low Freq Level
+Effects	EnVerb	EnVerb controls	Dry/Wet
+Effects	Quantec Room Simulator	Quantec Room Simulator: QRS controls	Reverb model
+Effects	Quantec Room Simulator	Quantec Room Simulator: QRS controls	Reverb Time
+Effects	Quantec Room Simulator	Quantec Room Simulator: QRS controls	Freeze
+Effects	Quantec Room Simulator	Quantec Room Simulator: QRS controls	Add
+Effects	Quantec Room Simulator	Quantec Room Simulator: QRS controls	Enhance
+Effects	Quantec Room Simulator	Quantec Room Simulator: QRS controls	Primary
+Effects	Quantec Room Simulator	Quantec Room Simulator: QRS controls	Room Size
+Effects	Quantec Room Simulator	Quantec Room Simulator: QRS controls	1st Reflection Delay
+Effects	Quantec Room Simulator	Quantec Room Simulator: QRS controls	Reverb Delay
+Effects	Quantec Room Simulator	Quantec Room Simulator: QRS controls	Dry Level
+Effects	Quantec Room Simulator	Quantec Room Simulator: QRS controls	1st Reflection Level
+Effects	Quantec Room Simulator	Quantec Room Simulator: QRS controls	Reverb Level
+Effects	Quantec Room Simulator	Quantec Room Simulator: QRS controls	Secondary
+Effects	Quantec Room Simulator	Quantec Room Simulator: QRS controls	AD/DA Converters
+Effects	Quantec Room Simulator	Quantec Room Simulator: QRS controls	AD/DA Drive
+Effects	Quantec Room Simulator	Quantec Room Simulator: QRS controls	1st Reflection Source
+Effects	Quantec Room Simulator	Quantec Room Simulator: QRS controls	1st Phase Reverse
+Effects	Quantec Room Simulator	Quantec Room Simulator: YardStick controls	Mode
+Effects	Quantec Room Simulator	Quantec Room Simulator: YardStick controls	Low
+Effects	Quantec Room Simulator	Quantec Room Simulator: YardStick controls	Xover
+Effects	Quantec Room Simulator	Quantec Room Simulator: YardStick controls	High
+Effects	Quantec Room Simulator	Quantec Room Simulator: YardStick controls	Reverb Density
+Effects	Quantec Room Simulator	Quantec Room Simulator: YardStick controls	1st Reflection Spread
+Effects	Quantec Room Simulator	Quantec Room Simulator: YardStick controls	Reverb High Cut
+Effects	Quantec Room Simulator	Quantec Room Simulator: YardStick controls	Bass Gain
+Effects	Quantec Room Simulator	Quantec Room Simulator: YardStick controls	Bass Crossover
+Effects	Quantec Room Simulator	Quantec Room Simulator: YardStick controls	Reverb Correlation
+Effects	Quantec Room Simulator	Quantec Room Simulator: YardStick controls	Extended
+Effects	Quantec Room Simulator	Quantec Room Simulator: YardStick controls	Dry Source
+Effects	Quantec Room Simulator	Quantec Room Simulator: YardStick controls	L Correlation Pattern
+Effects	Quantec Room Simulator	Quantec Room Simulator: YardStick controls	R Correlation Pattern
+Effects	Quantec Room Simulator	Quantec Room Simulator: YardStick controls	Subsonic
+Effects	Quantec Room Simulator	Quantec Room Simulator: Surround Sound	Reverb Level R/F
+Effects	Quantec Room Simulator	Quantec Room Simulator: Surround Sound	Reverb Level B/T
+Effects	Quantec Room Simulator	Quantec Room Simulator: Surround Sound	Details
+Effects	Quantec Room Simulator	Quantec Room Simulator: Surround Sound	Pre Level
+Effects	Quantec Room Simulator	Quantec Room Simulator: Surround Sound	Pre Delay
+Effects	Quantec Room Simulator	Quantec Room Simulator: Surround Sound	Pre High Cut
+Effects	Quantec Room Simulator	Quantec Room Simulator: Surround Sound	Room Input
+Effects	Quantec Room Simulator	Quantec Room Simulator: Surround Sound	1st Refl. Source
+Effects	Quantec Room Simulator	Quantec Room Simulator: Surround Sound	1st Refl. Delay
+Effects	Quantec Room Simulator	Quantec Room Simulator: Surround Sound	1st Refl. Spread
+Effects	Quantec Room Simulator	Quantec Room Simulator: Surround Sound	1st Refl. Level
+Effects	Quantec Room Simulator	Quantec Room Simulator: Surround Sound	Pattern correlation
+Effects	SilverVerb	SilverVerb controls	Predelay
+Effects	SilverVerb	SilverVerb controls	Reflectivity
+Effects	SilverVerb	SilverVerb controls	Size
+Effects	SilverVerb	SilverVerb controls	Density/Time
+Effects	SilverVerb	SilverVerb controls	Low Cut
+Effects	SilverVerb	SilverVerb controls	High Cut
+Effects	SilverVerb	SilverVerb controls	Modulation On/Off
+Effects	SilverVerb	SilverVerb controls	Rate
+Effects	SilverVerb	SilverVerb controls	Phase
+Effects	SilverVerb	SilverVerb controls	Intensity
+Effects	SilverVerb	SilverVerb controls	Dry/Wet
+Effects	Space Designer	Display mode bar	Volume Env On/Off
+Effects	Space Designer	Display mode bar	Volume Env
+Effects	Space Designer	Display mode bar	Filter Env On/Off
+Effects	Space Designer	Display mode bar	Filter Env
+Effects	Space Designer	Display mode bar	Density Env On/Off
+Effects	Space Designer	Display mode bar	Density Env
+Effects	Space Designer	Display mode bar	Output EQ On/Off
+Effects	Space Designer	Display mode bar	Output EQ
+Effects	Space Designer	Volume envelope controls	Decay
+Effects	Space Designer	Volume envelope controls	End Level
+Effects	Space Designer	Filter and filter envelope controls	Filter type
+Effects	Space Designer	Filter and filter envelope controls	Res(onance)
+Effects	Space Designer	Filter and filter envelope controls	Attack
+Effects	Space Designer	Filter and filter envelope controls	Break Level
+Effects	Space Designer	Filter and filter envelope controls	End Freq
+Effects	Space Designer	Density envelope controls	Ramp Time
+Effects	Space Designer	Density envelope controls	End Density
+Effects	Space Designer	Density envelope controls	Reflection Shape
+Effects	Space Designer	Output EQ controls	EQ On/Off
+Effects	Space Designer	Output EQ controls	Band 1 On/Off
+Effects	Space Designer	Output EQ controls	Band 2 On/Off
+Effects	Space Designer	Output EQ controls	Band 3 On/Off
+Effects	Space Designer	Output EQ controls	Band 4 On/Off
+Effects	Space Designer	Output EQ controls	Band 5 On/Off
+Effects	Space Designer	Output EQ controls	Band 6 On/Off
+Effects	Space Designer	Output EQ controls	Gain
+Effects	Space Designer	Output EQ controls	Order
+Effects	Space Designer	Output EQ controls	Q
+Effects	Exciter	Exciter controls	Frequency
+Effects	Exciter	Exciter controls	Dry Signal
+Effects	Exciter	Exciter controls	Harmonics
+Effects	Exciter	Exciter controls	Color 1
+Effects	SubBass	Controls	High Ratio
+Effects	SubBass	Controls	High Center
+Effects	SubBass	Controls	High Bandwidth
+Effects	SubBass	Controls	Freq. Mix
+Effects	SubBass	Controls	Low Ratio
+Effects	SubBass	Controls	Low Center
+Effects	SubBass	Controls	Low Bandwidth
+Effects	SubBass	Controls	Dry
+Effects	SubBass	Controls	Wet
+Instruments	Alchemy	Source master controls	Source On/Off
+Instruments	Alchemy	Source master controls	Source Select
+Instruments	Alchemy	Source master controls	Vol
+Instruments	Alchemy	Source master controls	Tune
+Instruments	Alchemy	Source master controls	Pan
+Instruments	Alchemy	Source master controls	Send
+Instruments	Alchemy	Source subpage controls	Solo
+Instruments	Alchemy	Source subpage controls	Stereo
+Instruments	Alchemy	Source subpage controls	Volume
+Instruments	Alchemy	Source subpage controls	Coarse Tune
+Instruments	Alchemy	Source subpage controls	Fine Tune
+Instruments	Alchemy	Source subpage controls	Position
+Instruments	Alchemy	Source subpage controls	(Loop) Start
+Instruments	Alchemy	Source subpage controls	(Loop) End/Length
+Instruments	Alchemy	Source subpage controls	Speed
+Instruments	Alchemy	Source subpage controls	Wait
+Instruments	Alchemy	Source subpage controls	Keyscale
+Instruments	Alchemy	Source subpage controls	Loop Mode
+Instruments	Alchemy	Source subpage controls	Sample Tempo
+Instruments	Alchemy	Source subpage controls	Synthesis element
+Instruments	Alchemy	Source filter controls	Filter type
+Instruments	Alchemy	Source filter controls	Ser/Par
+Instruments	Alchemy	Source filter controls	Cutoff
+Instruments	Alchemy	Source filter controls	Resonance
+Instruments	Alchemy	Source filter controls	Drive
+Instruments	Alchemy	Additive element controls	Sine/Complex
+Instruments	Alchemy	Additive element controls	Shape
+Instruments	Alchemy	Additive element controls	Num Partials
+Instruments	Alchemy	Additive element controls	PVar
+Instruments	Alchemy	Additive element controls	Sym
+Instruments	Alchemy	Additive element effects	Additive effect On/Off
+Instruments	Alchemy	Additive element effects	Additive effect 1
+Instruments	Alchemy	Additive element effects	Fundamental
+Instruments	Alchemy	Additive element effects	Octaves
+Instruments	Alchemy	Additive element effects	Odd/Even
+Instruments	Alchemy	Additive element effects	Fifths
+Instruments	Alchemy	Additive element effects	Pulse/Saw
+Instruments	Alchemy	Additive element effects	Sync
+Instruments	Alchemy	Additive element effects	Tone
+Instruments	Alchemy	Additive element effects	Noise
+Instruments	Alchemy	Additive element effects	Rate
+Instruments	Alchemy	Additive element effects	Smooth
+Instruments	Alchemy	Additive element effects	Additive effect 2
+Instruments	Alchemy	Additive element effects	Amount
+Instruments	Alchemy	Additive element effects	Partial
+Instruments	Alchemy	Additive element effects	Tuned
+Instruments	Alchemy	Additive element effects	String
+Instruments	Alchemy	Additive element effects	Pitch
+Instruments	Alchemy	Additive element effects	Frequency
+Instruments	Alchemy	Additive element effects	Min. Partial
+Instruments	Alchemy	Additive element effects	Additive effect 3
+Instruments	Alchemy	Additive element effects	Ramp
+Instruments	Alchemy	Additive element effects	Cycles
+Instruments	Alchemy	Additive element effects	Damp (Damping)
+Instruments	Alchemy	Additive element effects	Feedback
+Instruments	Alchemy	Additive element effects	Low
+Instruments	Alchemy	Additive element effects	Low Mid
+Instruments	Alchemy	Additive element effects	High Mid
+Instruments	Alchemy	Additive element effects	High
+Instruments	Alchemy	Additive element effects	Release
+Instruments	Alchemy	Additive element effects	Width
+Instruments	Alchemy	Additive element effects	Group
+Instruments	Alchemy	Additive element effects	Period
+Instruments	Alchemy	Additive element effects	Phase
+Instruments	Alchemy	Spectral element controls	Pitch/Noise
+Instruments	Alchemy	Spectral element controls	Low Cut
+Instruments	Alchemy	Spectral element controls	High Cut
+Instruments	Alchemy	Spectral element effects	Spectral effect On/Off
+Instruments	Alchemy	Spectral element effects	Spectral effect
+Instruments	Alchemy	Spectral element effects	Mix
+Instruments	Alchemy	Spectral element effects	Length
+Instruments	Alchemy	Spectral element effects	Variance
+Instruments	Alchemy	Spectral element effects	Gate
+Instruments	Alchemy	Spectral element effects	Threshold
+Instruments	Alchemy	Spectral element effects	Attack
+Instruments	Alchemy	Spectral element effects	Simplify
+Instruments	Alchemy	Spectral element effects	Shift
+Instruments	Alchemy	Spectral element effects	LP Cutoff
+Instruments	Alchemy	Spectral element effects	Alpha
+Instruments	Alchemy	Spectral element effects	Beta
+Instruments	Alchemy	Spectral element effects	Decay
+Instruments	Alchemy	Spectral element effects	Interval
+Instruments	Alchemy	Spectral element effects	Shimmer
+Instruments	Alchemy	Spectral element effects	Factor
+Instruments	Alchemy	Spectral element effects	Range
+Instruments	Alchemy	Spectral element effects	Bins
+Instruments	Alchemy	Spectral element effects	Bright
+Instruments	Alchemy	Spectral element effects	Phase On/Off
+Instruments	Alchemy	Formant filter controls	KTrack
+Instruments	Alchemy	Formant filter controls	Size
+Instruments	Alchemy	Formant filter controls	Center
+Instruments	Alchemy	Formant filter controls	Select
+Instruments	Alchemy	Granular element controls	Density
+Instruments	Alchemy	Granular element controls	Formant Shift
+Instruments	Alchemy	Granular element controls	RTime
+Instruments	Alchemy	Granular element controls	RPan
+Instruments	Alchemy	Granular element controls	Grain Shape
+Instruments	Alchemy	Granular element controls	Num Taps
+Instruments	Alchemy	Granular element controls	Tap Interval
+Instruments	Alchemy	Granular element controls	Tap Delay
+Instruments	Alchemy	Granular element controls	Tap Spacing
+Instruments	Alchemy	Granular element controls	StOffset
+Instruments	Alchemy	Sampler element controls	Reverse
+Instruments	Alchemy	VA element controls	Oscillator On/Off
+Instruments	Alchemy	VA element controls	Wave
+Instruments	Alchemy	VA element controls	(Oscillator) Vol
+Instruments	Alchemy	VA element controls	Num(ber)
+Instruments	Alchemy	VA element controls	Detune
+Instruments	Alchemy	VA element controls	Noise On/Off
+Instruments	Alchemy	VA element controls	(Noise) Vol
+Instruments	Alchemy	Morph controls	Morph type
+Instruments	Alchemy	Morph controls	X/Y
+Instruments	Alchemy	Morph controls	Auto Gain
+Instruments	Alchemy	Morph controls	Fixed Pitch
+Instruments	Alchemy	Morph controls	Auto Align
+Instruments	Alchemy	Morph controls	Source group
+Instruments	Alchemy	Morph controls	Additive/VA
+Instruments	Alchemy	Morph controls	Spectral/Granular
+Instruments	Alchemy	Morph controls	Formant
+Instruments	Alchemy	Morph controls	Envelope
+Instruments	Alchemy	Inspector group controls	Keyswitch
+Instruments	Alchemy	Inspector group controls	Trigger
+Instruments	Alchemy	Inspector group controls	Fade
+Instruments	Alchemy	Inspector group controls	Starts
+Instruments	Alchemy	Inspector group controls	Order
+Instruments	Alchemy	Inspector group controls	Type
+Instruments	Alchemy	Inspector group controls	Value
+Instruments	Alchemy	Inspector group controls	Condition
+Instruments	Alchemy	Inspector zone controls	Key
+Instruments	Alchemy	Inspector zone controls	Coarse/Fine Tune
+Instruments	Alchemy	Inspector zone controls	Lo Key
+Instruments	Alchemy	Inspector zone controls	Hi Key
+Instruments	Alchemy	Inspector zone controls	Lo Vel
+Instruments	Alchemy	Inspector zone controls	Hi Vel
+Instruments	Alchemy	Inspector zone controls	Zone Fade
+Instruments	Alchemy	Inspector zone controls	Left
+Instruments	Alchemy	Inspector zone controls	Right
+Instruments	Alchemy	Inspector zone controls	Bottom
+Instruments	Alchemy	Inspector zone controls	Top
+Instruments	Alchemy	Zone waveform editor	Loop XFade
+Instruments	Alchemy	Partial bar display	Mode
+Instruments	Alchemy	Partial bar display	Snap Pitch
+Instruments	Alchemy	Partial bar display	Breakpoint
+Instruments	Alchemy	Spectral edit window	Color
+Instruments	Alchemy	Spectral edit window	Mono/Stereo
+Instruments	Alchemy	Spectral edit window	Resolution
+Instruments	Alchemy	Main filter controls	Par/Ser
+Instruments	Alchemy	Main filter controls	FX master
+Instruments	Alchemy	Main filter controls	Send destination
+Instruments	Alchemy	Alchemy master voice section	Trigger Mode
+Instruments	Alchemy	Alchemy master voice section	Num(ber of voices)
+Instruments	Alchemy	Alchemy master voice section	Voice Priority
+Instruments	Alchemy	Alchemy master voice section	Rate/Time
+Instruments	Alchemy	Alchemy master voice section	Glide
+Instruments	Alchemy	Alchemy master voice section	Pitch bend Up/Down
+Instruments	Alchemy	Modulation rack controls	Modulation Target
+Instruments	Alchemy	Modulation rack controls	Modulation Source
+Instruments	Alchemy	Modulation rack controls	ModMap
+Instruments	Alchemy	Modulation rack controls	Depth
+Instruments	Alchemy	Modulation rack controls	Mod Targets
+Instruments	Alchemy	LFO controls	Current LFO
+Instruments	Alchemy	LFO controls	Bipolar
+Instruments	Alchemy	LFO controls	Delay
+Instruments	Alchemy	AHDSR envelope controls	Current AHDSR
+Instruments	Alchemy	AHDSR envelope controls	Hold
+Instruments	Alchemy	AHDSR envelope controls	Sustain
+Instruments	Alchemy	Multiple segment envelope controls	Current MSEG
+Instruments	Alchemy	Multiple segment envelope controls	Snap Y
+Instruments	Alchemy	Multiple segment envelope controls	Edit Mode
+Instruments	Alchemy	Sequencer	Current sequencer
+Instruments	Alchemy	Sequencer	Value Snap
+Instruments	Alchemy	Sequencer	Swing
+Instruments	Alchemy	Envelope follower parameters	Current Env Follower
+Instruments	Alchemy	Envelope follower parameters	Source
+Instruments	Alchemy	Envelope follower parameters	Scale
+Instruments	Alchemy	ModMap parameters	Current ModMap
+Instruments	Alchemy	ModMap parameters	Snap X
+Instruments	Alchemy	Transform Pad	Action pop-up menu
+Instruments	Alchemy	Transform Pad	Octave
+Instruments	Alchemy	Transform Pad	ModWheel
+Instruments	Alchemy	Transform Pad	Snap Vol
+Instruments	Alchemy	Performance control knobs	Invert
+Instruments	Alchemy	Basic arpeggiator controls	Key Trigger
+Instruments	Alchemy	Basic arpeggiator controls	Pattern
+Instruments	Alchemy	Basic arpeggiator controls	Note Vel
+Instruments	Alchemy	Basic arpeggiator controls	Split
+Instruments	Alchemy	Basic arpeggiator controls	Latch
+Instruments	Alchemy	Arpeggiator sequencer controls	Target
+Instruments	Alchemy	Arpeggiator sequencer controls	Step On/Off
+Instruments	Alchemy	Arpeggiator sequencer controls	Tie
+Instruments	Alchemy	Dynamic and utility effects	Gain
+Instruments	Alchemy	Dynamic and utility effects	Phat
+Instruments	Alchemy	Dynamic and utility effects	Input Gain
+Instruments	Alchemy	Dynamic and utility effects	Ratio
+Instruments	Alchemy	Dynamic and utility effects	Makeup Gain
+Instruments	Alchemy	Filter effects	Low Cut/High Cut
+Instruments	Alchemy	Filter effects	Low Res/High Res
+Instruments	Alchemy	Filter effects	Q
+Instruments	Alchemy	Filter effects	Bitcrusher
+Instruments	Alchemy	Filter effects	Mech
+Instruments	Alchemy	Filter effects	Tube
+Instruments	Alchemy	Filter effects	XCite
+Instruments	Alchemy	Filter effects	Pre Gain
+Instruments	Alchemy	Filter effects	Post Gain
+Instruments	Alchemy	Modulation effects	L/R Rate
+Instruments	Alchemy	Modulation effects	L/R Offset
+Instruments	Alchemy	Modulation effects	L/R Feedback
+Instruments	Alchemy	Modulation effects	Filter A/B
+Instruments	Alchemy	Modulation effects	Crossover
+Instruments	Alchemy	Modulation effects	Initial Pan
+Instruments	Alchemy	Modulation effects	Spread
+Instruments	Alchemy	Modulation effects	Poles
+Instruments	Alchemy	Reverb effects	Time
+Instruments	Alchemy	Reverb effects	Predelay
+Instruments	Alchemy	Reverb effects	Diffusion
+Instruments	Alchemy	Reverb effects	EQ
+Instruments	Alchemy	Reverb effects	Damping
+Instruments	Alchemy	Reverb effects	Variation
+Instruments	Alchemy	Reverb effects	Quality
+Instruments	Alchemy	Reverb effects	Hi/Lo Cut
+Instruments	Alchemy	Reverb effects	Dry
+Instruments	Alchemy	Reverb effects	Wet
+Instruments	Alchemy	Reverb effects	Pre-Delay
+Instruments	Alchemy	Reverb effects	Start
+Instruments	Alchemy	Reverb effects	End
+Instruments	Alchemy	Reverb effects	IR
+Instruments	Alchemy	Alchemy Extended parameters	MIDI Mono Mode
+Instruments	Alchemy	Alchemy Extended parameters	Mono Mode Bend Range
+Instruments	Alchemy	Alchemy Extended parameters	Ctrl A
+Instruments	Alchemy	Alchemy Extended parameters	Ctrl B
+Instruments	Alchemy	Alchemy Extended parameters	Ctrl C
+Instruments	Alchemy	Alchemy Extended parameters	Ctrl D
+Instruments	Alchemy	Alchemy Extended parameters	Arp Overlap Legacy Mode
+Instruments	Drum Synth	Drum Synth Kicks	Body
+Instruments	Drum Synth	Drum Synth Kicks	Decay
+Instruments	Drum Synth	Drum Synth Kicks	Noise
+Instruments	Drum Synth	Drum Synth Kicks	Pitch
+Instruments	Drum Synth	Drum Synth Kicks	Punch
+Instruments	Drum Synth	Drum Synth Kicks	Saturation
+Instruments	Drum Synth	Drum Synth Kicks	Shape
+Instruments	Drum Synth	Drum Synth Kicks	Snap
+Instruments	Drum Synth	Drum Synth Kicks	Sweep
+Instruments	Drum Synth	Drum Synth Kicks	Tone
+Instruments	Drum Synth	Drum Synth Kicks	Volume
+Instruments	Drum Synth	Drum Synth Snares and Claps	Crush
+Instruments	Drum Synth	Drum Synth Snares and Claps	Cycles
+Instruments	Drum Synth	Drum Synth Snares and Claps	Dirt
+Instruments	Drum Synth	Drum Synth Snares and Claps	Position
+Instruments	Drum Synth	Drum Synth Snares and Claps	Size
+Instruments	Drum Synth	Drum Synth Snares and Claps	Speed
+Instruments	Drum Synth	Drum Synth Snares and Claps	Tension
+Instruments	Drum Synth	Drum Synth Percussion	Attack
+Instruments	Drum Synth	Drum Synth Percussion	Color
+Instruments	Drum Synth	Drum Synth Percussion	Dissonance
+Instruments	Drum Synth	Drum Synth Percussion	Harmonic
+Instruments	Drum Synth	Drum Synth Percussion	Material
+Instruments	Drum Synth	Drum Synth Hats and Cymbals	Bell
+Instruments	Drum Synth	Drum Synth Hats and Cymbals	Character
+Instruments	Drum Synth	Drum Synth Hats and Cymbals	Metallic
+Instruments	ES1	Oscillator parameters	Wave
+Instruments	ES1	Oscillator parameters	Mix
+Instruments	ES1	Oscillator parameters	Sub
+Instruments	ES1	Oscillator parameters	2’
+Instruments	ES1	Oscillator parameters	4’
+Instruments	ES1	Oscillator parameters	8’
+Instruments	ES1	Oscillator parameters	16’
+Instruments	ES1	Oscillator parameters	32’
+Instruments	ES1	Global parameters	Glide
+Instruments	ES1	Global parameters	Tune
+Instruments	ES1	Global parameters	Analog
+Instruments	ES1	Global parameters	Bender Range
+Instruments	ES1	Global parameters	Out Level
+Instruments	ES1	Global parameters	Voices
+Instruments	ES1	Global parameters	Chorus
+Instruments	ES1	Filter parameters	Cutoff
+Instruments	ES1	Filter parameters	Resonance
+Instruments	ES1	Filter parameters	Slope
+Instruments	ES1	Filter parameters	Drive
+Instruments	ES1	Filter parameters	Key
+Instruments	ES1	Filter parameters	ADSR via Vel
+Instruments	ES1	Amplifier parameters	Level via Vel
+Instruments	ES1	Amplifier parameters	Amplifier envelope selector
+Instruments	ES1	Envelope parameters	Attack
+Instruments	ES1	Envelope parameters	Decay
+Instruments	ES1	Envelope parameters	Sustain
+Instruments	ES1	Envelope parameters	Release
+Instruments	ES2	Envelope 1 controls	Trigger Modes
+Instruments	ES2	Envelope 1 controls	Attack via Velocity
+Instruments	ES2	Envelope 1 controls	Decay/Release mode
+Instruments	ES2	Envelope 2 and 3 controls	Attack
+Instruments	ES2	Envelope 2 and 3 controls	Decay
+Instruments	ES2	Envelope 2 and 3 controls	Sustain/Sustain Time
+Instruments	ES2	Envelope 2 and 3 controls	Release Time
+Instruments	ES2	Envelope 2 and 3 controls	Velocity Sensitivity
+Instruments	ES2	ES2 integrated effects processor controls	Soft
+Instruments	ES2	ES2 integrated effects processor controls	Hard
+Instruments	ES2	ES2 integrated effects processor controls	Distortion
+Instruments	ES2	ES2 integrated effects processor controls	Tone
+Instruments	ES2	ES2 integrated effects processor controls	Intensity
+Instruments	ES2	ES2 integrated effects processor controls	Speed
+Instruments	ES2	Extended parameters	MIDI Mono Mode
+Instruments	ES2	Extended parameters	Mono Mode Bend Range
+Instruments	EFM1	Modulation parameters	Modulation Envelope
+Instruments	EFM1	Modulation parameters	Attack
+Instruments	EFM1	Modulation parameters	Decay
+Instruments	EFM1	Modulation parameters	Sustain
+Instruments	EFM1	Modulation parameters	Release
+Instruments	EFM1	Modulation parameters	Modulator Pitch
+Instruments	EFM1	Modulation parameters	FM Depth
+Instruments	EFM1	Modulation parameters	LFO
+Instruments	EFM1	Modulation parameters	Rate
+Instruments	EFM1	Global parameters	Transpose
+Instruments	EFM1	Global parameters	Tune
+Instruments	EFM1	Global parameters	Voices
+Instruments	EFM1	Global parameters	Unison
+Instruments	EFM1	Global parameters	Glide
+Instruments	EFM1	Output parameters	Sub Osc Level
+Instruments	EFM1	Output parameters	Stereo Detune
+Instruments	EFM1	Output parameters	Main Level
+Instruments	EFM1	Output parameters	Velocity
+Instruments	EFM1	Extended parameters	MIDI Mono Mode
+Instruments	EFM1	Extended parameters	Mono Mode Bend Range
+Instruments	EFM1	Extended parameters	Main Pitch Bend Range
+Instruments	ES E	Oscillator parameters	Wave
+Instruments	ES E	LFO parameters	Vib/PWM
+Instruments	ES E	LFO parameters	Speed
+Instruments	ES E	Filter parameters	Cutoff
+Instruments	ES E	Filter parameters	Resonance
+Instruments	ES E	Filter parameters	AR Int
+Instruments	ES E	Filter parameters	Velo Filter
+Instruments	ES E	Envelope parameters	Attack
+Instruments	ES E	Envelope parameters	Release
+Instruments	ES E	Output parameters	Volume
+Instruments	ES E	Output parameters	Velo Volume
+Instruments	ES E	Output parameters	Chorus I
+Instruments	ES E	Output parameters	II/Ensemble
+Instruments	ES E	Extended parameters	Bend Up
+Instruments	ES E	Extended parameters	Bend Down
+Instruments	ES E	Extended parameters	Tune
+Instruments	ES M	Oscillator parameters	Mix
+Instruments	ES M	Oscillator parameters	Glide
+Instruments	ES M	Filter and filter envelope controls	Cutoff
+Instruments	ES M	Filter and filter envelope controls	Resonance
+Instruments	ES M	Filter and filter envelope controls	Int
+Instruments	ES M	Filter and filter envelope controls	Decay
+Instruments	ES M	Filter and filter envelope controls	Velo
+Instruments	ES M	Level envelope and output controls	Vol
+Instruments	ES M	Level envelope and output controls	Overdrive
+Instruments	ES M	Extended parameters	Pitch Bend Up
+Instruments	ES M	Extended parameters	Pitch Bend Down
+Instruments	ES M	Extended parameters	Tune
+Instruments	ES P	Oscillator parameters	Triangle oscillator
+Instruments	ES P	Oscillator parameters	Sawtooth oscillator
+Instruments	ES P	Oscillator parameters	Rectangle oscillator
+Instruments	ES P	Oscillator parameters	Sub-oscillator -1 octave
+Instruments	ES P	Oscillator parameters	Noise generator
+Instruments	ES P	LFO parameters	Vib/Wah
+Instruments	ES P	LFO parameters	Speed
+Instruments	ES P	Filter parameters	Frequency
+Instruments	ES P	Filter parameters	Resonance
+Instruments	ES P	Filter parameters	1/3
+Instruments	ES P	Filter parameters	2/3
+Instruments	ES P	Filter parameters	3/3
+Instruments	ES P	Filter parameters	ADSR Int
+Instruments	ES P	Filter parameters	Velo Filter
+Instruments	ES P	Envelope and level controls	Attack
+Instruments	ES P	Envelope and level controls	Decay
+Instruments	ES P	Envelope and level controls	Sustain
+Instruments	ES P	Envelope and level controls	Release
+Instruments	ES P	Envelope and level controls	Volume
+Instruments	ES P	Envelope and level controls	Velo Volume
+Instruments	ES P	Integrated effects processor	Chorus
+Instruments	ES P	Integrated effects processor	Overdrive
+Instruments	ES P	Extended parameters	Bend Up
+Instruments	ES P	Extended parameters	Bend Down
+Instruments	ES P	Extended parameters	Tune
+Instruments	EVOC 20 PolySynth	(U/V) detection parameters	Sensitivity
+Instruments	EVOC 20 PolySynth	(U/V) detection parameters	Mode
+Instruments	EVOC 20 PolySynth	(U/V) detection parameters	U/V Level
+Instruments	EVOC 20 PolySynth	Oscillator dual mode parameters	Semi
+Instruments	EVOC 20 PolySynth	Oscillator dual mode parameters	Detune
+Instruments	EVOC 20 PolySynth	Oscillator dual mode parameters	Balance
+Instruments	EVOC 20 PolySynth	Oscillator FM mode parameters	Ratio coarse
+Instruments	EVOC 20 PolySynth	Oscillator FM mode parameters	Ratio fine
+Instruments	EVOC 20 PolySynth	Oscillator FM mode parameters	FM Int
+Instruments	EVOC 20 PolySynth	Noise generator parameters	Level
+Instruments	EVOC 20 PolySynth	Noise generator parameters	Color
+Instruments	EVOC 20 PolySynth	Tuning and pitch controls	Tune
+Instruments	EVOC 20 PolySynth	Tuning and pitch controls	Analog
+Instruments	EVOC 20 PolySynth	Tuning and pitch controls	Glide
+Instruments	EVOC 20 PolySynth	Tuning and pitch controls	Bend Range
+Instruments	EVOC 20 PolySynth	Filter parameters	Cutoff
+Instruments	EVOC 20 PolySynth	Filter parameters	Resonance
+Instruments	EVOC 20 PolySynth	Envelope parameters	Attack
+Instruments	EVOC 20 PolySynth	Envelope parameters	Release
+Instruments	EVOC 20 PolySynth	Global parameters	Poly/Mono/Legato
+Instruments	EVOC 20 PolySynth	Global parameters	Voices
+Instruments	EVOC 20 PolySynth	Global parameters	Unison
+Instruments	EVOC 20 PolySynth	Formant filter controls	Lowest
+Instruments	EVOC 20 PolySynth	Formant filter controls	Highest
+Instruments	EVOC 20 PolySynth	Formant filter controls	Formant Stretch
+Instruments	EVOC 20 PolySynth	Formant filter controls	Formant Shift
+Instruments	EVOC 20 PolySynth	Modulation parameters	Int via Whl
+Instruments	EVOC 20 PolySynth	Modulation parameters	Rate
+Instruments	EVOC 20 PolySynth	Modulation parameters	Waveform
+Instruments	EVOC 20 PolySynth	Modulation parameters	Intensity
+Instruments	EVOC 20 PolySynth	Output parameters	Signal
+Instruments	EVOC 20 PolySynth	Output parameters	Ensemble
+Instruments	EVOC 20 PolySynth	Output parameters	Stereo Width
+Instruments	Quick Sampler	Classic mode	Root Key
+Instruments	Quick Sampler	Classic mode	Tune
+Instruments	Quick Sampler	Classic mode	Playback
+Instruments	Quick Sampler	Classic mode	Loop mode
+Instruments	Quick Sampler	Classic mode	Flex On/Off
+Instruments	Quick Sampler	Classic mode	Follow Tempo
+Instruments	Quick Sampler	Classic mode	(Flex) Speed
+Instruments	Quick Sampler	Slice mode	Fade in
+Instruments	Quick Sampler	Slice mode	fade out
+Instruments	Quick Sampler	Slice mode	Mode
+Instruments	Quick Sampler	Slice mode	Sensitivity
+Instruments	Quick Sampler	Slice mode	Division
+Instruments	Quick Sampler	Slice mode	Slices
+Instruments	Quick Sampler	Slice mode	Start Key
+Instruments	Quick Sampler	Slice mode	Start Key Mapping
+Instruments	Quick Sampler	Slice mode	Gate
+Instruments	Quick Sampler	Slice mode	Play to End
+Instruments	Quick Sampler	Recorder mode	Input
+Instruments	Quick Sampler	Recorder mode	Monitor
+Instruments	Quick Sampler	Recorder mode	Record Start
+Instruments	Quick Sampler	Mod Matrix pane	Source
+Instruments	Quick Sampler	Mod Matrix pane	Target
+Instruments	Quick Sampler	Mod Matrix pane	Amount
+Instruments	Quick Sampler	LFO controls	LFO Rate
+Instruments	Quick Sampler	LFO controls	Sync
+Instruments	Quick Sampler	LFO controls	Fade Mode
+Instruments	Quick Sampler	LFO controls	Fade Time
+Instruments	Quick Sampler	LFO controls	Phase
+Instruments	Quick Sampler	LFO controls	Waveform
+Instruments	Quick Sampler	LFO controls	Polarity
+Instruments	Quick Sampler	LFO controls	Key Trigger
+Instruments	Quick Sampler	LFO controls	Via
+Instruments	Quick Sampler	Quick Sampler Pitch controls	Coarse
+Instruments	Quick Sampler	Quick Sampler Pitch controls	Fine
+Instruments	Quick Sampler	Quick Sampler Pitch controls	Glide
+Instruments	Quick Sampler	Quick Sampler Pitch controls	Env Depth
+Instruments	Quick Sampler	Quick Sampler Pitch controls	Key Tracking
+Instruments	Quick Sampler	Quick Sampler Pitch controls	Bend Range
+Instruments	Quick Sampler	Quick Sampler Pitch controls	Envelope Type
+Instruments	Quick Sampler	Quick Sampler Pitch controls	Attack
+Instruments	Quick Sampler	Quick Sampler Pitch controls	Hold
+Instruments	Quick Sampler	Quick Sampler Pitch controls	Decay
+Instruments	Quick Sampler	Quick Sampler Pitch controls	Sustain
+Instruments	Quick Sampler	Quick Sampler Pitch controls	Release
+Instruments	Quick Sampler	Quick Sampler Pitch controls	Vel
+Instruments	Quick Sampler	Quick Sampler Filter controls	Type
+Instruments	Quick Sampler	Quick Sampler Filter controls	Cutoff
+Instruments	Quick Sampler	Quick Sampler Filter controls	Reso
+Instruments	Quick Sampler	Quick Sampler Filter controls	Drive
+Instruments	Quick Sampler	Quick Sampler Filter controls	Keyscale
+Instruments	Quick Sampler	Quick Sampler Amp controls	Pan
+Instruments	Quick Sampler	Quick Sampler Amp controls	Polyphony
+Instruments	Quick Sampler	Quick Sampler Amp controls	Volume
+Instruments	Quick Sampler	Quick Sampler extended parameters	MIDI Mono Mode
+Instruments	Quick Sampler	Quick Sampler extended parameters	Mono Mode Bend Range
+Instruments	Retro Synth	Analog oscillator controls	Shape 1
+Instruments	Retro Synth	Analog oscillator controls	Shape Modulation
+Instruments	Retro Synth	Analog oscillator controls	Vibrato
+Instruments	Retro Synth	Analog oscillator controls	Semitones
+Instruments	Retro Synth	Analog oscillator controls	Cents
+Instruments	Retro Synth	Analog oscillator controls	Mix
+Instruments	Retro Synth	Sync oscillator controls	Shape 2
+Instruments	Retro Synth	Sync oscillator controls	Sync Modulation
+Instruments	Retro Synth	Sync oscillator controls	Sync
+Instruments	Retro Synth	Table oscillator parameters	Wavetable
+Instruments	Retro Synth	Table oscillator parameters	Shape/Formant
+Instruments	Retro Synth	FM oscillator controls	Modulation
+Instruments	Retro Synth	FM oscillator controls	FM (Amount)
+Instruments	Retro Synth	FM oscillator controls	FM/Harmonic target
+Instruments	Retro Synth	FM oscillator controls	Harmonic/Inharmonic
+Instruments	Retro Synth	FM oscillator controls	Shape
+Instruments	Retro Synth	Filter controls	Filter Type
+Instruments	Retro Synth	Filter controls	Key (Follow)
+Instruments	Retro Synth	Filter controls	Filter FM/Drive
+Instruments	Retro Synth	Filter controls	LFO
+Instruments	Retro Synth	Filter controls	Filter Env(elope)
+Instruments	Retro Synth	Amp and effect controls	Volume
+Instruments	Retro Synth	Amp and effect controls	Sine Level
+Instruments	Retro Synth	Amp and effect controls	Effect Type
+Instruments	Retro Synth	Amp and effect controls	Rate
+Instruments	Retro Synth	Glide and Autobend modulation	Bend Type
+Instruments	Retro Synth	Glide and Autobend modulation	Mode
+Instruments	Retro Synth	Glide and Autobend modulation	Time
+Instruments	Retro Synth	Glide and Autobend modulation	Depth
+Instruments	Retro Synth	LFO and Vibrato modulation	LFO Sync
+Instruments	Retro Synth	LFO and Vibrato modulation	Source
+Instruments	Retro Synth	Envelopes	Velocity
+Instruments	Retro Synth	Global and controller settings	Transpose
+Instruments	Retro Synth	Global and controller settings	Tune
+Instruments	Retro Synth	Global and controller settings	Bend
+Instruments	Retro Synth	Global and controller settings	Polyphony
+Instruments	Retro Synth	Global and controller settings	Voice Detune
+Instruments	Retro Synth	Global and controller settings	Stereo Spread
+Instruments	Retro Synth	Global and controller settings	Unison
+Instruments	Retro Synth	Global and controller settings	Mod Wheel to
+Instruments	Retro Synth	Global and controller settings	Velocity to
+Instruments	Retro Synth	Global and controller settings	Aftertouch to
+Instruments	Retro Synth	Global and controller settings	Assignable CC
+Instruments	Retro Synth	Extended parameters	MIDI Mono Mode
+Instruments	Retro Synth	Extended parameters	Mono Mode Bend Range
+Instruments	Sample Alchemy	Granular controls	Effect
+Instruments	Sample Alchemy	Granular controls	Size
+Instruments	Sample Alchemy	Granular controls	Density
+Instruments	Sample Alchemy	Granular controls	Random Pan
+Instruments	Sample Alchemy	Granular controls	Random Time
+Instruments	Sample Alchemy	Granular controls	Formant Shift
+Instruments	Sample Alchemy	Granular controls	Num Taps
+Instruments	Sample Alchemy	Granular controls	Tap Spacing
+Instruments	Sample Alchemy	Additive effect controls	Odd/Even
+Instruments	Sample Alchemy	Additive effect controls	Fifths
+Instruments	Sample Alchemy	Additive effect controls	Octaves
+Instruments	Sample Alchemy	Additive effect controls	Fundamental
+Instruments	Sample Alchemy	Additive effect controls	Symmetry
+Instruments	Sample Alchemy	Additive effect controls	Pitch Var
+Instruments	Sample Alchemy	Additive effect controls	Num Partials
+Instruments	Sample Alchemy	Additive effect controls	Shift
+Instruments	Sample Alchemy	Additive effect controls	Key Track
+Instruments	Sample Alchemy	Additive effect controls	Center
+Instruments	Sample Alchemy	Additive effect controls	Vowel
+Instruments	Sample Alchemy	Spectral effect controls	Low Cut
+Instruments	Sample Alchemy	Spectral effect controls	High Cut
+Instruments	Sample Alchemy	Spectral effect controls	Mix
+Instruments	Sample Alchemy	Spectral effect controls	Length
+Instruments	Sample Alchemy	Spectral effect controls	Variance
+Instruments	Sample Alchemy	Spectral effect controls	Gate
+Instruments	Sample Alchemy	Spectral effect controls	Threshold
+Instruments	Sample Alchemy	Spectral effect controls	Attack
+Instruments	Sample Alchemy	Spectral effect controls	Simplify
+Instruments	Sample Alchemy	Spectral effect controls	Interval
+Instruments	Sample Alchemy	Spectral effect controls	Feedback
+Instruments	Sample Alchemy	Filter module	Filter On/Off
+Instruments	Sample Alchemy	Filter module	Filter Type
+Instruments	Sample Alchemy	Filter module	Global
+Instruments	Sample Alchemy	Lowpass, bandpass, and highpass filters	Cutoff
+Instruments	Sample Alchemy	Lowpass, bandpass, and highpass filters	Res(onance)
+Instruments	Sample Alchemy	Envelope generators	Amp/Mod
+Instruments	Sample Alchemy	Mod Matrix	Mod Matrix
+Instruments	Sample Alchemy	Mod Matrix	Target
+Instruments	Sample Alchemy	Mod Matrix	Source
+Instruments	Sample Alchemy	Mod Matrix	Depth
+Instruments	Sampler	Synth pane	Details
+Instruments	Sampler	Synth pane	Tune
+Instruments	Sampler	Synth pane	Fine
+Instruments	Sampler	Synth pane	Filter On/Off
+Instruments	Sampler	Synth pane	Filter Type
+Instruments	Sampler	Synth pane	Cutoff
+Instruments	Sampler	Synth pane	Resonance
+Instruments	Sampler	Synth pane	Drive
+Instruments	Sampler	Synth pane	Filter configuration
+Instruments	Sampler	Synth pane	Series
+Instruments	Sampler	Synth pane	Parallel
+Instruments	Sampler	Synth pane	Filter Blend
+Instruments	Sampler	Synth pane	Volume
+Instruments	Sampler	Synth pane	Pan
+Instruments	Sampler	Synth Details	Glide
+Instruments	Sampler	Synth Details	Pitch Bend Up/Down
+Instruments	Sampler	Synth Details	Coarse Tune Remote
+Instruments	Sampler	Synth Details	Transpose
+Instruments	Sampler	Synth Details	Sample Select Random
+Instruments	Sampler	Synth Details	Velocity Random
+Instruments	Sampler	Synth Details	Amp Velocity Curve
+Instruments	Sampler	Synth Details	Velocity Offset
+Instruments	Sampler	Synth Details	Ignore Release Velocity
+Instruments	Sampler	Synth Details	Amp Key Scale
+Instruments	Sampler	Synth Details	Polyphony
+Instruments	Sampler	Synth Details	Mode
+Instruments	Sampler	Synth Details	Unison
+Instruments	Sampler	Synth Details	Random Detune
+Instruments	Sampler	Synth Details	Used Voices
+Instruments	Sampler	Fade between sample groups	Low
+Instruments	Sampler	Fade between sample groups	High
+Instruments	Sampler	Fade between sample groups	XFade
+Instruments	Sampler	Fade between sample groups	XFade Type
+Instruments	Sampler	Sampler extended parameters	MIDI Mono Mode
+Instruments	Sampler	Sampler extended parameters	Mono Mode Bend Range
+Instruments	Sculpture	Hide, Keyscale, and Release view	Keyscale
+Instruments	Sculpture	Hide, Keyscale, and Release view	Release
+Instruments	Sculpture	String parameter sliders	Resolution
+Instruments	Sculpture	String parameter sliders	Resolution High Scaling
+Instruments	Sculpture	String parameter sliders	Resolution Low Scaling
+Instruments	Sculpture	String parameter sliders	Media Loss
+Instruments	Sculpture	String parameter sliders	Media Loss High Scaling
+Instruments	Sculpture	String parameter sliders	Media Loss Low Scaling
+Instruments	Sculpture	String parameter sliders	Tension Mod
+Instruments	Sculpture	String parameter sliders	Tension Mod High Scaling
+Instruments	Sculpture	String parameter sliders	Tension Mod Resolution Low Scaling
+Instruments	Sculpture	Pickup parameters	Object position
+Instruments	Sculpture	Pickup parameters	Pickup A position
+Instruments	Sculpture	Pickup parameters	Pickup B position
+Instruments	Sculpture	Pickup parameters	Invert
+Instruments	Sculpture	Spread controls	Key Spread
+Instruments	Sculpture	Spread controls	Pickup Spread
+Instruments	Sculpture	Global parameters	Glide Time
+Instruments	Sculpture	Global parameters	Tune
+Instruments	Sculpture	Global parameters	Warmth
+Instruments	Sculpture	Global parameters	Transpose
+Instruments	Sculpture	Global parameters	Voices
+Instruments	Sculpture	Global parameters	Bender Range Up/Down
+Instruments	Sculpture	Amplitude envelope parameters	Attack Soft/Hard
+Instruments	Sculpture	Amplitude envelope parameters	Decay
+Instruments	Sculpture	Amplitude envelope parameters	Sustain
+Instruments	Sculpture	Filter parameters	Filter On/Off
+Instruments	Sculpture	Filter parameters	Filter type
+Instruments	Sculpture	Filter parameters	Cutoff
+Instruments	Sculpture	Filter parameters	Resonance
+Instruments	Sculpture	Filter parameters	Key
+Instruments	Sculpture	Filter parameters	Velo Sens
+Instruments	Sculpture	Basic EQ model	Low/Int
+Instruments	Sculpture	Basic EQ model	Mid/Shift
+Instruments	Sculpture	Basic EQ model	High/Stretch
+Instruments	Sculpture	Basic EQ model	Mid Frequency/Fine Structure
+Instruments	Sculpture	Body EQ models	Formant–Intensity
+Instruments	Sculpture	Body EQ models	Formant–Shift
+Instruments	Sculpture	Body EQ models	Formant–Stretch
+Instruments	Sculpture	Body EQ models	Fine Structure
+Instruments	Sculpture	Output parameters	Level
+Instruments	Sculpture	Output parameters	Level Limiter mode
+Instruments	Sculpture	Modulate the LFOs	LFO 1/2 On/Off
+Instruments	Sculpture	Modulate the LFOs	Modulation Target
+Instruments	Sculpture	Modulate the LFOs	Via source
+Instruments	Sculpture	Modulate the LFOs	Amt
+Instruments	Sculpture	Modulate the LFOs	Via amount
+Instruments	Sculpture	Vibrato parameters	Waveform
+Instruments	Sculpture	Vibrato parameters	Curve
+Instruments	Sculpture	Vibrato parameters	Phase
+Instruments	Sculpture	Vibrato parameters	Rate
+Instruments	Sculpture	Vibrato parameters	Sync/Free
+Instruments	Sculpture	Vibrato parameters	DepthviaVibCtrl
+Instruments	Sculpture	Vibrato parameters	Via
+Instruments	Sculpture	Jitter generator controls	Jitter 1/2 On/Off
+Instruments	Sculpture	Jitter generator controls	Target 1/2
+Instruments	Sculpture	Jitter generator controls	Amount 1/2
+Instruments	Sculpture	Velocity modulators	Target
+Instruments	Sculpture	Velocity modulators	Amount
+Instruments	Sculpture	Active envelope controls	A-Time Velosens
+Instruments	Sculpture	Active envelope controls	Timescale
+Instruments	Sculpture	Active envelope controls	Sustain mode
+Instruments	Sculpture	Active envelope controls	Sync
+Instruments	Sculpture	Randomize points in the Morph Pad	Intensity
+Instruments	Sculpture	Morph Envelope parameters	Trigger mode
+Instruments	Sculpture	Morph Envelope parameters	Mode
+Instruments	Sculpture	Morph Envelope parameters	Pad Mode
+Instruments	Sculpture	Morph Envelope parameters	Depth
+Instruments	Sculpture	Morph Envelope parameters	Modulation
+Instruments	Sculpture	Morph Envelope parameters	Modulation source
+Instruments	Sculpture	Morph Envelope parameters	Transition
+Instruments	Sculpture	Morph Envelope mode	Env +
+Instruments	Sculpture	Morph Envelope mode	Offset
+Instruments	Sculpture	Extended parameters	MIDI Mono Mode
+Instruments	Sculpture	Extended parameters	Mono Mode Bend Range
+Instruments	Sculpture	Extended parameters	Render Mode
+Instruments	Studio Bass	Main view parameters	Playing Style
+Instruments	Studio Bass	Main view parameters	Mute
+Instruments	Studio Bass	Main view parameters	Definition
+Instruments	Studio Bass	Main view parameters	Last Played
+Instruments	Studio Bass	Main view parameters	Volume
+Instruments	Studio Bass	Main view parameters	Tone
+Instruments	Studio Bass	Main view parameters	Neck Volume
+Instruments	Studio Bass	Main view parameters	Bridge Volume
+Instruments	Studio Bass	Main view parameters	Rhythm/Solo
+Instruments	Studio Bass	Main view parameters	Bass
+Instruments	Studio Bass	Main view parameters	Treble
+Instruments	Studio Bass	Main view parameters	Neck Tone
+Instruments	Studio Bass	Main view parameters	Bridge Tone
+Instruments	Studio Bass	Main view parameters	Pickup
+Instruments	Studio Bass	Details view parameters	Portamento
+Instruments	Studio Bass	Details view parameters	Tempo Sync
+Instruments	Studio Bass	Details view parameters	Scrapes
+Instruments	Studio Bass	Details view parameters	String Noise
+Instruments	Studio Bass	Details view parameters	Hum & Hiss
+Instruments	Studio Bass	Details view parameters	Release Noise
+Instruments	Studio Bass	Details view parameters	Rattles
+Instruments	Studio Bass	Details view parameters	Releases
+Instruments	Studio Bass	Details view parameters	Handling
+Instruments	Studio Bass	Details view parameters	Voice Mode
+Instruments	Studio Bass	Details view parameters	Open Strings
+Instruments	Studio Horns	Extended parameters	Vibrato Controller
+Instruments	Studio Horns	Extended parameters	Manual Vibrato Mode
+Instruments	Studio Horns	Extended parameters	Dynamic Controller
+Instruments	Studio Horns	Extended parameters	Dynamic Controller Mode
+Instruments	Studio Horns	Extended parameters	Legato Transitions
+Instruments	Studio Horns	Extended parameters	Release Samples
+Instruments	Studio Horns	Extended parameters	Pitch Bend Range
+Instruments	Studio Horns	Extended parameters	Extended Key Range
+Instruments	Studio Horns	Extended parameters	Allow Unison
+Instruments	Studio Horns	Extended parameters	Split Voicing
+Instruments	Studio Horns	Extended parameters	Split Mode
+Instruments	Studio Horns	Extended parameters	Split Key
+Instruments	Studio Horns	Extended parameters	Inst via MIDI Channel
+Instruments	Studio Strings	Extended parameters	Vibrato Controller
+Instruments	Studio Strings	Extended parameters	Dynamic Controller
+Instruments	Studio Strings	Extended parameters	Dynamic Controller Mode
+Instruments	Studio Strings	Extended parameters	Legato Transitions
+Instruments	Studio Strings	Extended parameters	Release Samples
+Instruments	Studio Strings	Extended parameters	Pitch Bend Range
+Instruments	Studio Strings	Extended parameters	Extended Key Range
+Instruments	Studio Strings	Extended parameters	Allow Unison
+Instruments	Studio Strings	Extended parameters	Split Voicing
+Instruments	Studio Strings	Extended parameters	Split Mode
+Instruments	Studio Strings	Extended parameters	Split Key
+Instruments	Studio Strings	Extended parameters	Inst via MIDI Channel
+Instruments	Ultrabeat	Oscillator 1 phase oscillator mode	Slope
+Instruments	Ultrabeat	Oscillator 1 phase oscillator mode	Saturation
+Instruments	Ultrabeat	Oscillator 1 phase oscillator mode	Asymmetry
+Instruments	Ultrabeat	Oscillator 2 phase oscillator mode	Asym(metry)
+Instruments	Ultrabeat	Ring modulator controls	Ring Modulator On/Off
+Instruments	Ultrabeat	Ring modulator controls	Level
+Instruments	Ultrabeat	Ring modulator controls	Mod
+Instruments	Ultrabeat	Ring modulator controls	via
+Instruments	Ultrabeat	Ring modulator controls	Signal Flow
+Instruments	Ultrabeat	Noise generator controls	Filter Type
+Instruments	Ultrabeat	Noise generator controls	Cutoff
+Instruments	Ultrabeat	Noise generator controls	Resonance
+Instruments	Ultrabeat	Noise generator controls	Dirt
+Instruments	Ultrabeat	Noise generator controls	Volume
+Instruments	Ultrabeat	Filter section controls	Filter (On/Off)
+Instruments	Ultrabeat	Filter section controls	Filter Slope
+Instruments	Ultrabeat	Distortion circuit controls	Crush
+Instruments	Ultrabeat	Distortion circuit controls	Distort
+Instruments	Ultrabeat	Distortion circuit controls	Drive
+Instruments	Ultrabeat	Distortion circuit controls	Color
+Instruments	Ultrabeat	Two-band EQ parameters	Band 1/2
+Instruments	Ultrabeat	Two-band EQ parameters	EQ type
+Instruments	Ultrabeat	Two-band EQ parameters	Gain
+Instruments	Ultrabeat	Two-band EQ parameters	Frequency
+Instruments	Ultrabeat	Two-band EQ parameters	Q
+Instruments	Ultrabeat	Trigger mode controls	Trigger
+Instruments	Ultrabeat	Trigger mode controls	Group
+Instruments	Ultrabeat	Trigger mode controls	Gate
+Instruments	Ultrabeat	Envelope parameters	Zoom scroll
+Instruments	Ultrabeat	Envelope parameters	Env mod
+Instruments	Ultrabeat	Envelope parameters	Mod via vel
+Instruments	Ultrabeat	Envelope parameters	Sustain
+Instruments	Ultrabeat	Envelope parameters	Zoom to fit
+Instruments	Ultrabeat	Envelope parameters	Zoom A/D
+Instruments	Ultrabeat	Global sequencer controls	Edit mode
+Instruments	Ultrabeat	Global sequencer controls	Transport
+Instruments	Ultrabeat	Global sequencer controls	Swing
+Instruments	Ultrabeat	Pattern controls	Pattern
+Instruments	Ultrabeat	Pattern controls	Resolution
+Instruments	Ultrabeat	Pattern controls	Accent
+Instruments	Ultrabeat	Pattern controls	Swing Enable
+Instruments	Vintage B3 Organ	Scanner Vibrato and Chorus	Upper/Lower
+Instruments	Vintage B3 Organ	Scanner Vibrato and Chorus	Type
+Instruments	Vintage B3 Organ	Scanner Vibrato and Chorus	Mode
+Instruments	Vintage B3 Organ	Scanner Vibrato and Chorus	Rate
+Instruments	Vintage B3 Organ	Scanner Vibrato and Chorus	Depth
+Instruments	Vintage B3 Organ	Percussion effect	Percussion
+Instruments	Vintage B3 Organ	Percussion effect	Harmonic
+Instruments	Vintage B3 Organ	Percussion effect	Time
+Instruments	Vintage B3 Organ	Percussion effect	Volume
+Instruments	Vintage B3 Organ	Percussion effect	Upper Level
+Instruments	Vintage B3 Organ	Percussion effect	Velocity
+Instruments	Vintage B3 Organ	Advanced Cabinet parameters	Cabinet
+Instruments	Vintage B3 Organ	Advanced Cabinet parameters	Deflector
+Instruments	Vintage B3 Organ	Advanced Motor parameters	Acceleration
+Instruments	Vintage B3 Organ	Advanced Motor parameters	Max Rate
+Instruments	Vintage B3 Organ	Advanced Motor parameters	Motor Control
+Instruments	Vintage B3 Organ	Advanced Motor parameters	Speed MIDI Control
+Instruments	Vintage B3 Organ	Advanced Brake parameters	Dry Level
+Instruments	Vintage B3 Organ	Advanced Brake parameters	Output
+Instruments	Vintage B3 Organ	Advanced Brake parameters	Horn/Drum Position
+Instruments	Vintage B3 Organ	Microphone parameters	Mic Position
+Instruments	Vintage B3 Organ	Microphone parameters	Horn
+Instruments	Vintage B3 Organ	Microphone parameters	Drum
+Instruments	Vintage B3 Organ	Microphone parameters	Distance
+Instruments	Vintage B3 Organ	Microphone parameters	Angle
+Instruments	Vintage B3 Organ	Microphone parameters	Balance
+Instruments	Vintage B3 Organ	Master and Click controls	Tune
+Instruments	Vintage B3 Organ	Master and Click controls	Expression
+Instruments	Vintage B3 Organ	Master and Click controls	Key On/Off
+Instruments	Vintage B3 Organ	Master and Click controls	Pedal
+Instruments	Vintage B3 Organ	Morph parameters	Upper Morph
+Instruments	Vintage B3 Organ	Morph parameters	Range
+Instruments	Vintage B3 Organ	Morph parameters	MIDI Controller
+Instruments	Vintage B3 Organ	EQ controls	EQ On/Off
+Instruments	Vintage B3 Organ	EQ controls	Output Level
+Instruments	Vintage B3 Organ	EQ controls	Low
+Instruments	Vintage B3 Organ	EQ controls	Mid
+Instruments	Vintage B3 Organ	EQ controls	High
+Instruments	Vintage B3 Organ	Wah effect controls	Wah On/Off
+Instruments	Vintage B3 Organ	Wah effect controls	Sweep MIDI Ctrl
+Instruments	Vintage B3 Organ	Wah effect controls	Bite
+Instruments	Vintage B3 Organ	Distortion effect controls	Distortion On/Off
+Instruments	Vintage B3 Organ	Distortion effect controls	Tone
+Instruments	Vintage B3 Organ	Distortion effect controls	Drive
+Instruments	Vintage B3 Organ	Reverb effect controls	Reverb On/Off
+Instruments	Vintage B3 Organ	Reverb effect controls	Pre/Post
+Instruments	Vintage B3 Organ	Reverb effect controls	Level
+Instruments	Vintage B3 Organ	Pitch controls	Upper Stretch
+Instruments	Vintage B3 Organ	Pitch controls	Lower Stretch
+Instruments	Vintage B3 Organ	Pitch controls	Warmth
+Instruments	Vintage B3 Organ	Pitch controls	Pitchbend Up/Down
+Instruments	Vintage B3 Organ	Sustain controls	Upper Manual
+Instruments	Vintage B3 Organ	Sustain controls	Lower Manual
+Instruments	Vintage B3 Organ	Sustain controls	Pedals
+Instruments	Vintage B3 Organ	Condition controls	Click Minimum/Maximum
+Instruments	Vintage B3 Organ	Condition controls	Click Color
+Instruments	Vintage B3 Organ	Condition controls	Filter Age
+Instruments	Vintage B3 Organ	Condition controls	Leakage
+Instruments	Vintage B3 Organ	Condition controls	Drawbar Leak
+Instruments	Vintage B3 Organ	Condition controls	Crosstalk
+Instruments	Vintage B3 Organ	Condition controls	Random FM
+Instruments	Vintage B3 Organ	Organ Model controls	Maximum Wheels
+Instruments	Vintage B3 Organ	Organ Model controls	Tonal Balance
+Instruments	Vintage B3 Organ	Organ Model controls	Lower Manual Volume
+Instruments	Vintage B3 Organ	Organ Model controls	Pedals Volume
+Instruments	Vintage B3 Organ	Organ Model controls	Shape
+Instruments	Vintage B3 Organ	Organ Model controls	Bass Filter
+Instruments	Vintage B3 Organ	Organ Model controls	Extended bass
+Instruments	Vintage B3 Organ	Organ Model controls	Ultrabass
+Instruments	Vintage Clav	Vintage Clav interface	Model
+Instruments	Vintage Clav	Vintage Clav interface	Main
+Instruments	Vintage Clav	Vintage Clav interface	Effects
+Instruments	Vintage Clav	Vintage Clav interface	Details
+Instruments	Vintage Clav	Compressor effect controls	Ratio
+Instruments	Vintage Clav	Distortion effect controls	Gain
+Instruments	Vintage Clav	Distortion effect controls	Tone
+Instruments	Vintage Clav	Modulation effect controls	Mode
+Instruments	Vintage Clav	Modulation effect controls	Intensity
+Instruments	Vintage Clav	Modulation effect controls	Sync
+Instruments	Vintage Clav	Modulation effect controls	Rate
+Instruments	Vintage Clav	Wah effect controls	Range
+Instruments	Vintage Clav	Wah effect controls	Envelope
+Instruments	Vintage Clav	Excite and Click parameters	Shape
+Instruments	Vintage Clav	Excite and Click parameters	Random
+Instruments	Vintage Clav	Excite and Click parameters	Velocity
+Instruments	Vintage Clav	Excite and Click parameters	Velocity mode
+Instruments	Vintage Clav	String parameters	Release
+Instruments	Vintage Clav	String parameters	Damping
+Instruments	Vintage Clav	String parameters	Stiffness/Inharmonicity
+Instruments	Vintage Clav	String parameters	Tension Mod
+Instruments	Vintage Clav	String parameters	Pitch Fall
+Instruments	Vintage Clav	Pitch parameters	Tune
+Instruments	Vintage Clav	Pitch parameters	Stretch Tuning
+Instruments	Vintage Clav	Pitch parameters	Warmth
+Instruments	Vintage Clav	Pitch parameters	Pitch Wheel
+Instruments	Vintage Clav	Pitch parameters	Pitch Pressure
+Instruments	Vintage Clav	Misc parameters	Voices
+Instruments	Vintage Clav	Misc parameters	Velocity Curve
+Instruments	Vintage Clav	Misc parameters	Damper Control
+Instruments	Vintage Clav	Misc parameters	Wah Control
+Instruments	Vintage Clav	Extended parameters	MIDI Mono Mode
+Instruments	Vintage Clav	Extended parameters	Mono Mode Bend Range
+Instruments	Vintage Electric Piano	Vintage Electric Piano interface	Model
+Instruments	Vintage Electric Piano	Vintage Electric Piano interface	Effects
+Instruments	Vintage Electric Piano	Vintage Electric Piano interface	Details
+Instruments	Vintage Electric Piano	Vintage Electric Piano interface	Bass Boost
+Instruments	Vintage Electric Piano	Vintage Electric Piano interface	Volume
+Instruments	Vintage Electric Piano	EQ controls	Bass
+Instruments	Vintage Electric Piano	EQ controls	Treble
+Instruments	Vintage Electric Piano	Drive effect controls	Drive mode
+Instruments	Vintage Electric Piano	Drive effect controls	Gain
+Instruments	Vintage Electric Piano	Drive effect controls	Tone
+Instruments	Vintage Electric Piano	Chorus effect controls	Rate
+Instruments	Vintage Electric Piano	Chorus effect controls	Intensity
+Instruments	Vintage Electric Piano	Phaser effect controls	Sync
+Instruments	Vintage Electric Piano	Phaser effect controls	Color
+Instruments	Vintage Electric Piano	Phaser effect controls	Stereo
+Instruments	Vintage Electric Piano	Model controls	Voices
+Instruments	Vintage Electric Piano	Model controls	Decay
+Instruments	Vintage Electric Piano	Model controls	Release
+Instruments	Vintage Electric Piano	Model controls	Stereo Width
+Instruments	Vintage Electric Piano	Model controls	Tine Bell
+Instruments	Vintage Electric Piano	Model controls	Damper Noise
+Instruments	Vintage Electric Piano	Pitch controls	Tune
+Instruments	Vintage Electric Piano	Pitch controls	Down/Up
+Instruments	Vintage Electric Piano	Pitch controls	Warmth
+Instruments	Vintage Electric Piano	Pitch controls	Lower
+Instruments	Vintage Electric Piano	Pitch controls	Upper
+Instruments	Vintage Electric Piano	Extended parameters	Delay Pianissimo
+Instruments	Vintage Electric Piano	Extended parameters	Delay Fortissimo
+Instruments	Vintage Electric Piano	Extended parameters	MIDI Mode
+Instruments	Vintage Mellotron	Vintage Mellotron controls	Sound A/B
+Instruments	Vintage Mellotron	Vintage Mellotron controls	Sound A/B Transpose
+Instruments	Vintage Mellotron	Vintage Mellotron controls	Blend A/B
+Instruments	Vintage Mellotron	Vintage Mellotron controls	Tape Speed
+Instruments	Vintage Mellotron	Vintage Mellotron controls	Tone
+Instruments	Vintage Mellotron	Vintage Mellotron controls	Volume
+Instruments	Vintage Mellotron	Vintage Mellotron controls	Attack
+Instruments	Vintage Mellotron	Vintage Mellotron controls	Release
+Instruments	Vintage Mellotron	Vintage Mellotron controls	Pitch Bend Range
+Instruments	Vintage Mellotron	Vintage Mellotron controls	Fixed Velocity
+Effects	Stereo Spread	Stereo Spread controls	Lower Intensity
+Effects	Stereo Spread	Stereo Spread controls	Upper Intensity
+Effects	Stereo Spread	Stereo Spread controls	Upper/Lower Frequency
+Effects	Stereo Spread	Stereo Spread controls	Order
+Effects	Gain	Gain controls	Gain
+Effects	Gain	Gain controls	Phase Invert Left/Right
+Effects	Gain	Gain controls	Balance
+Effects	Gain	Gain controls	Swap L/R
+Instruments	Studio Piano	Studio Piano	Instrument
+Instruments	Studio Piano	Studio Piano	Stereo Mic A
+Instruments	Studio Piano	Studio Piano	Stereo Mic B
+Instruments	Studio Piano	Studio Piano	Mono Mic
+Instruments	Studio Piano	Studio Piano	Stereo Mic A On/Off
+Instruments	Studio Piano	Studio Piano	Stereo Mic B On/Off
+Instruments	Studio Piano	Studio Piano	Mono Mic On/Off

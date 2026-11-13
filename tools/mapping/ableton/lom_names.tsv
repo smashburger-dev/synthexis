@@ -1,0 +1,2426 @@
+class_name	name	sources
+Amp	Amp Type	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Amp	Bass	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Amp	Device On	on-12.0,on-12.1
+Amp	Dry/Wet	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Amp	Dual Mono	v3-12.0,v2-12.0,generic-12.0,v3-12.1
+Amp	Gain	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Amp	Middle	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Amp	Presence	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Amp	Treble	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Amp	Volume	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+AudioEffectGroupDevice	Device On	on-12.0,on-12.1
+AudioEffectGroupDevice	Macro 1	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+AudioEffectGroupDevice	Macro 10	v3-12.0,v2-12.0,generic-12.0,v3-12.1
+AudioEffectGroupDevice	Macro 11	v3-12.0,v2-12.0,generic-12.0,v3-12.1
+AudioEffectGroupDevice	Macro 12	v3-12.0,v2-12.0,generic-12.0,v3-12.1
+AudioEffectGroupDevice	Macro 13	v3-12.0,v2-12.0,generic-12.0,v3-12.1
+AudioEffectGroupDevice	Macro 14	v3-12.0,v2-12.0,generic-12.0,v3-12.1
+AudioEffectGroupDevice	Macro 15	v3-12.0,v2-12.0,generic-12.0,v3-12.1
+AudioEffectGroupDevice	Macro 16	v3-12.0,v2-12.0,generic-12.0,v3-12.1
+AudioEffectGroupDevice	Macro 2	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+AudioEffectGroupDevice	Macro 3	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+AudioEffectGroupDevice	Macro 4	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+AudioEffectGroupDevice	Macro 5	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+AudioEffectGroupDevice	Macro 6	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+AudioEffectGroupDevice	Macro 7	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+AudioEffectGroupDevice	Macro 8	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+AudioEffectGroupDevice	Macro 9	v3-12.0,v2-12.0,generic-12.0,v3-12.1
+AutoFilter	Device On	on-12.0,on-12.1
+AutoFilter	Drive	v3-12.0,v2-12.0,push2-12.0
+AutoFilter	Env. Attack	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+AutoFilter	Env. Modulation	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+AutoFilter	Env. Release	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+AutoFilter	Filter Circuit - BP/NO/Morph	v3-12.0,v2-12.0,push2-12.0
+AutoFilter	Filter Circuit - LP/HP	v3-12.0,v2-12.0,push2-12.0
+AutoFilter	Filter Type	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+AutoFilter	Filter Type (Legacy)	v3-12.0,v2-12.0,push2-12.0
+AutoFilter	Frequency	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+AutoFilter	LFO Amount	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+AutoFilter	LFO Frequency	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+AutoFilter	LFO Offset	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+AutoFilter	LFO Phase	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+AutoFilter	LFO Quantize On	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+AutoFilter	LFO Quantize Rate	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+AutoFilter	LFO Spin	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+AutoFilter	LFO Stereo Mode	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+AutoFilter	LFO Sync	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+AutoFilter	LFO Sync Rate	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+AutoFilter	LFO Waveform	v3-12.0,v2-12.0,push2-12.0
+AutoFilter	Morph	v3-12.0,v2-12.0,push2-12.0
+AutoFilter	Resonance	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+AutoFilter	Resonance (Legacy)	v3-12.0,v2-12.0,push2-12.0
+AutoFilter	S/C Gain	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+AutoFilter	S/C Mix	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+AutoFilter	S/C On	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+AutoFilter	Slope	v3-12.0,v2-12.0
+AutoFilter2	Control	move-12.4
+AutoFilter2	Device On	on-12.0,on-12.1
+AutoFilter2	Drive	move-12.4
+AutoFilter2	Dry/Wet	move-12.4
+AutoFilter2	Filter Morph	move-12.4
+AutoFilter2	Filter Type	move-12.4
+AutoFilter2	Formant	move-12.4
+AutoFilter2	Frequency	move-12.4
+AutoFilter2	LFO 16th	move-12.4
+AutoFilter2	LFO Amount	move-12.4
+AutoFilter2	LFO Freq	move-12.4
+AutoFilter2	LFO Rate	move-12.4
+AutoFilter2	LFO T Mode	move-12.4
+AutoFilter2	LFO Time	move-12.4
+AutoFilter2	LFO Wave	move-12.4
+AutoFilter2	Pitch	move-12.4
+AutoFilter2	Resonance	move-12.4
+AutoPan	Amount	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+AutoPan	Device On	on-12.0,on-12.1
+AutoPan	Frequency	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+AutoPan	Invert	v3-12.0,v2-12.0,push2-12.0,v3-12.1
+AutoPan	LFO Type	v3-12.0,v2-12.0,push2-12.0,v3-12.1
+AutoPan	Offset	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+AutoPan	Phase	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+AutoPan	Shape	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+AutoPan	Spin	v3-12.0,v2-12.0,push2-12.0
+AutoPan	Stereo Mode	v3-12.0,v2-12.0,push2-12.0,v3-12.1
+AutoPan	Sync Rate	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+AutoPan	Waveform	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+AutoPan	Width (Random)	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+AutoPan2	16th	move-12.4
+AutoPan2	Amount	move-12.4
+AutoPan2	Attack Time	move-12.4
+AutoPan2	Device On	on-12.0,on-12.1
+AutoPan2	Dyn Mod	move-12.4
+AutoPan2	Frequency	move-12.4
+AutoPan2	Harmonic	move-12.4
+AutoPan2	Invert	move-12.4
+AutoPan2	Mode	move-12.4
+AutoPan2	Panning Shape	move-12.4
+AutoPan2	Phase	move-12.4
+AutoPan2	Rate	move-12.4
+AutoPan2	Spin	move-12.4
+AutoPan2	Stereo Mode	move-12.4
+AutoPan2	Time	move-12.4
+AutoPan2	Time Mode	move-12.4
+AutoPan2	Tremolo Shape	move-12.4
+AutoPan2	Waveform	move-12.4
+AutoShift	Device On	on-12.0,on-12.1
+AutoShift	Dry/Wet	move-12.4
+AutoShift	Formant Follow	move-12.4
+AutoShift	Formant Shift	move-12.4
+AutoShift	Pitch Fine	move-12.4
+AutoShift	Pitch Scale Deg.	move-12.4
+AutoShift	Pitch St.	move-12.4
+AutoShift	Root	move-12.4
+AutoShift	Scale	move-12.4
+AutoShift	Smooth Time	move-12.4
+AutoShift	Strength	move-12.4
+AutoShift	Vibrato Amt	move-12.4
+AutoShift	Vibrato Rate	move-12.4
+BeatRepeat	Block Triplets	v3-12.0,v2-12.0,v3-12.1
+BeatRepeat	Chance	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+BeatRepeat	Decay	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+BeatRepeat	Device On	on-12.0,on-12.1
+BeatRepeat	Filter Freq	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+BeatRepeat	Filter On	v3-12.0,v2-12.0,v3-12.1
+BeatRepeat	Filter Width	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+BeatRepeat	Gate	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+BeatRepeat	Grid	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+BeatRepeat	Interval	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+BeatRepeat	Mix Type	v3-12.0,v2-12.0,v3-12.1
+BeatRepeat	Offset	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+BeatRepeat	Pitch	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+BeatRepeat	Pitch Decay	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+BeatRepeat	Repeat	v3-12.0,v2-12.0,v3-12.1
+BeatRepeat	Variation	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+BeatRepeat	Variation Type	v3-12.0,v2-12.0,push2-12.0,v3-12.1
+BeatRepeat	Volume	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Cabinet	Cabinet Type	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Cabinet	Device On	on-12.0,on-12.1
+Cabinet	Dry/Wet	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Cabinet	Dual Mono	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Cabinet	Microphone Position	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Cabinet	Microphone Type	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+ChannelEq	Device On	on-12.0,on-12.1
+ChannelEq	Gain	v3-12.0,v2-12.0,push2-12.0,v3-12.1,move-12.1
+ChannelEq	High Gain	v3-12.0,v2-12.0,push2-12.0,move-12.4,v3-12.1,move-12.1
+ChannelEq	Highpass On	v3-12.0,v2-12.0,push2-12.0,move-12.4,v3-12.1,move-12.1
+ChannelEq	Low Gain	v3-12.0,v2-12.0,push2-12.0,move-12.4,v3-12.1,move-12.1
+ChannelEq	Mid Freq	v3-12.0,v2-12.0,push2-12.0,move-12.4,v3-12.1,move-12.1
+ChannelEq	Mid Gain	v3-12.0,v2-12.0,push2-12.0,move-12.4,v3-12.1,move-12.1
+ChannelEq	Output	move-12.4
+Chorus	Delay 1 HiPass	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Chorus	Delay 1 Time	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Chorus	Delay 2 Mode	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Chorus	Delay 2 Time	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Chorus	Device On	on-12.0,on-12.1
+Chorus	Dry/Wet	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Chorus	Feedback	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Chorus	LFO Amount	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Chorus	LFO Extend On	v3-12.0,v2-12.0,push2-12.0,v3-12.1
+Chorus	LFO Rate	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Chorus	Link On	v3-12.0,v2-12.0,push2-12.0,v3-12.1
+Chorus	Polarity	v3-12.0,v2-12.0,push2-12.0,v3-12.1
+Chorus2	Amount	v3-12.0,push2-12.0,move-12.4,v3-12.1,move-12.1
+Chorus2	Device On	on-12.0,on-12.1
+Chorus2	Dry/Wet	v3-12.0,push2-12.0,move-12.4,v3-12.1,move-12.1
+Chorus2	Feedback	v3-12.0,push2-12.0,move-12.4,v3-12.1,move-12.1
+Chorus2	Gain	v3-12.0,push2-12.0,v3-12.1
+Chorus2	HP Freq	move-12.4
+Chorus2	HPF Freq	push2-12.0,move-12.1
+Chorus2	Mode	v3-12.0,push2-12.0,move-12.4,v3-12.1,move-12.1
+Chorus2	Offset	v3-12.0,push2-12.0,v3-12.1
+Chorus2	Rate	v3-12.0,push2-12.0,move-12.4,v3-12.1,move-12.1
+Chorus2	Shape	push2-12.0,move-12.4,move-12.1
+Chorus2	Warmth	v3-12.0,push2-12.0,move-12.4,v3-12.1,move-12.1
+Chorus2	Width	v3-12.0,push2-12.0,move-12.4,v3-12.1,move-12.1
+Collision	Device On	on-12.0,on-12.1
+Collision	LFO 1 Amt A	push2-12.0
+Collision	LFO 1 Amt B	push2-12.0
+Collision	LFO 1 Depth	v2-12.0,push2-12.0
+Collision	LFO 1 Depth < Vel	push2-12.0
+Collision	LFO 1 Dest A	push2-12.0
+Collision	LFO 1 Dest B	push2-12.0
+Collision	LFO 1 Destination A	v2-12.0
+Collision	LFO 1 Destination A Amount	v2-12.0
+Collision	LFO 1 Offset	v2-12.0,push2-12.0
+Collision	LFO 1 On/Off	v2-12.0
+Collision	LFO 1 Rate	v2-12.0,push2-12.0
+Collision	LFO 1 Rate < Key	push2-12.0
+Collision	LFO 1 Shape	v2-12.0,push2-12.0
+Collision	LFO 1 Sync	v2-12.0,push2-12.0
+Collision	LFO 1 Sync Rate	v2-12.0,push2-12.0
+Collision	LFO 2 Amt A	push2-12.0
+Collision	LFO 2 Amt B	push2-12.0
+Collision	LFO 2 Depth	v2-12.0,push2-12.0
+Collision	LFO 2 Depth < Vel	push2-12.0
+Collision	LFO 2 Dest A	push2-12.0
+Collision	LFO 2 Dest B	push2-12.0
+Collision	LFO 2 Destination A	v2-12.0
+Collision	LFO 2 Destination A Amount	v2-12.0
+Collision	LFO 2 Offset	v2-12.0,push2-12.0
+Collision	LFO 2 On/Off	v2-12.0
+Collision	LFO 2 Rate	v2-12.0,push2-12.0
+Collision	LFO 2 Rate < Key	push2-12.0
+Collision	LFO 2 Shape	v2-12.0,push2-12.0
+Collision	LFO 2 Sync	v2-12.0,push2-12.0
+Collision	LFO 2 Sync Rate	v2-12.0,push2-12.0
+Collision	Mallet Noise Amount	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Collision	Mallet Noise Amount < Key	v2-12.0,push2-12.0
+Collision	Mallet Noise Amount < Vel	v2-12.0,push2-12.0
+Collision	Mallet Noise Color	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Collision	Mallet On/Off	v3-12.0,v2-12.0,generic-12.0
+Collision	Mallet Stiffness	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Collision	Mallet Stiffness < Key	v2-12.0,push2-12.0
+Collision	Mallet Stiffness < Vel	v2-12.0,push2-12.0
+Collision	Mallet Volume	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Collision	Mallet Volume < Key	v2-12.0,push2-12.0
+Collision	Mallet Volume < Vel	v2-12.0,push2-12.0
+Collision	MW Amt A	push2-12.0
+Collision	MW Amt B	push2-12.0
+Collision	MW Dest A	push2-12.0
+Collision	MW Dest B	push2-12.0
+Collision	Noise Attack	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Collision	Noise Decay	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Collision	Noise Filter Freq	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Collision	Noise Filter Q	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Collision	Noise Filter Type	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Collision	Noise Freq < Env	v2-12.0
+Collision	Noise Freq < Key	v2-12.0,push2-12.0
+Collision	Noise Freq < Vel	v2-12.0,push2-12.0
+Collision	Noise On/Off	v2-12.0
+Collision	Noise Release	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Collision	Noise Sustain	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Collision	Noise Volume	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Collision	Noise Volume < Key	v2-12.0,push2-12.0
+Collision	Noise Volume < Vel	v2-12.0,push2-12.0
+Collision	Note PB Range	push2-12.0
+Collision	Panorama	v2-12.0
+Collision	PB Amt A	push2-12.0
+Collision	PB Dest A	push2-12.0
+Collision	PB Range	push2-12.0
+Collision	Press Amt A	push2-12.0
+Collision	Press Amt B	push2-12.0
+Collision	Press Dest A	push2-12.0
+Collision	Press Dest B	push2-12.0
+Collision	Res 1 Bleed	v2-12.0,push2-12.0
+Collision	Res 1 Brightness	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Collision	Res 1 Decay	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Collision	Res 1 Decay < Key	push2-12.0
+Collision	Res 1 Decay < Vel	push2-12.0
+Collision	Res 1 Fine Tune	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Collision	Res 1 Hit	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Collision	Res 1 Hit < Random	push2-12.0
+Collision	Res 1 Inharmonics	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Collision	Res 1 Inharmonics < Vel	push2-12.0
+Collision	Res 1 Listening L	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Collision	Res 1 Listening R	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Collision	Res 1 Material	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Collision	Res 1 Material < Key	push2-12.0
+Collision	Res 1 Material < Vel	push2-12.0
+Collision	Res 1 On/Off	v2-12.0
+Collision	Res 1 Opening	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Collision	Res 1 Pan	push2-12.0
+Collision	Res 1 Pan < Key	push2-12.0
+Collision	Res 1 Pitch Env.	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Collision	Res 1 Pitch Env. < Vel	push2-12.0
+Collision	Res 1 Pitch Env. Time	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Collision	Res 1 Quality	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Collision	Res 1 Radius	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Collision	Res 1 Ratio	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Collision	Res 1 Tune	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Collision	Res 1 Tune < Key	push2-12.0
+Collision	Res 1 Type	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Collision	Res 1 Volume	v2-12.0,push2-12.0
+Collision	Res 2 Bleed	v2-12.0,push2-12.0
+Collision	Res 2 Brightness	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Collision	Res 2 Decay	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Collision	Res 2 Decay < Key	push2-12.0
+Collision	Res 2 Decay < Vel	push2-12.0
+Collision	Res 2 Fine Tune	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Collision	Res 2 Hit	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Collision	Res 2 Hit < Random	push2-12.0
+Collision	Res 2 Inharmonics	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Collision	Res 2 Inharmonics < Vel	push2-12.0
+Collision	Res 2 Listening L	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Collision	Res 2 Listening R	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Collision	Res 2 Material	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Collision	Res 2 Material < Key	push2-12.0
+Collision	Res 2 Material < Vel	push2-12.0
+Collision	Res 2 On/Off	v2-12.0
+Collision	Res 2 Opening	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Collision	Res 2 Pan	push2-12.0
+Collision	Res 2 Pan < Key	push2-12.0
+Collision	Res 2 Panorama	v2-12.0
+Collision	Res 2 Pitch Env.	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Collision	Res 2 Pitch Env. < Vel	push2-12.0
+Collision	Res 2 Pitch Env. Time	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Collision	Res 2 Quality	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Collision	Res 2 Radius	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Collision	Res 2 Ratio	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Collision	Res 2 Tune	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Collision	Res 2 Tune < Key	push2-12.0
+Collision	Res 2 Type	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Collision	Res 2 Volume	v2-12.0,push2-12.0
+Collision	Slide Amt A	push2-12.0
+Collision	Slide Amt B	push2-12.0
+Collision	Slide Dest A	push2-12.0
+Collision	Slide Dest B	push2-12.0
+Collision	Structure	v2-12.0
+Collision	Volume	v3-12.0,v2-12.0,push2-12.0
+Compressor2	Attack	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Compressor2	Auto Release On/Off	v3-12.0,v2-12.0,generic-12.0,v3-12.1
+Compressor2	Device On	on-12.0,on-12.1
+Compressor2	Dry/Wet	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Compressor2	Env Mode	v3-12.0,v2-12.0,generic-12.0,v3-12.1
+Compressor2	Expansion Ratio	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Compressor2	Knee	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Compressor2	LookAhead	v3-12.0,v2-12.0,generic-12.0,v3-12.1
+Compressor2	Makeup	v3-12.0,v2-12.0,generic-12.0,v3-12.1
+Compressor2	Model	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Compressor2	Output Gain	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Compressor2	Ratio	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Compressor2	Release	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Compressor2	S/C EQ Freq	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Compressor2	S/C EQ Gain	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Compressor2	S/C EQ On	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Compressor2	S/C EQ Q	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Compressor2	S/C EQ Type	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Compressor2	S/C Gain	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Compressor2	S/C Listen	v3-12.0,v2-12.0,generic-12.0,v3-12.1
+Compressor2	S/C Mix	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Compressor2	S/C On	v3-12.0,v2-12.0,generic-12.0,v3-12.1
+Compressor2	Threshold	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Corpus	Bleed	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Corpus	Brightness	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Corpus	Decay	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Corpus	Device On	on-12.0,on-12.1
+Corpus	Dry Wet	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Corpus	Filter On/Off	v3-12.0,v2-12.0,push2-12.0
+Corpus	Fine	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Corpus	Gain	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Corpus	Hit	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Corpus	Inharmonics	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Corpus	LFO Amount	v3-12.0,v2-12.0,push2-12.0
+Corpus	LFO On/Off	v3-12.0,v2-12.0,push2-12.0
+Corpus	LFO Rate	v3-12.0,v2-12.0,push2-12.0
+Corpus	LFO Shape	v3-12.0,v2-12.0,push2-12.0
+Corpus	LFO Stereo Mode	v3-12.0,v2-12.0,push2-12.0
+Corpus	LFO Sync	v3-12.0,v2-12.0,push2-12.0
+Corpus	LFO Sync Rate	v3-12.0,v2-12.0,push2-12.0
+Corpus	Listening L	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Corpus	Listening R	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Corpus	Material	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Corpus	Mid Freq	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Corpus	MIDI Frequency	v3-12.0,v2-12.0,push2-12.0
+Corpus	MIDI Mode	v3-12.0,v2-12.0,push2-12.0
+Corpus	Note Off	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Corpus	Off Decay	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Corpus	Offset	v3-12.0,v2-12.0,push2-12.0
+Corpus	Opening	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Corpus	PB Range	push2-12.0
+Corpus	Phase	v3-12.0,v2-12.0,push2-12.0
+Corpus	Radius	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Corpus	Ratio	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Corpus	Resonance Type	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Corpus	Resonator Quality	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Corpus	Spin	v3-12.0,v2-12.0,push2-12.0
+Corpus	Spread	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Corpus	Transpose	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Corpus	Tune	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Corpus	Width	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Delay	Delay Mode	v3-12.0,v2-12.0
+Delay	Device On	on-12.0,on-12.1
+Delay	Dly < Mod	v3-12.0,v2-12.0,push2-12.0,v3-12.1,move-12.1
+Delay	Dry/Wet	v3-12.0,v2-12.0,push2-12.0,move-12.4,v3-12.1,move-12.1
+Delay	Feedback	v3-12.0,v2-12.0,push2-12.0,move-12.4,v3-12.1,move-12.1
+Delay	Filter < Mod	v3-12.0,v2-12.0,push2-12.0,v3-12.1,move-12.1
+Delay	Filter Freq	v3-12.0,v2-12.0,push2-12.0,move-12.4,v3-12.1,move-12.1
+Delay	Filter On	v3-12.0,v2-12.0,v3-12.1
+Delay	Filter Width	v3-12.0,v2-12.0,push2-12.0,move-12.4,v3-12.1,move-12.1
+Delay	Freeze	v3-12.0,v2-12.0
+Delay	L 16th	v3-12.0,v2-12.0,push2-12.0,move-12.4,v3-12.1,move-12.1
+Delay	L Offset	v3-12.0,v2-12.0,push2-12.0,v3-12.1
+Delay	L Sync	v3-12.0,v2-12.0,push2-12.0,move-12.4,v3-12.1,move-12.1
+Delay	L Time	v3-12.0,v2-12.0,push2-12.0,move-12.4,v3-12.1,move-12.1
+Delay	LFO > Delay	move-12.4
+Delay	LFO > Filter	move-12.4
+Delay	LFO Freq	move-12.4
+Delay	Link	v3-12.0,v2-12.0,v3-12.1
+Delay	Mod Freq	v3-12.0,v2-12.0,push2-12.0,v3-12.1,move-12.1
+Delay	Ping Pong	v3-12.0,v2-12.0,push2-12.0
+Delay	R 16th	v3-12.0,v2-12.0,push2-12.0
+Delay	R Offset	v3-12.0,v2-12.0,push2-12.0,v3-12.1
+Delay	R Sync	v3-12.0,v2-12.0,push2-12.0
+Delay	R Time	v3-12.0,v2-12.0,push2-12.0,v3-12.1
+Drift	Cyc Env Hold	v3-12.0,v2-12.0,push2-12.0,move-12.4
+Drift	Cyc Env Rate	v3-12.0,v2-12.0,push2-12.0,move-12.4
+Drift	Cyc Env Ratio	v3-12.0,v2-12.0,push2-12.0,move-12.4
+Drift	Cyc Env Synced	v3-12.0,v2-12.0,push2-12.0,move-12.4
+Drift	Cyc Env Tilt	v3-12.0,v2-12.0,push2-12.0,move-12.4
+Drift	Cyc Env Time	v3-12.0,v2-12.0,push2-12.0,move-12.4
+Drift	Cyc Env Time Mode	v3-12.0,v2-12.0,push2-12.0,move-12.4
+Drift	Device On	on-12.0,on-12.1
+Drift	Drift	v3-12.0,v2-12.0,push2-12.0,move-12.4
+Drift	Env 1 Attack	v3-12.0,v2-12.0,push2-12.0,move-12.4
+Drift	Env 1 Decay	v3-12.0,v2-12.0,push2-12.0,move-12.4
+Drift	Env 1 Release	v3-12.0,v2-12.0,push2-12.0,move-12.4
+Drift	Env 1 Sustain	v3-12.0,v2-12.0,push2-12.0,move-12.4
+Drift	Env 2 Attack	v3-12.0,v2-12.0,push2-12.0,move-12.4
+Drift	Env 2 Cyc On	push2-12.0,move-12.4
+Drift	Env 2 Decay	v3-12.0,v2-12.0,push2-12.0,move-12.4
+Drift	Env 2 Release	v3-12.0,v2-12.0,push2-12.0,move-12.4
+Drift	Env 2 Sustain	v3-12.0,v2-12.0,push2-12.0,move-12.4
+Drift	Glide Time	v3-12.0,v2-12.0,push2-12.0,move-12.4
+Drift	HP Freq	v3-12.0,v2-12.0,push2-12.0,move-12.4
+Drift	Key > LPF	push2-12.0,move-12.4
+Drift	Legato On	move-12.4
+Drift	LFO Amt	v3-12.0,v2-12.0,push2-12.0,move-12.4
+Drift	LFO Mod Amt	v3-12.0,v2-12.0,push2-12.0,move-12.4
+Drift	LFO Rate	v3-12.0,v2-12.0,push2-12.0,move-12.4
+Drift	LFO Ratio	v3-12.0,v2-12.0,push2-12.0,move-12.4
+Drift	LFO Retrig On	move-12.4
+Drift	LFO Synced	v3-12.0,v2-12.0,push2-12.0,move-12.4
+Drift	LFO Time	v3-12.0,v2-12.0,push2-12.0,move-12.4
+Drift	LFO Time Mode	v3-12.0,v2-12.0,push2-12.0,move-12.4
+Drift	LFO Wave	v3-12.0,v2-12.0,push2-12.0,move-12.4
+Drift	LP Freq	v3-12.0,v2-12.0,push2-12.0,move-12.4
+Drift	LP Mod Amt 1	v3-12.0,v2-12.0,push2-12.0,move-12.4
+Drift	LP Mod Amt 2	v3-12.0,v2-12.0,push2-12.0,move-12.4
+Drift	LP Res	move-12.4
+Drift	LP Reso	v3-12.0,v2-12.0,push2-12.0
+Drift	LP Type	v3-12.0,v2-12.0,push2-12.0,move-12.4
+Drift	Mod Matrix Amt 1	push2-12.0,move-12.4
+Drift	Mod Matrix Amt 2	push2-12.0,move-12.4
+Drift	Mod Matrix Amt 3	push2-12.0,move-12.4
+Drift	Noise Gain	v3-12.0,v2-12.0,push2-12.0,move-12.4
+Drift	Noise On	move-12.4
+Drift	Osc 1 Flt On	move-12.4
+Drift	Osc 1 Gain	v3-12.0,v2-12.0,push2-12.0,move-12.4
+Drift	Osc 1 Oct	v3-12.0,v2-12.0,push2-12.0,move-12.4
+Drift	Osc 1 Shape	v3-12.0,v2-12.0,push2-12.0,move-12.4
+Drift	Osc 1 Shape Mod Amt	v3-12.0,v2-12.0,push2-12.0,move-12.4
+Drift	Osc 1 Wave	v3-12.0,v2-12.0,push2-12.0,move-12.4
+Drift	Osc 2 Detune	v3-12.0,v2-12.0,push2-12.0
+Drift	Osc 2 Flt On	move-12.4
+Drift	Osc 2 Gain	v3-12.0,v2-12.0,push2-12.0,move-12.4
+Drift	Osc 2 Oct	v3-12.0,v2-12.0,push2-12.0,move-12.4
+Drift	Osc 2 Shape	move-12.4
+Drift	Osc 2 Wave	v3-12.0,v2-12.0,push2-12.0,move-12.4
+Drift	Osc Retrig On	move-12.4
+Drift	Pitch Mod Amt 1	v3-12.0,v2-12.0,push2-12.0,move-12.4
+Drift	Pitch Mod Amt 2	v3-12.0,v2-12.0,push2-12.0,move-12.4
+Drift	Spread	v3-12.0,v2-12.0,push2-12.0,move-12.4
+Drift	Strength	v3-12.0,v2-12.0,push2-12.0,move-12.4
+Drift	Thickness	v3-12.0,v2-12.0,push2-12.0,move-12.4
+Drift	Transpose	v3-12.0,v2-12.0,push2-12.0,move-12.4
+Drift	Vel > Vol	v3-12.0,v2-12.0,push2-12.0,move-12.4
+Drift	Volume	v3-12.0,v2-12.0,push2-12.0,move-12.4
+DrumBuss	Boom Amt	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+DrumBuss	Boom Audition	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+DrumBuss	Boom Decay	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+DrumBuss	Boom Freq	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+DrumBuss	Compressor On	v3-12.0,v2-12.0,generic-12.0,v3-12.1
+DrumBuss	Crunch	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+DrumBuss	Damping Freq	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+DrumBuss	Device On	on-12.0,on-12.1
+DrumBuss	Drive	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+DrumBuss	Drive Type	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+DrumBuss	Dry/Wet	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+DrumBuss	Output Gain	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+DrumBuss	Transients	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+DrumBuss	Trim	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+DrumCell	8-Bit Flt Decay	move-12.4
+DrumCell	8-Bit Rate	move-12.4
+DrumCell	Attack	push2-12.0,move-12.4
+DrumCell	Decay	push2-12.0,move-12.4
+DrumCell	Detune	push2-12.0,move-12.4
+DrumCell	Device On	on-12.0,on-12.1
+DrumCell	Env Mode	move-12.4
+DrumCell	Filter Freq	move-12.4
+DrumCell	Filter Gain	move-12.4
+DrumCell	Filter Res	move-12.4
+DrumCell	Filter Type	move-12.4
+DrumCell	Flt Freq	push2-12.0
+DrumCell	Flt Reso	push2-12.0
+DrumCell	Flt Type	push2-12.0
+DrumCell	FM Amt	move-12.4
+DrumCell	FM Freq	move-12.4
+DrumCell	FX Type	move-12.4
+DrumCell	Grain Size	move-12.4
+DrumCell	Hold	push2-12.0,move-12.4
+DrumCell	Length	move-12.4
+DrumCell	Loop Length	move-12.4
+DrumCell	Loop Offset	move-12.4
+DrumCell	Mod Amt	move-12.4
+DrumCell	Mod Dest	move-12.4
+DrumCell	Noise Amt	move-12.4
+DrumCell	Noise Color	move-12.4
+DrumCell	Pan	move-12.4
+DrumCell	Pitch Env Amt	move-12.4
+DrumCell	Pitch Env Decay	move-12.4
+DrumCell	Punch Amt	move-12.4
+DrumCell	Punch Release	move-12.4
+DrumCell	RM Amt	move-12.4
+DrumCell	RM Freq	move-12.4
+DrumCell	Start	push2-12.0,move-12.4
+DrumCell	Stretch Factor	move-12.4
+DrumCell	Sub Amt	move-12.4
+DrumCell	Sub Freq	move-12.4
+DrumCell	Transpose	push2-12.0,move-12.4
+DrumCell	Vel > Vol	push2-12.0,move-12.4
+DrumCell	Volume	push2-12.0
+DrumGroupDevice	Device On	on-12.0,on-12.1
+DrumGroupDevice	Macro 1	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+DrumGroupDevice	Macro 10	v3-12.0,v2-12.0,generic-12.0,v3-12.1
+DrumGroupDevice	Macro 11	v3-12.0,v2-12.0,generic-12.0,v3-12.1
+DrumGroupDevice	Macro 12	v3-12.0,v2-12.0,generic-12.0,v3-12.1
+DrumGroupDevice	Macro 13	v3-12.0,v2-12.0,generic-12.0,v3-12.1
+DrumGroupDevice	Macro 14	v3-12.0,v2-12.0,generic-12.0,v3-12.1
+DrumGroupDevice	Macro 15	v3-12.0,v2-12.0,generic-12.0,v3-12.1
+DrumGroupDevice	Macro 16	v3-12.0,v2-12.0,generic-12.0,v3-12.1
+DrumGroupDevice	Macro 2	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+DrumGroupDevice	Macro 3	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+DrumGroupDevice	Macro 4	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+DrumGroupDevice	Macro 5	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+DrumGroupDevice	Macro 6	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+DrumGroupDevice	Macro 7	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+DrumGroupDevice	Macro 8	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+DrumGroupDevice	Macro 9	v3-12.0,v2-12.0,generic-12.0,v3-12.1
+Echo	Channel Mode	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Echo	Clip Dry	v3-12.0,v2-12.0,generic-12.0
+Echo	Device On	on-12.0,on-12.1
+Echo	Dly < Mod	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Echo	Dry Wet	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Echo	Duck On	v3-12.0,v2-12.0,generic-12.0
+Echo	Duck Release	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Echo	Duck Thr	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Echo	Env Mix	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Echo	Feedback	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Echo	Feedback Inv	v3-12.0,v2-12.0,generic-12.0
+Echo	Filter On	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Echo	Flt < Mod	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Echo	Gate On	v3-12.0,v2-12.0,generic-12.0
+Echo	Gate Release	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Echo	Gate Thr	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Echo	HP Freq	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Echo	HP Res	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Echo	Input Gain	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Echo	L 16th	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Echo	L Division	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Echo	L Offset	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Echo	L Sync	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Echo	L Sync Mode	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Echo	L Time	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Echo	Link	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Echo	LP Freq	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Echo	LP Res	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Echo	Mod 4x	v3-12.0,v2-12.0,generic-12.0
+Echo	Mod Freq	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Echo	Mod Phase	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Echo	Mod Rate	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Echo	Mod Sync	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Echo	Mod Wave	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Echo	Noise Amt	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Echo	Noise Mrph	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Echo	Noise On	v3-12.0,v2-12.0,generic-12.0
+Echo	Output Gain	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Echo	R 16th	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Echo	R Division	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Echo	R Offset	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Echo	R Sync	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Echo	R Sync Mode	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Echo	R Time	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Echo	Repitch	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Echo	Reverb Decay	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Echo	Reverb Level	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Echo	Reverb Loc	v3-12.0,v2-12.0,generic-12.0
+Echo	Stereo Width	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Echo	Wobble Amt	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Echo	Wobble Mrph	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Echo	Wobble On	v3-12.0,v2-12.0,generic-12.0
+Eq8	1 Filter On A	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Eq8	1 Filter On B	push2-12.0
+Eq8	1 Filter Type A	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Eq8	1 Filter Type B	push2-12.0
+Eq8	1 Frequency A	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Eq8	1 Frequency B	push2-12.0
+Eq8	1 Gain A	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Eq8	1 Gain B	push2-12.0
+Eq8	1 Resonance A	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Eq8	1 Resonance B	push2-12.0
+Eq8	2 Filter On A	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Eq8	2 Filter On B	push2-12.0
+Eq8	2 Filter Type A	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Eq8	2 Filter Type B	push2-12.0
+Eq8	2 Frequency A	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Eq8	2 Frequency B	push2-12.0
+Eq8	2 Gain A	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Eq8	2 Gain B	push2-12.0
+Eq8	2 Resonance A	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Eq8	2 Resonance B	push2-12.0
+Eq8	3 Filter On A	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Eq8	3 Filter On B	push2-12.0
+Eq8	3 Filter Type A	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Eq8	3 Filter Type B	push2-12.0
+Eq8	3 Frequency A	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Eq8	3 Frequency B	push2-12.0
+Eq8	3 Gain A	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Eq8	3 Gain B	push2-12.0
+Eq8	3 Resonance A	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Eq8	3 Resonance B	push2-12.0
+Eq8	4 Filter On A	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Eq8	4 Filter On B	push2-12.0
+Eq8	4 Filter Type A	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Eq8	4 Filter Type B	push2-12.0
+Eq8	4 Frequency A	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Eq8	4 Frequency B	push2-12.0
+Eq8	4 Gain A	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Eq8	4 Gain B	push2-12.0
+Eq8	4 Resonance A	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Eq8	4 Resonance B	push2-12.0
+Eq8	5 Filter On A	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Eq8	5 Filter On B	push2-12.0
+Eq8	5 Filter Type A	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Eq8	5 Filter Type B	push2-12.0
+Eq8	5 Frequency A	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Eq8	5 Frequency B	push2-12.0
+Eq8	5 Gain A	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Eq8	5 Gain B	push2-12.0
+Eq8	5 Resonance A	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Eq8	5 Resonance B	push2-12.0
+Eq8	6 Filter On A	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Eq8	6 Filter On B	push2-12.0
+Eq8	6 Filter Type A	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Eq8	6 Filter Type B	push2-12.0
+Eq8	6 Frequency A	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Eq8	6 Frequency B	push2-12.0
+Eq8	6 Gain A	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Eq8	6 Gain B	push2-12.0
+Eq8	6 Resonance A	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Eq8	6 Resonance B	push2-12.0
+Eq8	7 Filter On A	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Eq8	7 Filter On B	push2-12.0
+Eq8	7 Filter Type A	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Eq8	7 Filter Type B	push2-12.0
+Eq8	7 Frequency A	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Eq8	7 Frequency B	push2-12.0
+Eq8	7 Gain A	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Eq8	7 Gain B	push2-12.0
+Eq8	7 Resonance A	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Eq8	7 Resonance B	push2-12.0
+Eq8	8 Filter On A	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Eq8	8 Filter On B	push2-12.0
+Eq8	8 Filter Type A	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Eq8	8 Filter Type B	push2-12.0
+Eq8	8 Frequency A	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Eq8	8 Frequency B	push2-12.0
+Eq8	8 Gain A	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Eq8	8 Gain B	push2-12.0
+Eq8	8 Resonance A	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Eq8	8 Resonance B	push2-12.0
+Eq8	Adaptive Q	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Eq8	Device On	on-12.0,on-12.1
+Eq8	Output Gain	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Eq8	Scale	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Erosion	Amount	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Erosion	Device On	on-12.0,on-12.1
+Erosion	Frequency	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Erosion	Mode	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Erosion	Width	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Erosion2	Amount	move-12.4
+Erosion2	Device On	on-12.0,on-12.1
+Erosion2	Filter Width	move-12.4
+Erosion2	Frequency	move-12.4
+Erosion2	Noise Blend	move-12.4
+Erosion2	Stereo Width	move-12.4
+FilterDelay	1 Beat Delay	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+FilterDelay	1 Beat Swing	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+FilterDelay	1 Delay Mode	v3-12.0,v2-12.0,push2-12.0
+FilterDelay	1 Feedback	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+FilterDelay	1 Filter Freq	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+FilterDelay	1 Filter Width	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+FilterDelay	1 Input On	v3-12.0,v2-12.0
+FilterDelay	1 Pan	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+FilterDelay	1 Time Delay	v3-12.0,v2-12.0,push2-12.0
+FilterDelay	1 Volume	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+FilterDelay	2 Beat Delay	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+FilterDelay	2 Beat Swing	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+FilterDelay	2 Delay Mode	v3-12.0,v2-12.0,push2-12.0
+FilterDelay	2 Feedback	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+FilterDelay	2 Filter Freq	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+FilterDelay	2 Filter Width	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+FilterDelay	2 Input On	v3-12.0,v2-12.0
+FilterDelay	2 Pan	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+FilterDelay	2 Time Delay	v3-12.0,v2-12.0,push2-12.0
+FilterDelay	2 Volume	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+FilterDelay	3 Beat Delay	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+FilterDelay	3 Beat Swing	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+FilterDelay	3 Delay Mode	v3-12.0,v2-12.0,push2-12.0
+FilterDelay	3 Feedback	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+FilterDelay	3 Filter Freq	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+FilterDelay	3 Filter Width	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+FilterDelay	3 Input On	v3-12.0,v2-12.0
+FilterDelay	3 Pan	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+FilterDelay	3 Time Delay	v3-12.0,v2-12.0,push2-12.0
+FilterDelay	3 Volume	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+FilterDelay	Device On	on-12.0,on-12.1
+FilterDelay	Dry	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+FilterEQ3	Device On	on-12.0,on-12.1
+FilterEQ3	FreqHi	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+FilterEQ3	FreqLo	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+FilterEQ3	GainHi	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+FilterEQ3	GainLo	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+FilterEQ3	GainMid	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+FilterEQ3	HighOn	v3-12.0,v2-12.0,generic-12.0,v3-12.1
+FilterEQ3	LowOn	v3-12.0,v2-12.0,generic-12.0,v3-12.1
+FilterEQ3	MidOn	v3-12.0,v2-12.0,generic-12.0,v3-12.1
+FilterEQ3	Slope	v3-12.0,v2-12.0,v3-12.1
+Flanger	Delay Time	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Flanger	Device On	on-12.0,on-12.1
+Flanger	Dry/Wet	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Flanger	Env. Attack	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Flanger	Env. Modulation	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Flanger	Env. Release	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Flanger	Feedback	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Flanger	Frequency	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Flanger	Hi Pass	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Flanger	LFO Amount	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Flanger	LFO Offset	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Flanger	LFO Phase	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Flanger	LFO Spin	v3-12.0,v2-12.0,push2-12.0
+Flanger	LFO Stereo Mode	v3-12.0,v2-12.0,push2-12.0
+Flanger	LFO Waveform	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Flanger	LFO Width (Random)	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Flanger	Polarity	v3-12.0,v2-12.0,push2-12.0
+Flanger	Sync	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Flanger	Sync Rate	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+FrequencyShifter	Coarse	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+FrequencyShifter	Device On	on-12.0,on-12.1
+FrequencyShifter	Drive	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+FrequencyShifter	Drive On/Off	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+FrequencyShifter	Dry/Wet	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+FrequencyShifter	Fine	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+FrequencyShifter	LFO Amount	v3-12.0,v2-12.0,push2-12.0,v3-12.1
+FrequencyShifter	LFO Frequency	v3-12.0,v2-12.0,push2-12.0,v3-12.1
+FrequencyShifter	LFO Offset	v3-12.0,v2-12.0,push2-12.0
+FrequencyShifter	LFO Phase	v3-12.0,v2-12.0,push2-12.0
+FrequencyShifter	LFO Spin	v3-12.0,v2-12.0,push2-12.0,v3-12.1
+FrequencyShifter	LFO Stereo Mode	v3-12.0,v2-12.0,push2-12.0,v3-12.1
+FrequencyShifter	LFO Waveform	v3-12.0,v2-12.0,push2-12.0,v3-12.1
+FrequencyShifter	LFO Width (Random)	v3-12.0,v2-12.0,push2-12.0
+FrequencyShifter	Mode	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+FrequencyShifter	Ring Mod Frequency	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+FrequencyShifter	Sync	v3-12.0,v2-12.0,push2-12.0,v3-12.1
+FrequencyShifter	Sync Rate	v3-12.0,v2-12.0,push2-12.0,v3-12.1
+FrequencyShifter	Wide	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Gate	Attack	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Gate	Device On	on-12.0,on-12.1
+Gate	FlipMode	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Gate	Floor	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Gate	Hold	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Gate	LookAhead	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Gate	Release	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Gate	Return	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Gate	S/C EQ Freq	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Gate	S/C EQ Gain	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Gate	S/C EQ On	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Gate	S/C EQ Q	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Gate	S/C EQ Type	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Gate	S/C Gain	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Gate	S/C Listen	v3-12.0,v2-12.0,push2-12.0,v3-12.1
+Gate	S/C Mix	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Gate	S/C On	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Gate	Threshold	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+GlueCompressor	Attack	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+GlueCompressor	Device On	on-12.0,on-12.1
+GlueCompressor	Dry/Wet	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+GlueCompressor	Makeup	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+GlueCompressor	Peak Clip In	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+GlueCompressor	Range	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+GlueCompressor	Ratio	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+GlueCompressor	Release	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+GlueCompressor	S/C EQ Freq	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+GlueCompressor	S/C EQ Gain	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+GlueCompressor	S/C EQ On	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+GlueCompressor	S/C EQ Q	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+GlueCompressor	S/C EQ Type	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+GlueCompressor	S/C Gain	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+GlueCompressor	S/C Mix	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+GlueCompressor	S/C On	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+GlueCompressor	Threshold	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+GrainDelay	Beat Delay	v3-12.0,v2-12.0,push2-12.0,v3-12.1
+GrainDelay	Beat Swing	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+GrainDelay	Delay Mode	v3-12.0,v2-12.0,push2-12.0,v3-12.1
+GrainDelay	Device On	on-12.0,on-12.1
+GrainDelay	DryWet	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+GrainDelay	Feedback	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+GrainDelay	Frequency	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+GrainDelay	Pitch	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+GrainDelay	Random	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+GrainDelay	Spray	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+GrainDelay	Time Delay	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Hybrid	Algo Delay	push2-12.0
+Hybrid	Algo Type	v3-12.0,v2-12.0,push2-12.0
+Hybrid	Blend	v3-12.0,v2-12.0,push2-12.0
+Hybrid	Damping	v3-12.0,v2-12.0,push2-12.0
+Hybrid	Decay	v3-12.0,v2-12.0,push2-12.0
+Hybrid	Device On	on-12.0,on-12.1
+Hybrid	DH Bass X	v3-12.0,v2-12.0,push2-12.0
+Hybrid	DH BassMult	v3-12.0,v2-12.0,push2-12.0
+Hybrid	DH Shape	v3-12.0,v2-12.0,push2-12.0
+Hybrid	Diffusion	v3-12.0,v2-12.0,push2-12.0
+Hybrid	Dry/Wet	v3-12.0,v2-12.0,push2-12.0
+Hybrid	EQ High Freq	v3-12.0,v2-12.0,push2-12.0
+Hybrid	EQ High Gain	v3-12.0,v2-12.0,push2-12.0
+Hybrid	EQ High Slope	v3-12.0,v2-12.0,push2-12.0
+Hybrid	EQ High Type	v3-12.0,v2-12.0,push2-12.0
+Hybrid	EQ Low Freq	v3-12.0,v2-12.0,push2-12.0
+Hybrid	EQ Low Gain	v3-12.0,v2-12.0,push2-12.0
+Hybrid	EQ Low Slope	v3-12.0,v2-12.0,push2-12.0
+Hybrid	EQ Low Type	v3-12.0,v2-12.0,push2-12.0
+Hybrid	EQ On	push2-12.0
+Hybrid	EQ P1 Freq	v3-12.0,v2-12.0,push2-12.0
+Hybrid	EQ P1 Gain	v3-12.0,v2-12.0,push2-12.0
+Hybrid	EQ P1 Q	v3-12.0,v2-12.0,push2-12.0
+Hybrid	EQ P2 Freq	v3-12.0,v2-12.0,push2-12.0
+Hybrid	EQ P2 Gain	v3-12.0,v2-12.0,push2-12.0
+Hybrid	EQ P2 Q	v3-12.0,v2-12.0,push2-12.0
+Hybrid	EQ Pre Algo	v3-12.0,v2-12.0,push2-12.0
+Hybrid	Modulation	v3-12.0,v2-12.0,push2-12.0
+Hybrid	P.Dly 16th	v3-12.0,v2-12.0,push2-12.0
+Hybrid	P.Dly Fb 16th	v3-12.0,v2-12.0,push2-12.0
+Hybrid	P.Dly Fb Time	v3-12.0,v2-12.0,push2-12.0
+Hybrid	P.Dly Sync	v3-12.0,v2-12.0,push2-12.0
+Hybrid	P.Dly Time	v3-12.0,v2-12.0,push2-12.0
+Hybrid	Pr High Mult	v3-12.0,v2-12.0,push2-12.0
+Hybrid	Pr Low Mult	v3-12.0,v2-12.0,push2-12.0
+Hybrid	Pr X Over	v3-12.0,v2-12.0,push2-12.0
+Hybrid	Qz Distance	v3-12.0,v2-12.0,push2-12.0
+Hybrid	Qz Low Damp	v3-12.0,v2-12.0,push2-12.0
+Hybrid	Routing	v3-12.0,v2-12.0
+Hybrid	Send Gain	v3-12.0,v2-12.0,push2-12.0
+Hybrid	Sh Pitch Shift	v3-12.0,v2-12.0,push2-12.0
+Hybrid	Sh Shimmer	v3-12.0,v2-12.0,push2-12.0
+Hybrid	Size	v3-12.0,v2-12.0,push2-12.0
+Hybrid	Ti Phase	v3-12.0,v2-12.0,push2-12.0
+Hybrid	Ti Rate	v3-12.0,v2-12.0,push2-12.0
+Hybrid	Ti Tide	v3-12.0,v2-12.0,push2-12.0
+Hybrid	Ti Waveform	v3-12.0,v2-12.0,push2-12.0
+Hybrid	Vintage	v3-12.0,v2-12.0
+Hybrid	Width	v3-12.0,v2-12.0,push2-12.0
+InstrumentGroupDevice	Device On	on-12.0,on-12.1
+InstrumentGroupDevice	Macro 1	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+InstrumentGroupDevice	Macro 10	v3-12.0,v2-12.0,generic-12.0,v3-12.1
+InstrumentGroupDevice	Macro 11	v3-12.0,v2-12.0,generic-12.0,v3-12.1
+InstrumentGroupDevice	Macro 12	v3-12.0,v2-12.0,generic-12.0,v3-12.1
+InstrumentGroupDevice	Macro 13	v3-12.0,v2-12.0,generic-12.0,v3-12.1
+InstrumentGroupDevice	Macro 14	v3-12.0,v2-12.0,generic-12.0,v3-12.1
+InstrumentGroupDevice	Macro 15	v3-12.0,v2-12.0,generic-12.0,v3-12.1
+InstrumentGroupDevice	Macro 16	v3-12.0,v2-12.0,generic-12.0,v3-12.1
+InstrumentGroupDevice	Macro 2	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+InstrumentGroupDevice	Macro 3	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+InstrumentGroupDevice	Macro 4	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+InstrumentGroupDevice	Macro 5	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+InstrumentGroupDevice	Macro 6	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+InstrumentGroupDevice	Macro 7	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+InstrumentGroupDevice	Macro 8	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+InstrumentGroupDevice	Macro 9	v3-12.0,v2-12.0,generic-12.0,v3-12.1
+InstrumentImpulse	1 Envelope Decay	v2-12.0,push2-12.0
+InstrumentImpulse	1 Envelope Type	v2-12.0,push2-12.0
+InstrumentImpulse	1 Filter <- Random	v2-12.0,push2-12.0
+InstrumentImpulse	1 Filter <- Vel	v2-12.0,push2-12.0
+InstrumentImpulse	1 Filter Freq	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentImpulse	1 Filter Res	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentImpulse	1 Filter Type	v2-12.0,push2-12.0
+InstrumentImpulse	1 Pan	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentImpulse	1 Pan <- Random	v2-12.0,push2-12.0
+InstrumentImpulse	1 Pan <- Vel	v2-12.0,push2-12.0
+InstrumentImpulse	1 Saturator Drive	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentImpulse	1 Start	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentImpulse	1 Stretch Factor	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentImpulse	1 Stretch Mode	push2-12.0
+InstrumentImpulse	1 Transpose	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentImpulse	1 Volume	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentImpulse	1 Volume <- Vel	v2-12.0,push2-12.0
+InstrumentImpulse	2 Envelope Decay	v2-12.0,push2-12.0
+InstrumentImpulse	2 Envelope Type	v2-12.0,push2-12.0
+InstrumentImpulse	2 Filter <- Random	v2-12.0,push2-12.0
+InstrumentImpulse	2 Filter <- Vel	v2-12.0,push2-12.0
+InstrumentImpulse	2 Filter Freq	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentImpulse	2 Filter Res	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentImpulse	2 Filter Type	v2-12.0,push2-12.0
+InstrumentImpulse	2 Pan	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentImpulse	2 Pan <- Random	v2-12.0,push2-12.0
+InstrumentImpulse	2 Pan <- Vel	v2-12.0,push2-12.0
+InstrumentImpulse	2 Saturator Drive	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentImpulse	2 Start	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentImpulse	2 Stretch Factor	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentImpulse	2 Stretch Mode	push2-12.0
+InstrumentImpulse	2 Transpose	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentImpulse	2 Volume	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentImpulse	2 Volume <- Vel	v2-12.0,push2-12.0
+InstrumentImpulse	3 Envelope Decay	v2-12.0,push2-12.0
+InstrumentImpulse	3 Envelope Type	v2-12.0,push2-12.0
+InstrumentImpulse	3 Filter <- Random	v2-12.0,push2-12.0
+InstrumentImpulse	3 Filter <- Vel	v2-12.0,push2-12.0
+InstrumentImpulse	3 Filter Freq	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentImpulse	3 Filter Res	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentImpulse	3 Filter Type	v2-12.0,push2-12.0
+InstrumentImpulse	3 Pan	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentImpulse	3 Pan <- Random	v2-12.0,push2-12.0
+InstrumentImpulse	3 Pan <- Vel	v2-12.0,push2-12.0
+InstrumentImpulse	3 Saturator Drive	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentImpulse	3 Start	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentImpulse	3 Stretch Factor	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentImpulse	3 Stretch Mode	push2-12.0
+InstrumentImpulse	3 Transpose	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentImpulse	3 Volume	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentImpulse	3 Volume <- Vel	v2-12.0,push2-12.0
+InstrumentImpulse	4 Envelope Decay	v2-12.0,push2-12.0
+InstrumentImpulse	4 Envelope Type	v2-12.0,push2-12.0
+InstrumentImpulse	4 Filter <- Random	v2-12.0,push2-12.0
+InstrumentImpulse	4 Filter <- Vel	v2-12.0,push2-12.0
+InstrumentImpulse	4 Filter Freq	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentImpulse	4 Filter Res	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentImpulse	4 Filter Type	v2-12.0,push2-12.0
+InstrumentImpulse	4 Pan	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentImpulse	4 Pan <- Random	v2-12.0,push2-12.0
+InstrumentImpulse	4 Pan <- Vel	v2-12.0,push2-12.0
+InstrumentImpulse	4 Saturator Drive	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentImpulse	4 Start	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentImpulse	4 Stretch Factor	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentImpulse	4 Stretch Mode	push2-12.0
+InstrumentImpulse	4 Transpose	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentImpulse	4 Volume	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentImpulse	4 Volume <- Vel	v2-12.0,push2-12.0
+InstrumentImpulse	5 Envelope Decay	v2-12.0,push2-12.0
+InstrumentImpulse	5 Envelope Type	v2-12.0,push2-12.0
+InstrumentImpulse	5 Filter <- Random	v2-12.0,push2-12.0
+InstrumentImpulse	5 Filter <- Vel	v2-12.0,push2-12.0
+InstrumentImpulse	5 Filter Freq	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentImpulse	5 Filter Res	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentImpulse	5 Filter Type	v2-12.0,push2-12.0
+InstrumentImpulse	5 Pan	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentImpulse	5 Pan <- Random	v2-12.0,push2-12.0
+InstrumentImpulse	5 Pan <- Vel	v2-12.0,push2-12.0
+InstrumentImpulse	5 Saturator Drive	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentImpulse	5 Start	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentImpulse	5 Stretch Factor	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentImpulse	5 Stretch Mode	push2-12.0
+InstrumentImpulse	5 Transpose	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentImpulse	5 Volume	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentImpulse	5 Volume <- Vel	v2-12.0,push2-12.0
+InstrumentImpulse	6 Envelope Decay	v2-12.0,push2-12.0
+InstrumentImpulse	6 Envelope Type	v2-12.0,push2-12.0
+InstrumentImpulse	6 Filter <- Random	v2-12.0,push2-12.0
+InstrumentImpulse	6 Filter <- Vel	v2-12.0,push2-12.0
+InstrumentImpulse	6 Filter Freq	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentImpulse	6 Filter Res	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentImpulse	6 Filter Type	v2-12.0,push2-12.0
+InstrumentImpulse	6 Pan	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentImpulse	6 Pan <- Random	v2-12.0,push2-12.0
+InstrumentImpulse	6 Pan <- Vel	v2-12.0,push2-12.0
+InstrumentImpulse	6 Saturator Drive	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentImpulse	6 Start	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentImpulse	6 Stretch Factor	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentImpulse	6 Stretch Mode	push2-12.0
+InstrumentImpulse	6 Transpose	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentImpulse	6 Volume	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentImpulse	6 Volume <- Vel	v2-12.0,push2-12.0
+InstrumentImpulse	7 Envelope Decay	v2-12.0,push2-12.0
+InstrumentImpulse	7 Envelope Type	v2-12.0,push2-12.0
+InstrumentImpulse	7 Filter <- Random	v2-12.0,push2-12.0
+InstrumentImpulse	7 Filter <- Vel	v2-12.0,push2-12.0
+InstrumentImpulse	7 Filter Freq	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentImpulse	7 Filter Res	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentImpulse	7 Filter Type	v2-12.0,push2-12.0
+InstrumentImpulse	7 Pan	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentImpulse	7 Pan <- Random	v2-12.0,push2-12.0
+InstrumentImpulse	7 Pan <- Vel	v2-12.0,push2-12.0
+InstrumentImpulse	7 Saturator Drive	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentImpulse	7 Start	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentImpulse	7 Stretch Factor	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentImpulse	7 Stretch Mode	push2-12.0
+InstrumentImpulse	7 Transpose	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentImpulse	7 Volume	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentImpulse	7 Volume <- Vel	v2-12.0,push2-12.0
+InstrumentImpulse	8 Envelope Decay	v2-12.0,push2-12.0
+InstrumentImpulse	8 Envelope Type	v2-12.0,push2-12.0
+InstrumentImpulse	8 Filter <- Random	v2-12.0,push2-12.0
+InstrumentImpulse	8 Filter <- Vel	v2-12.0,push2-12.0
+InstrumentImpulse	8 Filter Freq	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentImpulse	8 Filter Res	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentImpulse	8 Filter Type	v2-12.0,push2-12.0
+InstrumentImpulse	8 Pan	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentImpulse	8 Pan <- Random	v2-12.0,push2-12.0
+InstrumentImpulse	8 Pan <- Vel	v2-12.0,push2-12.0
+InstrumentImpulse	8 Saturator Drive	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentImpulse	8 Start	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentImpulse	8 Stretch Factor	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentImpulse	8 Stretch Mode	push2-12.0
+InstrumentImpulse	8 Transpose	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentImpulse	8 Volume	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentImpulse	8 Volume <- Vel	v2-12.0,push2-12.0
+InstrumentImpulse	Device On	on-12.0,on-12.1
+InstrumentImpulse	Global Time	v3-12.0,v2-12.0,push2-12.0
+InstrumentImpulse	Global Transpose	v3-12.0,v2-12.0,push2-12.0
+InstrumentImpulse	Global Volume	v2-12.0,push2-12.0
+InstrumentMeld	Device On	on-12.0,on-12.1
+InstrumentMeld	MeldVoice_Drive	push2-12.0
+InstrumentMeld	MeldVoice_EngineA_AmpEnvelope_LoopMode	push2-12.0
+InstrumentMeld	MeldVoice_EngineA_AmpEnvelope_Slopes_Attack	push2-12.0
+InstrumentMeld	MeldVoice_EngineA_AmpEnvelope_Slopes_Decay	push2-12.0
+InstrumentMeld	MeldVoice_EngineA_AmpEnvelope_Slopes_Release	push2-12.0
+InstrumentMeld	MeldVoice_EngineA_AmpEnvelope_Sustain	push2-12.0
+InstrumentMeld	MeldVoice_EngineA_AmpEnvelope_Times_Attack	push2-12.0
+InstrumentMeld	MeldVoice_EngineA_AmpEnvelope_Times_Decay	push2-12.0
+InstrumentMeld	MeldVoice_EngineA_AmpEnvelope_Times_Release	push2-12.0
+InstrumentMeld	MeldVoice_EngineA_Filter_FilterType	push2-12.0
+InstrumentMeld	MeldVoice_EngineA_Filter_Frequency	push2-12.0,v3-12.1
+InstrumentMeld	MeldVoice_EngineA_Filter_Macro1	push2-12.0
+InstrumentMeld	MeldVoice_EngineA_Filter_Macro2	push2-12.0
+InstrumentMeld	MeldVoice_EngineA_FilterEnvelope_LoopMode	push2-12.0
+InstrumentMeld	MeldVoice_EngineA_FilterEnvelope_Slopes_Release	push2-12.0
+InstrumentMeld	MeldVoice_EngineA_FilterEnvelope_Times_Attack	push2-12.0
+InstrumentMeld	MeldVoice_EngineA_FilterEnvelope_Times_Decay	push2-12.0
+InstrumentMeld	MeldVoice_EngineA_FilterEnvelope_Times_Release	push2-12.0
+InstrumentMeld	MeldVoice_EngineA_FilterEnvelope_Values_Sustain	push2-12.0
+InstrumentMeld	MeldVoice_EngineA_GlideTime	push2-12.0
+InstrumentMeld	MeldVoice_EngineA_Lfo1_GeneratorMacro1	push2-12.0
+InstrumentMeld	MeldVoice_EngineA_Lfo1_GeneratorMacro2	push2-12.0
+InstrumentMeld	MeldVoice_EngineA_Lfo1_GeneratorType	push2-12.0
+InstrumentMeld	MeldVoice_EngineA_Lfo1_PhaseOffset	push2-12.0
+InstrumentMeld	MeldVoice_EngineA_Lfo1_Rate	push2-12.0
+InstrumentMeld	MeldVoice_EngineA_Lfo1_Sync	push2-12.0
+InstrumentMeld	MeldVoice_EngineA_Lfo1_SyncedRate	push2-12.0
+InstrumentMeld	MeldVoice_EngineA_Lfo1_Transformer1Macro	push2-12.0
+InstrumentMeld	MeldVoice_EngineA_Lfo1_Transformer1Type	push2-12.0
+InstrumentMeld	MeldVoice_EngineA_Lfo1_Transformer2Macro	push2-12.0
+InstrumentMeld	MeldVoice_EngineA_Lfo1_Transformer2Type	push2-12.0
+InstrumentMeld	MeldVoice_EngineA_Lfo2_Rate	push2-12.0
+InstrumentMeld	MeldVoice_EngineA_Lfo2_Sync	push2-12.0
+InstrumentMeld	MeldVoice_EngineA_Lfo2_SyncedRate	push2-12.0
+InstrumentMeld	MeldVoice_EngineA_Lfo2_Waveform	push2-12.0
+InstrumentMeld	MeldVoice_EngineA_Oscillator_Macro1	push2-12.0,v3-12.1
+InstrumentMeld	MeldVoice_EngineA_Oscillator_Macro2	push2-12.0,v3-12.1
+InstrumentMeld	MeldVoice_EngineA_Oscillator_OscillatorType	push2-12.0,v3-12.1
+InstrumentMeld	MeldVoice_EngineA_Oscillator_Pitch_Detune	push2-12.0
+InstrumentMeld	MeldVoice_EngineA_Oscillator_Pitch_Transpose	push2-12.0
+InstrumentMeld	MeldVoice_EngineA_Pan	push2-12.0
+InstrumentMeld	MeldVoice_EngineA_ToneFilter	push2-12.0
+InstrumentMeld	MeldVoice_EngineA_Volume	push2-12.0
+InstrumentMeld	MeldVoice_EngineB_AmpEnvelope_LoopMode	push2-12.0
+InstrumentMeld	MeldVoice_EngineB_AmpEnvelope_Slopes_Attack	push2-12.0
+InstrumentMeld	MeldVoice_EngineB_AmpEnvelope_Slopes_Decay	push2-12.0
+InstrumentMeld	MeldVoice_EngineB_AmpEnvelope_Slopes_Release	push2-12.0
+InstrumentMeld	MeldVoice_EngineB_AmpEnvelope_Sustain	push2-12.0
+InstrumentMeld	MeldVoice_EngineB_AmpEnvelope_Times_Attack	push2-12.0
+InstrumentMeld	MeldVoice_EngineB_AmpEnvelope_Times_Decay	push2-12.0
+InstrumentMeld	MeldVoice_EngineB_AmpEnvelope_Times_Release	push2-12.0
+InstrumentMeld	MeldVoice_EngineB_Filter_FilterType	push2-12.0
+InstrumentMeld	MeldVoice_EngineB_Filter_Frequency	push2-12.0,v3-12.1
+InstrumentMeld	MeldVoice_EngineB_Filter_Macro1	push2-12.0
+InstrumentMeld	MeldVoice_EngineB_Filter_Macro2	push2-12.0
+InstrumentMeld	MeldVoice_EngineB_FilterEnvelope_LoopMode	push2-12.0
+InstrumentMeld	MeldVoice_EngineB_FilterEnvelope_Slopes_Release	push2-12.0
+InstrumentMeld	MeldVoice_EngineB_FilterEnvelope_Times_Release	push2-12.0
+InstrumentMeld	MeldVoice_EngineB_FilterEnvelope_Values_Sustain	push2-12.0
+InstrumentMeld	MeldVoice_EngineB_GlideTime	push2-12.0
+InstrumentMeld	MeldVoice_EngineB_Lfo1_GeneratorMacro1	push2-12.0
+InstrumentMeld	MeldVoice_EngineB_Lfo1_GeneratorMacro2	push2-12.0
+InstrumentMeld	MeldVoice_EngineB_Lfo1_GeneratorType	push2-12.0
+InstrumentMeld	MeldVoice_EngineB_Lfo1_PhaseOffset	push2-12.0
+InstrumentMeld	MeldVoice_EngineB_Lfo1_Rate	push2-12.0
+InstrumentMeld	MeldVoice_EngineB_Lfo1_Sync	push2-12.0
+InstrumentMeld	MeldVoice_EngineB_Lfo1_SyncedRate	push2-12.0
+InstrumentMeld	MeldVoice_EngineB_Lfo1_Transformer1Macro	push2-12.0
+InstrumentMeld	MeldVoice_EngineB_Lfo1_Transformer1Type	push2-12.0
+InstrumentMeld	MeldVoice_EngineB_Lfo1_Transformer2Macro	push2-12.0
+InstrumentMeld	MeldVoice_EngineB_Lfo1_Transformer2Type	push2-12.0
+InstrumentMeld	MeldVoice_EngineB_Lfo2_Rate	push2-12.0
+InstrumentMeld	MeldVoice_EngineB_Lfo2_Sync	push2-12.0
+InstrumentMeld	MeldVoice_EngineB_Lfo2_SyncedRate	push2-12.0
+InstrumentMeld	MeldVoice_EngineB_Lfo2_Waveform	push2-12.0
+InstrumentMeld	MeldVoice_EngineB_Oscillator_Macro1	push2-12.0,v3-12.1
+InstrumentMeld	MeldVoice_EngineB_Oscillator_Macro2	push2-12.0,v3-12.1
+InstrumentMeld	MeldVoice_EngineB_Oscillator_OscillatorType	push2-12.0,v3-12.1
+InstrumentMeld	MeldVoice_EngineB_Oscillator_Pitch_Detune	push2-12.0
+InstrumentMeld	MeldVoice_EngineB_Oscillator_Pitch_Transpose	push2-12.0
+InstrumentMeld	MeldVoice_EngineB_Pan	push2-12.0
+InstrumentMeld	MeldVoice_EngineB_ToneFilter	push2-12.0
+InstrumentMeld	MeldVoice_EngineB_Volume	push2-12.0
+InstrumentMeld	MeldVoice_EngineBDelay	push2-12.0
+InstrumentMeld	MeldVoice_VoiceSpreadAmount	push2-12.0
+InstrumentMeld	Volume	push2-12.0
+InstrumentVector	Amp A Slope	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentVector	Amp Attack	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentVector	Amp D Slope	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentVector	Amp Decay	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentVector	Amp Loop Mode	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentVector	Amp R Slope	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentVector	Amp Release	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentVector	Amp Sustain	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentVector	Device On	on-12.0,on-12.1
+InstrumentVector	Env 2 A Slope	v2-12.0,push2-12.0
+InstrumentVector	Env 2 Attack	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentVector	Env 2 D Slope	v2-12.0,push2-12.0
+InstrumentVector	Env 2 Decay	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentVector	Env 2 Final	push2-12.0
+InstrumentVector	Env 2 Initial	push2-12.0
+InstrumentVector	Env 2 Loop Mode	v2-12.0,push2-12.0
+InstrumentVector	Env 2 Peak	push2-12.0
+InstrumentVector	Env 2 R Slope	v2-12.0,push2-12.0
+InstrumentVector	Env 2 Release	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentVector	Env 2 Sustain	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentVector	Env 3 A Slope	v2-12.0,push2-12.0
+InstrumentVector	Env 3 Attack	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentVector	Env 3 D Slope	v2-12.0,push2-12.0
+InstrumentVector	Env 3 Decay	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentVector	Env 3 Final	push2-12.0
+InstrumentVector	Env 3 Initial	push2-12.0
+InstrumentVector	Env 3 Loop Mode	v2-12.0,push2-12.0
+InstrumentVector	Env 3 Peak	push2-12.0
+InstrumentVector	Env 3 R Slope	v2-12.0,push2-12.0
+InstrumentVector	Env 3 Release	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentVector	Env 3 Sustain	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentVector	Filter 1 BP/NO/Morph	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentVector	Filter 1 Drive	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentVector	Filter 1 Freq	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentVector	Filter 1 LP/HP	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentVector	Filter 1 Morph	v3-12.0,v2-12.0,push2-12.0
+InstrumentVector	Filter 1 On	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentVector	Filter 1 Res	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentVector	Filter 1 Slope	v3-12.0,v2-12.0,generic-12.0
+InstrumentVector	Filter 1 Type	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentVector	Filter 2 BP/NO/Morph	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentVector	Filter 2 Drive	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentVector	Filter 2 Freq	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentVector	Filter 2 LP/HP	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentVector	Filter 2 Morph	v3-12.0,v2-12.0,push2-12.0
+InstrumentVector	Filter 2 On	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentVector	Filter 2 Res	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentVector	Filter 2 Slope	v3-12.0,v2-12.0,generic-12.0
+InstrumentVector	Filter 2 Type	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentVector	Glide	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentVector	Global Mod Amount	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentVector	Internal Filter	push2-12.0
+InstrumentVector	LFO 1 Amount	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentVector	LFO 1 Attack Time	v2-12.0,push2-12.0
+InstrumentVector	LFO 1 Phase Offset	v2-12.0,push2-12.0
+InstrumentVector	LFO 1 Rate	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentVector	LFO 1 Retrigger	v2-12.0,push2-12.0
+InstrumentVector	LFO 1 S. Rate	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentVector	LFO 1 Shape	v3-12.0,v2-12.0,push2-12.0
+InstrumentVector	LFO 1 Shaping	v2-12.0,push2-12.0
+InstrumentVector	LFO 1 Sync	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentVector	LFO 2 Amount	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentVector	LFO 2 Attack Time	v2-12.0,push2-12.0
+InstrumentVector	LFO 2 Phase Offset	v2-12.0,push2-12.0
+InstrumentVector	LFO 2 Rate	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentVector	LFO 2 Retrigger	v2-12.0,push2-12.0
+InstrumentVector	LFO 2 S. Rate	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentVector	LFO 2 Shape	v3-12.0,v2-12.0,push2-12.0
+InstrumentVector	LFO 2 Shaping	v2-12.0,push2-12.0
+InstrumentVector	LFO 2 Sync	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentVector	Osc 1 Detune	v3-12.0,generic-12.0
+InstrumentVector	Osc 1 Effect 1	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentVector	Osc 1 Effect 2	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentVector	Osc 1 Gain	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentVector	Osc 1 On	v3-12.0,v2-12.0,generic-12.0
+InstrumentVector	Osc 1 Pan	v3-12.0,v2-12.0,generic-12.0
+InstrumentVector	Osc 1 Pos	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentVector	Osc 1 Transp	v3-12.0,generic-12.0
+InstrumentVector	Osc 2 Detune	v3-12.0,generic-12.0
+InstrumentVector	Osc 2 Effect 1	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentVector	Osc 2 Effect 2	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentVector	Osc 2 Gain	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentVector	Osc 2 On	v3-12.0,v2-12.0,generic-12.0
+InstrumentVector	Osc 2 Pan	v3-12.0,v2-12.0,generic-12.0
+InstrumentVector	Osc 2 Pos	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentVector	Osc 2 Transp	v3-12.0,generic-12.0
+InstrumentVector	Sub Gain	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentVector	Sub On	v2-12.0
+InstrumentVector	Sub Tone	v2-12.0,push2-12.0
+InstrumentVector	Sub Transpose	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentVector	Time	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentVector	Transpose	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentVector	Unison Amount	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+InstrumentVector	Volume	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Limiter	Auto	v3-12.0,v2-12.0,push2-12.0,v3-12.1
+Limiter	Ceiling	v3-12.0,v2-12.0,push2-12.0,v3-12.1
+Limiter	Device On	on-12.0,on-12.1
+Limiter	Gain	v3-12.0,v2-12.0,push2-12.0
+Limiter	Input Gain	v3-12.1
+Limiter	Link	v3-12.1
+Limiter	Link Channels	v3-12.0,v2-12.0,push2-12.0
+Limiter	Lookahead	v3-12.0,v2-12.0,push2-12.0,v3-12.1
+Limiter	M/S Link	v3-12.1
+Limiter	Mode	v3-12.1
+Limiter	Release	v3-12.1
+Limiter	Release time	v3-12.0,v2-12.0,push2-12.0
+Looper	Device On	on-12.0,on-12.1
+Looper	Feedback	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Looper	Monitor	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Looper	Quantization	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Looper	Reverse	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Looper	Song Control	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Looper	Speed	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Looper	State	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Looper	Tempo Control	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+LoungeLizard	Damp Amount	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+LoungeLizard	Damp Balance	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+LoungeLizard	Damp Tone	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+LoungeLizard	Detune	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+LoungeLizard	Device On	on-12.0,on-12.1
+LoungeLizard	F Release	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+LoungeLizard	F Tine < Key	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+LoungeLizard	F Tine Color	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+LoungeLizard	F Tine Decay	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+LoungeLizard	F Tine Vol	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+LoungeLizard	F Tone Decay	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+LoungeLizard	F Tone Vol	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+LoungeLizard	KB Stretch	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+LoungeLizard	M Force	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+LoungeLizard	M Force < Key	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+LoungeLizard	M Force < Vel	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+LoungeLizard	M Stiff < Key	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+LoungeLizard	M Stiff < Vel	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+LoungeLizard	M Stiffness	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+LoungeLizard	Noise < Key	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+LoungeLizard	Noise Amount	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+LoungeLizard	Noise Decay	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+LoungeLizard	Noise Pitch	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+LoungeLizard	Note PB Range	v2-12.0,push2-12.0,generic-12.0
+LoungeLizard	P Amp < Key	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+LoungeLizard	P Amp In	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+LoungeLizard	P Amp Out	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+LoungeLizard	P Distance	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+LoungeLizard	P Symmetry	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+LoungeLizard	PB Range	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+LoungeLizard	Pickup Model	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+LoungeLizard	Semitone	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+LoungeLizard	Voices	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+LoungeLizard	Volume	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MidiArpeggiator	Device On	on-12.0,on-12.1
+MidiArpeggiator	Free Rate	v3-12.0,v2-12.0,push2-12.0,v3-12.1
+MidiArpeggiator	Gate	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+MidiArpeggiator	Groove	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+MidiArpeggiator	Hold On	v3-12.0,v2-12.0,push2-12.0,v3-12.1
+MidiArpeggiator	Offset	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+MidiArpeggiator	Repeats	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+MidiArpeggiator	Ret. Interval	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+MidiArpeggiator	Retrigger Mode	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+MidiArpeggiator	Style	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+MidiArpeggiator	Sync On	v3-12.0,v2-12.0,push2-12.0,v3-12.1
+MidiArpeggiator	Synced Rate	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+MidiArpeggiator	Tranpose Key	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+MidiArpeggiator	Tranpose Mode	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+MidiArpeggiator	Transp. Dist.	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+MidiArpeggiator	Transp. Steps	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+MidiArpeggiator	Vel. Retrigger	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+MidiArpeggiator	Velocity Decay	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+MidiArpeggiator	Velocity On	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+MidiArpeggiator	Velocity Target	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+MidiCcControl	Custom A	push2-12.0,v3-12.1
+MidiCcControl	Custom B	push2-12.0,v3-12.1
+MidiCcControl	Custom C	push2-12.0,v3-12.1
+MidiCcControl	Custom D	push2-12.0,v3-12.1
+MidiCcControl	Custom E	push2-12.0,v3-12.1
+MidiCcControl	Custom F	push2-12.0
+MidiCcControl	Custom G	push2-12.0
+MidiCcControl	Custom H	push2-12.0
+MidiCcControl	Custom I	push2-12.0
+MidiCcControl	Custom J	push2-12.0
+MidiCcControl	Custom K	push2-12.0
+MidiCcControl	Custom L	push2-12.0
+MidiCcControl	Custom M	push2-12.0
+MidiCcControl	Device On	on-12.0,on-12.1
+MidiCcControl	Mod Wheel	push2-12.0,v3-12.1
+MidiCcControl	Pitch Bend	push2-12.0,v3-12.1
+MidiCcControl	Pressure	push2-12.0,v3-12.1
+MidiChord	Device On	on-12.0,on-12.1
+MidiChord	Shift1	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+MidiChord	Shift2	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+MidiChord	Shift3	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+MidiChord	Shift4	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+MidiChord	Shift5	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+MidiChord	Shift6	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+MidiChord	Velocity1	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+MidiChord	Velocity2	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+MidiChord	Velocity3	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+MidiChord	Velocity4	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+MidiChord	Velocity5	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+MidiChord	Velocity6	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+MidiEffectGroupDevice	Device On	on-12.0,on-12.1
+MidiEffectGroupDevice	Macro 1	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+MidiEffectGroupDevice	Macro 10	v3-12.0,v2-12.0,generic-12.0,v3-12.1
+MidiEffectGroupDevice	Macro 11	v3-12.0,v2-12.0,generic-12.0,v3-12.1
+MidiEffectGroupDevice	Macro 12	v3-12.0,v2-12.0,generic-12.0,v3-12.1
+MidiEffectGroupDevice	Macro 13	v3-12.0,v2-12.0,generic-12.0,v3-12.1
+MidiEffectGroupDevice	Macro 14	v3-12.0,v2-12.0,generic-12.0,v3-12.1
+MidiEffectGroupDevice	Macro 15	v3-12.0,v2-12.0,generic-12.0,v3-12.1
+MidiEffectGroupDevice	Macro 16	v3-12.0,v2-12.0,generic-12.0,v3-12.1
+MidiEffectGroupDevice	Macro 2	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+MidiEffectGroupDevice	Macro 3	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+MidiEffectGroupDevice	Macro 4	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+MidiEffectGroupDevice	Macro 5	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+MidiEffectGroupDevice	Macro 6	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+MidiEffectGroupDevice	Macro 7	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+MidiEffectGroupDevice	Macro 8	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+MidiEffectGroupDevice	Macro 9	v3-12.0,v2-12.0,generic-12.0,v3-12.1
+MidiNoteLength	Decay Key Scale	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+MidiNoteLength	Decay Time	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MidiNoteLength	Device On	on-12.0,on-12.1
+MidiNoteLength	Gate	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+MidiNoteLength	Latch	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+MidiNoteLength	Release Velocity	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+MidiNoteLength	Sync On	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+MidiNoteLength	Synced Length	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+MidiNoteLength	Time Length	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MidiNoteLength	Trigger Source	v3-12.0,v2-12.0,push2-12.0,v3-12.1
+MidiPitcher	Device On	on-12.0,on-12.1
+MidiPitcher	Lowest	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+MidiPitcher	Pitch	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+MidiPitcher	Range	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+MidiRandom	Chance	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+MidiRandom	Choices	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+MidiRandom	Device On	on-12.0,on-12.1
+MidiRandom	Interval	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+MidiRandom	Mode	v3-12.0,v2-12.0,push2-12.0,v3-12.1
+MidiRandom	Sign	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+MidiScale	Base	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+MidiScale	Device On	on-12.0,on-12.1
+MidiScale	Fold	v3-12.0,v2-12.0,push2-12.0,v3-12.1
+MidiScale	Lowest	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+MidiScale	Range	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+MidiScale	Transpose	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+MidiVelocity	Compand	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+MidiVelocity	Device On	on-12.0,on-12.1
+MidiVelocity	Drive	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+MidiVelocity	Lowest	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+MidiVelocity	Mode	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+MidiVelocity	Out Hi	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+MidiVelocity	Out Low	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+MidiVelocity	Random	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+MidiVelocity	Range	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+MultibandDynamics	Above Ratio (High)	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultibandDynamics	Above Ratio (Low)	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultibandDynamics	Above Ratio (Mid)	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultibandDynamics	Above Threshold (High)	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultibandDynamics	Above Threshold (Low)	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultibandDynamics	Above Threshold (Mid)	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultibandDynamics	Amount	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultibandDynamics	Attack Time (High)	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultibandDynamics	Attack Time (Low)	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultibandDynamics	Attack Time (Mid)	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultibandDynamics	Band Activator (High)	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultibandDynamics	Band Activator (Low)	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultibandDynamics	Band Activator (Mid)	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultibandDynamics	Below Ratio (High)	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultibandDynamics	Below Ratio (Low)	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultibandDynamics	Below Ratio (Mid)	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultibandDynamics	Below Threshold (High)	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultibandDynamics	Below Threshold (Low)	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultibandDynamics	Below Threshold (Mid)	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultibandDynamics	Device On	on-12.0,on-12.1
+MultibandDynamics	Input Gain (High)	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultibandDynamics	Input Gain (Low)	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultibandDynamics	Input Gain (Mid)	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultibandDynamics	Low-Mid Crossover	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultibandDynamics	Master Output	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultibandDynamics	Mid-High Crossover	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultibandDynamics	Output Gain (High)	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultibandDynamics	Output Gain (Low)	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultibandDynamics	Output Gain (Mid)	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultibandDynamics	Peak/RMS Mode	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultibandDynamics	Release Time (High)	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultibandDynamics	Release Time (Low)	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultibandDynamics	Release Time (Mid)	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultibandDynamics	S/C Gain	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultibandDynamics	S/C Mix	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultibandDynamics	S/C On	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultibandDynamics	Soft Knee On/Off	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultibandDynamics	Time Scaling	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultiSampler	Ae < Env	v2-12.0
+MultiSampler	Ae A Slope	push2-12.0
+MultiSampler	Ae Attack	v2-12.0,push2-12.0
+MultiSampler	Ae D Slope	push2-12.0
+MultiSampler	Ae Decay	v2-12.0,push2-12.0
+MultiSampler	Ae End	v2-12.0,push2-12.0
+MultiSampler	Ae Init	v2-12.0,push2-12.0
+MultiSampler	Ae Loop	v2-12.0,push2-12.0
+MultiSampler	Ae Mode	v2-12.0,push2-12.0
+MultiSampler	Ae On	v2-12.0,push2-12.0
+MultiSampler	Ae Peak	v2-12.0,push2-12.0
+MultiSampler	Ae R < Vel	v2-12.0
+MultiSampler	Ae R Slope	push2-12.0
+MultiSampler	Ae Release	v2-12.0,push2-12.0
+MultiSampler	Ae Retrig	v2-12.0,push2-12.0
+MultiSampler	Ae Sustain	v2-12.0,push2-12.0
+MultiSampler	Detune	v2-12.0,push2-12.0
+MultiSampler	Device On	on-12.0,on-12.1
+MultiSampler	F On	v2-12.0,push2-12.0
+MultiSampler	Fe < Env	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultiSampler	Fe Attack	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultiSampler	Fe Decay	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultiSampler	Fe End	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultiSampler	Fe Init	v2-12.0,push2-12.0
+MultiSampler	Fe Loop	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultiSampler	Fe Mode	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultiSampler	Fe On	v2-12.0,push2-12.0
+MultiSampler	Fe Peak	v3-12.0,v2-12.0,push2-12.0
+MultiSampler	Fe R < Vel	v2-12.0,push2-12.0
+MultiSampler	Fe Release	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultiSampler	Fe Retrig	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultiSampler	Fe Sustain	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultiSampler	Filt < Key	v3-12.0,push2-12.0,generic-12.0
+MultiSampler	Filt < LFO	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultiSampler	Filt < Vel	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultiSampler	Filter Circuit - BP/NO/Morph	v2-12.0,push2-12.0
+MultiSampler	Filter Circuit - LP/HP	v2-12.0,push2-12.0
+MultiSampler	Filter Drive	v3-12.0,v2-12.0,push2-12.0
+MultiSampler	Filter Freq	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultiSampler	Filter Morph	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultiSampler	Filter Res	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultiSampler	Filter Res (Legacy)	v2-12.0,push2-12.0
+MultiSampler	Filter Slope	v2-12.0
+MultiSampler	Filter Type	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultiSampler	Filter Type (Legacy)	v2-12.0,push2-12.0
+MultiSampler	Glide Mode	v2-12.0,push2-12.0
+MultiSampler	Glide Time	v2-12.0,push2-12.0
+MultiSampler	Key Zone Shift	v2-12.0,push2-12.0
+MultiSampler	L 1 Attack	v2-12.0,push2-12.0
+MultiSampler	L 1 Offset	v2-12.0,push2-12.0
+MultiSampler	L 1 On	v3-12.0,v2-12.0,push2-12.0
+MultiSampler	L 1 Rate	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultiSampler	L 1 Retrig	v2-12.0,push2-12.0
+MultiSampler	L 1 Sync	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultiSampler	L 1 Sync Rate	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultiSampler	L 1 Wave	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultiSampler	L 2 Attack	v2-12.0,push2-12.0
+MultiSampler	L 2 Offset	v3-12.0,v2-12.0,push2-12.0
+MultiSampler	L 2 On	v3-12.0,v2-12.0,push2-12.0
+MultiSampler	L 2 Phase	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultiSampler	L 2 R < Key	v3-12.0,generic-12.0
+MultiSampler	L 2 Rate	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultiSampler	L 2 Retrig	v2-12.0,push2-12.0
+MultiSampler	L 2 Spin	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultiSampler	L 2 St Mode	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultiSampler	L 2 Sync	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultiSampler	L 2 Sync Rate	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultiSampler	L 2 Wave	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultiSampler	L 3 Attack	v2-12.0,push2-12.0
+MultiSampler	L 3 Offset	v3-12.0,v2-12.0,push2-12.0
+MultiSampler	L 3 On	v3-12.0,v2-12.0,push2-12.0
+MultiSampler	L 3 Phase	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultiSampler	L 3 R < Key	v3-12.0,generic-12.0
+MultiSampler	L 3 Rate	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultiSampler	L 3 Retrig	v2-12.0,push2-12.0
+MultiSampler	L 3 Spin	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultiSampler	L 3 St Mode	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultiSampler	L 3 Sync	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultiSampler	L 3 Sync Rate	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultiSampler	L 3 Wave	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultiSampler	O Coarse	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultiSampler	O Fine	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultiSampler	O Fix Freq	v2-12.0,push2-12.0
+MultiSampler	O Fix Freq Mul	v2-12.0,push2-12.0
+MultiSampler	O Fix On	v2-12.0,push2-12.0
+MultiSampler	O Mode	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultiSampler	O Type	v2-12.0,push2-12.0
+MultiSampler	O Volume	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultiSampler	Oe Attack	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultiSampler	Oe Decay	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultiSampler	Oe End	v2-12.0,push2-12.0
+MultiSampler	Oe Init	v2-12.0,push2-12.0
+MultiSampler	Oe Loop	v2-12.0,push2-12.0
+MultiSampler	Oe Mode	v2-12.0,push2-12.0
+MultiSampler	Oe Peak	v2-12.0,push2-12.0
+MultiSampler	Oe Release	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultiSampler	Oe Retrig	v2-12.0,push2-12.0
+MultiSampler	Oe Sustain	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultiSampler	Osc On	v2-12.0,push2-12.0
+MultiSampler	Pan	v2-12.0,push2-12.0
+MultiSampler	Pan < LFO	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultiSampler	Pan < Rnd	v2-12.0,push2-12.0
+MultiSampler	Pe < Env	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultiSampler	Pe Attack	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultiSampler	Pe Decay	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultiSampler	Pe End	v2-12.0,push2-12.0
+MultiSampler	Pe Init	v2-12.0,push2-12.0
+MultiSampler	Pe Loop	v2-12.0,push2-12.0
+MultiSampler	Pe Mode	v2-12.0,push2-12.0
+MultiSampler	Pe On	v2-12.0,push2-12.0
+MultiSampler	Pe Peak	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultiSampler	Pe R < Vel	v2-12.0,push2-12.0
+MultiSampler	Pe Release	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultiSampler	Pe Retrig	v2-12.0,push2-12.0
+MultiSampler	Pe Sustain	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultiSampler	Pitch < LFO	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultiSampler	Shaper Amt	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultiSampler	Shaper On	v2-12.0,push2-12.0
+MultiSampler	Shaper Type	v2-12.0,push2-12.0
+MultiSampler	Spread	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultiSampler	Time	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultiSampler	Time < Key	v2-12.0,push2-12.0
+MultiSampler	Transpose	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultiSampler	Ve Attack	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultiSampler	Ve Decay	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultiSampler	Ve Init	v2-12.0,push2-12.0
+MultiSampler	Ve Loop	v2-12.0,push2-12.0
+MultiSampler	Ve Mode	v2-12.0,push2-12.0
+MultiSampler	Ve Peak	v2-12.0,push2-12.0
+MultiSampler	Ve R < Vel	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultiSampler	Ve Release	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultiSampler	Ve Retrig	v2-12.0,push2-12.0
+MultiSampler	Ve Sustain	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultiSampler	Vol < LFO	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultiSampler	Vol < Vel	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+MultiSampler	Volume	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Operator	A Coarse	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Operator	A Fine	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Operator	A Fix Freq	v3-12.0,v2-12.0,push2-12.0
+Operator	A Fix Freq Mul	v3-12.0,v2-12.0,push2-12.0
+Operator	A Fix On 	v3-12.0,v2-12.0,push2-12.0
+Operator	A Freq<Vel	push2-12.0
+Operator	A Quantize	push2-12.0
+Operator	Ae Attack	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Operator	Ae Decay	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Operator	Ae Init	v2-12.0,push2-12.0
+Operator	Ae Loop	push2-12.0
+Operator	Ae Mode	push2-12.0
+Operator	Ae Peak	v2-12.0,push2-12.0
+Operator	Ae R < Vel	push2-12.0
+Operator	Ae Release	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Operator	Ae Retrig	push2-12.0
+Operator	Ae Sustain	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Operator	Algorithm	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Operator	B Coarse	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Operator	B Fine	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Operator	B Fix Freq	v3-12.0,v2-12.0,push2-12.0
+Operator	B Fix Freq Mul	v3-12.0,v2-12.0,push2-12.0
+Operator	B Fix On 	v3-12.0,v2-12.0,push2-12.0
+Operator	B Freq<Vel	push2-12.0
+Operator	B Quantize	push2-12.0
+Operator	Be Attack	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Operator	Be Decay	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Operator	Be Init	v2-12.0,push2-12.0
+Operator	Be Loop	push2-12.0
+Operator	Be Mode	push2-12.0
+Operator	Be Peak	v2-12.0,push2-12.0
+Operator	Be R < Vel	push2-12.0
+Operator	Be Release	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Operator	Be Retrig	push2-12.0
+Operator	Be Sustain	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Operator	C Coarse	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Operator	C Fine	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Operator	C Fix Freq	v3-12.0,v2-12.0,push2-12.0
+Operator	C Fix Freq Mul	v3-12.0,v2-12.0,push2-12.0
+Operator	C Fix On 	v3-12.0,v2-12.0,push2-12.0
+Operator	C Freq<Vel	push2-12.0
+Operator	C Quantize	push2-12.0
+Operator	Ce Attack	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Operator	Ce Decay	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Operator	Ce Init	v2-12.0,push2-12.0
+Operator	Ce Loop	push2-12.0
+Operator	Ce Mode	push2-12.0
+Operator	Ce Peak	v2-12.0,push2-12.0
+Operator	Ce R < Vel	push2-12.0
+Operator	Ce Release	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Operator	Ce Retrig	push2-12.0
+Operator	Ce Sustain	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Operator	D Coarse	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Operator	D Fine	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Operator	D Fix Freq	v3-12.0,v2-12.0,push2-12.0
+Operator	D Fix Freq Mul	v3-12.0,v2-12.0,push2-12.0
+Operator	D Fix On 	v3-12.0,v2-12.0,push2-12.0
+Operator	D Freq<Vel	push2-12.0
+Operator	D Quantize	push2-12.0
+Operator	De Attack	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Operator	De Decay	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Operator	De Init	v2-12.0,push2-12.0
+Operator	De Loop	push2-12.0
+Operator	De Mode	push2-12.0
+Operator	De Peak	v2-12.0,push2-12.0
+Operator	De R < Vel	push2-12.0
+Operator	De Release	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Operator	De Retrig	push2-12.0
+Operator	De Sustain	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Operator	Device On	on-12.0,on-12.1
+Operator	Fe A Slope	push2-12.0
+Operator	Fe Amount	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Operator	Fe Attack	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Operator	Fe D Slope	push2-12.0
+Operator	Fe Decay	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Operator	Fe End	v2-12.0,push2-12.0
+Operator	Fe Init	v2-12.0,push2-12.0
+Operator	Fe Loop	push2-12.0
+Operator	Fe Mode	push2-12.0
+Operator	Fe Peak	v2-12.0,push2-12.0
+Operator	Fe R < Vel	v3-12.0,push2-12.0,generic-12.0
+Operator	Fe R Slope	push2-12.0
+Operator	Fe Release	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Operator	Fe Retrig	push2-12.0
+Operator	Fe Sustain	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Operator	Filt < Key	push2-12.0
+Operator	Filt < LFO	push2-12.0
+Operator	Filt < Vel	v2-12.0,push2-12.0
+Operator	Filter Circuit - BP/NO/Morph	v2-12.0,push2-12.0
+Operator	Filter Circuit - LP/HP	v2-12.0,push2-12.0
+Operator	Filter Drive	v2-12.0,push2-12.0
+Operator	Filter Freq	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Operator	Filter Morph	v2-12.0,push2-12.0
+Operator	Filter On	v2-12.0,push2-12.0
+Operator	Filter Res	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Operator	Filter Res (Legacy)	v2-12.0,push2-12.0
+Operator	Filter Slope	v2-12.0
+Operator	Filter Type	v2-12.0,push2-12.0
+Operator	Filter Type (Legacy)	v2-12.0,push2-12.0
+Operator	Glide On	v2-12.0,push2-12.0
+Operator	Glide Time	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Operator	Le Attack	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Operator	Le Decay	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Operator	Le End	v2-12.0,push2-12.0
+Operator	Le Init	v2-12.0,push2-12.0
+Operator	Le Loop	push2-12.0
+Operator	Le Mode	push2-12.0
+Operator	Le Peak	v2-12.0,push2-12.0
+Operator	Le R < Vel	push2-12.0
+Operator	Le Release	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Operator	Le Retrig	push2-12.0
+Operator	Le Sustain	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Operator	LFO < Pe	v2-12.0,push2-12.0
+Operator	LFO < Vel	push2-12.0
+Operator	LFO Amt	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Operator	LFO Amt A	push2-12.0
+Operator	LFO Amt B	push2-12.0
+Operator	LFO Dst B	push2-12.0
+Operator	LFO On	v2-12.0,push2-12.0
+Operator	LFO R < K	v3-12.0,push2-12.0,generic-12.0
+Operator	LFO Range	v3-12.0,v2-12.0,push2-12.0
+Operator	LFO Rate	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Operator	LFO Retrigger	v2-12.0,push2-12.0
+Operator	LFO Sync	v3-12.0,v2-12.0,push2-12.0
+Operator	LFO Type	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Operator	Osc-A < LFO	push2-12.0
+Operator	Osc-A < Pe	push2-12.0
+Operator	Osc-A Lev < Key	push2-12.0
+Operator	Osc-A Lev < Vel	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Operator	Osc-A Level	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Operator	Osc-A On	v2-12.0,push2-12.0
+Operator	Osc-A Phase	v2-12.0,push2-12.0
+Operator	Osc-A Retrig	v2-12.0,push2-12.0
+Operator	Osc-A Wave	v2-12.0,push2-12.0
+Operator	Osc-B < LFO	push2-12.0
+Operator	Osc-B < Pe	push2-12.0
+Operator	Osc-B Lev < Key	push2-12.0
+Operator	Osc-B Lev < Vel	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Operator	Osc-B Level	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Operator	Osc-B On	v2-12.0,push2-12.0
+Operator	Osc-B Phase	v2-12.0,push2-12.0
+Operator	Osc-B Retrig	v2-12.0,push2-12.0
+Operator	Osc-B Wave	v2-12.0,push2-12.0
+Operator	Osc-C < LFO	push2-12.0
+Operator	Osc-C < Pe	push2-12.0
+Operator	Osc-C Lev < Key	push2-12.0
+Operator	Osc-C Lev < Vel	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Operator	Osc-C Level	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Operator	Osc-C On	v2-12.0,push2-12.0
+Operator	Osc-C Phase	v2-12.0,push2-12.0
+Operator	Osc-C Retrig	v2-12.0,push2-12.0
+Operator	Osc-C Wave	v2-12.0,push2-12.0
+Operator	Osc-D < LFO	push2-12.0
+Operator	Osc-D < Pe	push2-12.0
+Operator	Osc-D Lev < Key	push2-12.0
+Operator	Osc-D Lev < Vel	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Operator	Osc-D Level	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Operator	Osc-D On	v2-12.0,push2-12.0
+Operator	Osc-D Phase	v2-12.0,push2-12.0
+Operator	Osc-D Retrig	v2-12.0,push2-12.0
+Operator	Osc-D Wave	v2-12.0,push2-12.0
+Operator	Pan < Key	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Operator	Pan < Rnd	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Operator	Panorama	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Operator	Pe A Slope	push2-12.0
+Operator	Pe Amount	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Operator	Pe Amt A	push2-12.0
+Operator	Pe Amt B	push2-12.0
+Operator	Pe Attack	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Operator	Pe D Slope	push2-12.0
+Operator	Pe Decay	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Operator	Pe Dst B	v2-12.0,push2-12.0
+Operator	Pe End	v2-12.0,push2-12.0
+Operator	Pe Init	v3-12.0,push2-12.0,generic-12.0
+Operator	Pe On	v2-12.0,push2-12.0
+Operator	Pe Peak	v2-12.0,push2-12.0
+Operator	Pe R < Vel	v2-12.0,push2-12.0
+Operator	Pe R Slope	push2-12.0
+Operator	Pe Release	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Operator	Pe Sustain	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Operator	Shaper Drive	push2-12.0
+Operator	Shaper Mix	push2-12.0
+Operator	Shaper Type	push2-12.0
+Operator	Spread	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Operator	Time	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Operator	Time < Key	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Operator	Tone	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Operator	Transpose	v2-12.0,push2-12.0
+Operator	Volume	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+OriginalSimpler	Detune	v2-12.0,push2-12.0,move-12.4
+OriginalSimpler	Device On	on-12.0,on-12.1
+OriginalSimpler	Division	v2-12.0,push2-12.0,move-12.4
+OriginalSimpler	F On	v2-12.0,push2-12.0
+OriginalSimpler	Fade In	v2-12.0,push2-12.0,move-12.4
+OriginalSimpler	Fade Out	v2-12.0,push2-12.0,move-12.4
+OriginalSimpler	Fe < Env	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+OriginalSimpler	Fe Attack	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+OriginalSimpler	Fe Decay	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+OriginalSimpler	Fe On	v2-12.0,push2-12.0
+OriginalSimpler	Fe Release	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+OriginalSimpler	Fe Sustain	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+OriginalSimpler	Filt < LFO	v3-12.0,v2-12.0,push2-12.0,generic-12.0,move-12.4
+OriginalSimpler	Filt < Vel	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+OriginalSimpler	Filter Circuit - BP/NO/Morph	v2-12.0,push2-12.0
+OriginalSimpler	Filter Circuit - LP/HP	v2-12.0,push2-12.0
+OriginalSimpler	Filter Drive	v2-12.0,push2-12.0
+OriginalSimpler	Filter Freq	v3-12.0,v2-12.0,push2-12.0,generic-12.0,move-12.4
+OriginalSimpler	Filter Morph	v2-12.0,push2-12.0
+OriginalSimpler	Filter Res	v3-12.0,v2-12.0,push2-12.0,generic-12.0,move-12.4
+OriginalSimpler	Filter Res (Legacy)	v2-12.0,push2-12.0
+OriginalSimpler	Filter Slope	v2-12.0
+OriginalSimpler	Filter Type	v2-12.0,push2-12.0,move-12.4
+OriginalSimpler	Filter Type (Legacy)	v2-12.0,push2-12.0
+OriginalSimpler	Glide Mode	v2-12.0,push2-12.0
+OriginalSimpler	Glide Time	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+OriginalSimpler	L Attack	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+OriginalSimpler	L Offset	v2-12.0,push2-12.0
+OriginalSimpler	L On	v2-12.0,push2-12.0
+OriginalSimpler	L R < Key	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+OriginalSimpler	L Rate	v3-12.0,v2-12.0,push2-12.0,generic-12.0,move-12.4
+OriginalSimpler	L Retrig	v2-12.0,push2-12.0
+OriginalSimpler	L Sync	v3-12.0,v2-12.0,push2-12.0,move-12.4
+OriginalSimpler	L Sync Rate	v3-12.0,v2-12.0,push2-12.0,move-12.4
+OriginalSimpler	L Wave	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+OriginalSimpler	Nudge	v2-12.0,push2-12.0,move-12.4
+OriginalSimpler	Pan	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+OriginalSimpler	Pan < LFO	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+OriginalSimpler	Pan < Rnd	v2-12.0,push2-12.0
+OriginalSimpler	Pe < Env	v2-12.0,push2-12.0
+OriginalSimpler	Pe Attack	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+OriginalSimpler	Pe Decay	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+OriginalSimpler	Pe On	v2-12.0,push2-12.0
+OriginalSimpler	Pe Release	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+OriginalSimpler	Pe Sustain	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+OriginalSimpler	Pitch < LFO	v3-12.0,generic-12.0
+OriginalSimpler	Regions	v2-12.0,push2-12.0,move-12.4
+OriginalSimpler	S Length	v3-12.0,v2-12.0,push2-12.0,generic-12.0,move-12.4
+OriginalSimpler	S Loop Fade	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+OriginalSimpler	S Loop Length	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+OriginalSimpler	S Loop On	v2-12.0
+OriginalSimpler	S Start	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+OriginalSimpler	Slice by	v2-12.0,push2-12.0,move-12.4
+OriginalSimpler	Slice Style	v2-12.0
+OriginalSimpler	Spread	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+OriginalSimpler	Transpose	v3-12.0,v2-12.0,push2-12.0,move-12.4
+OriginalSimpler	Trigger Mode	v2-12.0
+OriginalSimpler	Ve Attack	v3-12.0,v2-12.0,push2-12.0,generic-12.0,move-12.4
+OriginalSimpler	Ve Decay	v3-12.0,v2-12.0,push2-12.0,generic-12.0,move-12.4
+OriginalSimpler	Ve Loop	push2-12.0
+OriginalSimpler	Ve Mode	push2-12.0,move-12.4
+OriginalSimpler	Ve Release	v3-12.0,v2-12.0,push2-12.0,generic-12.0,move-12.4
+OriginalSimpler	Ve Retrig	push2-12.0
+OriginalSimpler	Ve Sustain	v3-12.0,v2-12.0,push2-12.0,generic-12.0,move-12.4
+OriginalSimpler	Vol < LFO	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+OriginalSimpler	Vol < Vel	v2-12.0,push2-12.0
+OriginalSimpler	Volume	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Overdrive	Device On	on-12.0,on-12.1
+Overdrive	Drive	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Overdrive	Dry/Wet	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Overdrive	Filter Freq	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Overdrive	Filter Width	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Overdrive	Preserve Dynamics	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Overdrive	Tone	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Pedal	Bass	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Pedal	Device On	on-12.0,on-12.1
+Pedal	Dry/Wet	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Pedal	Gain	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Pedal	Mid	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Pedal	Mid Freq	v3-12.0,v2-12.0,generic-12.0,v3-12.1
+Pedal	Output	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Pedal	Sub	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Pedal	Treble	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Pedal	Type	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Phaser	Color	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Phaser	Device On	on-12.0,on-12.1
+Phaser	Dry/Wet	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Phaser	Env. Attack	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Phaser	Env. Modulation	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Phaser	Env. Release	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Phaser	Feedback	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Phaser	Frequency	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Phaser	LFO Amount	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Phaser	LFO Frequency	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Phaser	LFO Offset	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Phaser	LFO Phase	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Phaser	LFO Spin	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Phaser	LFO Stereo Mode	v3-12.0,v2-12.0,push2-12.0
+Phaser	LFO Sync	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Phaser	LFO Sync Rate	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Phaser	LFO Waveform	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Phaser	LFO Width (Random)	v3-12.0,v2-12.0,push2-12.0
+Phaser	Poles	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Phaser	Type	v3-12.0,v2-12.0,push2-12.0
+PhaserNew	Amount	v3-12.0,v2-12.0,push2-12.0,move-12.4,move-12.1
+PhaserNew	Center Freq	push2-12.0,move-12.4,move-12.1
+PhaserNew	Device On	on-12.0,on-12.1
+PhaserNew	Doubler Time	v3-12.0,v2-12.0,push2-12.0,move-12.4,move-12.1
+PhaserNew	Dry/Wet	v3-12.0,v2-12.0,push2-12.0,move-12.4,move-12.1
+PhaserNew	Duty Cycle	v3-12.0,v2-12.0,push2-12.0
+PhaserNew	Env Amount	v3-12.0,v2-12.0,push2-12.0
+PhaserNew	Env Attack	v3-12.0,v2-12.0,push2-12.0
+PhaserNew	Env Enabled	v3-12.0,v2-12.0,push2-12.0
+PhaserNew	Env Release	v3-12.0,v2-12.0,push2-12.0
+PhaserNew	FB Inv	v3-12.0,v2-12.0
+PhaserNew	Feedback	v3-12.0,v2-12.0,push2-12.0,move-12.4,move-12.1
+PhaserNew	Flange Time	v3-12.0,v2-12.0,push2-12.0,move-12.1
+PhaserNew	Flanger Time	move-12.4
+PhaserNew	Lfo Blend	v3-12.0,v2-12.0,push2-12.0
+PhaserNew	Mod Blend	push2-12.0
+PhaserNew	Mod Freq	v3-12.0,v2-12.0,push2-12.0,move-12.4,move-12.1
+PhaserNew	Mod Freq 2	v3-12.0,v2-12.0,push2-12.0
+PhaserNew	Mod Phase	v3-12.0,v2-12.0,push2-12.0
+PhaserNew	Mod Rate	v3-12.0,v2-12.0,push2-12.0,move-12.4,move-12.1
+PhaserNew	Mod Rate 2	v3-12.0,v2-12.0,push2-12.0
+PhaserNew	Mod Sync	v3-12.0,v2-12.0,push2-12.0,move-12.4,move-12.1
+PhaserNew	Mod Sync 2	v3-12.0,v2-12.0,push2-12.0
+PhaserNew	Mod Wave	v3-12.0,v2-12.0,push2-12.0
+PhaserNew	Mode	v3-12.0,v2-12.0,push2-12.0,move-12.4,move-12.1
+PhaserNew	Notches	v3-12.0,v2-12.0,push2-12.0,move-12.4,move-12.1
+PhaserNew	Output Gain	v3-12.0,v2-12.0,push2-12.0
+PhaserNew	Safe Freq	v3-12.0,v2-12.0,push2-12.0
+PhaserNew	Spin	v3-12.0,v2-12.0,push2-12.0
+PhaserNew	Spin Enabled	v3-12.0,v2-12.0,push2-12.0
+PhaserNew	Spread	push2-12.0
+PhaserNew	Warmth	v3-12.0,v2-12.0,push2-12.0,move-12.4,move-12.1
+ProxyAudioEffectDevice	Device On	on-12.0,on-12.1
+ProxyAudioEffectDevice	Dry/Wet	v3-12.0,v2-12.0,push2-12.0,v3-12.1
+ProxyAudioEffectDevice	Input Gain	v3-12.0,v2-12.0,push2-12.0,v3-12.1
+ProxyAudioEffectDevice	Output Gain	v3-12.0,v2-12.0,push2-12.0,v3-12.1
+Redux	Bit Depth	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Redux	Bit On	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Redux	Device On	on-12.0,on-12.1
+Redux	Sample Hard	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Redux	Sample Mode	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Redux	Sample Soft	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Redux2	Bit Depth	v3-12.0,v2-12.0,push2-12.0,move-12.4,v3-12.1,move-12.1
+Redux2	DC Shift	v3-12.0,v2-12.0,push2-12.0,v3-12.1
+Redux2	Device On	on-12.0,on-12.1
+Redux2	Dry/Wet	v3-12.0,v2-12.0,push2-12.0,move-12.4,v3-12.1,move-12.1
+Redux2	Jitter	v3-12.0,v2-12.0,push2-12.0,move-12.4,v3-12.1,move-12.1
+Redux2	Post-Filter	v3-12.0,v2-12.0,push2-12.0,move-12.4,v3-12.1,move-12.1
+Redux2	Post-Filter On	move-12.4,move-12.1
+Redux2	Pre-Filter On	v3-12.0,v2-12.0,push2-12.0,move-12.4,v3-12.1,move-12.1
+Redux2	Quantizer Shape	v3-12.0,v2-12.0,push2-12.0,move-12.4,v3-12.1,move-12.1
+Redux2	Sample Rate	v3-12.0,v2-12.0,push2-12.0,move-12.4,v3-12.1,move-12.1
+Resonator	Color	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Resonator	Const	v3-12.0,v2-12.0
+Resonator	Decay	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Resonator	Device On	on-12.0,on-12.1
+Resonator	Dry/Wet	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Resonator	Filter On	v3-12.0,v2-12.0
+Resonator	Filter Type	v3-12.0,v2-12.0,push2-12.0
+Resonator	Frequency	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Resonator	Global Gain	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Resonator	I Gain	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Resonator	I Note	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Resonator	I On	v3-12.0,v2-12.0
+Resonator	I Tune	v3-12.0,v2-12.0,push2-12.0
+Resonator	II Gain	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Resonator	II On	v3-12.0,v2-12.0
+Resonator	II Pitch	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Resonator	II Tune	v3-12.0,v2-12.0,push2-12.0
+Resonator	III Gain	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Resonator	III On	v3-12.0,v2-12.0
+Resonator	III Pitch	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Resonator	III Tune	v3-12.0,v2-12.0,push2-12.0
+Resonator	IV Gain	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Resonator	IV On	v3-12.0,v2-12.0
+Resonator	IV Pitch	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Resonator	IV Tune	v3-12.0,v2-12.0,push2-12.0
+Resonator	Mode	v3-12.0,v2-12.0
+Resonator	V Gain	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Resonator	V On	v3-12.0,v2-12.0
+Resonator	V Pitch	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Resonator	V Tune	v3-12.0,v2-12.0,push2-12.0
+Resonator	Width	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Reverb	Chorus Amount	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Reverb	Chorus On	v3-12.0,v2-12.0,v3-12.1
+Reverb	Chorus Rate	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Reverb	Decay Time	v3-12.0,v2-12.0,push2-12.0,generic-12.0,move-12.4,v3-12.1,move-12.1
+Reverb	Density	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Reverb	Device On	on-12.0,on-12.1
+Reverb	Diff. Hi Freq	move-12.4
+Reverb	Diff. Hi Type	move-12.4
+Reverb	Diffuse Level	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Reverb	Diffusion	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Reverb	Dry/Wet	v3-12.0,v2-12.0,push2-12.0,generic-12.0,move-12.4,v3-12.1,move-12.1
+Reverb	ER Shape	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Reverb	ER Spin Amount	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Reverb	ER Spin On	v3-12.0,v2-12.0,generic-12.0,v3-12.1
+Reverb	ER Spin Rate	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Reverb	Flat On	v3-12.0,v2-12.0,v3-12.1
+Reverb	Freeze On	v3-12.0,v2-12.0,generic-12.0,v3-12.1
+Reverb	HiFilter Freq	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1,move-12.1
+Reverb	HiFilter On	v3-12.0,v2-12.0,v3-12.1
+Reverb	HiFilter Type	move-12.1
+Reverb	HiShelf Gain	v3-12.0,v2-12.0,push2-12.0,generic-12.0,move-12.4,v3-12.1,move-12.1
+Reverb	In Filter Freq	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1,move-12.1
+Reverb	In Filter Width	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Reverb	In HighCut On	v3-12.0,v2-12.0,v3-12.1
+Reverb	In LowCut On	v3-12.0,v2-12.0,v3-12.1
+Reverb	Input Freq	move-12.4
+Reverb	LowShelf Freq	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Reverb	LowShelf Gain	v3-12.0,v2-12.0,push2-12.0,generic-12.0,move-12.4,v3-12.1,move-12.1
+Reverb	LowShelf On	v3-12.0,v2-12.0,v3-12.1
+Reverb	Predelay	v3-12.0,v2-12.0,push2-12.0,generic-12.0,move-12.4,v3-12.1,move-12.1
+Reverb	Reflect Level	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Reverb	Room Size	v3-12.0,v2-12.0,push2-12.0,generic-12.0,move-12.4,v3-12.1,move-12.1
+Reverb	Scale	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Reverb	Size Smoothing	push2-12.0
+Reverb	Stereo Image	v3-12.0,v2-12.0,push2-12.0,generic-12.0,move-12.4,v3-12.1,move-12.1
+Roar	Blend	push2-12.0
+Roar	Comp Amt	push2-12.0,v3-12.1
+Roar	Device On	on-12.0,on-12.1
+Roar	Drive	push2-12.0,v3-12.1
+Roar	Dry/Wet	push2-12.0,v3-12.1
+Roar	Env Attack	push2-12.0
+Roar	Env Freq	push2-12.0
+Roar	Env Gain	push2-12.0
+Roar	Env Release	push2-12.0
+Roar	Env Thresh	push2-12.0
+Roar	Env Width	push2-12.0
+Roar	Fb Amt	push2-12.0
+Roar	Fb Freq	push2-12.0
+Roar	Fb Note	push2-12.0
+Roar	Fb Synced	push2-12.0
+Roar	Fb Time	push2-12.0
+Roar	Fb Time Mode	push2-12.0
+Roar	Fb Width	push2-12.0
+Roar	Flt 1 Freq	push2-12.0,v3-12.1
+Roar	Flt 1 Morph	push2-12.0
+Roar	Flt 1 Peak	push2-12.0
+Roar	Flt 1 Res	push2-12.0
+Roar	Flt 1 Type	push2-12.0
+Roar	Flt 2 Freq	push2-12.0
+Roar	Flt 2 Morph	push2-12.0
+Roar	Flt 2 Peak	push2-12.0
+Roar	Flt 2 Res	push2-12.0
+Roar	Flt 2 Type	push2-12.0
+Roar	Flt 3 Freq	push2-12.0
+Roar	Flt 3 Morph	push2-12.0
+Roar	Flt 3 Peak	push2-12.0
+Roar	Flt 3 Res	push2-12.0
+Roar	Flt 3 Type	push2-12.0
+Roar	Global Mod Amt	push2-12.0
+Roar	LFO 1 16th	push2-12.0
+Roar	LFO 1 Morph	push2-12.0
+Roar	LFO 1 Rate	push2-12.0
+Roar	LFO 1 Rate Mode	push2-12.0
+Roar	LFO 1 Smooth	push2-12.0
+Roar	LFO 1 Synced Rate	push2-12.0
+Roar	LFO 1 Wave	push2-12.0
+Roar	LFO 2 16th	push2-12.0
+Roar	LFO 2 Morph	push2-12.0
+Roar	LFO 2 Rate	push2-12.0
+Roar	LFO 2 Rate Mode	push2-12.0
+Roar	LFO 2 Smooth	push2-12.0
+Roar	LFO 2 Synced Rate	push2-12.0
+Roar	LFO 2 Wave	push2-12.0
+Roar	Low Mid X-Over	push2-12.0
+Roar	Mid High X-Over	push2-12.0
+Roar	Noise 16th	push2-12.0
+Roar	Noise Rate	push2-12.0
+Roar	Noise Rate Mode	push2-12.0
+Roar	Noise Smooth	push2-12.0
+Roar	Noise Synced Rate	push2-12.0
+Roar	Noise Type	push2-12.0
+Roar	Output	push2-12.0,v3-12.1
+Roar	Shaper 1 Amt	push2-12.0,v3-12.1
+Roar	Shaper 1 Bias	push2-12.0,v3-12.1
+Roar	Shaper 1 Level	push2-12.0
+Roar	Shaper 1 Type	push2-12.0,v3-12.1
+Roar	Shaper 2 Amt	push2-12.0
+Roar	Shaper 2 Bias	push2-12.0
+Roar	Shaper 2 Level	push2-12.0
+Roar	Shaper 2 Type	push2-12.0
+Roar	Shaper 3 Amt	push2-12.0
+Roar	Shaper 3 Bias	push2-12.0
+Roar	Shaper 3 Level	push2-12.0
+Roar	Shaper 3 Type	push2-12.0
+Roar	Tone Amt	push2-12.0
+Roar	Tone Freq	push2-12.0
+Saturator	Base	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Saturator	Color	v3-12.0,v2-12.0
+Saturator	Color Amt Hi	move-12.4,v3-12.1,move-12.1
+Saturator	Color Amt Low	move-12.4,v3-12.1,move-12.1
+Saturator	Color Freq	move-12.4,v3-12.1,move-12.1
+Saturator	Color On	v3-12.1
+Saturator	Color Width	move-12.4,v3-12.1,move-12.1
+Saturator	Depth	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Saturator	Device On	on-12.0,on-12.1
+Saturator	Drive	v3-12.0,v2-12.0,push2-12.0,generic-12.0,move-12.4,v3-12.1,move-12.1
+Saturator	Dry/Wet	v3-12.0,v2-12.0,push2-12.0,generic-12.0,move-12.4,v3-12.1,move-12.1
+Saturator	Frequency	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Saturator	Output	v3-12.0,v2-12.0,push2-12.0,generic-12.0,move-12.4,v3-12.1,move-12.1
+Saturator	Soft Clip	v3-12.0,v2-12.0
+Saturator	Type	v3-12.0,v2-12.0,push2-12.0,generic-12.0,move-12.4,v3-12.1,move-12.1
+Saturator	Width	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Saturator	WS Curve	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Saturator	WS Damp	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Saturator	WS Depth	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Saturator	WS Drive	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Saturator	WS Lin	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Saturator	WS Linearity	v3-12.1
+Saturator	WS Period	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Shifter	Delay Feedback	push2-12.0
+Shifter	Delay S. Time	push2-12.0
+Shifter	Delay Sync	push2-12.0
+Shifter	Delay Time	push2-12.0
+Shifter	Device On	on-12.0,on-12.1
+Shifter	Dry/Wet	v3-12.0,push2-12.0,v3-12.1
+Shifter	Env Amount Hz	push2-12.0
+Shifter	Env Amount St	push2-12.0
+Shifter	Env Attack	push2-12.0
+Shifter	Env Release	push2-12.0
+Shifter	FShift Coarse	v3-12.0,push2-12.0,v3-12.1
+Shifter	Lfo Amount Hz	v3-12.0,push2-12.0,v3-12.1
+Shifter	Lfo Amount St	v3-12.0,push2-12.0
+Shifter	Lfo Duty Cycle	push2-12.0
+Shifter	Lfo Offset	push2-12.0
+Shifter	Lfo Phase	push2-12.0
+Shifter	Lfo Rate Hz	v3-12.0,push2-12.0
+Shifter	Lfo S. Rate	v3-12.0,push2-12.0,v3-12.1
+Shifter	Lfo Spin Amount	push2-12.0
+Shifter	Lfo Sync	v3-12.0,push2-12.0,v3-12.1
+Shifter	Lfo Waveform	v3-12.0,push2-12.0,v3-12.1
+Shifter	Lfo Width	push2-12.0
+Shifter	MidiPitch Glide	push2-12.0
+Shifter	Mod Fine	v3-12.0,push2-12.0,v3-12.1
+Shifter	Mode	v3-12.0,push2-12.0,v3-12.1
+Shifter	Pitch Coarse	v3-12.0,push2-12.0,v3-12.1
+Shifter	Pitch Fine	v3-12.0,push2-12.0
+Shifter	Pitch Window	push2-12.0
+Shifter	RM Coarse	v3-12.0,push2-12.0,v3-12.1
+Shifter	RM Drive Gain	push2-12.0
+Shifter	Tone	push2-12.0
+Shifter	Wide	v3-12.0,push2-12.0
+Spectral	Delay Dly. Unit	v3-12.0,push2-12.0,v3-12.1
+Spectral	Delay Feedback	v3-12.0,push2-12.0,v3-12.1
+Spectral	Delay Frequency Shift	v3-12.0,push2-12.0,v3-12.1
+Spectral	Delay Mask	v3-12.0,push2-12.0,v3-12.1
+Spectral	Delay Mix	push2-12.0
+Spectral	Delay On	push2-12.0
+Spectral	Delay Spray	v3-12.0,push2-12.0,v3-12.1
+Spectral	Delay Stereo Spread	push2-12.0
+Spectral	Delay Tilt	v3-12.0,push2-12.0,v3-12.1
+Spectral	Delay Time Divisions	v3-12.0,push2-12.0,v3-12.1
+Spectral	Delay Time Seconds	v3-12.0,push2-12.0,v3-12.1
+Spectral	Delay Time Sixteenths	v3-12.0,push2-12.0,v3-12.1
+Spectral	Device On	on-12.0,on-12.1
+Spectral	Dry Wet	v3-12.0,push2-12.0,v3-12.1
+Spectral	Fade In	push2-12.0
+Spectral	Fade Out	push2-12.0
+Spectral	Fade Type	push2-12.0
+Spectral	Frozen	v3-12.0,v3-12.1
+Spectral	Input Send Gain	push2-12.0
+Spectral	Mode	push2-12.0
+Spectral	On	push2-12.0
+Spectral	Retrigger Mode	push2-12.0
+Spectral	S.Rate ms	push2-12.0
+Spectral	Sensitivity	push2-12.0
+Spectral	Sync Interval	push2-12.0
+Spectral	Unit	push2-12.0
+Spectral	XFade %	push2-12.0
+StereoGain	Balance	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+StereoGain	Bass Freq	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+StereoGain	Bass Mono	v3-12.0,v2-12.0,generic-12.0,v3-12.1
+StereoGain	Channel Mode	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+StereoGain	DC Filter	v3-12.0,v2-12.0,generic-12.0,v3-12.1
+StereoGain	Device On	on-12.0,on-12.1
+StereoGain	Gain	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+StereoGain	Gain (Legacy)	v3-12.0,v2-12.0,push2-12.0,v3-12.1
+StereoGain	Left Inv	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+StereoGain	Mid/Side Balance	v3-12.0,v2-12.0,push2-12.0,v3-12.1
+StereoGain	Mono	v3-12.0,v2-12.0,generic-12.0,v3-12.1
+StereoGain	Mute	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+StereoGain	Right Inv	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+StereoGain	Stereo Width	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+StringStudio	Body Decay	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+StringStudio	Body High-Cut	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+StringStudio	Body Low-Cut	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+StringStudio	Body Mix	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+StringStudio	Body On/Off	v3-12.0,v2-12.0,generic-12.0
+StringStudio	Body Size	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+StringStudio	Body Type	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+StringStudio	D Damping	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+StringStudio	D Mass < Key	v2-12.0,push2-12.0
+StringStudio	D Pos < Key	v2-12.0,push2-12.0
+StringStudio	D Pos < Vel	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+StringStudio	D Pos Abs	v3-12.0,v2-12.0,generic-12.0
+StringStudio	D Stiff < Key	v2-12.0,push2-12.0
+StringStudio	D Stiffness	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+StringStudio	D Velo < Key	v2-12.0,push2-12.0
+StringStudio	D Velocity	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+StringStudio	Damp Pos	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+StringStudio	Damper Gated	v2-12.0
+StringStudio	Damper Mass	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+StringStudio	Damper On	v3-12.0,v2-12.0,generic-12.0
+StringStudio	Device On	on-12.0,on-12.1
+StringStudio	E Pos	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+StringStudio	E Pos < Key	v2-12.0,push2-12.0
+StringStudio	E Pos < Vel	v2-12.0,push2-12.0
+StringStudio	E Pos Abs	v2-12.0
+StringStudio	Error	v2-12.0,push2-12.0
+StringStudio	Exc Damping	push2-12.0
+StringStudio	Exc ForceMassProt	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+StringStudio	Exc ForceMassProt < Key	v2-12.0,push2-12.0
+StringStudio	Exc ForceMassProt < Vel	v2-12.0,push2-12.0
+StringStudio	Exc FricStiff	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+StringStudio	Exc FricStiff < Key	v2-12.0,push2-12.0
+StringStudio	Exc FricStiff < Vel	v2-12.0,push2-12.0
+StringStudio	Exc On/Off	v2-12.0
+StringStudio	Exc Vel < Key	v2-12.0,push2-12.0
+StringStudio	Exc Vel < Vel	v2-12.0,push2-12.0
+StringStudio	Exc Velocity	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+StringStudio	Exciter Type	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+StringStudio	FEG < Vel	v2-12.0,push2-12.0
+StringStudio	FEG Att < Vel	v2-12.0,push2-12.0
+StringStudio	FEG Attack	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+StringStudio	FEG Decay	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+StringStudio	FEG On/Off	v3-12.0,v2-12.0,generic-12.0
+StringStudio	FEG Release	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+StringStudio	FEG Sustain	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+StringStudio	Filter Freq	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+StringStudio	Filter On/Off	v3-12.0,v2-12.0,generic-12.0
+StringStudio	Filter Reso	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+StringStudio	Filter Type	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+StringStudio	Fine Tune	v2-12.0,push2-12.0
+StringStudio	Freq < Env	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+StringStudio	Freq < LFO	v3-12.0,v2-12.0,generic-12.0
+StringStudio	Key Dest	push2-12.0
+StringStudio	Key Priority	v2-12.0
+StringStudio	LFO Delay	v2-12.0,push2-12.0
+StringStudio	LFO Fade In	v2-12.0,push2-12.0
+StringStudio	LFO On/Off	v3-12.0,v2-12.0,generic-12.0
+StringStudio	LFO Shape	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+StringStudio	LFO Speed	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+StringStudio	LFO Sync On	v3-12.0,v2-12.0,push2-12.0
+StringStudio	LFO SyncRate	v3-12.0,v2-12.0,push2-12.0
+StringStudio	Note PB Range	v2-12.0,push2-12.0
+StringStudio	Octave	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+StringStudio	PB Range	v2-12.0,push2-12.0
+StringStudio	Pickup On/Off	v3-12.0,v2-12.0,generic-12.0
+StringStudio	Pickup Pos	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+StringStudio	Porta Legato	v2-12.0
+StringStudio	Porta On/Off	v3-12.0,v2-12.0,generic-12.0
+StringStudio	Porta Prop	v2-12.0
+StringStudio	Porta Time	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+StringStudio	Press Amt A	v2-12.0,push2-12.0
+StringStudio	Press Amt B	v2-12.0,push2-12.0
+StringStudio	Press Dest A	v2-12.0,push2-12.0
+StringStudio	Press Dest B	v2-12.0,push2-12.0
+StringStudio	Reso < Env	v3-12.0,v2-12.0,generic-12.0
+StringStudio	Reso < LFO	v3-12.0,v2-12.0,generic-12.0
+StringStudio	S Damp < Key	v2-12.0,push2-12.0
+StringStudio	S Decay < Key	v2-12.0,push2-12.0
+StringStudio	S Decay Ratio	v2-12.0,push2-12.0
+StringStudio	Semitone	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+StringStudio	Slide Amt A	v2-12.0,push2-12.0
+StringStudio	Slide Amt B	v2-12.0,push2-12.0
+StringStudio	Slide Dest A	v2-12.0,push2-12.0
+StringStudio	Slide Dest B	v2-12.0,push2-12.0
+StringStudio	Str Damping	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+StringStudio	Str Inharmon	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+StringStudio	Stretch	v2-12.0,push2-12.0
+StringStudio	String Decay	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+StringStudio	T Mass < Key	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+StringStudio	T Mass < Vel	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+StringStudio	Term Fng Stiff	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+StringStudio	Term Fret Stiff	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+StringStudio	Term Mass	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+StringStudio	Term On/Off	v3-12.0,v2-12.0,generic-12.0
+StringStudio	Uni Delay	v2-12.0,push2-12.0
+StringStudio	Uni Detune	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+StringStudio	Unison On/Off	v3-12.0,v2-12.0,generic-12.0
+StringStudio	Unison Voices	v2-12.0,push2-12.0
+StringStudio	Vel Dest	push2-12.0
+StringStudio	Vib < ModWh	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+StringStudio	Vib Amount	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+StringStudio	Vib Delay	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+StringStudio	Vib Error	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+StringStudio	Vib Fade-In	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+StringStudio	Vib Speed	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+StringStudio	Vibrato On/Off	v3-12.0,v2-12.0,generic-12.0
+StringStudio	Voices	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+StringStudio	Volume	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Transmute	Decay	v3-12.0,push2-12.0,v3-12.1
+Transmute	Device On	on-12.0,on-12.1
+Transmute	Dry Wet	v3-12.0,push2-12.0,v3-12.1
+Transmute	Freq. Hz	v3-12.0,push2-12.0,v3-12.1
+Transmute	Glide	push2-12.0
+Transmute	Harmonics	push2-12.0
+Transmute	HF Damp	push2-12.0
+Transmute	Hz/Note Mode	v3-12.0,v3-12.1
+Transmute	Input Send Gain	v3-12.0,push2-12.0,v3-12.1
+Transmute	LF Damp	push2-12.0
+Transmute	Mod Rate	push2-12.0
+Transmute	Note	v3-12.0,push2-12.0,v3-12.1
+Transmute	Pitch Mod	push2-12.0
+Transmute	Shift	v3-12.0,push2-12.0,v3-12.1
+Transmute	Stretch	v3-12.0,push2-12.0,v3-12.1
+Transmute	Transpose	v3-12.0,push2-12.0,v3-12.1
+Transmute	Unison	v3-12.0,push2-12.0,v3-12.1
+Transmute	Unison Amount	push2-12.0
+Tube	Attack	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Tube	Bias	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Tube	Device On	on-12.0,on-12.1
+Tube	Drive	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Tube	Dry/Wet	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Tube	Envelope	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Tube	Output	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Tube	Release	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Tube	Tone	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Tube	Tube Type	v3-12.0,v2-12.0,push2-12.0,v3-12.1
+UltraAnalog	A1 Pan < Env	push2-12.0
+UltraAnalog	A1 Pan < Key	push2-12.0
+UltraAnalog	A1 Pan < LFO	push2-12.0
+UltraAnalog	A2 Pan < Env	push2-12.0
+UltraAnalog	A2 Pan < Key	push2-12.0
+UltraAnalog	A2 Pan < LFO	push2-12.0
+UltraAnalog	AEG1 < Vel	v2-12.0
+UltraAnalog	AEG1 A < Vel	v2-12.0,push2-12.0
+UltraAnalog	AEG1 Attack	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+UltraAnalog	AEG1 Decay	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+UltraAnalog	AEG1 Loop	push2-12.0
+UltraAnalog	AEG1 Rel	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+UltraAnalog	AEG1 S Time	v2-12.0,push2-12.0
+UltraAnalog	AEG1 Sustain	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+UltraAnalog	AEG2 < Vel	v2-12.0
+UltraAnalog	AEG2 A < Vel	v2-12.0,push2-12.0
+UltraAnalog	AEG2 Attack	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+UltraAnalog	AEG2 Decay	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+UltraAnalog	AEG2 Loop	push2-12.0
+UltraAnalog	AEG2 Rel	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+UltraAnalog	AEG2 S Time	v2-12.0,push2-12.0
+UltraAnalog	AEG2 Sustain	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+UltraAnalog	AMP1 < Key	push2-12.0
+UltraAnalog	AMP1 < LFO	v2-12.0,push2-12.0
+UltraAnalog	AMP1 Level	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+UltraAnalog	AMP1 On/Off	v2-12.0
+UltraAnalog	AMP1 Pan	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+UltraAnalog	AMP2 < Key	push2-12.0
+UltraAnalog	AMP2 < LFO	v2-12.0,push2-12.0
+UltraAnalog	AMP2 Level	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+UltraAnalog	AMP2 On/Off	v2-12.0
+UltraAnalog	AMP2 Pan	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+UltraAnalog	Detune	push2-12.0
+UltraAnalog	Device On	on-12.0,on-12.1
+UltraAnalog	F1 Drive	push2-12.0
+UltraAnalog	F1 Freq	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+UltraAnalog	F1 Freq < Env	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+UltraAnalog	F1 Freq < Key	push2-12.0
+UltraAnalog	F1 Freq < LFO	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+UltraAnalog	F1 On/Off	v3-12.0,v2-12.0,generic-12.0
+UltraAnalog	F1 Res < Env	push2-12.0
+UltraAnalog	F1 Res < LFO	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+UltraAnalog	F1 Reso < Key	push2-12.0
+UltraAnalog	F1 Resonance	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+UltraAnalog	F1 Type	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+UltraAnalog	F2 Drive	push2-12.0
+UltraAnalog	F2 Freq	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+UltraAnalog	F2 Freq < Env	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+UltraAnalog	F2 Freq < Key	push2-12.0
+UltraAnalog	F2 Freq < LFO	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+UltraAnalog	F2 On/Off	v3-12.0,v2-12.0,generic-12.0
+UltraAnalog	F2 Res < Env	push2-12.0
+UltraAnalog	F2 Res < LFO	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+UltraAnalog	F2 Reso < Key	push2-12.0
+UltraAnalog	F2 Resonance	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+UltraAnalog	F2 Type	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+UltraAnalog	FEG1 < Vel	v2-12.0
+UltraAnalog	FEG1 A < Vel	v2-12.0,push2-12.0
+UltraAnalog	FEG1 Attack	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+UltraAnalog	FEG1 Decay	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+UltraAnalog	FEG1 Loop	push2-12.0
+UltraAnalog	FEG1 Rel	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+UltraAnalog	FEG1 S Time	v2-12.0,push2-12.0
+UltraAnalog	FEG1 Sustain	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+UltraAnalog	FEG2 < Vel	v2-12.0
+UltraAnalog	FEG2 A < Vel	v2-12.0,push2-12.0
+UltraAnalog	FEG2 Attack	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+UltraAnalog	FEG2 Decay	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+UltraAnalog	FEG2 Loop	push2-12.0
+UltraAnalog	FEG2 Rel	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+UltraAnalog	FEG2 S Time	v2-12.0,push2-12.0
+UltraAnalog	FEG2 Sustain	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+UltraAnalog	Glide Legato	v2-12.0
+UltraAnalog	Glide Mode	v2-12.0,push2-12.0
+UltraAnalog	Glide On/Off	v2-12.0
+UltraAnalog	Glide Time	v2-12.0,push2-12.0
+UltraAnalog	Key Error	v2-12.0,push2-12.0
+UltraAnalog	Key Priority	push2-12.0
+UltraAnalog	Key Stretch	v2-12.0,push2-12.0
+UltraAnalog	LFO1 Delay	v2-12.0,push2-12.0
+UltraAnalog	LFO1 Fade In	v2-12.0,push2-12.0
+UltraAnalog	LFO1 On/Off	v2-12.0
+UltraAnalog	LFO1 Phase	v2-12.0,push2-12.0
+UltraAnalog	LFO1 PW	v2-12.0,push2-12.0
+UltraAnalog	LFO1 Shape	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+UltraAnalog	LFO1 SncRate	v3-12.0,v2-12.0,push2-12.0
+UltraAnalog	LFO1 Speed	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+UltraAnalog	LFO1 Sync	v3-12.0,v2-12.0,push2-12.0
+UltraAnalog	LFO2 Delay	v2-12.0,push2-12.0
+UltraAnalog	LFO2 Fade In	v2-12.0,push2-12.0
+UltraAnalog	LFO2 On/Off	v2-12.0
+UltraAnalog	LFO2 Phase	v2-12.0,push2-12.0
+UltraAnalog	LFO2 PW	v2-12.0,push2-12.0
+UltraAnalog	LFO2 Shape	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+UltraAnalog	LFO2 SncRate	v3-12.0,v2-12.0,push2-12.0
+UltraAnalog	LFO2 Speed	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+UltraAnalog	LFO2 Sync	v3-12.0,v2-12.0,push2-12.0
+UltraAnalog	Noise Balance	v2-12.0,push2-12.0
+UltraAnalog	Noise Color	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+UltraAnalog	Noise Level	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+UltraAnalog	Noise On/Off	v3-12.0,v2-12.0,generic-12.0
+UltraAnalog	Note PB Range	push2-12.0
+UltraAnalog	O1 Keytrack	v2-12.0,push2-12.0
+UltraAnalog	O1 PW < LFO	v2-12.0,push2-12.0
+UltraAnalog	O1 Sub/Sync	v2-12.0,push2-12.0
+UltraAnalog	O2 Keytrack	v2-12.0,push2-12.0
+UltraAnalog	O2 PW < LFO	v2-12.0,push2-12.0
+UltraAnalog	O2 Sub/Sync	v2-12.0,push2-12.0
+UltraAnalog	Octave	push2-12.0
+UltraAnalog	OSC1 < LFO	v2-12.0,push2-12.0
+UltraAnalog	OSC1 Balance	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+UltraAnalog	OSC1 Detune	v2-12.0,push2-12.0
+UltraAnalog	OSC1 Level	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+UltraAnalog	OSC1 Mode	v2-12.0
+UltraAnalog	OSC1 Octave	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+UltraAnalog	OSC1 On/Off	v2-12.0
+UltraAnalog	OSC1 PW	v2-12.0,push2-12.0
+UltraAnalog	OSC1 Semi	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+UltraAnalog	OSC1 Shape	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+UltraAnalog	OSC2 < LFO	v2-12.0,push2-12.0
+UltraAnalog	OSC2 Balance	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+UltraAnalog	OSC2 Detune	v3-12.0,v2-12.0,push2-12.0
+UltraAnalog	OSC2 Level	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+UltraAnalog	OSC2 Mode	v2-12.0
+UltraAnalog	OSC2 Octave	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+UltraAnalog	OSC2 On/Off	v2-12.0
+UltraAnalog	OSC2 PW	v2-12.0,push2-12.0
+UltraAnalog	OSC2 Semi	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+UltraAnalog	OSC2 Shape	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+UltraAnalog	PB Range	v2-12.0,push2-12.0
+UltraAnalog	PEG1 Amount	v2-12.0,push2-12.0
+UltraAnalog	PEG1 Time	v2-12.0,push2-12.0
+UltraAnalog	PEG2 Amount	v2-12.0,push2-12.0
+UltraAnalog	PEG2 Time	v2-12.0,push2-12.0
+UltraAnalog	Press Amt A	push2-12.0
+UltraAnalog	Press Amt B	push2-12.0
+UltraAnalog	Press Dest A	push2-12.0
+UltraAnalog	Press Dest B	push2-12.0
+UltraAnalog	Semitone	push2-12.0
+UltraAnalog	Slide Amt A	push2-12.0
+UltraAnalog	Slide Amt B	push2-12.0
+UltraAnalog	Slide Dest A	push2-12.0
+UltraAnalog	Slide Dest B	push2-12.0
+UltraAnalog	Unison Delay	v2-12.0,push2-12.0
+UltraAnalog	Unison Detune	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+UltraAnalog	Unison On/Off	v3-12.0,v2-12.0,generic-12.0
+UltraAnalog	Unison Voices	push2-12.0
+UltraAnalog	Vib < ModWh	v2-12.0,push2-12.0
+UltraAnalog	Vib Amount	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+UltraAnalog	Vib Delay	v2-12.0,push2-12.0
+UltraAnalog	Vib Error	v2-12.0,push2-12.0
+UltraAnalog	Vib Fade-In	v2-12.0,push2-12.0
+UltraAnalog	Vib On/Off	v3-12.0,v2-12.0,generic-12.0
+UltraAnalog	Vib Speed	v2-12.0,push2-12.0
+UltraAnalog	Voices	v2-12.0,push2-12.0
+UltraAnalog	Volume	v3-12.0,v2-12.0,push2-12.0,generic-12.0
+Vinyl	Crackle Density	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Vinyl	Crackle Volume	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Vinyl	Device On	on-12.0,on-12.1
+Vinyl	Global Drive	v3-12.0,v2-12.0,push2-12.0,v3-12.1
+Vinyl	Pinch Drive	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Vinyl	Pinch Freq.	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Vinyl	Pinch Mono On	v3-12.0,v2-12.0,v3-12.1
+Vinyl	Pinch On	v3-12.0,v2-12.0,v3-12.1
+Vinyl	Pinch Soft On	v3-12.0,v2-12.0,v3-12.1
+Vinyl	Pinch Width	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Vinyl	Tracing Drive	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Vinyl	Tracing Freq.	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Vinyl	Tracing On	v3-12.0,v2-12.0,v3-12.1
+Vinyl	Tracing Width	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Vocoder	Attack Time	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Vocoder	Device On	on-12.0,on-12.1
+Vocoder	Dry/Wet	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Vocoder	Enhance	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Vocoder	Envelope Depth	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Vocoder	Ext. In Gain	generic-12.0
+Vocoder	Filter Bandwidth	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Vocoder	Formant Shift	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Vocoder	Gate Threshold	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Vocoder	Lower Filter Band	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Vocoder	Lower Pitch Detection	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Vocoder	Mono/Stereo	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Vocoder	Noise Crackle	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Vocoder	Noise Rate	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Vocoder	Oscillator Pitch	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Vocoder	Oscillator Waveform	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Vocoder	Output Level	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Vocoder	Precise/Retro	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Vocoder	Release Time	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Vocoder	Unvoiced Level	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Vocoder	Unvoiced Sensitivity	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Vocoder	Unvoiced Speed	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Vocoder	Upper Filter Band	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
+Vocoder	Upper Pitch Detection	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
