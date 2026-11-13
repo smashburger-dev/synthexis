@@ -46,6 +46,7 @@ pub struct Scope {
 }
 
 /// The assistant's answer to one sentence.
+#[derive(Default)]
 pub struct Reply {
     /// The frame's intent token without "I:" (map, unmap, clear, undo, ...).
     pub intent: String,
@@ -55,6 +56,9 @@ pub struct Reply {
     pub routes: Vec<resolve::Route>,
     /// One line per route, or why there is none.
     pub lines: Vec<String>,
+    /// The plugin the sentence names ("... on Fruity Reeverb 2"): the text
+    /// of its first PLUGIN span, as typed.
+    pub named: Option<String>,
 }
 
 /// One submitted sentence.
@@ -191,7 +195,7 @@ pub(crate) fn parse(parser: &Parser, text: &str, pins: &[Pin], scope: Option<&Sc
         Ok(p) => p,
         Err(e) => {
             log(&format!("assistant: parse failed for \"{text}\": {e:#}"));
-            return Reply { intent: "none".into(), rest: Vec::new(), routes: Vec::new(), lines: vec![format!("parse failed: {e}")] };
+            return Reply { intent: "none".into(), lines: vec![format!("parse failed: {e}")], ..Reply::default() };
         }
     };
     let parsed_ms = t0.elapsed().as_secs_f64() * 1e3;
@@ -224,7 +228,8 @@ pub(crate) fn parse(parser: &Parser, text: &str, pins: &[Pin], scope: Option<&Sc
             _ => None,
         })
         .collect();
-    Reply { intent, rest, routes, lines }
+    let named = p.spans.iter().find(|t| t.tag == "PLUGIN").and_then(|t| text.get(t.bytes.0..t.bytes.1)).map(|n| n.trim().to_string());
+    Reply { intent, rest, routes, lines, named }
 }
 
 #[cfg(test)]
@@ -246,7 +251,7 @@ mod tests {
             };
             work(&rx, idle, None, load, |gen: &usize, text: &str, _: &[Pin], _: Option<&Scope>| {
                 p.lock().push(format!("{gen}:{text}"));
-                Reply { intent: String::new(), rest: Vec::new(), routes: Vec::new(), lines: Vec::new() }
+                Reply::default()
             });
         });
         (tx, loads, parsed)

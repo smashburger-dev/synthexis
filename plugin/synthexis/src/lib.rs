@@ -177,7 +177,7 @@ impl Plugin for Synthexis {
     const VENDOR: &'static str = "synthexis";
     const URL: &'static str = "";
     const EMAIL: &'static str = "";
-    const VERSION: &'static str = "0.1.1";
+    const VERSION: &'static str = "0.1.4";
 
     const AUDIO_IO_LAYOUTS: &'static [AudioIOLayout] = &[AudioIOLayout {
         main_input_channels: None,

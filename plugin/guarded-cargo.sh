@@ -1,7 +1,8 @@
 #!/bin/bash
-# Pre-existing developer tooling, copied unchanged from Noa's build-rust skill
+# Pre-existing developer tooling, copied from Noa's build-rust skill
 # (scripts/guarded-cargo.sh). Not hackathon work and not part of the product;
-# it only protects the 16 GB dev laptop during Rust builds.
+# it only protects the 16 GB dev laptop during Rust builds. One addition
+# here: the shared target dir of all worktrees (target-dir.sh).
 #
 # Guarded cargo (AGENTS.md > Resource limits): runs `cargo "$@"` while a
 # sampler watches the WHOLE build tree — every process whose command is
@@ -20,6 +21,22 @@
 
 set -u
 cd "$(dirname "$0")" || exit 2
+
+# Every worktree builds into the main checkout's plugin/target instead of
+# its own (target-dir.sh says why), under one lock (target-lock.sh).
+CARGO_TARGET_DIR=$(./target-dir.sh) || exit 2
+export CARGO_TARGET_DIR
+if [ "$CARGO_TARGET_DIR" != "$PWD/target" ]; then
+    if [ "${1:-}" = clean ] && [ -z "${SYNTHEXIS_CLEAN_SHARED:-}" ]; then
+        case " $* " in
+            *" -p"*|*" --package"*) ;;
+            *) echo "refusing: cargo clean would empty the target of every worktree ($CARGO_TARGET_DIR); use -p <crate> or SYNTHEXIS_CLEAN_SHARED=1" >&2
+               exit 2 ;;
+        esac
+    fi
+    . ./target-lock.sh
+    target_lock "$CARGO_TARGET_DIR"
+fi
 
 MAX_MB=${GUARD_MAX_MB:-10240}
 MAX_SWAP_MB=${GUARD_MAX_SWAP_MB:-3072}

@@ -1,25 +1,30 @@
 # FL Studio parameter harvest
 
-Dumps every plugin (channel rack + mixer slots) of the open FL project
-with all parameter names, values and display strings to
-`~/Documents/synthexis-harvest/<timestamp>.json`.
+Dumps every plugin (channel rack + mixer slots) of an FL project with all
+parameter names, values and display strings, in the JSON layout
+`import_fl_dump.py` reads (`{"ts", "plugins": [{"location", "name",
+"user_name", "n_params", "params": [{"index", "name", "value", "samples"}]}]}`).
 
-## Steps for Noa
+FL 2026 (script API 45) gives device scripts no file writes, so
+`device_synthexis_harvest.py` can no longer write the dump itself. It is now
+the dump code that runs inside FL: `probes/fl-stock-plugins/run_stock.py`
+execs it through the probe-only dev script and fetches `_dump_one` page by
+page over MIDI. Steps and gotchas: `probes/fl-stock-plugins/README.md`.
 
-1. Copy `device_synthexis_harvest.py` into FL's script folder:
-   `~/Documents/Image-Line/FL Studio/Settings/Hardware/synthexis harvest/`
-   (create the folder).
-2. Open a **throwaway project** and load every FL Studio stock plugin
-   you want harvested (channel rack generators + mixer effect slots).
-   The harvester briefly changes every parameter to sample its display
-   strings — do not use a real project.
-3. Options > MIDI settings: select your input, set controller type to
-   **synthexis harvest**.
-4. Wait. The dump processes one plugin per idle tick; when it is done
-   the FL script log prints `synthexis harvest -> <path>`.
-   Pressing any MIDI note retriggers a dump.
-5. Convert with `uv run tools/mapping/fl/import_fl_dump.py`
-   (writes `data/mapping/harvest/fl/{plugins,params}.jsonl`).
+The stock dump of 2026-11-13 (109 plugins, 16,160 parameters):
 
-Params 4096+ (per-CC/aftertouch ranges) are skipped. Plugins whose
-parameter API is unreachable from the script land with `n_params: 0`.
+```bash
+uv run probes/fl-stock-plugins/fldev.py serve &      # dev script installed, then start FL
+uv run --with python-rtmidi==1.5.8 python probes/fl-stock-plugins/run_stock.py
+uv run tools/mapping/fl/import_fl_dump.py ~/Documents/synthexis-harvest/<dump>.json
+```
+
+`import_fl_dump.py` writes `data/mapping/harvest/fl/{plugins,params}.jsonl`
+for `label.py --harvest fl --priority`. Until that paid run happens, the
+stock effects with up to 60 parameters carry hand labels
+(`stock_labels.py` -> `stock_labels.tsv`, read by `export_paramsense.py`).
+
+The dump samples every parameter at 0, 0.2, 0.5, 0.8 and 1 and puts it
+back, so only run it on a throwaway project. Params 4096+ (FL's per-CC
+entries) are skipped. Plugins whose parameters the script API cannot reach
+land with `n_params: 0` (Patcher, Wave Traveller, Soundgoodizer).

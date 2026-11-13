@@ -1,0 +1,1745 @@
+plugin	plugin_name	kind	page	name	class	status
+logic:Amp Designer	Amp Designer	Effects	Amplifier controls	Gain	fx.drive	UI label
+logic:Amp Designer	Amp Designer	Effects	Amplifier controls	Presence	fx.tone	UI label
+logic:Amp Designer	Amp Designer	Effects	Amplifier controls	Master	fx.drive	UI label
+logic:Amp Designer	Amp Designer	Effects	Amplifier controls	Output	amp.gain	UI label
+logic:Amp Designer	Amp Designer	Effects	Reverb effect	Reverb	other	UI label
+logic:Amp Designer	Amp Designer	Effects	Reverb effect	Level	amp.gain	UI label
+logic:Amp Designer	Amp Designer	Effects	Tremolo and vibrato	Trem/Vib	other	UI label
+logic:Amp Designer	Amp Designer	Effects	Tremolo and vibrato	Depth	fx.mod.depth	UI label
+logic:Amp Designer	Amp Designer	Effects	Tremolo and vibrato	Speed	fx.mod.rate	UI label
+logic:Amp Designer	Amp Designer	Effects	Tremolo and vibrato	Sync/Free	other	UI label
+logic:Amp Designer	Amp Designer	Effects	Microphone parameters	Microphone	other	UI label
+logic:Amp Designer	Amp Designer	Effects	Microphone parameters	Mic	other	UI label
+logic:Bass Amp Designer	Bass Amp Designer	Effects	Amplifier controls	Channel I/II	other	UI label
+logic:Bass Amp Designer	Bass Amp Designer	Effects	Amplifier controls	Bright	other	UI label
+logic:Bass Amp Designer	Bass Amp Designer	Effects	Amplifier controls	Gain	amp.gain	UI label
+logic:Bass Amp Designer	Bass Amp Designer	Effects	Amplifier controls	Master	amp.gain	UI label
+logic:Bass Amp Designer	Bass Amp Designer	Effects	Amplifier controls	Output	amp.gain	UI label
+logic:Bass Amp Designer	Bass Amp Designer	Effects	EQ	EQ on/off	ctl.switch	UI label
+logic:Bass Amp Designer	Bass Amp Designer	Effects	EQ	Bass	other	UI label
+logic:Bass Amp Designer	Bass Amp Designer	Effects	EQ	Mids	other	UI label
+logic:Bass Amp Designer	Bass Amp Designer	Effects	EQ	Treble	other	UI label
+logic:Bass Amp Designer	Bass Amp Designer	Effects	EQ	Low	other	UI label
+logic:Bass Amp Designer	Bass Amp Designer	Effects	EQ	1-2-3	other	UI label
+logic:Bass Amp Designer	Bass Amp Designer	Effects	EQ	High	other	UI label
+logic:Bass Amp Designer	Bass Amp Designer	Effects	Compressor	Compressor on/off	ctl.switch	UI label
+logic:Bass Amp Designer	Bass Amp Designer	Effects	Compressor	Hard/Soft	other	UI label
+logic:Bass Amp Designer	Bass Amp Designer	Effects	Compressor	Comp(ression)	other	UI label
+logic:Bass Amp Designer	Bass Amp Designer	Effects	Graphic EQ	Type	ctl.select	UI label
+logic:Bass Amp Designer	Bass Amp Designer	Effects	Graphic EQ	Pre/Post	other	UI label
+logic:Bass Amp Designer	Bass Amp Designer	Effects	Graphic EQ	Frequency	other	UI label
+logic:Bass Amp Designer	Bass Amp Designer	Effects	Parametric EQ	kHz	other	UI label
+logic:Bass Amp Designer	Bass Amp Designer	Effects	Parametric EQ	Q	other	UI label
+logic:Bass Amp Designer	Bass Amp Designer	Effects	Microphone parameters	Microphone	other	UI label
+logic:Bass Amp Designer	Bass Amp Designer	Effects	Microphone parameters	Mic	other	UI label
+logic:Pedalboard	Pedalboard	Effects	Utility pedals	Mix	fx.mix	UI label
+logic:Pedalboard	Pedalboard	Effects	Utility pedals	A/Mix/B	other	UI label
+logic:Pedalboard	Pedalboard	Effects	Utility pedals	Pan A/B	other	UI label
+logic:Pedalboard	Pedalboard	Effects	Utility pedals	Frequency	other	UI label
+logic:Pedalboard	Pedalboard	Effects	Utility pedals	Split/Freq mode	ctl.select	UI label
+logic:Pedalboard	Pedalboard	Effects	Delay pedals	Time	other	UI label
+logic:Pedalboard	Pedalboard	Effects	Delay pedals	Repeats	other	UI label
+logic:Pedalboard	Pedalboard	Effects	Delay pedals	Tone Cut	fx.tone	UI label
+logic:Pedalboard	Pedalboard	Effects	Delay pedals	Mute	ctl.switch	UI label
+logic:Pedalboard	Pedalboard	Effects	Delay pedals	Sync	system	UI label
+logic:Pedalboard	Pedalboard	Effects	Delay pedals	Tone	fx.tone	UI label
+logic:Pedalboard	Pedalboard	Effects	Delay pedals	Style	ctl.select	UI label
+logic:Pedalboard	Pedalboard	Effects	Delay pedals	Feedback	other	UI label
+logic:Pedalboard	Pedalboard	Effects	Delay pedals	Bright/Dark	other	UI label
+logic:Pedalboard	Pedalboard	Effects	Delay pedals	Listen	ctl.switch	UI label
+logic:Pedalboard	Pedalboard	Effects	Delay pedals	Norm/Reverse	other	UI label
+logic:Pedalboard	Pedalboard	Effects	Delay pedals	Lo/Hi Cut	fx.tone	UI label
+logic:Pedalboard	Pedalboard	Effects	Delay pedals	Dirt	fx.drive	UI label
+logic:Pedalboard	Pedalboard	Effects	Delay pedals	Flutter	other	UI label
+logic:Pedalboard	Pedalboard	Effects	Distortion pedals	Drive	fx.drive	UI label
+logic:Pedalboard	Pedalboard	Effects	Distortion pedals	Level	amp.gain	UI label
+logic:Pedalboard	Pedalboard	Effects	Distortion pedals	Input	amp.gain	UI label
+logic:Pedalboard	Pedalboard	Effects	Distortion pedals	Squash	other	UI label
+logic:Pedalboard	Pedalboard	Effects	Distortion pedals	Contour	other	UI label
+logic:Pedalboard	Pedalboard	Effects	Distortion pedals	Bright/Fat	other	UI label
+logic:Pedalboard	Pedalboard	Effects	Distortion pedals	Fuzz	other	UI label
+logic:Pedalboard	Pedalboard	Effects	Distortion pedals	Grind	other	UI label
+logic:Pedalboard	Pedalboard	Effects	Distortion pedals	Filter	fx.tone	UI label
+logic:Pedalboard	Pedalboard	Effects	Distortion pedals	Full/Scoop	other	UI label
+logic:Pedalboard	Pedalboard	Effects	Distortion pedals	Volume	amp.gain	UI label
+logic:Pedalboard	Pedalboard	Effects	Distortion pedals	Distortion	fx.drive	UI label
+logic:Pedalboard	Pedalboard	Effects	Distortion pedals	Treble/Full	other	UI label
+logic:Pedalboard	Pedalboard	Effects	Distortion pedals	Roar	other	UI label
+logic:Pedalboard	Pedalboard	Effects	Distortion pedals	Growl	other	UI label
+logic:Pedalboard	Pedalboard	Effects	Distortion pedals	Texture	other	UI label
+logic:Pedalboard	Pedalboard	Effects	Distortion pedals	Grain	other	UI label
+logic:Pedalboard	Pedalboard	Effects	Distortion pedals	Crunch	fx.drive	UI label
+logic:Pedalboard	Pedalboard	Effects	Distortion pedals	Fat	other	UI label
+logic:Pedalboard	Pedalboard	Effects	Distortion pedals	Low	other	UI label
+logic:Pedalboard	Pedalboard	Effects	Distortion pedals	Mid Freq	other	UI label
+logic:Pedalboard	Pedalboard	Effects	Distortion pedals	Mid Gain	other	UI label
+logic:Pedalboard	Pedalboard	Effects	Distortion pedals	High	other	UI label
+logic:Pedalboard	Pedalboard	Effects	Distortion pedals	Bias	other	UI label
+logic:Pedalboard	Pedalboard	Effects	Distortion pedals	Output	amp.gain	UI label
+logic:Pedalboard	Pedalboard	Effects	Dynamics pedals	Sustain	other	UI label
+logic:Pedalboard	Pedalboard	Effects	Dynamics pedals	Attack	other	UI label
+logic:Pedalboard	Pedalboard	Effects	Filter pedals	Sensitivity	other	UI label
+logic:Pedalboard	Pedalboard	Effects	Filter pedals	Cutoff	fx.tone	UI label
+logic:Pedalboard	Pedalboard	Effects	Filter pedals	BP/LP	other	UI label
+logic:Pedalboard	Pedalboard	Effects	Filter pedals	Hi/Lo	other	UI label
+logic:Pedalboard	Pedalboard	Effects	Filter pedals	Up/Down	other	UI label
+logic:Pedalboard	Pedalboard	Effects	Filter pedals	Q	other	UI label
+logic:Pedalboard	Pedalboard	Effects	Filter pedals	Mode	ctl.select	UI label
+logic:Pedalboard	Pedalboard	Effects	Modulation pedals	Rate	fx.mod.rate	UI label
+logic:Pedalboard	Pedalboard	Effects	Modulation pedals	Depth	fx.mod.depth	UI label
+logic:Pedalboard	Pedalboard	Effects	Modulation pedals	Reso	other	UI label
+logic:Pedalboard	Pedalboard	Effects	Modulation pedals	Wave	ctl.select	UI label
+logic:Pedalboard	Pedalboard	Effects	Modulation pedals	Symmetry	other	UI label
+logic:Pedalboard	Pedalboard	Effects	Modulation pedals	Curve	other	UI label
+logic:Pedalboard	Pedalboard	Effects	Modulation pedals	Manual	other	UI label
+logic:Pedalboard	Pedalboard	Effects	Modulation pedals	Bright	other	UI label
+logic:Pedalboard	Pedalboard	Effects	Modulation pedals	Density	other	UI label
+logic:Pedalboard	Pedalboard	Effects	Modulation pedals	LFO 1/2 Rate	fx.mod.rate	UI label
+logic:Pedalboard	Pedalboard	Effects	Modulation pedals	LFO 1/2 Floor/Ceiling	other	UI label
+logic:Pedalboard	Pedalboard	Effects	Modulation pedals	LFO 1/2 Order	other	UI label
+logic:Pedalboard	Pedalboard	Effects	Modulation pedals	LFO 1/2 Feedback	other	UI label
+logic:Pedalboard	Pedalboard	Effects	Modulation pedals	LFO 1/2 Tone	fx.tone	UI label
+logic:Pedalboard	Pedalboard	Effects	Modulation pedals	LFO 1/2 Mix	other	UI label
+logic:Pedalboard	Pedalboard	Effects	Modulation pedals	Lin/Exp	other	UI label
+logic:Pedalboard	Pedalboard	Effects	Modulation pedals	Freq	other	UI label
+logic:Pedalboard	Pedalboard	Effects	Modulation pedals	Fine	fx.pitch	UI label
+logic:Pedalboard	Pedalboard	Effects	Modulation pedals	FB (Feedback)	other	UI label
+logic:Pedalboard	Pedalboard	Effects	Modulation pedals	Intensity	fx.mod.depth	UI label
+logic:Pedalboard	Pedalboard	Effects	Modulation pedals	Vintage/Modern	other	UI label
+logic:Pedalboard	Pedalboard	Effects	Modulation pedals	Cabinet	other	UI label
+logic:Pedalboard	Pedalboard	Effects	Modulation pedals	Fast Rate	other	UI label
+logic:Pedalboard	Pedalboard	Effects	Modulation pedals	Response	other	UI label
+logic:Pedalboard	Pedalboard	Effects	Modulation pedals	Slow/Brake/Fast	other	UI label
+logic:Pedalboard	Pedalboard	Effects	Modulation pedals	Type	ctl.select	UI label
+logic:Pedalboard	Pedalboard	Effects	Modulation pedals	Smooth	other	UI label
+logic:Pedalboard	Pedalboard	Effects	Modulation pedals	1/2 Speed	other	UI label
+logic:Pedalboard	Pedalboard	Effects	Modulation pedals	2x Speed	other	UI label
+logic:Pedalboard	Pedalboard	Effects	Modulation pedals	Speed Up	other	UI label
+logic:Pedalboard	Pedalboard	Effects	Modulation pedals	Slow Down	other	UI label
+logic:Pedalboard	Pedalboard	Effects	Pitch pedals	Octave 1/2	other	UI label
+logic:Pedalboard	Pedalboard	Effects	Pitch pedals	Direct	other	UI label
+logic:Pedalboard	Pedalboard	Effects	Pitch pedals	Tune	fx.pitch	UI label
+logic:Delay Designer	Delay Designer	Effects	Tap parameter bar	Filter On/Off	ctl.switch	UI label
+logic:Delay Designer	Delay Designer	Effects	Tap parameter bar	Cutoff HP/LP	fx.tone	UI label
+logic:Delay Designer	Delay Designer	Effects	Tap parameter bar	Slope	other	UI label
+logic:Delay Designer	Delay Designer	Effects	Tap parameter bar	Reso(nance)	other	UI label
+logic:Delay Designer	Delay Designer	Effects	Tap parameter bar	Tap Delay	other	UI label
+logic:Delay Designer	Delay Designer	Effects	Tap parameter bar	Pitch On/Off	ctl.switch	UI label
+logic:Delay Designer	Delay Designer	Effects	Tap parameter bar	Transp(ose)	other	UI label
+logic:Delay Designer	Delay Designer	Effects	Tap parameter bar	Flip	other	UI label
+logic:Delay Designer	Delay Designer	Effects	Tap parameter bar	Pan	amp.pan	UI label
+logic:Delay Designer	Delay Designer	Effects	Tap parameter bar	Spread	stereo.width	UI label
+logic:Delay Designer	Delay Designer	Effects	Tap parameter bar	Mute	ctl.switch	UI label
+logic:Delay Designer	Delay Designer	Effects	Tap parameter bar	Level	amp.gain	UI label
+logic:Delay Designer	Delay Designer	Effects	Master parameters	Feedback	fx.delay.feedback	UI label
+logic:Delay Designer	Delay Designer	Effects	Master parameters	Feedback Tap	other	UI label
+logic:Delay Designer	Delay Designer	Effects	Master parameters	Feedback Level	other	UI label
+logic:Delay Designer	Delay Designer	Effects	Master parameters	Mix	fx.delay.mix	UI label
+logic:Echo	Echo	Effects	Echo controls	Note	fx.delay.time	UI label
+logic:Echo	Echo	Effects	Echo controls	Feedback	fx.delay.feedback	UI label
+logic:Echo	Echo	Effects	Echo controls	Color	fx.tone	UI label
+logic:Echo	Echo	Effects	Echo controls	Dry	other	UI label
+logic:Echo	Echo	Effects	Echo controls	Wet	fx.delay.mix	UI label
+logic:Sample Delay	Sample Delay	Effects	Sample Delay controls	Delay knob (L/R) and	other	UI label
+logic:Sample Delay	Sample Delay	Effects	Sample Delay controls	Link L & R	other	UI label
+logic:Sample Delay	Sample Delay	Effects	Sample Delay controls	Unit	ctl.select	UI label
+logic:Stereo Delay	Stereo Delay	Effects	Stereo Delay controls	Input	ctl.select	UI label
+logic:Stereo Delay	Stereo Delay	Effects	Stereo Delay controls	Delay Time	fx.delay.time	UI label
+logic:Stereo Delay	Stereo Delay	Effects	Stereo Delay controls	Note	fx.delay.time	UI label
+logic:Stereo Delay	Stereo Delay	Effects	Stereo Delay controls	Deviation	other	UI label
+logic:Stereo Delay	Stereo Delay	Effects	Stereo Delay controls	Low/High Cut	fx.tone	UI label
+logic:Stereo Delay	Stereo Delay	Effects	Stereo Delay controls	Feedback	fx.delay.feedback	UI label
+logic:Stereo Delay	Stereo Delay	Effects	Stereo Delay controls	Feedback Phase	ctl.switch	UI label
+logic:Stereo Delay	Stereo Delay	Effects	Stereo Delay controls	Crossfeed Left to Right (Right to Left)	other	UI label
+logic:Stereo Delay	Stereo Delay	Effects	Stereo Delay controls	Crossfeed Phase	ctl.switch	UI label
+logic:Stereo Delay	Stereo Delay	Effects	Stereo Delay controls	Routing	ctl.select	UI label
+logic:Stereo Delay	Stereo Delay	Effects	Stereo Delay controls	Tempo Sync	ctl.switch	UI label
+logic:Stereo Delay	Stereo Delay	Effects	Stereo Delay controls	Stereo Link	ctl.switch	UI label
+logic:Stereo Delay	Stereo Delay	Effects	Stereo Delay controls	Output Mix	fx.delay.mix	UI label
+logic:Tape Delay	Tape Delay	Effects	Tape Delay controls	Tempo Sync	ctl.switch	UI label
+logic:Tape Delay	Tape Delay	Effects	Tape Delay controls	Delay Time	fx.delay.time	UI label
+logic:Tape Delay	Tape Delay	Effects	Tape Delay controls	Note	fx.delay.time	UI label
+logic:Tape Delay	Tape Delay	Effects	Tape Delay controls	Deviation	other	UI label
+logic:Tape Delay	Tape Delay	Effects	Tape Delay controls	Smoothing	other	UI label
+logic:Tape Delay	Tape Delay	Effects	Tape Delay controls	Clip Threshold	fx.drive	UI label
+logic:Tape Delay	Tape Delay	Effects	Tape Delay controls	Spread	stereo.width	UI label
+logic:Tape Delay	Tape Delay	Effects	Tape Delay controls	Tape Head Mode	ctl.select	UI label
+logic:Tape Delay	Tape Delay	Effects	Tape Delay controls	Low/High Cut	fx.tone	UI label
+logic:Tape Delay	Tape Delay	Effects	Tape Delay controls	LFO Rate	fx.mod.rate	UI label
+logic:Tape Delay	Tape Delay	Effects	Tape Delay controls	LFO Intensity	fx.mod.depth	UI label
+logic:Tape Delay	Tape Delay	Effects	Tape Delay controls	Flutter Rate/Intensity	fx.mod.depth	UI label
+logic:Tape Delay	Tape Delay	Effects	Tape Delay controls	Feedback	fx.delay.feedback	UI label
+logic:Tape Delay	Tape Delay	Effects	Tape Delay controls	Freeze	ctl.switch	UI label
+logic:Tape Delay	Tape Delay	Effects	Tape Delay controls	Dry/Wet	fx.delay.mix	UI label
+logic:Bitcrusher	Bitcrusher	Effects	Bitcrusher controls	Mode	ctl.select	UI label
+logic:Bitcrusher	Bitcrusher	Effects	Bitcrusher controls	Fold	other	UI label
+logic:Bitcrusher	Bitcrusher	Effects	Bitcrusher controls	Clip	other	UI label
+logic:Bitcrusher	Bitcrusher	Effects	Bitcrusher controls	Wrap	other	UI label
+logic:Bitcrusher	Bitcrusher	Effects	Bitcrusher controls	Drive	fx.drive	UI label
+logic:Bitcrusher	Bitcrusher	Effects	Bitcrusher controls	Resolution	other	UI label
+logic:Bitcrusher	Bitcrusher	Effects	Bitcrusher controls	Downsampling	fx.drive	UI label
+logic:Bitcrusher	Bitcrusher	Effects	Bitcrusher controls	Mix	fx.mix	UI label
+logic:Bitcrusher	Bitcrusher	Effects	Bitcrusher controls	Clip Level	other	UI label
+logic:ChromaGlow	ChromaGlow	Effects	ChromaGlow controls	Model	ctl.select	UI label
+logic:ChromaGlow	ChromaGlow	Effects	ChromaGlow controls	Style	ctl.select	UI label
+logic:ChromaGlow	ChromaGlow	Effects	ChromaGlow controls	Drive	fx.drive	UI label
+logic:ChromaGlow	ChromaGlow	Effects	ChromaGlow controls	Bypass Below	other	UI label
+logic:ChromaGlow	ChromaGlow	Effects	ChromaGlow controls	Level In	other	UI label
+logic:ChromaGlow	ChromaGlow	Effects	ChromaGlow controls	Level Out	other	UI label
+logic:ChromaGlow	ChromaGlow	Effects	ChromaGlow controls	Mix	fx.mix	UI label
+logic:ChromaGlow	ChromaGlow	Effects	ChromaGlow controls	Low Cut	fx.tone	UI label
+logic:ChromaGlow	ChromaGlow	Effects	ChromaGlow controls	Slope	other	UI label
+logic:ChromaGlow	ChromaGlow	Effects	ChromaGlow controls	Frequency	other	UI label
+logic:ChromaGlow	ChromaGlow	Effects	ChromaGlow controls	Resonance	other	UI label
+logic:ChromaGlow	ChromaGlow	Effects	ChromaGlow controls	Pre/Post	other	UI label
+logic:ChromaGlow	ChromaGlow	Effects	ChromaGlow controls	High Cut	other	UI label
+logic:Clip Distortion	Clip Distortion	Effects	Clip Distortion controls	Input Gain	amp.gain	UI label
+logic:Clip Distortion	Clip Distortion	Effects	Clip Distortion controls	Drive	fx.drive	UI label
+logic:Clip Distortion	Clip Distortion	Effects	Clip Distortion controls	Tone	fx.tone	UI label
+logic:Clip Distortion	Clip Distortion	Effects	Clip Distortion controls	Symmetry	other	UI label
+logic:Clip Distortion	Clip Distortion	Effects	Clip Distortion controls	Clip Filter	fx.tone	UI label
+logic:Clip Distortion	Clip Distortion	Effects	Clip Distortion controls	Mix	fx.mix	UI label
+logic:Clip Distortion	Clip Distortion	Effects	Clip Distortion controls	High Shelving	other	UI label
+logic:Clip Distortion	Clip Distortion	Effects	Clip Distortion controls	LP Filter	fx.tone	UI label
+logic:Clip Distortion	Clip Distortion	Effects	Clip Distortion controls	Gain	amp.gain	UI label
+logic:Clip Distortion	Clip Distortion	Effects	Clip Distortion controls	Output Gain	amp.gain	UI label
+logic:Distortion	Distortion	Effects	Distortion effect controls	Drive	fx.drive	UI label
+logic:Distortion	Distortion	Effects	Distortion effect controls	Tone	fx.tone	UI label
+logic:Distortion	Distortion	Effects	Distortion effect controls	Output	amp.gain	UI label
+logic:Distortion	Distortion	Effects	Distortion effect controls	Level Compensation	other	UI label
+logic:Distortion II	Distortion II	Effects	Distortion II controls	PreGain	other	UI label
+logic:Distortion II	Distortion II	Effects	Distortion II controls	Drive	fx.drive	UI label
+logic:Distortion II	Distortion II	Effects	Distortion II controls	Tone	fx.tone	UI label
+logic:Distortion II	Distortion II	Effects	Distortion II controls	Type	ctl.select	UI label
+logic:Distortion II	Distortion II	Effects	Distortion II controls	Distortion Output Level	other	UI label
+logic:Distortion II	Distortion II	Effects	Distortion II controls	Mix	fx.mix	UI label
+logic:Distortion II	Distortion II	Effects	Distortion II controls	Level Compensation	other	UI label
+logic:Overdrive	Overdrive	Effects	Overdrive controls	Drive	fx.drive	UI label
+logic:Overdrive	Overdrive	Effects	Overdrive controls	Tone	fx.tone	UI label
+logic:Overdrive	Overdrive	Effects	Overdrive controls	Output	amp.gain	UI label
+logic:Overdrive	Overdrive	Effects	Overdrive controls	Level Compensation	other	UI label
+logic:Phase Distortion	Phase Distortion	Effects	Phase Distortion controls	Monitor	system	UI label
+logic:Phase Distortion	Phase Distortion	Effects	Phase Distortion controls	Cutoff	fx.tone	UI label
+logic:Phase Distortion	Phase Distortion	Effects	Phase Distortion controls	Resonance	other	UI label
+logic:Phase Distortion	Phase Distortion	Effects	Phase Distortion controls	Intensity	fx.mod.depth	UI label
+logic:Phase Distortion	Phase Distortion	Effects	Phase Distortion controls	Phase Reverse	other	UI label
+logic:Phase Distortion	Phase Distortion	Effects	Phase Distortion controls	Delay	other	UI label
+logic:Phase Distortion	Phase Distortion	Effects	Phase Distortion controls	Mix	fx.mix	UI label
+logic:Adaptive Limiter	Adaptive Limiter	Effects	Adaptive Limiter controls	Gain	amp.gain	UI label
+logic:Adaptive Limiter	Adaptive Limiter	Effects	Adaptive Limiter controls	Out Ceiling	other	UI label
+logic:Adaptive Limiter	Adaptive Limiter	Effects	Adaptive Limiter controls	Lookahead	system	UI label
+logic:Adaptive Limiter	Adaptive Limiter	Effects	Adaptive Limiter controls	Remove DC Offset	other	UI label
+logic:Adaptive Limiter	Adaptive Limiter	Effects	Adaptive Limiter controls	True Peak Detection	other	UI label
+logic:Adaptive Limiter	Adaptive Limiter	Effects	Adaptive Limiter controls	Optimal Lookahead	system	UI label
+logic:Compressor	Compressor	Effects	Compressor main parameters	Circuit Type	ctl.select	UI label
+logic:Compressor	Compressor	Effects	Compressor main parameters	Side Chain	system	UI label
+logic:Compressor	Compressor	Effects	Compressor main parameters	Output	amp.gain	UI label
+logic:Compressor	Compressor	Effects	Compressor main parameters	Input Gain	amp.gain	UI label
+logic:Compressor	Compressor	Effects	Compressor main parameters	Threshold	fx.comp.amount	UI label
+logic:Compressor	Compressor	Effects	Compressor main parameters	Ratio	fx.comp.amount	UI label
+logic:Compressor	Compressor	Effects	Compressor main parameters	Make Up	unsafe	UI label
+logic:Compressor	Compressor	Effects	Compressor main parameters	Auto Gain	ctl.select	UI label
+logic:Compressor	Compressor	Effects	Compressor main parameters	Knee	other	UI label
+logic:Compressor	Compressor	Effects	Compressor main parameters	Attack	other	UI label
+logic:Compressor	Compressor	Effects	Compressor main parameters	Release	other	UI label
+logic:Compressor	Compressor	Effects	Compressor main parameters	Auto Release	ctl.switch	UI label
+logic:Compressor	Compressor	Effects	Compressor main parameters	Output Gain	amp.gain	UI label
+logic:Compressor	Compressor	Effects	Compressor output parameters	Limiter	ctl.switch	UI label
+logic:Compressor	Compressor	Effects	Compressor output parameters	Limiter Threshold	other	UI label
+logic:Compressor	Compressor	Effects	Compressor output parameters	Distortion	ctl.select	UI label
+logic:Compressor	Compressor	Effects	Compressor output parameters	Mix	fx.mix	UI label
+logic:Compressor	Compressor	Effects	Compressor side chain parameters	Detection	ctl.select	UI label
+logic:Compressor	Compressor	Effects	Compressor side chain parameters	Max	ctl.select	UI label
+logic:Compressor	Compressor	Effects	Compressor side chain parameters	Sum	ctl.select	UI label
+logic:Compressor	Compressor	Effects	Compressor side chain parameters	Peak/RMS	ctl.select	UI label
+logic:Compressor	Compressor	Effects	Compressor side chain parameters	Filter	ctl.switch	UI label
+logic:Compressor	Compressor	Effects	Compressor side chain parameters	Filter mode	ctl.select	UI label
+logic:Compressor	Compressor	Effects	Compressor side chain parameters	Frequency	system	UI label
+logic:Compressor	Compressor	Effects	Compressor side chain parameters	Q	system	UI label
+logic:Compressor	Compressor	Effects	Compressor side chain parameters	Gain	system	UI label
+logic:DeEsser 2	DeEsser 2	Effects	DeEsser 2 controls	Detection max	other	UI label
+logic:DeEsser 2	DeEsser 2	Effects	DeEsser 2 controls	Reduction max	other	UI label
+logic:DeEsser 2	DeEsser 2	Effects	DeEsser 2 controls	Threshold	fx.comp.amount	UI label
+logic:DeEsser 2	DeEsser 2	Effects	DeEsser 2 controls	Max Reduction	other	UI label
+logic:DeEsser 2	DeEsser 2	Effects	DeEsser 2 controls	Frequency	other	UI label
+logic:DeEsser 2	DeEsser 2	Effects	DeEsser 2 controls	Mode	ctl.select	UI label
+logic:DeEsser 2	DeEsser 2	Effects	DeEsser 2 controls	Range	system	UI label
+logic:DeEsser 2	DeEsser 2	Effects	DeEsser 2 controls	Filter	fx.tone	UI label
+logic:DeEsser 2	DeEsser 2	Effects	DeEsser 2 controls	Filter Solo	other	UI label
+logic:Enveloper	Enveloper	Effects	Enveloper controls	Threshold	fx.comp.amount	UI label
+logic:Enveloper	Enveloper	Effects	Enveloper controls	(Attack) Gain	other	UI label
+logic:Enveloper	Enveloper	Effects	Enveloper controls	Lookahead	system	UI label
+logic:Enveloper	Enveloper	Effects	Enveloper controls	(Attack) Time	other	UI label
+logic:Enveloper	Enveloper	Effects	Enveloper controls	(Release) Time	other	UI label
+logic:Enveloper	Enveloper	Effects	Enveloper controls	(Release) Gain	other	UI label
+logic:Enveloper	Enveloper	Effects	Enveloper controls	Out Level	other	UI label
+logic:Expander	Expander	Effects	Expander controls	Threshold	fx.comp.amount	UI label
+logic:Expander	Expander	Effects	Expander controls	Ratio	fx.comp.amount	UI label
+logic:Expander	Expander	Effects	Expander controls	Gain	amp.gain	UI label
+logic:Expander	Expander	Effects	Expander controls	Auto Gain	other	UI label
+logic:Expander	Expander	Effects	Expander controls	Knee	other	UI label
+logic:Expander	Expander	Effects	Expander controls	Attack	other	UI label
+logic:Expander	Expander	Effects	Expander controls	Release	other	UI label
+logic:Expander	Expander	Effects	Expander controls	Output Clip	other	UI label
+logic:Expander	Expander	Effects	Expander controls	Peak/RMS	other	UI label
+logic:Limiter	Limiter	Effects	Limiter controls	Gain	amp.gain	UI label
+logic:Limiter	Limiter	Effects	Limiter controls	Release	other	UI label
+logic:Limiter	Limiter	Effects	Limiter controls	Output Level	amp.gain	UI label
+logic:Limiter	Limiter	Effects	Limiter controls	Lookahead	system	UI label
+logic:Limiter	Limiter	Effects	Limiter controls	Mode	ctl.select	UI label
+logic:Multipressor	Multipressor	Effects	Multipressor display parameters	Crossover	other	UI label
+logic:Multipressor	Multipressor	Effects	Multipressor display parameters	Gain Make-up	other	UI label
+logic:Multipressor	Multipressor	Effects	Frequency band controls	Compression Threshold	other	UI label
+logic:Multipressor	Multipressor	Effects	Frequency band controls	Compression Ratio	other	UI label
+logic:Multipressor	Multipressor	Effects	Frequency band controls	Expansion Threshold	other	UI label
+logic:Multipressor	Multipressor	Effects	Frequency band controls	Expansion Ratio	other	UI label
+logic:Multipressor	Multipressor	Effects	Frequency band controls	Expansion Reduction	other	UI label
+logic:Multipressor	Multipressor	Effects	Frequency band controls	Peak/RMS	other	UI label
+logic:Multipressor	Multipressor	Effects	Frequency band controls	Attack	other	UI label
+logic:Multipressor	Multipressor	Effects	Frequency band controls	Release	other	UI label
+logic:Multipressor	Multipressor	Effects	Frequency band controls	Band on/off	ctl.switch	UI label
+logic:Multipressor	Multipressor	Effects	Frequency band controls	Bypass	ctl.switch	UI label
+logic:Multipressor	Multipressor	Effects	Frequency band controls	Solo	ctl.switch	UI label
+logic:Multipressor	Multipressor	Effects	Output parameters	Auto Gain	other	UI label
+logic:Multipressor	Multipressor	Effects	Output parameters	Lookahead	system	UI label
+logic:Multipressor	Multipressor	Effects	Output parameters	Out	other	UI label
+logic:Channel EQ	Channel EQ	Effects	Channel EQ parameters	Band 1 On/Off	ctl.switch	UI label
+logic:Channel EQ	Channel EQ	Effects	Channel EQ parameters	Band 2 On/Off	ctl.switch	UI label
+logic:Channel EQ	Channel EQ	Effects	Channel EQ parameters	Band 3 On/Off	ctl.switch	UI label
+logic:Channel EQ	Channel EQ	Effects	Channel EQ parameters	Band 4 On/Off	ctl.switch	UI label
+logic:Channel EQ	Channel EQ	Effects	Channel EQ parameters	Band 5 On/Off	ctl.switch	UI label
+logic:Channel EQ	Channel EQ	Effects	Channel EQ parameters	Band 6 On/Off	ctl.switch	UI label
+logic:Channel EQ	Channel EQ	Effects	Channel EQ parameters	Band 7 On/Off	ctl.switch	UI label
+logic:Channel EQ	Channel EQ	Effects	Channel EQ parameters	Band 8 On/Off	ctl.switch	UI label
+logic:Channel EQ	Channel EQ	Effects	Channel EQ parameters	Master Gain	amp.gain	UI label
+logic:Channel EQ	Channel EQ	Effects	Channel EQ parameters	Analyzer	ctl.switch	UI label
+logic:Channel EQ	Channel EQ	Effects	Channel EQ parameters	Analyzer (Pre/Post)	ctl.switch	UI label
+logic:Channel EQ	Channel EQ	Effects	Channel EQ parameters	Q-Couple	ctl.switch	UI label
+logic:Channel EQ	Channel EQ	Effects	Channel EQ parameters	HQ	ctl.switch	UI label
+logic:Channel EQ	Channel EQ	Effects	Channel EQ parameters	Processing	ctl.select	UI label
+logic:Channel EQ	Channel EQ	Effects	Channel EQ extended parameters	Analyzer Decay	system	UI label
+logic:Linear Phase EQ	Linear Phase EQ	Effects	Linear Phase EQ parameters	Band 1 On/Off	ctl.switch	UI label
+logic:Linear Phase EQ	Linear Phase EQ	Effects	Linear Phase EQ parameters	Band 2 On/Off	ctl.switch	UI label
+logic:Linear Phase EQ	Linear Phase EQ	Effects	Linear Phase EQ parameters	Band 3 On/Off	ctl.switch	UI label
+logic:Linear Phase EQ	Linear Phase EQ	Effects	Linear Phase EQ parameters	Band 4 On/Off	ctl.switch	UI label
+logic:Linear Phase EQ	Linear Phase EQ	Effects	Linear Phase EQ parameters	Band 5 On/Off	ctl.switch	UI label
+logic:Linear Phase EQ	Linear Phase EQ	Effects	Linear Phase EQ parameters	Band 6 On/Off	ctl.switch	UI label
+logic:Linear Phase EQ	Linear Phase EQ	Effects	Linear Phase EQ parameters	Band 7 On/Off	ctl.switch	UI label
+logic:Linear Phase EQ	Linear Phase EQ	Effects	Linear Phase EQ parameters	Band 8 On/Off	ctl.switch	UI label
+logic:Linear Phase EQ	Linear Phase EQ	Effects	Linear Phase EQ parameters	Master Gain	amp.gain	UI label
+logic:Linear Phase EQ	Linear Phase EQ	Effects	Linear Phase EQ parameters	Analyzer	ctl.switch	UI label
+logic:Linear Phase EQ	Linear Phase EQ	Effects	Linear Phase EQ parameters	Analyzer (Pre/Post)	ctl.switch	UI label
+logic:Linear Phase EQ	Linear Phase EQ	Effects	Linear Phase EQ parameters	Q-Couple	ctl.switch	UI label
+logic:Linear Phase EQ	Linear Phase EQ	Effects	Linear Phase EQ parameters	Processing	other	UI label
+logic:Linear Phase EQ	Linear Phase EQ	Effects	Linear Phase EQ extended parameters	Analyzer Decay	ctl.switch	UI label
+logic:Match EQ	Match EQ	Effects	Match EQ parameters	Current	other	UI label
+logic:Match EQ	Match EQ	Effects	Match EQ parameters	Reference	other	UI label
+logic:Match EQ	Match EQ	Effects	Match EQ parameters	EQ Curve	other	UI label
+logic:Match EQ	Match EQ	Effects	Match EQ parameters	Analyzer	ctl.switch	UI label
+logic:Match EQ	Match EQ	Effects	Match EQ parameters	Analyzer Pre/Post	ctl.switch	UI label
+logic:Match EQ	Match EQ	Effects	Match EQ parameters	Smoothing	other	UI label
+logic:Match EQ	Match EQ	Effects	Match EQ parameters	Channel	other	UI label
+logic:Match EQ	Match EQ	Effects	Match EQ parameters	Hide Others	other	UI label
+logic:Match EQ	Match EQ	Effects	Match EQ parameters	Channel Link	ctl.switch	UI label
+logic:Match EQ	Match EQ	Effects	Match EQ parameters	LFE Handling	other	UI label
+logic:Match EQ	Match EQ	Effects	Match EQ parameters	Current Learn	other	UI label
+logic:Match EQ	Match EQ	Effects	Match EQ parameters	Reference Learn	other	UI label
+logic:Match EQ	Match EQ	Effects	Match EQ parameters	EQ Curve Match	other	UI label
+logic:Match EQ	Match EQ	Effects	Match EQ parameters	Apply	other	UI label
+logic:Match EQ	Match EQ	Effects	Match EQ parameters	Ease-In/Ease-Out	other	UI label
+logic:Match EQ	Match EQ	Effects	Match EQ parameters	Limit Boost	other	UI label
+logic:Match EQ	Match EQ	Effects	Match EQ parameters	Limit Cut	other	UI label
+logic:Match EQ	Match EQ	Effects	Match EQ parameters	Phase	other	UI label
+logic:Single Band EQ	Single Band EQ	Effects	Single Band EQ controls	Mode	ctl.select	UI label
+logic:Single Band EQ	Single Band EQ	Effects	Single Band EQ controls	Frequency	fx.eq.freq	UI label
+logic:Single Band EQ	Single Band EQ	Effects	Single Band EQ controls	Gain	fx.eq.gain	UI label
+logic:Single Band EQ	Single Band EQ	Effects	Single Band EQ controls	Slope	ctl.select	UI label
+logic:Single Band EQ	Single Band EQ	Effects	Single Band EQ controls	Q Factor	fx.eq.q	UI label
+logic:Vintage EQ Collection	Vintage EQ Collection	Effects	Vintage Console EQ controls	In/Out	other	UI label
+logic:Vintage EQ Collection	Vintage EQ Collection	Effects	Vintage Console EQ controls	Low Cut	fx.tone	UI label
+logic:Vintage EQ Collection	Vintage EQ Collection	Effects	Vintage Console EQ controls	Low	other	UI label
+logic:Vintage EQ Collection	Vintage EQ Collection	Effects	Vintage Console EQ controls	Low Gain	other	UI label
+logic:Vintage EQ Collection	Vintage EQ Collection	Effects	Vintage Console EQ controls	Mid	other	UI label
+logic:Vintage EQ Collection	Vintage EQ Collection	Effects	Vintage Console EQ controls	Mid Gain	other	UI label
+logic:Vintage EQ Collection	Vintage EQ Collection	Effects	Vintage Console EQ controls	Mid Freq	other	UI label
+logic:Vintage EQ Collection	Vintage EQ Collection	Effects	Vintage Console EQ controls	High	other	UI label
+logic:Vintage EQ Collection	Vintage EQ Collection	Effects	Vintage Console EQ controls	High Gain	other	UI label
+logic:Vintage EQ Collection	Vintage EQ Collection	Effects	Vintage Graphic EQ controls	Tune	fx.pitch	UI label
+logic:Vintage EQ Collection	Vintage EQ Collection	Effects	Vintage Graphic EQ controls	EQ band	other	UI label
+logic:Vintage EQ Collection	Vintage EQ Collection	Effects	Vintage Tube EQ controls	Low Boost	other	UI label
+logic:Vintage EQ Collection	Vintage EQ Collection	Effects	Vintage Tube EQ controls	Low Atten	other	UI label
+logic:Vintage EQ Collection	Vintage EQ Collection	Effects	Vintage Tube EQ controls	Low Freq	other	UI label
+logic:Vintage EQ Collection	Vintage EQ Collection	Effects	Vintage Tube EQ controls	High Boost	other	UI label
+logic:Vintage EQ Collection	Vintage EQ Collection	Effects	Vintage Tube EQ controls	High Bandwidth	stereo.width	UI label
+logic:Vintage EQ Collection	Vintage EQ Collection	Effects	Vintage Tube EQ controls	High Freq	other	UI label
+logic:Vintage EQ Collection	Vintage EQ Collection	Effects	Vintage Tube EQ controls	High Atten	other	UI label
+logic:Vintage EQ Collection	Vintage EQ Collection	Effects	Vintage Tube EQ controls	High Atten Sel	other	UI label
+logic:Vintage EQ Collection	Vintage EQ Collection	Effects	Vintage Tube EQ controls	Low Peak	other	UI label
+logic:Vintage EQ Collection	Vintage EQ Collection	Effects	Vintage Tube EQ controls	Dip Freq	other	UI label
+logic:Vintage EQ Collection	Vintage EQ Collection	Effects	Vintage Tube EQ controls	Dip	other	UI label
+logic:Vintage EQ Collection	Vintage EQ Collection	Effects	Vintage Tube EQ controls	High Peak	other	UI label
+logic:AutoFilter	AutoFilter	Effects	Filter controls	Resonance	filter.resonance	UI label
+logic:AutoFilter	AutoFilter	Effects	Filter controls	State Variable	ctl.select	UI label
+logic:AutoFilter	AutoFilter	Effects	Filter controls	4-Pole Lowpass	ctl.select	UI label
+logic:AutoFilter	AutoFilter	Effects	Filter controls	Fatness	other	UI label
+logic:AutoFilter	AutoFilter	Effects	Filter controls	Spread	stereo.width	UI label
+logic:AutoFilter	AutoFilter	Effects	Filter controls	Envelope	filter.env_amount	UI label
+logic:AutoFilter	AutoFilter	Effects	Filter controls	LFO	lfo.amount	UI label
+logic:AutoFilter	AutoFilter	Effects	Envelope controls	Threshold	other	UI label
+logic:AutoFilter	AutoFilter	Effects	Envelope controls	Dynamic	other	UI label
+logic:AutoFilter	AutoFilter	Effects	Envelope controls	Attack	other	UI label
+logic:AutoFilter	AutoFilter	Effects	Envelope controls	Decay	other	UI label
+logic:AutoFilter	AutoFilter	Effects	Envelope controls	Sustain	other	UI label
+logic:AutoFilter	AutoFilter	Effects	Envelope controls	Release	other	UI label
+logic:AutoFilter	AutoFilter	Effects	Distortion controls	Pre Filter	fx.drive	UI label
+logic:AutoFilter	AutoFilter	Effects	Distortion controls	Post Filter	fx.drive	UI label
+logic:AutoFilter	AutoFilter	Effects	Distortion controls	Mode	ctl.select	UI label
+logic:AutoFilter	AutoFilter	Effects	LFO controls	Sync	system	UI label
+logic:AutoFilter	AutoFilter	Effects	LFO controls	Rate	fx.mod.rate	UI label
+logic:AutoFilter	AutoFilter	Effects	LFO controls	Sync Phase	other	UI label
+logic:AutoFilter	AutoFilter	Effects	LFO controls	Stereo Phase	stereo.width	UI label
+logic:AutoFilter	AutoFilter	Effects	LFO controls	Retrigger	ctl.switch	UI label
+logic:AutoFilter	AutoFilter	Effects	LFO controls	Waveform	ctl.select	UI label
+logic:AutoFilter	AutoFilter	Effects	LFO controls	Pulse Width	other	UI label
+logic:AutoFilter	AutoFilter	Effects	Output controls	Dry Signal	other	UI label
+logic:AutoFilter	AutoFilter	Effects	Output controls	Main Out	amp.gain	UI label
+logic:EVOC 20 Filterbank	EVOC 20 Filterbank	Effects	Formant Filter controls	Formant Shift	other	UI label
+logic:EVOC 20 Filterbank	EVOC 20 Filterbank	Effects	Formant Filter controls	Bands	other	UI label
+logic:EVOC 20 Filterbank	EVOC 20 Filterbank	Effects	Formant Filter controls	Lowest	other	UI label
+logic:EVOC 20 Filterbank	EVOC 20 Filterbank	Effects	Formant Filter controls	Highest	other	UI label
+logic:EVOC 20 Filterbank	EVOC 20 Filterbank	Effects	Formant Filter controls	Resonance	filter.resonance	UI label
+logic:EVOC 20 Filterbank	EVOC 20 Filterbank	Effects	Formant Filter controls	Boost A	other	UI label
+logic:EVOC 20 Filterbank	EVOC 20 Filterbank	Effects	Formant Filter controls	Boost B	other	UI label
+logic:EVOC 20 Filterbank	EVOC 20 Filterbank	Effects	Formant Filter controls	Slope	other	UI label
+logic:EVOC 20 Filterbank	EVOC 20 Filterbank	Effects	Formant Filter controls	Fade AB	other	UI label
+logic:EVOC 20 Filterbank	EVOC 20 Filterbank	Effects	Modulation controls	Shift LFO Intensity	other	UI label
+logic:EVOC 20 Filterbank	EVOC 20 Filterbank	Effects	Modulation controls	Rate	fx.mod.rate	UI label
+logic:EVOC 20 Filterbank	EVOC 20 Filterbank	Effects	Modulation controls	Waveform	ctl.select	UI label
+logic:EVOC 20 Filterbank	EVOC 20 Filterbank	Effects	Modulation controls	Fade LFO Intensity	other	UI label
+logic:EVOC 20 Filterbank	EVOC 20 Filterbank	Effects	Output controls	Overdrive	other	UI label
+logic:EVOC 20 Filterbank	EVOC 20 Filterbank	Effects	Output controls	Level	amp.gain	UI label
+logic:EVOC 20 Filterbank	EVOC 20 Filterbank	Effects	Output controls	Stereo Mode	ctl.select	UI label
+logic:EVOC 20 Filterbank	EVOC 20 Filterbank	Effects	Output controls	Stereo Width	stereo.width	UI label
+logic:EVOC 20 TrackOscillator	EVOC 20 TrackOscillator	Effects	U/V detection controls	Sensitivity	other	UI label
+logic:EVOC 20 TrackOscillator	EVOC 20 TrackOscillator	Effects	U/V detection controls	Mode	ctl.select	UI label
+logic:EVOC 20 TrackOscillator	EVOC 20 TrackOscillator	Effects	U/V detection controls	Level	amp.gain	UI label
+logic:EVOC 20 TrackOscillator	EVOC 20 TrackOscillator	Effects	Synthesis In controls	Synthesis In	other	UI label
+logic:EVOC 20 TrackOscillator	EVOC 20 TrackOscillator	Effects	Synthesis In controls	Bands	other	UI label
+logic:EVOC 20 TrackOscillator	EVOC 20 TrackOscillator	Effects	Tracking oscillator controls	FM Ratio	other	UI label
+logic:EVOC 20 TrackOscillator	EVOC 20 TrackOscillator	Effects	Tracking oscillator controls	FM Int	other	UI label
+logic:EVOC 20 TrackOscillator	EVOC 20 TrackOscillator	Effects	Tracking oscillator controls	Coarse Tune	fx.pitch	UI label
+logic:EVOC 20 TrackOscillator	EVOC 20 TrackOscillator	Effects	Tracking oscillator controls	Fine Tune	fx.pitch	UI label
+logic:EVOC 20 TrackOscillator	EVOC 20 TrackOscillator	Effects	Tracking oscillator pitch controls	Pitch Quantize Strength	other	UI label
+logic:EVOC 20 TrackOscillator	EVOC 20 TrackOscillator	Effects	Tracking oscillator pitch controls	Pitch Quantize Glide	voice.glide	UI label
+logic:EVOC 20 TrackOscillator	EVOC 20 TrackOscillator	Effects	Tracking oscillator pitch controls	Root/Scale	other	UI label
+logic:EVOC 20 TrackOscillator	EVOC 20 TrackOscillator	Effects	Tracking oscillator pitch controls	Max Track	other	UI label
+logic:EVOC 20 TrackOscillator	EVOC 20 TrackOscillator	Effects	Formant filter controls	Lowest	other	UI label
+logic:EVOC 20 TrackOscillator	EVOC 20 TrackOscillator	Effects	Formant filter controls	Highest	other	UI label
+logic:EVOC 20 TrackOscillator	EVOC 20 TrackOscillator	Effects	Formant filter controls	Formant Stretch	other	UI label
+logic:EVOC 20 TrackOscillator	EVOC 20 TrackOscillator	Effects	Formant filter controls	Formant Shift	other	UI label
+logic:EVOC 20 TrackOscillator	EVOC 20 TrackOscillator	Effects	Formant filter controls	Resonance	other	UI label
+logic:EVOC 20 TrackOscillator	EVOC 20 TrackOscillator	Effects	Modulation controls	Shift Intensity	other	UI label
+logic:EVOC 20 TrackOscillator	EVOC 20 TrackOscillator	Effects	Modulation controls	Pitch Intensity	other	UI label
+logic:EVOC 20 TrackOscillator	EVOC 20 TrackOscillator	Effects	Modulation controls	Waveform	ctl.select	UI label
+logic:EVOC 20 TrackOscillator	EVOC 20 TrackOscillator	Effects	Modulation controls	LFO Rate	fx.mod.rate	UI label
+logic:EVOC 20 TrackOscillator	EVOC 20 TrackOscillator	Effects	Output controls	Signal	other	UI label
+logic:EVOC 20 TrackOscillator	EVOC 20 TrackOscillator	Effects	Output controls	Stereo Mode	ctl.select	UI label
+logic:EVOC 20 TrackOscillator	EVOC 20 TrackOscillator	Effects	Output controls	Stereo Width	stereo.width	UI label
+logic:EVOC 20 TrackOscillator	EVOC 20 TrackOscillator	Effects	Extended parameters	Track Mode	ctl.select	UI label
+logic:EVOC 20 TrackOscillator	EVOC 20 TrackOscillator	Effects	Extended parameters	Oscillator Wave	ctl.select	UI label
+logic:EVOC 20 TrackOscillator	EVOC 20 TrackOscillator	Effects	Extended parameters	Fixed Note	other	UI label
+logic:Fuzz-Wah	Fuzz-Wah	Effects	Auto Wah controls	Wah Type	ctl.select	UI label
+logic:Fuzz-Wah	Fuzz-Wah	Effects	Auto Wah controls	Auto Gain	other	UI label
+logic:Fuzz-Wah	Fuzz-Wah	Effects	Auto Wah controls	Relative Q	other	UI label
+logic:Fuzz-Wah	Fuzz-Wah	Effects	Auto Wah controls	Wah Level	other	UI label
+logic:Fuzz-Wah	Fuzz-Wah	Effects	Auto Wah controls	Depth	fx.mod.depth	UI label
+logic:Fuzz-Wah	Fuzz-Wah	Effects	Auto Wah controls	Attack	other	UI label
+logic:Fuzz-Wah	Fuzz-Wah	Effects	Auto Wah controls	Release	other	UI label
+logic:Fuzz-Wah	Fuzz-Wah	Effects	Auto Wah controls	Range	system	UI label
+logic:Fuzz-Wah	Fuzz-Wah	Effects	Compressor controls	Ratio	other	UI label
+logic:Fuzz-Wah	Fuzz-Wah	Effects	Fuzz parameters	Gain	amp.gain	UI label
+logic:Fuzz-Wah	Fuzz-Wah	Effects	Fuzz parameters	Tone	fx.tone	UI label
+logic:Arpeggiator	Arpeggiator	Effects	Arpeggiator control parameters	Play	other	UI label
+logic:Arpeggiator	Arpeggiator	Effects	Arpeggiator control parameters	Capture live performance	other	UI label
+logic:Arpeggiator	Arpeggiator	Effects	Arpeggiator control parameters	Latch	ctl.switch	UI label
+logic:Arpeggiator	Arpeggiator	Effects	Arpeggiator control parameters	Latch mode	ctl.select	UI label
+logic:Arpeggiator	Arpeggiator	Effects	Arpeggiator control parameters	Delete Last	other	UI label
+logic:Arpeggiator	Arpeggiator	Effects	Arpeggiator options parameters	Options	other	UI label
+logic:Arpeggiator	Arpeggiator	Effects	Arpeggiator options parameters	Note Length	other	UI label
+logic:Arpeggiator	Arpeggiator	Effects	Arpeggiator options parameters	Random	other	UI label
+logic:Arpeggiator	Arpeggiator	Effects	Arpeggiator options parameters	Velocity	system	UI label
+logic:Arpeggiator	Arpeggiator	Effects	Arpeggiator options parameters	Vel (Velocity Base)	other	UI label
+logic:Arpeggiator	Arpeggiator	Effects	Arpeggiator options parameters	Crescendo/Random	other	UI label
+logic:Arpeggiator	Arpeggiator	Effects	Arpeggiator options parameters	Swing	other	UI label
+logic:Arpeggiator	Arpeggiator	Effects	Arpeggiator options parameters	Cycle Length	other	UI label
+logic:Arpeggiator	Arpeggiator	Effects	Arpeggiator keyboard parameters	Input Snap	other	UI label
+logic:Arpeggiator	Arpeggiator	Effects	Arpeggiator keyboard parameters	Root	other	UI label
+logic:Arpeggiator	Arpeggiator	Effects	Arpeggiator keyboard parameters	Scale	other	UI label
+logic:Modifier	Modifier	Effects	Modifier controls	Input Thru	other	UI label
+logic:Modifier	Modifier	Effects	Modifier controls	Input Event	other	UI label
+logic:Modifier	Modifier	Effects	Modifier controls	Re-Assign To	other	UI label
+logic:Modifier	Modifier	Effects	Modifier controls	Scale	other	UI label
+logic:Modifier	Modifier	Effects	Modifier controls	Add	other	UI label
+logic:Modulator	Modulator	Effects	LFO controls	LFO on/off	ctl.switch	UI label
+logic:Modulator	Modulator	Effects	LFO controls	Waveform Shape	ctl.select	UI label
+logic:Modulator	Modulator	Effects	LFO controls	Symmetry	other	UI label
+logic:Modulator	Modulator	Effects	LFO controls	Similarity	other	UI label
+logic:Modulator	Modulator	Effects	LFO controls	Trigger	other	UI label
+logic:Modulator	Modulator	Effects	LFO controls	Steps per LFO Cycle (Smoothing)	other	UI label
+logic:Modulator	Modulator	Effects	LFO controls	Rate	fx.mod.rate	UI label
+logic:Modulator	Modulator	Effects	LFO controls	Sync	system	UI label
+logic:Modulator	Modulator	Effects	LFO controls	To	other	UI label
+logic:Modulator	Modulator	Effects	LFO controls	Output Level	amp.gain	UI label
+logic:Modulator	Modulator	Effects	LFO controls	Offset	other	UI label
+logic:Modulator	Modulator	Effects	Envelope controls	Envelope on/off	ctl.switch	UI label
+logic:Modulator	Modulator	Effects	Envelope controls	Steps per Env(elope) Pass	other	UI label
+logic:Modulator	Modulator	Effects	Envelope controls	Env to LFO Rate	fx.mod.rate	UI label
+logic:Modulator	Modulator	Effects	Envelope controls	Env to LFO Amp	other	UI label
+logic:Note Repeater	Note Repeater	Effects	Note Repeater controls	Input Thru	other	UI label
+logic:Note Repeater	Note Repeater	Effects	Note Repeater controls	Delay Sync	system	UI label
+logic:Note Repeater	Note Repeater	Effects	Note Repeater controls	Delay	other	UI label
+logic:Note Repeater	Note Repeater	Effects	Note Repeater controls	Repeats	other	UI label
+logic:Note Repeater	Note Repeater	Effects	Note Repeater controls	Transpose	fx.pitch	UI label
+logic:Note Repeater	Note Repeater	Effects	Note Repeater controls	Velocity Ramp	other	UI label
+logic:Randomizer	Randomizer	Effects	Randomizer controls	Event Type	ctl.select	UI label
+logic:Randomizer	Randomizer	Effects	Randomizer controls	Input Range	system	UI label
+logic:Randomizer	Randomizer	Effects	Randomizer controls	Amount	other	UI label
+logic:Randomizer	Randomizer	Effects	Randomizer controls	Weight	other	UI label
+logic:Randomizer	Randomizer	Effects	Randomizer controls	Output Offset	other	UI label
+logic:Transposer	Transposer	Effects	Transposer controls	Transpose	fx.pitch	UI label
+logic:Transposer	Transposer	Effects	Transposer controls	Root	other	UI label
+logic:Transposer	Transposer	Effects	Transposer controls	Scale	other	UI label
+logic:Velocity Processor	Velocity Processor	Effects	Compress/Expand mode	Threshold	other	UI label
+logic:Velocity Processor	Velocity Processor	Effects	Compress/Expand mode	Ratio	other	UI label
+logic:Velocity Processor	Velocity Processor	Effects	Compress/Expand mode	Make-up	other	UI label
+logic:Velocity Processor	Velocity Processor	Effects	Compress/Expand mode	Auto (Gain)	other	UI label
+logic:Velocity Processor	Velocity Processor	Effects	Value/Range mode	Value/Range	other	UI label
+logic:Velocity Processor	Velocity Processor	Effects	Value/Range mode	Value	other	UI label
+logic:Velocity Processor	Velocity Processor	Effects	Value/Range mode	Range	system	UI label
+logic:Chorus	Chorus	Effects	Chorus controls	Rate	fx.mod.rate	UI label
+logic:Chorus	Chorus	Effects	Chorus controls	Intensity	fx.mod.depth	UI label
+logic:Chorus	Chorus	Effects	Chorus controls	D-Mode	other	UI label
+logic:Chorus	Chorus	Effects	Chorus controls	Mix	fx.mod.mix	UI label
+logic:Ensemble	Ensemble	Effects	Ensemble controls	LFO1/LFO2/Random on/off	ctl.switch	UI label
+logic:Ensemble	Ensemble	Effects	Ensemble controls	Rate	fx.mod.rate	UI label
+logic:Ensemble	Ensemble	Effects	Ensemble controls	Intensity	fx.mod.depth	UI label
+logic:Ensemble	Ensemble	Effects	Ensemble controls	Voices	system	UI label
+logic:Ensemble	Ensemble	Effects	Ensemble controls	Stereo Spread	stereo.width	UI label
+logic:Ensemble	Ensemble	Effects	Ensemble controls	Phase	other	UI label
+logic:Ensemble	Ensemble	Effects	Ensemble controls	Volume Compensation	other	UI label
+logic:Ensemble	Ensemble	Effects	Ensemble controls	Output Mix	fx.mod.mix	UI label
+logic:Flanger	Flanger	Effects	Flanger controls	Sync	system	UI label
+logic:Flanger	Flanger	Effects	Flanger controls	Rate	fx.mod.rate	UI label
+logic:Flanger	Flanger	Effects	Flanger controls	Intensity	fx.mod.depth	UI label
+logic:Flanger	Flanger	Effects	Flanger controls	Feedback	other	UI label
+logic:Flanger	Flanger	Effects	Flanger controls	Mix	fx.mod.mix	UI label
+logic:Microphaser	Microphaser	Effects	Microphaser controls	Sync	system	UI label
+logic:Microphaser	Microphaser	Effects	Microphaser controls	Rate	fx.mod.rate	UI label
+logic:Microphaser	Microphaser	Effects	Microphaser controls	Intensity	fx.mod.depth	UI label
+logic:Microphaser	Microphaser	Effects	Microphaser controls	Feedback	other	UI label
+logic:Modulation Delay	Modulation Delay	Effects	Modulation Delay controls	Mod Intensity	other	UI label
+logic:Modulation Delay	Modulation Delay	Effects	Modulation Delay controls	Time	other	UI label
+logic:Modulation Delay	Modulation Delay	Effects	Modulation Delay controls	Feedback	other	UI label
+logic:Modulation Delay	Modulation Delay	Effects	Modulation Delay controls	De-Warble	other	UI label
+logic:Modulation Delay	Modulation Delay	Effects	Modulation Delay controls	Constant Mod	other	UI label
+logic:Modulation Delay	Modulation Delay	Effects	Modulation Delay controls	D-Mode	other	UI label
+logic:Modulation Delay	Modulation Delay	Effects	Modulation Delay controls	LFO 1/2 Rate	fx.mod.rate	UI label
+logic:Modulation Delay	Modulation Delay	Effects	Modulation Delay controls	Link L & R	other	UI label
+logic:Modulation Delay	Modulation Delay	Effects	Modulation Delay controls	Mix	fx.mod.mix	UI label
+logic:Modulation Delay	Modulation Delay	Effects	Modulation Delay controls	Phase	other	UI label
+logic:Modulation Delay	Modulation Delay	Effects	Modulation Delay controls	Distribution	other	UI label
+logic:Modulation Delay	Modulation Delay	Effects	Modulation Delay controls	Filter	fx.tone	UI label
+logic:Modulation Delay	Modulation Delay	Effects	Modulation Delay controls	Low/High Cut	other	UI label
+logic:Modulation Delay	Modulation Delay	Effects	Modulation Delay controls	Volume Mod	other	UI label
+logic:Modulation Delay	Modulation Delay	Effects	Modulation Delay controls	Output Mix	fx.mod.mix	UI label
+logic:Phaser	Phaser	Effects	Phaser controls	Stages	other	UI label
+logic:Phaser	Phaser	Effects	Phaser controls	Sweep Mode	ctl.select	UI label
+logic:Phaser	Phaser	Effects	Phaser controls	Ceiling/Floor	other	UI label
+logic:Phaser	Phaser	Effects	Phaser controls	Rate 1/2	other	UI label
+logic:Phaser	Phaser	Effects	Phaser controls	Sync	system	UI label
+logic:Phaser	Phaser	Effects	Phaser controls	Phase	other	UI label
+logic:Phaser	Phaser	Effects	Phaser controls	(LFO) Mix	other	UI label
+logic:Phaser	Phaser	Effects	Phaser controls	Distribution	other	UI label
+logic:Phaser	Phaser	Effects	Phaser controls	Level	amp.gain	UI label
+logic:Phaser	Phaser	Effects	Phaser controls	Warmth	fx.tone	UI label
+logic:Phaser	Phaser	Effects	Phaser controls	Low/High Cut	other	UI label
+logic:Phaser	Phaser	Effects	Phaser controls	Filter	fx.tone	UI label
+logic:Phaser	Phaser	Effects	Phaser controls	(Out) Mix	other	UI label
+logic:Ringshifter	Ringshifter	Effects	Oscillator parameters	Env Follow	other	UI label
+logic:Ringshifter	Ringshifter	Effects	Oscillator parameters	LFO	other	UI label
+logic:Ringshifter	Ringshifter	Effects	Delay parameters	Time	other	UI label
+logic:Ringshifter	Ringshifter	Effects	Delay parameters	Sync	system	UI label
+logic:Ringshifter	Ringshifter	Effects	Delay parameters	Level	amp.gain	UI label
+logic:Ringshifter	Ringshifter	Effects	Delay parameters	Delay Low/High Cut	other	UI label
+logic:Ringshifter	Ringshifter	Effects	Output parameters	Dry/Wet	fx.mix	UI label
+logic:Ringshifter	Ringshifter	Effects	Output parameters	Feedback	other	UI label
+logic:Ringshifter	Ringshifter	Effects	Output parameters	Stereo Width	stereo.width	UI label
+logic:Rotor Cabinet	Rotor Cabinet	Effects	Motor parameters	Acceleration	other	UI label
+logic:Rotor Cabinet	Rotor Cabinet	Effects	Motor parameters	Max Rate	other	UI label
+logic:Rotor Cabinet	Rotor Cabinet	Effects	Motor parameters	Motor Control	other	UI label
+logic:Rotor Cabinet	Rotor Cabinet	Effects	Mic processing controls	Mic Position	other	UI label
+logic:Rotor Cabinet	Rotor Cabinet	Effects	Mic processing controls	Horn	other	UI label
+logic:Rotor Cabinet	Rotor Cabinet	Effects	Mic processing controls	Drum	other	UI label
+logic:Rotor Cabinet	Rotor Cabinet	Effects	Mic processing controls	Distance	other	UI label
+logic:Rotor Cabinet	Rotor Cabinet	Effects	Mic processing controls	Angle	other	UI label
+logic:Rotor Cabinet	Rotor Cabinet	Effects	Mic processing controls	Balance	amp.pan	UI label
+logic:Scanner Vibrato	Scanner Vibrato	Effects	Scanner Vibrato controls	Type	ctl.select	UI label
+logic:Scanner Vibrato	Scanner Vibrato	Effects	Scanner Vibrato controls	Depth	fx.mod.depth	UI label
+logic:Scanner Vibrato	Scanner Vibrato	Effects	Scanner Vibrato controls	Stereo Phase	other	UI label
+logic:Scanner Vibrato	Scanner Vibrato	Effects	Scanner Vibrato controls	Rate Left	other	UI label
+logic:Scanner Vibrato	Scanner Vibrato	Effects	Scanner Vibrato controls	Rate Right	other	UI label
+logic:Spreader	Spreader	Effects	Spreader controls	Rate	fx.mod.rate	UI label
+logic:Spreader	Spreader	Effects	Spreader controls	Intensity	fx.mod.depth	UI label
+logic:Spreader	Spreader	Effects	Spreader controls	Channel Delay	other	UI label
+logic:Spreader	Spreader	Effects	Spreader controls	Mix	fx.mod.mix	UI label
+logic:Tremolo	Tremolo	Effects	Tremolo controls	Sync	system	UI label
+logic:Tremolo	Tremolo	Effects	Tremolo controls	Rate	fx.mod.rate	UI label
+logic:Tremolo	Tremolo	Effects	Tremolo controls	Depth	fx.mod.depth	UI label
+logic:Tremolo	Tremolo	Effects	Tremolo controls	Smoothing	other	UI label
+logic:Tremolo	Tremolo	Effects	Tremolo controls	Distribution	other	UI label
+logic:Tremolo	Tremolo	Effects	Tremolo controls	Offset	other	UI label
+logic:Tremolo	Tremolo	Effects	Tremolo controls	Symmetry	other	UI label
+logic:Tremolo	Tremolo	Effects	Tremolo controls	Phase	other	UI label
+logic:Beat Breaker	Beat Breaker	Effects	Main Editor	Edit Mode	ctl.select	UI label
+logic:Beat Breaker	Beat Breaker	Effects	Main Editor	Time	other	UI label
+logic:Beat Breaker	Beat Breaker	Effects	Main Editor	Repeat	other	UI label
+logic:Beat Breaker	Beat Breaker	Effects	Main Editor	Cutoff	filter.cutoff	UI label
+logic:Beat Breaker	Beat Breaker	Effects	Main Editor	Resonance	filter.resonance	UI label
+logic:Beat Breaker	Beat Breaker	Effects	Main Editor	Volume	amp.gain	UI label
+logic:Beat Breaker	Beat Breaker	Effects	Main Editor	Pan	amp.pan	UI label
+logic:Beat Breaker	Beat Breaker	Effects	Main Editor	Length	other	UI label
+logic:Beat Breaker	Beat Breaker	Effects	Main Editor	Bypass Below	other	UI label
+logic:Beat Breaker	Beat Breaker	Effects	Main Editor	More	other	UI label
+logic:Beat Breaker	Beat Breaker	Effects	Main Editor	Pattern	other	UI label
+logic:Beat Breaker	Beat Breaker	Effects	Main Editor	Pattern Off	ctl.switch	UI label
+logic:Beat Breaker	Beat Breaker	Effects	Main Editor	Pattern Slot Edit	other	UI label
+logic:Beat Breaker	Beat Breaker	Effects	Configure randomization settings	Mode	ctl.select	UI label
+logic:Beat Breaker	Beat Breaker	Effects	Configure randomization settings	Clear All Values	other	UI label
+logic:Phat FX	Phat FX	Effects	Phat FX processors	Type	ctl.select	UI label
+logic:Phat FX	Phat FX	Effects	Phat FX processors	Low/High	other	UI label
+logic:Phat FX	Phat FX	Effects	Phat FX processors	Low/High Res	other	UI label
+logic:Phat FX	Phat FX	Effects	Phat FX processors	Reject Mix	other	UI label
+logic:Phat FX	Phat FX	Effects	Phat FX processors	Cutoff	filter.cutoff	UI label
+logic:Phat FX	Phat FX	Effects	Phat FX processors	Res	filter.resonance	UI label
+logic:Phat FX	Phat FX	Effects	Phat FX processors	Drive	fx.drive	UI label
+logic:Phat FX	Phat FX	Effects	Phat FX processors	Mix	fx.mix	UI label
+logic:Phat FX	Phat FX	Effects	Phat FX processors	Amount	other	UI label
+logic:Phat FX	Phat FX	Effects	Phat FX processors	Rate	fx.mod.rate	UI label
+logic:Phat FX	Phat FX	Effects	Phat FX processors	Tune	fx.pitch	UI label
+logic:Phat FX	Phat FX	Effects	Phat FX processors	Release	other	UI label
+logic:Phat FX	Phat FX	Effects	Phat FX modulators	Target	other	UI label
+logic:Phat FX	Phat FX	Effects	Phat FX modulators	Attack	other	UI label
+logic:Phat FX	Phat FX	Effects	Phat FX modulators	Depth	fx.mod.depth	UI label
+logic:Phat FX	Phat FX	Effects	Phat FX modulators	Waveform	ctl.select	UI label
+logic:Phat FX	Phat FX	Effects	Phat FX modulators	LFO Rate	fx.mod.rate	UI label
+logic:Phat FX	Phat FX	Effects	Phat FX modulators	Sync	system	UI label
+logic:Phat FX	Phat FX	Effects	Global controls	XY	other	UI label
+logic:Phat FX	Phat FX	Effects	Global controls	Y Target	other	UI label
+logic:Phat FX	Phat FX	Effects	Global controls	Y Depth	other	UI label
+logic:Phat FX	Phat FX	Effects	Global controls	Limiter	other	UI label
+logic:Phat FX	Phat FX	Effects	Global controls	Input	amp.gain	UI label
+logic:Phat FX	Phat FX	Effects	Global controls	Output	amp.gain	UI label
+logic:Remix FX	Remix FX	Effects	Remix FX	FX Lock	other	UI label
+logic:Remix FX	Remix FX	Effects	Remix FX	Gater	other	UI label
+logic:Remix FX	Remix FX	Effects	Remix FX	Downsampler	other	UI label
+logic:Remix FX	Remix FX	Effects	Remix FX	Reverse	other	UI label
+logic:Remix FX	Remix FX	Effects	Remix FX	Scratch	other	UI label
+logic:Remix FX	Remix FX	Effects	Remix FX	Tape Stop	other	UI label
+logic:Remix FX	Remix FX	Effects	Remix FX	Settings	other	UI label
+logic:Remix FX	Remix FX	Effects	Remix FX	Combine effects on a locked	other	UI label
+logic:Step FX	Step FX	Effects	Step FX processors	Delay	other	UI label
+logic:Step FX	Step FX	Effects	Step FX processors	Rate	fx.mod.rate	UI label
+logic:Step FX	Step FX	Effects	Step FX processors	Depth	fx.mod.depth	UI label
+logic:Step FX	Step FX	Effects	Step FX processors	Feedback	other	UI label
+logic:Step FX	Step FX	Effects	Step FX processors	Mix	fx.mix	UI label
+logic:Step FX	Step FX	Effects	Step FX processors	Filter Type	ctl.select	UI label
+logic:Step FX	Step FX	Effects	Step FX processors	Cutoff	filter.cutoff	UI label
+logic:Step FX	Step FX	Effects	Step FX processors	Sync	system	UI label
+logic:Step FX	Step FX	Effects	Step FX processors	Time L/R	other	UI label
+logic:Step FX	Step FX	Effects	Step FX processors	Type	ctl.select	UI label
+logic:Step FX	Step FX	Effects	Step FX processors	Res	filter.resonance	UI label
+logic:Step FX	Step FX	Effects	Step FX processors	Exciter	other	UI label
+logic:Step FX	Step FX	Effects	Step FX processors	Dirt	fx.drive	UI label
+logic:Step FX	Step FX	Effects	Step FX processors	Time	other	UI label
+logic:Step FX	Step FX	Effects	Step modulator global controls	Step modulator select	other	UI label
+logic:Step FX	Step FX	Effects	Step modulator global controls	Modulator Target	other	UI label
+logic:Step FX	Step FX	Effects	Step modulator playback controls	Swing	other	UI label
+logic:Step FX	Step FX	Effects	Step modulator playback controls	Attack	other	UI label
+logic:Step FX	Step FX	Effects	Step modulator playback controls	Hold	other	UI label
+logic:Step FX	Step FX	Effects	Step modulator playback controls	Release	other	UI label
+logic:Step FX	Step FX	Effects	Global controls	XY	other	UI label
+logic:Step FX	Step FX	Effects	Global controls	Y Target	other	UI label
+logic:Step FX	Step FX	Effects	Global controls	Y Depth	other	UI label
+logic:Step FX	Step FX	Effects	Global controls	Input	amp.gain	UI label
+logic:Step FX	Step FX	Effects	Global controls	Output	amp.gain	UI label
+logic:Pitch Correction	Pitch Correction	Effects	Pitch Correction parameters	Root Note	other	UI label
+logic:Pitch Correction	Pitch Correction	Effects	Pitch Correction parameters	Scale/Chord	other	UI label
+logic:Pitch Correction	Pitch Correction	Effects	Pitch Correction parameters	Show Pitch	fx.pitch	UI label
+logic:Pitch Correction	Pitch Correction	Effects	Pitch Correction parameters	Edit Scale	other	UI label
+logic:Pitch Correction	Pitch Correction	Effects	Pitch Correction parameters	Bypass Notes	other	UI label
+logic:Pitch Correction	Pitch Correction	Effects	Pitch Correction parameters	Bypass All	other	UI label
+logic:Pitch Correction	Pitch Correction	Effects	Pitch Correction parameters	Neural Pitch Detection	other	UI label
+logic:Pitch Correction	Pitch Correction	Effects	Pitch Correction parameters	Pitch Range	system	UI label
+logic:Pitch Correction	Pitch Correction	Effects	Pitch Correction parameters	Response	other	UI label
+logic:Pitch Correction	Pitch Correction	Effects	Pitch Correction parameters	Tolerance	other	UI label
+logic:Pitch Correction	Pitch Correction	Effects	Pitch Correction parameters	Global Tuning	other	UI label
+logic:Pitch Correction	Pitch Correction	Effects	Pitch Correction parameters	Reference	other	UI label
+logic:Pitch Correction	Pitch Correction	Effects	Pitch Correction parameters	Detune	fx.pitch	UI label
+logic:Vocal Transformer	Vocal Transformer	Effects	Vocal Transformer parameters	Pitch	fx.pitch	UI label
+logic:Vocal Transformer	Vocal Transformer	Effects	Vocal Transformer parameters	Robotize	other	UI label
+logic:Vocal Transformer	Vocal Transformer	Effects	Vocal Transformer parameters	Pitch Base	ctl.select	UI label
+logic:Vocal Transformer	Vocal Transformer	Effects	Vocal Transformer parameters	Tracking slider	other	UI label
+logic:Vocal Transformer	Vocal Transformer	Effects	Vocal Transformer parameters	field	other	UI label
+logic:Vocal Transformer	Vocal Transformer	Effects	Vocal Transformer parameters	and	other	UI label
+logic:Vocal Transformer	Vocal Transformer	Effects	Vocal Transformer parameters	Mix	fx.mix	UI label
+logic:Vocal Transformer	Vocal Transformer	Effects	Vocal Transformer parameters	Formant	other	UI label
+logic:ChromaVerb	ChromaVerb	Effects	Main display and Damping EQ	Room Type	ctl.select	UI label
+logic:ChromaVerb	ChromaVerb	Effects	Main display and Damping EQ	Frequency	fx.eq.freq	UI label
+logic:ChromaVerb	ChromaVerb	Effects	Main display and Damping EQ	Ratio	other	UI label
+logic:ChromaVerb	ChromaVerb	Effects	Main display and Damping EQ	Q	fx.eq.q	UI label
+logic:ChromaVerb	ChromaVerb	Effects	Main display and Damping EQ	Visualization on/off	ctl.switch	UI label
+logic:ChromaVerb	ChromaVerb	Effects	Main view controls	Attack	other	UI label
+logic:ChromaVerb	ChromaVerb	Effects	Main view controls	Size	fx.reverb.decay	UI label
+logic:ChromaVerb	ChromaVerb	Effects	Main view controls	Density	other	UI label
+logic:ChromaVerb	ChromaVerb	Effects	Main view controls	Predelay	other	UI label
+logic:ChromaVerb	ChromaVerb	Effects	Main view controls	Predelay sync	system	UI label
+logic:ChromaVerb	ChromaVerb	Effects	Main view controls	Decay	fx.reverb.decay	UI label
+logic:ChromaVerb	ChromaVerb	Effects	Main view controls	Decay sync	system	UI label
+logic:ChromaVerb	ChromaVerb	Effects	Main view controls	Freeze	ctl.switch	UI label
+logic:ChromaVerb	ChromaVerb	Effects	Main view controls	Distance	other	UI label
+logic:ChromaVerb	ChromaVerb	Effects	Main view controls	Dry/Wet	fx.reverb.mix	UI label
+logic:ChromaVerb	ChromaVerb	Effects	Output EQ	Output EQ on/off	ctl.switch	UI label
+logic:ChromaVerb	ChromaVerb	Effects	Output EQ	Band 1 On/Off	ctl.switch	UI label
+logic:ChromaVerb	ChromaVerb	Effects	Output EQ	Band 2 On/Off	ctl.switch	UI label
+logic:ChromaVerb	ChromaVerb	Effects	Output EQ	Band 3 On/Off	ctl.switch	UI label
+logic:ChromaVerb	ChromaVerb	Effects	Output EQ	Band 4 On/Off	ctl.switch	UI label
+logic:ChromaVerb	ChromaVerb	Effects	Output EQ	Band 5 On/Off	ctl.switch	UI label
+logic:ChromaVerb	ChromaVerb	Effects	Output EQ	Band 6 On/Off	ctl.switch	UI label
+logic:ChromaVerb	ChromaVerb	Effects	Output EQ	Gain	fx.eq.gain	UI label
+logic:ChromaVerb	ChromaVerb	Effects	Output EQ	Order	ctl.select	UI label
+logic:ChromaVerb	ChromaVerb	Effects	Details view controls	Quality	ctl.select	UI label
+logic:ChromaVerb	ChromaVerb	Effects	Details view controls	Mod Speed	fx.mod.rate	UI label
+logic:ChromaVerb	ChromaVerb	Effects	Details view controls	Mod Depth	fx.mod.depth	UI label
+logic:ChromaVerb	ChromaVerb	Effects	Details view controls	Mod Source	ctl.select	UI label
+logic:ChromaVerb	ChromaVerb	Effects	Details view controls	Smoothing	other	UI label
+logic:ChromaVerb	ChromaVerb	Effects	Details view controls	Early/Late Mix	other	UI label
+logic:ChromaVerb	ChromaVerb	Effects	Details view controls	Width	stereo.width	UI label
+logic:ChromaVerb	ChromaVerb	Effects	Details view controls	Mono Maker on/off	ctl.switch	UI label
+logic:ChromaVerb	ChromaVerb	Effects	Details view controls	Mono Maker	other	UI label
+logic:EnVerb	EnVerb	Effects	EnVerb controls	Attack	other	UI label
+logic:EnVerb	EnVerb	Effects	EnVerb controls	Decay	fx.reverb.decay	UI label
+logic:EnVerb	EnVerb	Effects	EnVerb controls	Sustain (Hold)	other	UI label
+logic:EnVerb	EnVerb	Effects	EnVerb controls	Release	other	UI label
+logic:EnVerb	EnVerb	Effects	EnVerb controls	Dry Signal Delay	other	UI label
+logic:EnVerb	EnVerb	Effects	EnVerb controls	Predelay	other	UI label
+logic:EnVerb	EnVerb	Effects	EnVerb controls	Hold (Sustain)	other	UI label
+logic:EnVerb	EnVerb	Effects	EnVerb controls	Density	other	UI label
+logic:EnVerb	EnVerb	Effects	EnVerb controls	Spread	stereo.width	UI label
+logic:EnVerb	EnVerb	Effects	EnVerb controls	High Cut	other	UI label
+logic:EnVerb	EnVerb	Effects	EnVerb controls	Crossover	other	UI label
+logic:EnVerb	EnVerb	Effects	EnVerb controls	Low Freq Level	other	UI label
+logic:EnVerb	EnVerb	Effects	EnVerb controls	Dry/Wet	fx.reverb.mix	UI label
+logic:Quantec Room Simulator	Quantec Room Simulator	Effects	Quantec Room Simulator: QRS controls	Reverb model	ctl.select	UI label
+logic:Quantec Room Simulator	Quantec Room Simulator	Effects	Quantec Room Simulator: QRS controls	Reverb Time	fx.reverb.decay	UI label
+logic:Quantec Room Simulator	Quantec Room Simulator	Effects	Quantec Room Simulator: QRS controls	Freeze	ctl.switch	UI label
+logic:Quantec Room Simulator	Quantec Room Simulator	Effects	Quantec Room Simulator: QRS controls	Add	other	UI label
+logic:Quantec Room Simulator	Quantec Room Simulator	Effects	Quantec Room Simulator: QRS controls	Enhance	other	UI label
+logic:Quantec Room Simulator	Quantec Room Simulator	Effects	Quantec Room Simulator: QRS controls	Primary	other	UI label
+logic:Quantec Room Simulator	Quantec Room Simulator	Effects	Quantec Room Simulator: QRS controls	Room Size	other	UI label
+logic:Quantec Room Simulator	Quantec Room Simulator	Effects	Quantec Room Simulator: QRS controls	1st Reflection Delay	other	UI label
+logic:Quantec Room Simulator	Quantec Room Simulator	Effects	Quantec Room Simulator: QRS controls	Reverb Delay	other	UI label
+logic:Quantec Room Simulator	Quantec Room Simulator	Effects	Quantec Room Simulator: QRS controls	Dry Level	other	UI label
+logic:Quantec Room Simulator	Quantec Room Simulator	Effects	Quantec Room Simulator: QRS controls	1st Reflection Level	other	UI label
+logic:Quantec Room Simulator	Quantec Room Simulator	Effects	Quantec Room Simulator: QRS controls	Reverb Level	other	UI label
+logic:Quantec Room Simulator	Quantec Room Simulator	Effects	Quantec Room Simulator: QRS controls	Secondary	other	UI label
+logic:Quantec Room Simulator	Quantec Room Simulator	Effects	Quantec Room Simulator: QRS controls	AD/DA Converters	other	UI label
+logic:Quantec Room Simulator	Quantec Room Simulator	Effects	Quantec Room Simulator: QRS controls	AD/DA Drive	other	UI label
+logic:Quantec Room Simulator	Quantec Room Simulator	Effects	Quantec Room Simulator: QRS controls	1st Reflection Source	ctl.select	UI label
+logic:Quantec Room Simulator	Quantec Room Simulator	Effects	Quantec Room Simulator: QRS controls	1st Phase Reverse	other	UI label
+logic:Quantec Room Simulator	Quantec Room Simulator	Effects	Quantec Room Simulator: YardStick controls	Mode	ctl.select	UI label
+logic:Quantec Room Simulator	Quantec Room Simulator	Effects	Quantec Room Simulator: YardStick controls	Low	other	UI label
+logic:Quantec Room Simulator	Quantec Room Simulator	Effects	Quantec Room Simulator: YardStick controls	Xover	other	UI label
+logic:Quantec Room Simulator	Quantec Room Simulator	Effects	Quantec Room Simulator: YardStick controls	High	other	UI label
+logic:Quantec Room Simulator	Quantec Room Simulator	Effects	Quantec Room Simulator: YardStick controls	Reverb Density	other	UI label
+logic:Quantec Room Simulator	Quantec Room Simulator	Effects	Quantec Room Simulator: YardStick controls	1st Reflection Spread	stereo.width	UI label
+logic:Quantec Room Simulator	Quantec Room Simulator	Effects	Quantec Room Simulator: YardStick controls	Reverb High Cut	other	UI label
+logic:Quantec Room Simulator	Quantec Room Simulator	Effects	Quantec Room Simulator: YardStick controls	Bass Gain	other	UI label
+logic:Quantec Room Simulator	Quantec Room Simulator	Effects	Quantec Room Simulator: YardStick controls	Bass Crossover	other	UI label
+logic:Quantec Room Simulator	Quantec Room Simulator	Effects	Quantec Room Simulator: YardStick controls	Reverb Correlation	other	UI label
+logic:Quantec Room Simulator	Quantec Room Simulator	Effects	Quantec Room Simulator: YardStick controls	Extended	other	UI label
+logic:Quantec Room Simulator	Quantec Room Simulator	Effects	Quantec Room Simulator: YardStick controls	Dry Source	ctl.select	UI label
+logic:Quantec Room Simulator	Quantec Room Simulator	Effects	Quantec Room Simulator: YardStick controls	L Correlation Pattern	other	UI label
+logic:Quantec Room Simulator	Quantec Room Simulator	Effects	Quantec Room Simulator: YardStick controls	R Correlation Pattern	other	UI label
+logic:Quantec Room Simulator	Quantec Room Simulator	Effects	Quantec Room Simulator: YardStick controls	Subsonic	other	UI label
+logic:Quantec Room Simulator	Quantec Room Simulator	Effects	Quantec Room Simulator: Surround Sound	Reverb Level R/F	other	UI label
+logic:Quantec Room Simulator	Quantec Room Simulator	Effects	Quantec Room Simulator: Surround Sound	Reverb Level B/T	other	UI label
+logic:Quantec Room Simulator	Quantec Room Simulator	Effects	Quantec Room Simulator: Surround Sound	Details	other	UI label
+logic:Quantec Room Simulator	Quantec Room Simulator	Effects	Quantec Room Simulator: Surround Sound	Pre Level	other	UI label
+logic:Quantec Room Simulator	Quantec Room Simulator	Effects	Quantec Room Simulator: Surround Sound	Pre Delay	other	UI label
+logic:Quantec Room Simulator	Quantec Room Simulator	Effects	Quantec Room Simulator: Surround Sound	Pre High Cut	other	UI label
+logic:Quantec Room Simulator	Quantec Room Simulator	Effects	Quantec Room Simulator: Surround Sound	Room Input	other	UI label
+logic:Quantec Room Simulator	Quantec Room Simulator	Effects	Quantec Room Simulator: Surround Sound	1st Refl. Source	ctl.select	UI label
+logic:Quantec Room Simulator	Quantec Room Simulator	Effects	Quantec Room Simulator: Surround Sound	1st Refl. Delay	other	UI label
+logic:Quantec Room Simulator	Quantec Room Simulator	Effects	Quantec Room Simulator: Surround Sound	1st Refl. Spread	stereo.width	UI label
+logic:Quantec Room Simulator	Quantec Room Simulator	Effects	Quantec Room Simulator: Surround Sound	1st Refl. Level	other	UI label
+logic:Quantec Room Simulator	Quantec Room Simulator	Effects	Quantec Room Simulator: Surround Sound	Pattern correlation	other	UI label
+logic:SilverVerb	SilverVerb	Effects	SilverVerb controls	Predelay	other	UI label
+logic:SilverVerb	SilverVerb	Effects	SilverVerb controls	Reflectivity	other	UI label
+logic:SilverVerb	SilverVerb	Effects	SilverVerb controls	Size	fx.reverb.decay	UI label
+logic:SilverVerb	SilverVerb	Effects	SilverVerb controls	Density/Time	other	UI label
+logic:SilverVerb	SilverVerb	Effects	SilverVerb controls	Low Cut	fx.tone	UI label
+logic:SilverVerb	SilverVerb	Effects	SilverVerb controls	High Cut	other	UI label
+logic:SilverVerb	SilverVerb	Effects	SilverVerb controls	Modulation On/Off	ctl.switch	UI label
+logic:SilverVerb	SilverVerb	Effects	SilverVerb controls	Rate	fx.mod.rate	UI label
+logic:SilverVerb	SilverVerb	Effects	SilverVerb controls	Phase	other	UI label
+logic:SilverVerb	SilverVerb	Effects	SilverVerb controls	Intensity	fx.mod.depth	UI label
+logic:SilverVerb	SilverVerb	Effects	SilverVerb controls	Dry/Wet	fx.reverb.mix	UI label
+logic:Space Designer	Space Designer	Effects	Display mode bar	Volume Env On/Off	ctl.switch	UI label
+logic:Space Designer	Space Designer	Effects	Display mode bar	Volume Env	other	UI label
+logic:Space Designer	Space Designer	Effects	Display mode bar	Filter Env On/Off	ctl.switch	UI label
+logic:Space Designer	Space Designer	Effects	Display mode bar	Filter Env	other	UI label
+logic:Space Designer	Space Designer	Effects	Display mode bar	Density Env On/Off	ctl.switch	UI label
+logic:Space Designer	Space Designer	Effects	Display mode bar	Density Env	other	UI label
+logic:Space Designer	Space Designer	Effects	Display mode bar	Output EQ On/Off	ctl.switch	UI label
+logic:Space Designer	Space Designer	Effects	Display mode bar	Output EQ	other	UI label
+logic:Space Designer	Space Designer	Effects	Volume envelope controls	Decay	fx.reverb.decay	UI label
+logic:Space Designer	Space Designer	Effects	Volume envelope controls	End Level	other	UI label
+logic:Space Designer	Space Designer	Effects	Filter and filter envelope controls	Filter type	ctl.select	UI label
+logic:Space Designer	Space Designer	Effects	Filter and filter envelope controls	Res(onance)	other	UI label
+logic:Space Designer	Space Designer	Effects	Filter and filter envelope controls	Attack	other	UI label
+logic:Space Designer	Space Designer	Effects	Filter and filter envelope controls	Break Level	other	UI label
+logic:Space Designer	Space Designer	Effects	Filter and filter envelope controls	End Freq	other	UI label
+logic:Space Designer	Space Designer	Effects	Density envelope controls	Ramp Time	other	UI label
+logic:Space Designer	Space Designer	Effects	Density envelope controls	End Density	other	UI label
+logic:Space Designer	Space Designer	Effects	Density envelope controls	Reflection Shape	ctl.select	UI label
+logic:Space Designer	Space Designer	Effects	Output EQ controls	EQ On/Off	ctl.switch	UI label
+logic:Space Designer	Space Designer	Effects	Output EQ controls	Band 1 On/Off	ctl.switch	UI label
+logic:Space Designer	Space Designer	Effects	Output EQ controls	Band 2 On/Off	ctl.switch	UI label
+logic:Space Designer	Space Designer	Effects	Output EQ controls	Band 3 On/Off	ctl.switch	UI label
+logic:Space Designer	Space Designer	Effects	Output EQ controls	Band 4 On/Off	ctl.switch	UI label
+logic:Space Designer	Space Designer	Effects	Output EQ controls	Band 5 On/Off	ctl.switch	UI label
+logic:Space Designer	Space Designer	Effects	Output EQ controls	Band 6 On/Off	ctl.switch	UI label
+logic:Space Designer	Space Designer	Effects	Output EQ controls	Gain	fx.eq.gain	UI label
+logic:Space Designer	Space Designer	Effects	Output EQ controls	Order	other	UI label
+logic:Space Designer	Space Designer	Effects	Output EQ controls	Q	fx.eq.q	UI label
+logic:Exciter	Exciter	Effects	Exciter controls	Frequency	other	UI label
+logic:Exciter	Exciter	Effects	Exciter controls	Dry Signal	other	UI label
+logic:Exciter	Exciter	Effects	Exciter controls	Harmonics	other	UI label
+logic:Exciter	Exciter	Effects	Exciter controls	Color 1	fx.tone	UI label
+logic:SubBass	SubBass	Effects	Controls	High Ratio	other	UI label
+logic:SubBass	SubBass	Effects	Controls	High Center	other	UI label
+logic:SubBass	SubBass	Effects	Controls	High Bandwidth	stereo.width	UI label
+logic:SubBass	SubBass	Effects	Controls	Freq. Mix	other	UI label
+logic:SubBass	SubBass	Effects	Controls	Low Ratio	other	UI label
+logic:SubBass	SubBass	Effects	Controls	Low Center	other	UI label
+logic:SubBass	SubBass	Effects	Controls	Low Bandwidth	stereo.width	UI label
+logic:SubBass	SubBass	Effects	Controls	Dry	other	UI label
+logic:SubBass	SubBass	Effects	Controls	Wet	fx.mix	UI label
+logic:Alchemy	Alchemy	Instruments	Source master controls	Source On/Off	ctl.switch	UI label
+logic:Alchemy	Alchemy	Instruments	Source master controls	Source Select	other	UI label
+logic:Alchemy	Alchemy	Instruments	Source master controls	Vol	amp.gain	UI label
+logic:Alchemy	Alchemy	Instruments	Source master controls	Tune	osc.pitch	UI label
+logic:Alchemy	Alchemy	Instruments	Source master controls	Pan	amp.pan	UI label
+logic:Alchemy	Alchemy	Instruments	Source master controls	Send	other	UI label
+logic:Alchemy	Alchemy	Instruments	Source subpage controls	Solo	ctl.switch	UI label
+logic:Alchemy	Alchemy	Instruments	Source subpage controls	Stereo	other	UI label
+logic:Alchemy	Alchemy	Instruments	Source subpage controls	Volume	amp.gain	UI label
+logic:Alchemy	Alchemy	Instruments	Source subpage controls	Coarse Tune	osc.pitch	UI label
+logic:Alchemy	Alchemy	Instruments	Source subpage controls	Fine Tune	osc.fine	UI label
+logic:Alchemy	Alchemy	Instruments	Source subpage controls	Position	other	UI label
+logic:Alchemy	Alchemy	Instruments	Source subpage controls	(Loop) Start	other	UI label
+logic:Alchemy	Alchemy	Instruments	Source subpage controls	(Loop) End/Length	other	UI label
+logic:Alchemy	Alchemy	Instruments	Source subpage controls	Speed	other	UI label
+logic:Alchemy	Alchemy	Instruments	Source subpage controls	Wait	other	UI label
+logic:Alchemy	Alchemy	Instruments	Source subpage controls	Keyscale	system	UI label
+logic:Alchemy	Alchemy	Instruments	Source subpage controls	Loop Mode	ctl.select	UI label
+logic:Alchemy	Alchemy	Instruments	Source subpage controls	Sample Tempo	other	UI label
+logic:Alchemy	Alchemy	Instruments	Source subpage controls	Synthesis element	other	UI label
+logic:Alchemy	Alchemy	Instruments	Source filter controls	Filter type	ctl.select	UI label
+logic:Alchemy	Alchemy	Instruments	Source filter controls	Ser/Par	other	UI label
+logic:Alchemy	Alchemy	Instruments	Source filter controls	Cutoff	filter.cutoff	UI label
+logic:Alchemy	Alchemy	Instruments	Source filter controls	Resonance	filter.resonance	UI label
+logic:Alchemy	Alchemy	Instruments	Source filter controls	Drive	fx.drive	UI label
+logic:Alchemy	Alchemy	Instruments	Additive element controls	Sine/Complex	other	UI label
+logic:Alchemy	Alchemy	Instruments	Additive element controls	Shape	ctl.select	UI label
+logic:Alchemy	Alchemy	Instruments	Additive element controls	Num Partials	other	UI label
+logic:Alchemy	Alchemy	Instruments	Additive element controls	PVar	other	UI label
+logic:Alchemy	Alchemy	Instruments	Additive element controls	Sym	other	UI label
+logic:Alchemy	Alchemy	Instruments	Additive element effects	Additive effect On/Off	ctl.switch	UI label
+logic:Alchemy	Alchemy	Instruments	Additive element effects	Additive effect 1	other	UI label
+logic:Alchemy	Alchemy	Instruments	Additive element effects	Fundamental	other	UI label
+logic:Alchemy	Alchemy	Instruments	Additive element effects	Octaves	other	UI label
+logic:Alchemy	Alchemy	Instruments	Additive element effects	Odd/Even	other	UI label
+logic:Alchemy	Alchemy	Instruments	Additive element effects	Fifths	other	UI label
+logic:Alchemy	Alchemy	Instruments	Additive element effects	Pulse/Saw	other	UI label
+logic:Alchemy	Alchemy	Instruments	Additive element effects	Sync	system	UI label
+logic:Alchemy	Alchemy	Instruments	Additive element effects	Tone	fx.tone	UI label
+logic:Alchemy	Alchemy	Instruments	Additive element effects	Noise	other	UI label
+logic:Alchemy	Alchemy	Instruments	Additive element effects	Rate	lfo.rate	UI label
+logic:Alchemy	Alchemy	Instruments	Additive element effects	Smooth	other	UI label
+logic:Alchemy	Alchemy	Instruments	Additive element effects	Additive effect 2	other	UI label
+logic:Alchemy	Alchemy	Instruments	Additive element effects	Amount	mod.amount	UI label
+logic:Alchemy	Alchemy	Instruments	Additive element effects	Partial	other	UI label
+logic:Alchemy	Alchemy	Instruments	Additive element effects	Tuned	other	UI label
+logic:Alchemy	Alchemy	Instruments	Additive element effects	String	other	UI label
+logic:Alchemy	Alchemy	Instruments	Additive element effects	Pitch	osc.pitch	UI label
+logic:Alchemy	Alchemy	Instruments	Additive element effects	Frequency	other	UI label
+logic:Alchemy	Alchemy	Instruments	Additive element effects	Min. Partial	other	UI label
+logic:Alchemy	Alchemy	Instruments	Additive element effects	Additive effect 3	other	UI label
+logic:Alchemy	Alchemy	Instruments	Additive element effects	Ramp	other	UI label
+logic:Alchemy	Alchemy	Instruments	Additive element effects	Cycles	other	UI label
+logic:Alchemy	Alchemy	Instruments	Additive element effects	Damp (Damping)	fx.tone	UI label
+logic:Alchemy	Alchemy	Instruments	Additive element effects	Feedback	other	UI label
+logic:Alchemy	Alchemy	Instruments	Additive element effects	Low	other	UI label
+logic:Alchemy	Alchemy	Instruments	Additive element effects	Low Mid	other	UI label
+logic:Alchemy	Alchemy	Instruments	Additive element effects	High Mid	other	UI label
+logic:Alchemy	Alchemy	Instruments	Additive element effects	High	other	UI label
+logic:Alchemy	Alchemy	Instruments	Additive element effects	Release	env.release	UI label
+logic:Alchemy	Alchemy	Instruments	Additive element effects	Width	stereo.width	UI label
+logic:Alchemy	Alchemy	Instruments	Additive element effects	Group	other	UI label
+logic:Alchemy	Alchemy	Instruments	Additive element effects	Period	other	UI label
+logic:Alchemy	Alchemy	Instruments	Additive element effects	Phase	other	UI label
+logic:Alchemy	Alchemy	Instruments	Spectral element controls	Pitch/Noise	other	UI label
+logic:Alchemy	Alchemy	Instruments	Spectral element controls	Low Cut	fx.tone	UI label
+logic:Alchemy	Alchemy	Instruments	Spectral element controls	High Cut	other	UI label
+logic:Alchemy	Alchemy	Instruments	Spectral element effects	Spectral effect On/Off	ctl.switch	UI label
+logic:Alchemy	Alchemy	Instruments	Spectral element effects	Spectral effect	other	UI label
+logic:Alchemy	Alchemy	Instruments	Spectral element effects	Mix	fx.mix	UI label
+logic:Alchemy	Alchemy	Instruments	Spectral element effects	Length	other	UI label
+logic:Alchemy	Alchemy	Instruments	Spectral element effects	Variance	other	UI label
+logic:Alchemy	Alchemy	Instruments	Spectral element effects	Gate	other	UI label
+logic:Alchemy	Alchemy	Instruments	Spectral element effects	Threshold	other	UI label
+logic:Alchemy	Alchemy	Instruments	Spectral element effects	Attack	env.attack	UI label
+logic:Alchemy	Alchemy	Instruments	Spectral element effects	Simplify	other	UI label
+logic:Alchemy	Alchemy	Instruments	Spectral element effects	Shift	other	UI label
+logic:Alchemy	Alchemy	Instruments	Spectral element effects	LP Cutoff	filter.cutoff	UI label
+logic:Alchemy	Alchemy	Instruments	Spectral element effects	Alpha	other	UI label
+logic:Alchemy	Alchemy	Instruments	Spectral element effects	Beta	other	UI label
+logic:Alchemy	Alchemy	Instruments	Spectral element effects	Decay	env.decay	UI label
+logic:Alchemy	Alchemy	Instruments	Spectral element effects	Interval	ctl.select	UI label
+logic:Alchemy	Alchemy	Instruments	Spectral element effects	Shimmer	other	UI label
+logic:Alchemy	Alchemy	Instruments	Spectral element effects	Factor	other	UI label
+logic:Alchemy	Alchemy	Instruments	Spectral element effects	Range	system	UI label
+logic:Alchemy	Alchemy	Instruments	Spectral element effects	Bins	other	UI label
+logic:Alchemy	Alchemy	Instruments	Spectral element effects	Bright	other	UI label
+logic:Alchemy	Alchemy	Instruments	Spectral element effects	Phase On/Off	ctl.switch	UI label
+logic:Alchemy	Alchemy	Instruments	Formant filter controls	KTrack	other	UI label
+logic:Alchemy	Alchemy	Instruments	Formant filter controls	Size	other	UI label
+logic:Alchemy	Alchemy	Instruments	Formant filter controls	Center	other	UI label
+logic:Alchemy	Alchemy	Instruments	Formant filter controls	Select	other	UI label
+logic:Alchemy	Alchemy	Instruments	Granular element controls	Density	other	UI label
+logic:Alchemy	Alchemy	Instruments	Granular element controls	Formant Shift	other	UI label
+logic:Alchemy	Alchemy	Instruments	Granular element controls	RTime	other	UI label
+logic:Alchemy	Alchemy	Instruments	Granular element controls	RPan	other	UI label
+logic:Alchemy	Alchemy	Instruments	Granular element controls	Grain Shape	ctl.select	UI label
+logic:Alchemy	Alchemy	Instruments	Granular element controls	Num Taps	other	UI label
+logic:Alchemy	Alchemy	Instruments	Granular element controls	Tap Interval	ctl.select	UI label
+logic:Alchemy	Alchemy	Instruments	Granular element controls	Tap Delay	other	UI label
+logic:Alchemy	Alchemy	Instruments	Granular element controls	Tap Spacing	other	UI label
+logic:Alchemy	Alchemy	Instruments	Granular element controls	StOffset	other	UI label
+logic:Alchemy	Alchemy	Instruments	Sampler element controls	Reverse	other	UI label
+logic:Alchemy	Alchemy	Instruments	VA element controls	Oscillator On/Off	ctl.switch	UI label
+logic:Alchemy	Alchemy	Instruments	VA element controls	Wave	ctl.select	UI label
+logic:Alchemy	Alchemy	Instruments	VA element controls	(Oscillator) Vol	other	UI label
+logic:Alchemy	Alchemy	Instruments	VA element controls	Num(ber)	other	UI label
+logic:Alchemy	Alchemy	Instruments	VA element controls	Detune	osc.fine	UI label
+logic:Alchemy	Alchemy	Instruments	VA element controls	Noise On/Off	ctl.switch	UI label
+logic:Alchemy	Alchemy	Instruments	VA element controls	(Noise) Vol	other	UI label
+logic:Alchemy	Alchemy	Instruments	Morph controls	Morph type	ctl.select	UI label
+logic:Alchemy	Alchemy	Instruments	Morph controls	X/Y	other	UI label
+logic:Alchemy	Alchemy	Instruments	Morph controls	Auto Gain	other	UI label
+logic:Alchemy	Alchemy	Instruments	Morph controls	Fixed Pitch	osc.pitch	UI label
+logic:Alchemy	Alchemy	Instruments	Morph controls	Auto Align	other	UI label
+logic:Alchemy	Alchemy	Instruments	Morph controls	Source group	other	UI label
+logic:Alchemy	Alchemy	Instruments	Morph controls	Additive/VA	other	UI label
+logic:Alchemy	Alchemy	Instruments	Morph controls	Spectral/Granular	other	UI label
+logic:Alchemy	Alchemy	Instruments	Morph controls	Formant	other	UI label
+logic:Alchemy	Alchemy	Instruments	Morph controls	Envelope	other	UI label
+logic:Alchemy	Alchemy	Instruments	Inspector group controls	Keyswitch	other	UI label
+logic:Alchemy	Alchemy	Instruments	Inspector group controls	Trigger	other	UI label
+logic:Alchemy	Alchemy	Instruments	Inspector group controls	Fade	other	UI label
+logic:Alchemy	Alchemy	Instruments	Inspector group controls	Starts	other	UI label
+logic:Alchemy	Alchemy	Instruments	Inspector group controls	Order	other	UI label
+logic:Alchemy	Alchemy	Instruments	Inspector group controls	Type	ctl.select	UI label
+logic:Alchemy	Alchemy	Instruments	Inspector group controls	Value	other	UI label
+logic:Alchemy	Alchemy	Instruments	Inspector group controls	Condition	other	UI label
+logic:Alchemy	Alchemy	Instruments	Inspector zone controls	Key	other	UI label
+logic:Alchemy	Alchemy	Instruments	Inspector zone controls	Coarse/Fine Tune	osc.pitch	UI label
+logic:Alchemy	Alchemy	Instruments	Inspector zone controls	Lo Key	other	UI label
+logic:Alchemy	Alchemy	Instruments	Inspector zone controls	Hi Key	other	UI label
+logic:Alchemy	Alchemy	Instruments	Inspector zone controls	Lo Vel	other	UI label
+logic:Alchemy	Alchemy	Instruments	Inspector zone controls	Hi Vel	other	UI label
+logic:Alchemy	Alchemy	Instruments	Inspector zone controls	Zone Fade	other	UI label
+logic:Alchemy	Alchemy	Instruments	Inspector zone controls	Left	other	UI label
+logic:Alchemy	Alchemy	Instruments	Inspector zone controls	Right	other	UI label
+logic:Alchemy	Alchemy	Instruments	Inspector zone controls	Bottom	other	UI label
+logic:Alchemy	Alchemy	Instruments	Inspector zone controls	Top	other	UI label
+logic:Alchemy	Alchemy	Instruments	Zone waveform editor	Loop XFade	other	UI label
+logic:Alchemy	Alchemy	Instruments	Partial bar display	Mode	ctl.select	UI label
+logic:Alchemy	Alchemy	Instruments	Partial bar display	Snap Pitch	osc.pitch	UI label
+logic:Alchemy	Alchemy	Instruments	Partial bar display	Breakpoint	other	UI label
+logic:Alchemy	Alchemy	Instruments	Spectral edit window	Color	fx.tone	UI label
+logic:Alchemy	Alchemy	Instruments	Spectral edit window	Mono/Stereo	ctl.select	UI label
+logic:Alchemy	Alchemy	Instruments	Spectral edit window	Resolution	other	UI label
+logic:Alchemy	Alchemy	Instruments	Main filter controls	Par/Ser	other	UI label
+logic:Alchemy	Alchemy	Instruments	Main filter controls	FX master	other	UI label
+logic:Alchemy	Alchemy	Instruments	Main filter controls	Send destination	other	UI label
+logic:Alchemy	Alchemy	Instruments	Alchemy master voice section	Trigger Mode	ctl.select	UI label
+logic:Alchemy	Alchemy	Instruments	Alchemy master voice section	Num(ber of voices)	other	UI label
+logic:Alchemy	Alchemy	Instruments	Alchemy master voice section	Voice Priority	other	UI label
+logic:Alchemy	Alchemy	Instruments	Alchemy master voice section	Rate/Time	other	UI label
+logic:Alchemy	Alchemy	Instruments	Alchemy master voice section	Glide	voice.glide	UI label
+logic:Alchemy	Alchemy	Instruments	Alchemy master voice section	Pitch bend Up/Down	other	UI label
+logic:Alchemy	Alchemy	Instruments	Modulation rack controls	Modulation Target	other	UI label
+logic:Alchemy	Alchemy	Instruments	Modulation rack controls	Modulation Source	ctl.select	UI label
+logic:Alchemy	Alchemy	Instruments	Modulation rack controls	ModMap	other	UI label
+logic:Alchemy	Alchemy	Instruments	Modulation rack controls	Depth	lfo.amount	UI label
+logic:Alchemy	Alchemy	Instruments	Modulation rack controls	Mod Targets	other	UI label
+logic:Alchemy	Alchemy	Instruments	LFO controls	Current LFO	other	UI label
+logic:Alchemy	Alchemy	Instruments	LFO controls	Bipolar	other	UI label
+logic:Alchemy	Alchemy	Instruments	LFO controls	Delay	other	UI label
+logic:Alchemy	Alchemy	Instruments	AHDSR envelope controls	Current AHDSR	other	UI label
+logic:Alchemy	Alchemy	Instruments	AHDSR envelope controls	Hold	other	UI label
+logic:Alchemy	Alchemy	Instruments	AHDSR envelope controls	Sustain	env.sustain	UI label
+logic:Alchemy	Alchemy	Instruments	Multiple segment envelope controls	Current MSEG	other	UI label
+logic:Alchemy	Alchemy	Instruments	Multiple segment envelope controls	Snap Y	other	UI label
+logic:Alchemy	Alchemy	Instruments	Multiple segment envelope controls	Edit Mode	ctl.select	UI label
+logic:Alchemy	Alchemy	Instruments	Sequencer	Current sequencer	other	UI label
+logic:Alchemy	Alchemy	Instruments	Sequencer	Value Snap	other	UI label
+logic:Alchemy	Alchemy	Instruments	Sequencer	Swing	other	UI label
+logic:Alchemy	Alchemy	Instruments	Envelope follower parameters	Current Env Follower	other	UI label
+logic:Alchemy	Alchemy	Instruments	Envelope follower parameters	Source	ctl.select	UI label
+logic:Alchemy	Alchemy	Instruments	Envelope follower parameters	Scale	other	UI label
+logic:Alchemy	Alchemy	Instruments	ModMap parameters	Current ModMap	other	UI label
+logic:Alchemy	Alchemy	Instruments	ModMap parameters	Snap X	other	UI label
+logic:Alchemy	Alchemy	Instruments	Transform Pad	Action pop-up menu	other	UI label
+logic:Alchemy	Alchemy	Instruments	Transform Pad	Octave	osc.pitch	UI label
+logic:Alchemy	Alchemy	Instruments	Transform Pad	ModWheel	other	UI label
+logic:Alchemy	Alchemy	Instruments	Transform Pad	Snap Vol	other	UI label
+logic:Alchemy	Alchemy	Instruments	Performance control knobs	Invert	ctl.switch	UI label
+logic:Alchemy	Alchemy	Instruments	Basic arpeggiator controls	Key Trigger	other	UI label
+logic:Alchemy	Alchemy	Instruments	Basic arpeggiator controls	Pattern	other	UI label
+logic:Alchemy	Alchemy	Instruments	Basic arpeggiator controls	Note Vel	other	UI label
+logic:Alchemy	Alchemy	Instruments	Basic arpeggiator controls	Split	other	UI label
+logic:Alchemy	Alchemy	Instruments	Basic arpeggiator controls	Latch	ctl.switch	UI label
+logic:Alchemy	Alchemy	Instruments	Arpeggiator sequencer controls	Target	other	UI label
+logic:Alchemy	Alchemy	Instruments	Arpeggiator sequencer controls	Step On/Off	ctl.switch	UI label
+logic:Alchemy	Alchemy	Instruments	Arpeggiator sequencer controls	Tie	other	UI label
+logic:Alchemy	Alchemy	Instruments	Dynamic and utility effects	Gain	amp.gain	UI label
+logic:Alchemy	Alchemy	Instruments	Dynamic and utility effects	Phat	other	UI label
+logic:Alchemy	Alchemy	Instruments	Dynamic and utility effects	Input Gain	amp.gain	UI label
+logic:Alchemy	Alchemy	Instruments	Dynamic and utility effects	Ratio	other	UI label
+logic:Alchemy	Alchemy	Instruments	Dynamic and utility effects	Makeup Gain	other	UI label
+logic:Alchemy	Alchemy	Instruments	Filter effects	Low Cut/High Cut	fx.tone	UI label
+logic:Alchemy	Alchemy	Instruments	Filter effects	Low Res/High Res	other	UI label
+logic:Alchemy	Alchemy	Instruments	Filter effects	Q	other	UI label
+logic:Alchemy	Alchemy	Instruments	Filter effects	Bitcrusher	other	UI label
+logic:Alchemy	Alchemy	Instruments	Filter effects	Mech	other	UI label
+logic:Alchemy	Alchemy	Instruments	Filter effects	Tube	other	UI label
+logic:Alchemy	Alchemy	Instruments	Filter effects	XCite	other	UI label
+logic:Alchemy	Alchemy	Instruments	Filter effects	Pre Gain	other	UI label
+logic:Alchemy	Alchemy	Instruments	Filter effects	Post Gain	other	UI label
+logic:Alchemy	Alchemy	Instruments	Modulation effects	L/R Rate	other	UI label
+logic:Alchemy	Alchemy	Instruments	Modulation effects	L/R Offset	other	UI label
+logic:Alchemy	Alchemy	Instruments	Modulation effects	L/R Feedback	other	UI label
+logic:Alchemy	Alchemy	Instruments	Modulation effects	Filter A/B	other	UI label
+logic:Alchemy	Alchemy	Instruments	Modulation effects	Crossover	other	UI label
+logic:Alchemy	Alchemy	Instruments	Modulation effects	Initial Pan	amp.pan	UI label
+logic:Alchemy	Alchemy	Instruments	Modulation effects	Spread	stereo.width	UI label
+logic:Alchemy	Alchemy	Instruments	Modulation effects	Poles	other	UI label
+logic:Alchemy	Alchemy	Instruments	Reverb effects	Time	other	UI label
+logic:Alchemy	Alchemy	Instruments	Reverb effects	Predelay	other	UI label
+logic:Alchemy	Alchemy	Instruments	Reverb effects	Diffusion	other	UI label
+logic:Alchemy	Alchemy	Instruments	Reverb effects	EQ	other	UI label
+logic:Alchemy	Alchemy	Instruments	Reverb effects	Damping	fx.tone	UI label
+logic:Alchemy	Alchemy	Instruments	Reverb effects	Variation	other	UI label
+logic:Alchemy	Alchemy	Instruments	Reverb effects	Quality	ctl.select	UI label
+logic:Alchemy	Alchemy	Instruments	Reverb effects	Hi/Lo Cut	other	UI label
+logic:Alchemy	Alchemy	Instruments	Reverb effects	Dry	other	UI label
+logic:Alchemy	Alchemy	Instruments	Reverb effects	Wet	fx.mix	UI label
+logic:Alchemy	Alchemy	Instruments	Reverb effects	Pre-Delay	other	UI label
+logic:Alchemy	Alchemy	Instruments	Reverb effects	Start	other	UI label
+logic:Alchemy	Alchemy	Instruments	Reverb effects	End	other	UI label
+logic:Alchemy	Alchemy	Instruments	Reverb effects	IR	other	UI label
+logic:Alchemy	Alchemy	Instruments	Alchemy Extended parameters	MIDI Mono Mode	ctl.select	UI label
+logic:Alchemy	Alchemy	Instruments	Alchemy Extended parameters	Mono Mode Bend Range	system	UI label
+logic:Alchemy	Alchemy	Instruments	Alchemy Extended parameters	Ctrl A	other	UI label
+logic:Alchemy	Alchemy	Instruments	Alchemy Extended parameters	Ctrl B	other	UI label
+logic:Alchemy	Alchemy	Instruments	Alchemy Extended parameters	Ctrl C	other	UI label
+logic:Alchemy	Alchemy	Instruments	Alchemy Extended parameters	Ctrl D	other	UI label
+logic:Alchemy	Alchemy	Instruments	Alchemy Extended parameters	Arp Overlap Legacy Mode	ctl.select	UI label
+logic:Drum Synth	Drum Synth	Instruments	Drum Synth Kicks	Body	other	UI label
+logic:Drum Synth	Drum Synth	Instruments	Drum Synth Kicks	Decay	env.decay	UI label
+logic:Drum Synth	Drum Synth	Instruments	Drum Synth Kicks	Noise	other	UI label
+logic:Drum Synth	Drum Synth	Instruments	Drum Synth Kicks	Pitch	osc.pitch	UI label
+logic:Drum Synth	Drum Synth	Instruments	Drum Synth Kicks	Punch	other	UI label
+logic:Drum Synth	Drum Synth	Instruments	Drum Synth Kicks	Saturation	other	UI label
+logic:Drum Synth	Drum Synth	Instruments	Drum Synth Kicks	Shape	ctl.select	UI label
+logic:Drum Synth	Drum Synth	Instruments	Drum Synth Kicks	Snap	other	UI label
+logic:Drum Synth	Drum Synth	Instruments	Drum Synth Kicks	Sweep	other	UI label
+logic:Drum Synth	Drum Synth	Instruments	Drum Synth Kicks	Tone	fx.tone	UI label
+logic:Drum Synth	Drum Synth	Instruments	Drum Synth Kicks	Volume	amp.gain	UI label
+logic:Drum Synth	Drum Synth	Instruments	Drum Synth Snares and Claps	Crush	fx.drive	UI label
+logic:Drum Synth	Drum Synth	Instruments	Drum Synth Snares and Claps	Cycles	other	UI label
+logic:Drum Synth	Drum Synth	Instruments	Drum Synth Snares and Claps	Dirt	fx.drive	UI label
+logic:Drum Synth	Drum Synth	Instruments	Drum Synth Snares and Claps	Position	other	UI label
+logic:Drum Synth	Drum Synth	Instruments	Drum Synth Snares and Claps	Size	other	UI label
+logic:Drum Synth	Drum Synth	Instruments	Drum Synth Snares and Claps	Speed	lfo.rate	UI label
+logic:Drum Synth	Drum Synth	Instruments	Drum Synth Snares and Claps	Tension	other	UI label
+logic:Drum Synth	Drum Synth	Instruments	Drum Synth Percussion	Attack	env.attack	UI label
+logic:Drum Synth	Drum Synth	Instruments	Drum Synth Percussion	Color	fx.tone	UI label
+logic:Drum Synth	Drum Synth	Instruments	Drum Synth Percussion	Dissonance	other	UI label
+logic:Drum Synth	Drum Synth	Instruments	Drum Synth Percussion	Harmonic	other	UI label
+logic:Drum Synth	Drum Synth	Instruments	Drum Synth Percussion	Material	ctl.select	UI label
+logic:Drum Synth	Drum Synth	Instruments	Drum Synth Hats and Cymbals	Bell	other	UI label
+logic:Drum Synth	Drum Synth	Instruments	Drum Synth Hats and Cymbals	Character	other	UI label
+logic:Drum Synth	Drum Synth	Instruments	Drum Synth Hats and Cymbals	Metallic	other	UI label
+logic:ES1	ES1	Instruments	Oscillator parameters	Wave	ctl.select	UI label
+logic:ES1	ES1	Instruments	Oscillator parameters	Mix	osc.level	UI label
+logic:ES1	ES1	Instruments	Oscillator parameters	Sub	osc.level	UI label
+logic:ES1	ES1	Instruments	Oscillator parameters	2’	other	UI label
+logic:ES1	ES1	Instruments	Oscillator parameters	4’	other	UI label
+logic:ES1	ES1	Instruments	Oscillator parameters	8’	other	UI label
+logic:ES1	ES1	Instruments	Oscillator parameters	16’	other	UI label
+logic:ES1	ES1	Instruments	Oscillator parameters	32’	other	UI label
+logic:ES1	ES1	Instruments	Global parameters	Glide	voice.glide	UI label
+logic:ES1	ES1	Instruments	Global parameters	Tune	osc.pitch	UI label
+logic:ES1	ES1	Instruments	Global parameters	Analog	other	UI label
+logic:ES1	ES1	Instruments	Global parameters	Bender Range	system	UI label
+logic:ES1	ES1	Instruments	Global parameters	Out Level	amp.gain	UI label
+logic:ES1	ES1	Instruments	Global parameters	Voices	system	UI label
+logic:ES1	ES1	Instruments	Global parameters	Chorus	other	UI label
+logic:ES1	ES1	Instruments	Filter parameters	Cutoff	filter.cutoff	UI label
+logic:ES1	ES1	Instruments	Filter parameters	Resonance	filter.resonance	UI label
+logic:ES1	ES1	Instruments	Filter parameters	Slope	other	UI label
+logic:ES1	ES1	Instruments	Filter parameters	Drive	fx.drive	UI label
+logic:ES1	ES1	Instruments	Filter parameters	Key	other	UI label
+logic:ES1	ES1	Instruments	Filter parameters	ADSR via Vel	system	UI label
+logic:ES1	ES1	Instruments	Amplifier parameters	Level via Vel	system	UI label
+logic:ES1	ES1	Instruments	Amplifier parameters	Amplifier envelope selector	other	UI label
+logic:ES1	ES1	Instruments	Envelope parameters	Attack	env.attack	UI label
+logic:ES1	ES1	Instruments	Envelope parameters	Decay	env.decay	UI label
+logic:ES1	ES1	Instruments	Envelope parameters	Sustain	env.sustain	UI label
+logic:ES1	ES1	Instruments	Envelope parameters	Release	env.release	UI label
+logic:ES2	ES2	Instruments	Envelope 1 controls	Trigger Modes	other	UI label
+logic:ES2	ES2	Instruments	Envelope 1 controls	Attack via Velocity	system	UI label
+logic:ES2	ES2	Instruments	Envelope 1 controls	Decay/Release mode	ctl.select	UI label
+logic:ES2	ES2	Instruments	Envelope 2 and 3 controls	Attack	env.attack	UI label
+logic:ES2	ES2	Instruments	Envelope 2 and 3 controls	Decay	env.decay	UI label
+logic:ES2	ES2	Instruments	Envelope 2 and 3 controls	Sustain/Sustain Time	other	UI label
+logic:ES2	ES2	Instruments	Envelope 2 and 3 controls	Release Time	other	UI label
+logic:ES2	ES2	Instruments	Envelope 2 and 3 controls	Velocity Sensitivity	system	UI label
+logic:ES2	ES2	Instruments	ES2 integrated effects processor controls	Soft	other	UI label
+logic:ES2	ES2	Instruments	ES2 integrated effects processor controls	Hard	other	UI label
+logic:ES2	ES2	Instruments	ES2 integrated effects processor controls	Distortion	fx.drive	UI label
+logic:ES2	ES2	Instruments	ES2 integrated effects processor controls	Tone	fx.tone	UI label
+logic:ES2	ES2	Instruments	ES2 integrated effects processor controls	Intensity	lfo.amount	UI label
+logic:ES2	ES2	Instruments	ES2 integrated effects processor controls	Speed	lfo.rate	UI label
+logic:ES2	ES2	Instruments	Extended parameters	MIDI Mono Mode	ctl.select	UI label
+logic:ES2	ES2	Instruments	Extended parameters	Mono Mode Bend Range	system	UI label
+logic:EFM1	EFM1	Instruments	Modulation parameters	Modulation Envelope	other	UI label
+logic:EFM1	EFM1	Instruments	Modulation parameters	Attack	env.attack	UI label
+logic:EFM1	EFM1	Instruments	Modulation parameters	Decay	env.decay	UI label
+logic:EFM1	EFM1	Instruments	Modulation parameters	Sustain	env.sustain	UI label
+logic:EFM1	EFM1	Instruments	Modulation parameters	Release	env.release	UI label
+logic:EFM1	EFM1	Instruments	Modulation parameters	Modulator Pitch	osc.pitch	UI label
+logic:EFM1	EFM1	Instruments	Modulation parameters	FM Depth	osc.fm	UI label
+logic:EFM1	EFM1	Instruments	Modulation parameters	LFO	other	UI label
+logic:EFM1	EFM1	Instruments	Modulation parameters	Rate	lfo.rate	UI label
+logic:EFM1	EFM1	Instruments	Global parameters	Transpose	osc.pitch	UI label
+logic:EFM1	EFM1	Instruments	Global parameters	Tune	osc.pitch	UI label
+logic:EFM1	EFM1	Instruments	Global parameters	Voices	system	UI label
+logic:EFM1	EFM1	Instruments	Global parameters	Unison	other	UI label
+logic:EFM1	EFM1	Instruments	Global parameters	Glide	voice.glide	UI label
+logic:EFM1	EFM1	Instruments	Output parameters	Sub Osc Level	osc.level	UI label
+logic:EFM1	EFM1	Instruments	Output parameters	Stereo Detune	unison.detune	UI label
+logic:EFM1	EFM1	Instruments	Output parameters	Main Level	amp.gain	UI label
+logic:EFM1	EFM1	Instruments	Output parameters	Velocity	system	UI label
+logic:EFM1	EFM1	Instruments	Extended parameters	MIDI Mono Mode	ctl.select	UI label
+logic:EFM1	EFM1	Instruments	Extended parameters	Mono Mode Bend Range	system	UI label
+logic:EFM1	EFM1	Instruments	Extended parameters	Main Pitch Bend Range	system	UI label
+logic:ES E	ES E	Instruments	Oscillator parameters	Wave	ctl.select	UI label
+logic:ES E	ES E	Instruments	LFO parameters	Vib/PWM	other	UI label
+logic:ES E	ES E	Instruments	LFO parameters	Speed	lfo.rate	UI label
+logic:ES E	ES E	Instruments	Filter parameters	Cutoff	filter.cutoff	UI label
+logic:ES E	ES E	Instruments	Filter parameters	Resonance	filter.resonance	UI label
+logic:ES E	ES E	Instruments	Filter parameters	AR Int	other	UI label
+logic:ES E	ES E	Instruments	Filter parameters	Velo Filter	system	UI label
+logic:ES E	ES E	Instruments	Envelope parameters	Attack	env.attack	UI label
+logic:ES E	ES E	Instruments	Envelope parameters	Release	env.release	UI label
+logic:ES E	ES E	Instruments	Output parameters	Volume	amp.gain	UI label
+logic:ES E	ES E	Instruments	Output parameters	Velo Volume	system	UI label
+logic:ES E	ES E	Instruments	Output parameters	Chorus I	other	UI label
+logic:ES E	ES E	Instruments	Output parameters	II/Ensemble	other	UI label
+logic:ES E	ES E	Instruments	Extended parameters	Bend Up	other	UI label
+logic:ES E	ES E	Instruments	Extended parameters	Bend Down	other	UI label
+logic:ES E	ES E	Instruments	Extended parameters	Tune	osc.pitch	UI label
+logic:ES M	ES M	Instruments	Oscillator parameters	Mix	fx.mix	UI label
+logic:ES M	ES M	Instruments	Oscillator parameters	Glide	voice.glide	UI label
+logic:ES M	ES M	Instruments	Filter and filter envelope controls	Cutoff	filter.cutoff	UI label
+logic:ES M	ES M	Instruments	Filter and filter envelope controls	Resonance	filter.resonance	UI label
+logic:ES M	ES M	Instruments	Filter and filter envelope controls	Int	other	UI label
+logic:ES M	ES M	Instruments	Filter and filter envelope controls	Decay	env.decay	UI label
+logic:ES M	ES M	Instruments	Filter and filter envelope controls	Velo	other	UI label
+logic:ES M	ES M	Instruments	Level envelope and output controls	Vol	amp.gain	UI label
+logic:ES M	ES M	Instruments	Level envelope and output controls	Overdrive	other	UI label
+logic:ES M	ES M	Instruments	Extended parameters	Pitch Bend Up	other	UI label
+logic:ES M	ES M	Instruments	Extended parameters	Pitch Bend Down	other	UI label
+logic:ES M	ES M	Instruments	Extended parameters	Tune	osc.pitch	UI label
+logic:ES P	ES P	Instruments	Oscillator parameters	Triangle oscillator	other	UI label
+logic:ES P	ES P	Instruments	Oscillator parameters	Sawtooth oscillator	other	UI label
+logic:ES P	ES P	Instruments	Oscillator parameters	Rectangle oscillator	other	UI label
+logic:ES P	ES P	Instruments	Oscillator parameters	Sub-oscillator -1 octave	osc.pitch	UI label
+logic:ES P	ES P	Instruments	Oscillator parameters	Noise generator	other	UI label
+logic:ES P	ES P	Instruments	LFO parameters	Vib/Wah	other	UI label
+logic:ES P	ES P	Instruments	LFO parameters	Speed	lfo.rate	UI label
+logic:ES P	ES P	Instruments	Filter parameters	Frequency	filter.cutoff	UI label
+logic:ES P	ES P	Instruments	Filter parameters	Resonance	filter.resonance	UI label
+logic:ES P	ES P	Instruments	Filter parameters	1/3	other	UI label
+logic:ES P	ES P	Instruments	Filter parameters	2/3	other	UI label
+logic:ES P	ES P	Instruments	Filter parameters	3/3	other	UI label
+logic:ES P	ES P	Instruments	Filter parameters	ADSR Int	filter.env_amount	UI label
+logic:ES P	ES P	Instruments	Filter parameters	Velo Filter	system	UI label
+logic:ES P	ES P	Instruments	Envelope and level controls	Attack	env.attack	UI label
+logic:ES P	ES P	Instruments	Envelope and level controls	Decay	env.decay	UI label
+logic:ES P	ES P	Instruments	Envelope and level controls	Sustain	env.sustain	UI label
+logic:ES P	ES P	Instruments	Envelope and level controls	Release	env.release	UI label
+logic:ES P	ES P	Instruments	Envelope and level controls	Volume	amp.gain	UI label
+logic:ES P	ES P	Instruments	Envelope and level controls	Velo Volume	system	UI label
+logic:ES P	ES P	Instruments	Integrated effects processor	Chorus	other	UI label
+logic:ES P	ES P	Instruments	Integrated effects processor	Overdrive	fx.drive	UI label
+logic:ES P	ES P	Instruments	Extended parameters	Bend Up	other	UI label
+logic:ES P	ES P	Instruments	Extended parameters	Bend Down	other	UI label
+logic:ES P	ES P	Instruments	Extended parameters	Tune	osc.pitch	UI label
+logic:EVOC 20 PolySynth	EVOC 20 PolySynth	Instruments	(U/V) detection parameters	Sensitivity	other	UI label
+logic:EVOC 20 PolySynth	EVOC 20 PolySynth	Instruments	(U/V) detection parameters	Mode	ctl.select	UI label
+logic:EVOC 20 PolySynth	EVOC 20 PolySynth	Instruments	(U/V) detection parameters	U/V Level	other	UI label
+logic:EVOC 20 PolySynth	EVOC 20 PolySynth	Instruments	Oscillator dual mode parameters	Semi	osc.pitch	UI label
+logic:EVOC 20 PolySynth	EVOC 20 PolySynth	Instruments	Oscillator dual mode parameters	Detune	osc.fine	UI label
+logic:EVOC 20 PolySynth	EVOC 20 PolySynth	Instruments	Oscillator dual mode parameters	Balance	amp.pan	UI label
+logic:EVOC 20 PolySynth	EVOC 20 PolySynth	Instruments	Oscillator FM mode parameters	Ratio coarse	osc.pitch	UI label
+logic:EVOC 20 PolySynth	EVOC 20 PolySynth	Instruments	Oscillator FM mode parameters	Ratio fine	osc.fine	UI label
+logic:EVOC 20 PolySynth	EVOC 20 PolySynth	Instruments	Oscillator FM mode parameters	FM Int	other	UI label
+logic:EVOC 20 PolySynth	EVOC 20 PolySynth	Instruments	Noise generator parameters	Level	amp.gain	UI label
+logic:EVOC 20 PolySynth	EVOC 20 PolySynth	Instruments	Noise generator parameters	Color	fx.tone	UI label
+logic:EVOC 20 PolySynth	EVOC 20 PolySynth	Instruments	Tuning and pitch controls	Tune	osc.pitch	UI label
+logic:EVOC 20 PolySynth	EVOC 20 PolySynth	Instruments	Tuning and pitch controls	Analog	other	UI label
+logic:EVOC 20 PolySynth	EVOC 20 PolySynth	Instruments	Tuning and pitch controls	Glide	voice.glide	UI label
+logic:EVOC 20 PolySynth	EVOC 20 PolySynth	Instruments	Tuning and pitch controls	Bend Range	system	UI label
+logic:EVOC 20 PolySynth	EVOC 20 PolySynth	Instruments	Filter parameters	Cutoff	filter.cutoff	UI label
+logic:EVOC 20 PolySynth	EVOC 20 PolySynth	Instruments	Filter parameters	Resonance	filter.resonance	UI label
+logic:EVOC 20 PolySynth	EVOC 20 PolySynth	Instruments	Envelope parameters	Attack	env.attack	UI label
+logic:EVOC 20 PolySynth	EVOC 20 PolySynth	Instruments	Envelope parameters	Release	env.release	UI label
+logic:EVOC 20 PolySynth	EVOC 20 PolySynth	Instruments	Global parameters	Poly/Mono/Legato	other	UI label
+logic:EVOC 20 PolySynth	EVOC 20 PolySynth	Instruments	Global parameters	Voices	system	UI label
+logic:EVOC 20 PolySynth	EVOC 20 PolySynth	Instruments	Global parameters	Unison	other	UI label
+logic:EVOC 20 PolySynth	EVOC 20 PolySynth	Instruments	Formant filter controls	Lowest	other	UI label
+logic:EVOC 20 PolySynth	EVOC 20 PolySynth	Instruments	Formant filter controls	Highest	other	UI label
+logic:EVOC 20 PolySynth	EVOC 20 PolySynth	Instruments	Formant filter controls	Formant Stretch	other	UI label
+logic:EVOC 20 PolySynth	EVOC 20 PolySynth	Instruments	Formant filter controls	Formant Shift	other	UI label
+logic:EVOC 20 PolySynth	EVOC 20 PolySynth	Instruments	Modulation parameters	Int via Whl	other	UI label
+logic:EVOC 20 PolySynth	EVOC 20 PolySynth	Instruments	Modulation parameters	Rate	lfo.rate	UI label
+logic:EVOC 20 PolySynth	EVOC 20 PolySynth	Instruments	Modulation parameters	Waveform	ctl.select	UI label
+logic:EVOC 20 PolySynth	EVOC 20 PolySynth	Instruments	Modulation parameters	Intensity	lfo.amount	UI label
+logic:EVOC 20 PolySynth	EVOC 20 PolySynth	Instruments	Output parameters	Signal	other	UI label
+logic:EVOC 20 PolySynth	EVOC 20 PolySynth	Instruments	Output parameters	Ensemble	other	UI label
+logic:EVOC 20 PolySynth	EVOC 20 PolySynth	Instruments	Output parameters	Stereo Width	stereo.width	UI label
+logic:Quick Sampler	Quick Sampler	Instruments	Classic mode	Root Key	system	UI label
+logic:Quick Sampler	Quick Sampler	Instruments	Classic mode	Tune	osc.pitch	UI label
+logic:Quick Sampler	Quick Sampler	Instruments	Classic mode	Playback	other	UI label
+logic:Quick Sampler	Quick Sampler	Instruments	Classic mode	Loop mode	ctl.select	UI label
+logic:Quick Sampler	Quick Sampler	Instruments	Classic mode	Flex On/Off	ctl.switch	UI label
+logic:Quick Sampler	Quick Sampler	Instruments	Classic mode	Follow Tempo	other	UI label
+logic:Quick Sampler	Quick Sampler	Instruments	Classic mode	(Flex) Speed	other	UI label
+logic:Quick Sampler	Quick Sampler	Instruments	Slice mode	Fade in	other	UI label
+logic:Quick Sampler	Quick Sampler	Instruments	Slice mode	fade out	other	UI label
+logic:Quick Sampler	Quick Sampler	Instruments	Slice mode	Mode	ctl.select	UI label
+logic:Quick Sampler	Quick Sampler	Instruments	Slice mode	Sensitivity	other	UI label
+logic:Quick Sampler	Quick Sampler	Instruments	Slice mode	Division	ctl.select	UI label
+logic:Quick Sampler	Quick Sampler	Instruments	Slice mode	Slices	other	UI label
+logic:Quick Sampler	Quick Sampler	Instruments	Slice mode	Start Key	other	UI label
+logic:Quick Sampler	Quick Sampler	Instruments	Slice mode	Start Key Mapping	other	UI label
+logic:Quick Sampler	Quick Sampler	Instruments	Slice mode	Gate	other	UI label
+logic:Quick Sampler	Quick Sampler	Instruments	Slice mode	Play to End	other	UI label
+logic:Quick Sampler	Quick Sampler	Instruments	Recorder mode	Input	amp.gain	UI label
+logic:Quick Sampler	Quick Sampler	Instruments	Recorder mode	Monitor	system	UI label
+logic:Quick Sampler	Quick Sampler	Instruments	Recorder mode	Record Start	other	UI label
+logic:Quick Sampler	Quick Sampler	Instruments	Mod Matrix pane	Source	ctl.select	UI label
+logic:Quick Sampler	Quick Sampler	Instruments	Mod Matrix pane	Target	other	UI label
+logic:Quick Sampler	Quick Sampler	Instruments	Mod Matrix pane	Amount	mod.amount	UI label
+logic:Quick Sampler	Quick Sampler	Instruments	LFO controls	LFO Rate	lfo.rate	UI label
+logic:Quick Sampler	Quick Sampler	Instruments	LFO controls	Sync	system	UI label
+logic:Quick Sampler	Quick Sampler	Instruments	LFO controls	Fade Mode	ctl.select	UI label
+logic:Quick Sampler	Quick Sampler	Instruments	LFO controls	Fade Time	other	UI label
+logic:Quick Sampler	Quick Sampler	Instruments	LFO controls	Phase	other	UI label
+logic:Quick Sampler	Quick Sampler	Instruments	LFO controls	Waveform	ctl.select	UI label
+logic:Quick Sampler	Quick Sampler	Instruments	LFO controls	Polarity	other	UI label
+logic:Quick Sampler	Quick Sampler	Instruments	LFO controls	Key Trigger	other	UI label
+logic:Quick Sampler	Quick Sampler	Instruments	LFO controls	Via	other	UI label
+logic:Quick Sampler	Quick Sampler	Instruments	Quick Sampler Pitch controls	Coarse	osc.pitch	UI label
+logic:Quick Sampler	Quick Sampler	Instruments	Quick Sampler Pitch controls	Fine	osc.fine	UI label
+logic:Quick Sampler	Quick Sampler	Instruments	Quick Sampler Pitch controls	Glide	voice.glide	UI label
+logic:Quick Sampler	Quick Sampler	Instruments	Quick Sampler Pitch controls	Env Depth	filter.env_amount	UI label
+logic:Quick Sampler	Quick Sampler	Instruments	Quick Sampler Pitch controls	Key Tracking	system	UI label
+logic:Quick Sampler	Quick Sampler	Instruments	Quick Sampler Pitch controls	Bend Range	system	UI label
+logic:Quick Sampler	Quick Sampler	Instruments	Quick Sampler Pitch controls	Envelope Type	ctl.select	UI label
+logic:Quick Sampler	Quick Sampler	Instruments	Quick Sampler Pitch controls	Attack	env.attack	UI label
+logic:Quick Sampler	Quick Sampler	Instruments	Quick Sampler Pitch controls	Hold	other	UI label
+logic:Quick Sampler	Quick Sampler	Instruments	Quick Sampler Pitch controls	Decay	env.decay	UI label
+logic:Quick Sampler	Quick Sampler	Instruments	Quick Sampler Pitch controls	Sustain	env.sustain	UI label
+logic:Quick Sampler	Quick Sampler	Instruments	Quick Sampler Pitch controls	Release	env.release	UI label
+logic:Quick Sampler	Quick Sampler	Instruments	Quick Sampler Pitch controls	Vel	system	UI label
+logic:Quick Sampler	Quick Sampler	Instruments	Quick Sampler Filter controls	Type	ctl.select	UI label
+logic:Quick Sampler	Quick Sampler	Instruments	Quick Sampler Filter controls	Cutoff	filter.cutoff	UI label
+logic:Quick Sampler	Quick Sampler	Instruments	Quick Sampler Filter controls	Reso	filter.resonance	UI label
+logic:Quick Sampler	Quick Sampler	Instruments	Quick Sampler Filter controls	Drive	fx.drive	UI label
+logic:Quick Sampler	Quick Sampler	Instruments	Quick Sampler Filter controls	Keyscale	system	UI label
+logic:Quick Sampler	Quick Sampler	Instruments	Quick Sampler Amp controls	Pan	amp.pan	UI label
+logic:Quick Sampler	Quick Sampler	Instruments	Quick Sampler Amp controls	Polyphony	system	UI label
+logic:Quick Sampler	Quick Sampler	Instruments	Quick Sampler Amp controls	Volume	amp.gain	UI label
+logic:Quick Sampler	Quick Sampler	Instruments	Quick Sampler extended parameters	MIDI Mono Mode	ctl.select	UI label
+logic:Quick Sampler	Quick Sampler	Instruments	Quick Sampler extended parameters	Mono Mode Bend Range	system	UI label
+logic:Retro Synth	Retro Synth	Instruments	Analog oscillator controls	Shape 1	osc.shape	UI label
+logic:Retro Synth	Retro Synth	Instruments	Analog oscillator controls	Shape Modulation	other	UI label
+logic:Retro Synth	Retro Synth	Instruments	Analog oscillator controls	Vibrato	lfo.amount	UI label
+logic:Retro Synth	Retro Synth	Instruments	Analog oscillator controls	Semitones	osc.pitch	UI label
+logic:Retro Synth	Retro Synth	Instruments	Analog oscillator controls	Cents	osc.fine	UI label
+logic:Retro Synth	Retro Synth	Instruments	Analog oscillator controls	Mix	osc.level	UI label
+logic:Retro Synth	Retro Synth	Instruments	Sync oscillator controls	Shape 2	osc.shape	UI label
+logic:Retro Synth	Retro Synth	Instruments	Sync oscillator controls	Sync Modulation	other	UI label
+logic:Retro Synth	Retro Synth	Instruments	Sync oscillator controls	Sync	system	UI label
+logic:Retro Synth	Retro Synth	Instruments	Table oscillator parameters	Wavetable	osc.shape	UI label
+logic:Retro Synth	Retro Synth	Instruments	Table oscillator parameters	Shape/Formant	osc.shape	UI label
+logic:Retro Synth	Retro Synth	Instruments	FM oscillator controls	Modulation	other	UI label
+logic:Retro Synth	Retro Synth	Instruments	FM oscillator controls	FM (Amount)	osc.fm	UI label
+logic:Retro Synth	Retro Synth	Instruments	FM oscillator controls	FM/Harmonic target	other	UI label
+logic:Retro Synth	Retro Synth	Instruments	FM oscillator controls	Harmonic/Inharmonic	other	UI label
+logic:Retro Synth	Retro Synth	Instruments	FM oscillator controls	Shape	ctl.select	UI label
+logic:Retro Synth	Retro Synth	Instruments	Filter controls	Filter Type	ctl.select	UI label
+logic:Retro Synth	Retro Synth	Instruments	Filter controls	Key (Follow)	system	UI label
+logic:Retro Synth	Retro Synth	Instruments	Filter controls	Filter FM/Drive	fx.drive	UI label
+logic:Retro Synth	Retro Synth	Instruments	Filter controls	LFO	other	UI label
+logic:Retro Synth	Retro Synth	Instruments	Filter controls	Filter Env(elope)	filter.env_amount	UI label
+logic:Retro Synth	Retro Synth	Instruments	Amp and effect controls	Volume	amp.gain	UI label
+logic:Retro Synth	Retro Synth	Instruments	Amp and effect controls	Sine Level	osc.level	UI label
+logic:Retro Synth	Retro Synth	Instruments	Amp and effect controls	Effect Type	ctl.select	UI label
+logic:Retro Synth	Retro Synth	Instruments	Amp and effect controls	Rate	lfo.rate	UI label
+logic:Retro Synth	Retro Synth	Instruments	Glide and Autobend modulation	Bend Type	ctl.select	UI label
+logic:Retro Synth	Retro Synth	Instruments	Glide and Autobend modulation	Mode	ctl.select	UI label
+logic:Retro Synth	Retro Synth	Instruments	Glide and Autobend modulation	Time	other	UI label
+logic:Retro Synth	Retro Synth	Instruments	Glide and Autobend modulation	Depth	lfo.amount	UI label
+logic:Retro Synth	Retro Synth	Instruments	LFO and Vibrato modulation	LFO Sync	system	UI label
+logic:Retro Synth	Retro Synth	Instruments	LFO and Vibrato modulation	Source	ctl.select	UI label
+logic:Retro Synth	Retro Synth	Instruments	Envelopes	Velocity	system	UI label
+logic:Retro Synth	Retro Synth	Instruments	Global and controller settings	Transpose	osc.pitch	UI label
+logic:Retro Synth	Retro Synth	Instruments	Global and controller settings	Tune	osc.pitch	UI label
+logic:Retro Synth	Retro Synth	Instruments	Global and controller settings	Bend	other	UI label
+logic:Retro Synth	Retro Synth	Instruments	Global and controller settings	Polyphony	system	UI label
+logic:Retro Synth	Retro Synth	Instruments	Global and controller settings	Voice Detune	unison.detune	UI label
+logic:Retro Synth	Retro Synth	Instruments	Global and controller settings	Stereo Spread	stereo.width	UI label
+logic:Retro Synth	Retro Synth	Instruments	Global and controller settings	Unison	other	UI label
+logic:Retro Synth	Retro Synth	Instruments	Global and controller settings	Mod Wheel to	other	UI label
+logic:Retro Synth	Retro Synth	Instruments	Global and controller settings	Velocity to	other	UI label
+logic:Retro Synth	Retro Synth	Instruments	Global and controller settings	Aftertouch to	other	UI label
+logic:Retro Synth	Retro Synth	Instruments	Global and controller settings	Assignable CC	other	UI label
+logic:Retro Synth	Retro Synth	Instruments	Extended parameters	MIDI Mono Mode	ctl.select	UI label
+logic:Retro Synth	Retro Synth	Instruments	Extended parameters	Mono Mode Bend Range	system	UI label
+logic:Sample Alchemy	Sample Alchemy	Instruments	Granular controls	Effect	other	UI label
+logic:Sample Alchemy	Sample Alchemy	Instruments	Granular controls	Size	other	UI label
+logic:Sample Alchemy	Sample Alchemy	Instruments	Granular controls	Density	other	UI label
+logic:Sample Alchemy	Sample Alchemy	Instruments	Granular controls	Random Pan	amp.pan	UI label
+logic:Sample Alchemy	Sample Alchemy	Instruments	Granular controls	Random Time	other	UI label
+logic:Sample Alchemy	Sample Alchemy	Instruments	Granular controls	Formant Shift	other	UI label
+logic:Sample Alchemy	Sample Alchemy	Instruments	Granular controls	Num Taps	other	UI label
+logic:Sample Alchemy	Sample Alchemy	Instruments	Granular controls	Tap Spacing	other	UI label
+logic:Sample Alchemy	Sample Alchemy	Instruments	Additive effect controls	Odd/Even	other	UI label
+logic:Sample Alchemy	Sample Alchemy	Instruments	Additive effect controls	Fifths	other	UI label
+logic:Sample Alchemy	Sample Alchemy	Instruments	Additive effect controls	Octaves	other	UI label
+logic:Sample Alchemy	Sample Alchemy	Instruments	Additive effect controls	Fundamental	other	UI label
+logic:Sample Alchemy	Sample Alchemy	Instruments	Additive effect controls	Symmetry	other	UI label
+logic:Sample Alchemy	Sample Alchemy	Instruments	Additive effect controls	Pitch Var	other	UI label
+logic:Sample Alchemy	Sample Alchemy	Instruments	Additive effect controls	Num Partials	other	UI label
+logic:Sample Alchemy	Sample Alchemy	Instruments	Additive effect controls	Shift	other	UI label
+logic:Sample Alchemy	Sample Alchemy	Instruments	Additive effect controls	Key Track	other	UI label
+logic:Sample Alchemy	Sample Alchemy	Instruments	Additive effect controls	Center	other	UI label
+logic:Sample Alchemy	Sample Alchemy	Instruments	Additive effect controls	Vowel	other	UI label
+logic:Sample Alchemy	Sample Alchemy	Instruments	Spectral effect controls	Low Cut	fx.tone	UI label
+logic:Sample Alchemy	Sample Alchemy	Instruments	Spectral effect controls	High Cut	other	UI label
+logic:Sample Alchemy	Sample Alchemy	Instruments	Spectral effect controls	Mix	fx.mix	UI label
+logic:Sample Alchemy	Sample Alchemy	Instruments	Spectral effect controls	Length	other	UI label
+logic:Sample Alchemy	Sample Alchemy	Instruments	Spectral effect controls	Variance	other	UI label
+logic:Sample Alchemy	Sample Alchemy	Instruments	Spectral effect controls	Gate	other	UI label
+logic:Sample Alchemy	Sample Alchemy	Instruments	Spectral effect controls	Threshold	other	UI label
+logic:Sample Alchemy	Sample Alchemy	Instruments	Spectral effect controls	Attack	env.attack	UI label
+logic:Sample Alchemy	Sample Alchemy	Instruments	Spectral effect controls	Simplify	other	UI label
+logic:Sample Alchemy	Sample Alchemy	Instruments	Spectral effect controls	Interval	ctl.select	UI label
+logic:Sample Alchemy	Sample Alchemy	Instruments	Spectral effect controls	Feedback	other	UI label
+logic:Sample Alchemy	Sample Alchemy	Instruments	Filter module	Filter On/Off	ctl.switch	UI label
+logic:Sample Alchemy	Sample Alchemy	Instruments	Filter module	Filter Type	ctl.select	UI label
+logic:Sample Alchemy	Sample Alchemy	Instruments	Filter module	Global	other	UI label
+logic:Sample Alchemy	Sample Alchemy	Instruments	Lowpass, bandpass, and highpass filters	Cutoff	filter.cutoff	UI label
+logic:Sample Alchemy	Sample Alchemy	Instruments	Lowpass, bandpass, and highpass filters	Res(onance)	filter.resonance	UI label
+logic:Sample Alchemy	Sample Alchemy	Instruments	Envelope generators	Amp/Mod	other	UI label
+logic:Sample Alchemy	Sample Alchemy	Instruments	Mod Matrix	Mod Matrix	other	UI label
+logic:Sample Alchemy	Sample Alchemy	Instruments	Mod Matrix	Target	other	UI label
+logic:Sample Alchemy	Sample Alchemy	Instruments	Mod Matrix	Source	ctl.select	UI label
+logic:Sample Alchemy	Sample Alchemy	Instruments	Mod Matrix	Depth	lfo.amount	UI label
+logic:Sampler	Sampler	Instruments	Synth pane	Details	other	UI label
+logic:Sampler	Sampler	Instruments	Synth pane	Tune	osc.pitch	UI label
+logic:Sampler	Sampler	Instruments	Synth pane	Fine	osc.fine	UI label
+logic:Sampler	Sampler	Instruments	Synth pane	Filter On/Off	ctl.switch	UI label
+logic:Sampler	Sampler	Instruments	Synth pane	Filter Type	ctl.select	UI label
+logic:Sampler	Sampler	Instruments	Synth pane	Cutoff	filter.cutoff	UI label
+logic:Sampler	Sampler	Instruments	Synth pane	Resonance	filter.resonance	UI label
+logic:Sampler	Sampler	Instruments	Synth pane	Drive	fx.drive	UI label
+logic:Sampler	Sampler	Instruments	Synth pane	Filter configuration	other	UI label
+logic:Sampler	Sampler	Instruments	Synth pane	Series	other	UI label
+logic:Sampler	Sampler	Instruments	Synth pane	Parallel	other	UI label
+logic:Sampler	Sampler	Instruments	Synth pane	Filter Blend	other	UI label
+logic:Sampler	Sampler	Instruments	Synth pane	Volume	amp.gain	UI label
+logic:Sampler	Sampler	Instruments	Synth pane	Pan	amp.pan	UI label
+logic:Sampler	Sampler	Instruments	Synth Details	Glide	voice.glide	UI label
+logic:Sampler	Sampler	Instruments	Synth Details	Pitch Bend Up/Down	other	UI label
+logic:Sampler	Sampler	Instruments	Synth Details	Coarse Tune Remote	other	UI label
+logic:Sampler	Sampler	Instruments	Synth Details	Transpose	osc.pitch	UI label
+logic:Sampler	Sampler	Instruments	Synth Details	Sample Select Random	other	UI label
+logic:Sampler	Sampler	Instruments	Synth Details	Velocity Random	other	UI label
+logic:Sampler	Sampler	Instruments	Synth Details	Amp Velocity Curve	other	UI label
+logic:Sampler	Sampler	Instruments	Synth Details	Velocity Offset	other	UI label
+logic:Sampler	Sampler	Instruments	Synth Details	Ignore Release Velocity	other	UI label
+logic:Sampler	Sampler	Instruments	Synth Details	Amp Key Scale	system	UI label
+logic:Sampler	Sampler	Instruments	Synth Details	Polyphony	system	UI label
+logic:Sampler	Sampler	Instruments	Synth Details	Mode	ctl.select	UI label
+logic:Sampler	Sampler	Instruments	Synth Details	Unison	other	UI label
+logic:Sampler	Sampler	Instruments	Synth Details	Random Detune	osc.fine	UI label
+logic:Sampler	Sampler	Instruments	Synth Details	Used Voices	system	UI label
+logic:Sampler	Sampler	Instruments	Fade between sample groups	Low	other	UI label
+logic:Sampler	Sampler	Instruments	Fade between sample groups	High	other	UI label
+logic:Sampler	Sampler	Instruments	Fade between sample groups	XFade	other	UI label
+logic:Sampler	Sampler	Instruments	Fade between sample groups	XFade Type	ctl.select	UI label
+logic:Sampler	Sampler	Instruments	Sampler extended parameters	MIDI Mono Mode	ctl.select	UI label
+logic:Sampler	Sampler	Instruments	Sampler extended parameters	Mono Mode Bend Range	system	UI label
+logic:Sculpture	Sculpture	Instruments	Hide, Keyscale, and Release view	Keyscale	system	UI label
+logic:Sculpture	Sculpture	Instruments	Hide, Keyscale, and Release view	Release	env.release	UI label
+logic:Sculpture	Sculpture	Instruments	String parameter sliders	Resolution	other	UI label
+logic:Sculpture	Sculpture	Instruments	String parameter sliders	Resolution High Scaling	other	UI label
+logic:Sculpture	Sculpture	Instruments	String parameter sliders	Resolution Low Scaling	other	UI label
+logic:Sculpture	Sculpture	Instruments	String parameter sliders	Media Loss	other	UI label
+logic:Sculpture	Sculpture	Instruments	String parameter sliders	Media Loss High Scaling	other	UI label
+logic:Sculpture	Sculpture	Instruments	String parameter sliders	Media Loss Low Scaling	other	UI label
+logic:Sculpture	Sculpture	Instruments	String parameter sliders	Tension Mod	other	UI label
+logic:Sculpture	Sculpture	Instruments	String parameter sliders	Tension Mod High Scaling	other	UI label
+logic:Sculpture	Sculpture	Instruments	String parameter sliders	Tension Mod Resolution Low Scaling	other	UI label
+logic:Sculpture	Sculpture	Instruments	Pickup parameters	Object position	other	UI label
+logic:Sculpture	Sculpture	Instruments	Pickup parameters	Pickup A position	other	UI label
+logic:Sculpture	Sculpture	Instruments	Pickup parameters	Pickup B position	other	UI label
+logic:Sculpture	Sculpture	Instruments	Pickup parameters	Invert	ctl.switch	UI label
+logic:Sculpture	Sculpture	Instruments	Spread controls	Key Spread	stereo.width	UI label
+logic:Sculpture	Sculpture	Instruments	Spread controls	Pickup Spread	stereo.width	UI label
+logic:Sculpture	Sculpture	Instruments	Global parameters	Glide Time	voice.glide	UI label
+logic:Sculpture	Sculpture	Instruments	Global parameters	Tune	osc.pitch	UI label
+logic:Sculpture	Sculpture	Instruments	Global parameters	Warmth	fx.tone	UI label
+logic:Sculpture	Sculpture	Instruments	Global parameters	Transpose	osc.pitch	UI label
+logic:Sculpture	Sculpture	Instruments	Global parameters	Voices	system	UI label
+logic:Sculpture	Sculpture	Instruments	Global parameters	Bender Range Up/Down	other	UI label
+logic:Sculpture	Sculpture	Instruments	Amplitude envelope parameters	Attack Soft/Hard	other	UI label
+logic:Sculpture	Sculpture	Instruments	Amplitude envelope parameters	Decay	env.decay	UI label
+logic:Sculpture	Sculpture	Instruments	Amplitude envelope parameters	Sustain	env.sustain	UI label
+logic:Sculpture	Sculpture	Instruments	Filter parameters	Filter On/Off	ctl.switch	UI label
+logic:Sculpture	Sculpture	Instruments	Filter parameters	Filter type	ctl.select	UI label
+logic:Sculpture	Sculpture	Instruments	Filter parameters	Cutoff	filter.cutoff	UI label
+logic:Sculpture	Sculpture	Instruments	Filter parameters	Resonance	filter.resonance	UI label
+logic:Sculpture	Sculpture	Instruments	Filter parameters	Key	other	UI label
+logic:Sculpture	Sculpture	Instruments	Filter parameters	Velo Sens	system	UI label
+logic:Sculpture	Sculpture	Instruments	Basic EQ model	Low/Int	other	UI label
+logic:Sculpture	Sculpture	Instruments	Basic EQ model	Mid/Shift	other	UI label
+logic:Sculpture	Sculpture	Instruments	Basic EQ model	High/Stretch	other	UI label
+logic:Sculpture	Sculpture	Instruments	Basic EQ model	Mid Frequency/Fine Structure	ctl.select	UI label
+logic:Sculpture	Sculpture	Instruments	Body EQ models	Formant–Intensity	other	UI label
+logic:Sculpture	Sculpture	Instruments	Body EQ models	Formant–Shift	other	UI label
+logic:Sculpture	Sculpture	Instruments	Body EQ models	Formant–Stretch	other	UI label
+logic:Sculpture	Sculpture	Instruments	Body EQ models	Fine Structure	ctl.select	UI label
+logic:Sculpture	Sculpture	Instruments	Output parameters	Level	amp.gain	UI label
+logic:Sculpture	Sculpture	Instruments	Output parameters	Level Limiter mode	ctl.select	UI label
+logic:Sculpture	Sculpture	Instruments	Modulate the LFOs	LFO 1/2 On/Off	ctl.switch	UI label
+logic:Sculpture	Sculpture	Instruments	Modulate the LFOs	Modulation Target	other	UI label
+logic:Sculpture	Sculpture	Instruments	Modulate the LFOs	Via source	ctl.select	UI label
+logic:Sculpture	Sculpture	Instruments	Modulate the LFOs	Amt	other	UI label
+logic:Sculpture	Sculpture	Instruments	Modulate the LFOs	Via amount	mod.amount	UI label
+logic:Sculpture	Sculpture	Instruments	Vibrato parameters	Waveform	ctl.select	UI label
+logic:Sculpture	Sculpture	Instruments	Vibrato parameters	Curve	other	UI label
+logic:Sculpture	Sculpture	Instruments	Vibrato parameters	Phase	other	UI label
+logic:Sculpture	Sculpture	Instruments	Vibrato parameters	Rate	lfo.rate	UI label
+logic:Sculpture	Sculpture	Instruments	Vibrato parameters	Sync/Free	other	UI label
+logic:Sculpture	Sculpture	Instruments	Vibrato parameters	DepthviaVibCtrl	other	UI label
+logic:Sculpture	Sculpture	Instruments	Vibrato parameters	Via	other	UI label
+logic:Sculpture	Sculpture	Instruments	Jitter generator controls	Jitter 1/2 On/Off	ctl.switch	UI label
+logic:Sculpture	Sculpture	Instruments	Jitter generator controls	Target 1/2	other	UI label
+logic:Sculpture	Sculpture	Instruments	Jitter generator controls	Amount 1/2	other	UI label
+logic:Sculpture	Sculpture	Instruments	Velocity modulators	Target	other	UI label
+logic:Sculpture	Sculpture	Instruments	Velocity modulators	Amount	mod.amount	UI label
+logic:Sculpture	Sculpture	Instruments	Active envelope controls	A-Time Velosens	other	UI label
+logic:Sculpture	Sculpture	Instruments	Active envelope controls	Timescale	other	UI label
+logic:Sculpture	Sculpture	Instruments	Active envelope controls	Sustain mode	ctl.select	UI label
+logic:Sculpture	Sculpture	Instruments	Active envelope controls	Sync	system	UI label
+logic:Sculpture	Sculpture	Instruments	Randomize points in the Morph Pad	Intensity	lfo.amount	UI label
+logic:Sculpture	Sculpture	Instruments	Morph Envelope parameters	Trigger mode	ctl.select	UI label
+logic:Sculpture	Sculpture	Instruments	Morph Envelope parameters	Mode	ctl.select	UI label
+logic:Sculpture	Sculpture	Instruments	Morph Envelope parameters	Pad Mode	ctl.select	UI label
+logic:Sculpture	Sculpture	Instruments	Morph Envelope parameters	Depth	lfo.amount	UI label
+logic:Sculpture	Sculpture	Instruments	Morph Envelope parameters	Modulation	other	UI label
+logic:Sculpture	Sculpture	Instruments	Morph Envelope parameters	Modulation source	ctl.select	UI label
+logic:Sculpture	Sculpture	Instruments	Morph Envelope parameters	Transition	other	UI label
+logic:Sculpture	Sculpture	Instruments	Morph Envelope mode	Env +	other	UI label
+logic:Sculpture	Sculpture	Instruments	Morph Envelope mode	Offset	other	UI label
+logic:Sculpture	Sculpture	Instruments	Extended parameters	MIDI Mono Mode	ctl.select	UI label
+logic:Sculpture	Sculpture	Instruments	Extended parameters	Mono Mode Bend Range	system	UI label
+logic:Sculpture	Sculpture	Instruments	Extended parameters	Render Mode	ctl.select	UI label
+logic:Studio Bass	Studio Bass	Instruments	Main view parameters	Playing Style	ctl.select	UI label
+logic:Studio Bass	Studio Bass	Instruments	Main view parameters	Mute	ctl.switch	UI label
+logic:Studio Bass	Studio Bass	Instruments	Main view parameters	Definition	other	UI label
+logic:Studio Bass	Studio Bass	Instruments	Main view parameters	Last Played	other	UI label
+logic:Studio Bass	Studio Bass	Instruments	Main view parameters	Volume	amp.gain	UI label
+logic:Studio Bass	Studio Bass	Instruments	Main view parameters	Tone	fx.tone	UI label
+logic:Studio Bass	Studio Bass	Instruments	Main view parameters	Neck Volume	other	UI label
+logic:Studio Bass	Studio Bass	Instruments	Main view parameters	Bridge Volume	other	UI label
+logic:Studio Bass	Studio Bass	Instruments	Main view parameters	Rhythm/Solo	other	UI label
+logic:Studio Bass	Studio Bass	Instruments	Main view parameters	Bass	other	UI label
+logic:Studio Bass	Studio Bass	Instruments	Main view parameters	Treble	other	UI label
+logic:Studio Bass	Studio Bass	Instruments	Main view parameters	Neck Tone	fx.tone	UI label
+logic:Studio Bass	Studio Bass	Instruments	Main view parameters	Bridge Tone	fx.tone	UI label
+logic:Studio Bass	Studio Bass	Instruments	Main view parameters	Pickup	other	UI label
+logic:Studio Bass	Studio Bass	Instruments	Details view parameters	Portamento	other	UI label
+logic:Studio Bass	Studio Bass	Instruments	Details view parameters	Tempo Sync	ctl.switch	UI label
+logic:Studio Bass	Studio Bass	Instruments	Details view parameters	Scrapes	other	UI label
+logic:Studio Bass	Studio Bass	Instruments	Details view parameters	String Noise	other	UI label
+logic:Studio Bass	Studio Bass	Instruments	Details view parameters	Hum & Hiss	other	UI label
+logic:Studio Bass	Studio Bass	Instruments	Details view parameters	Release Noise	other	UI label
+logic:Studio Bass	Studio Bass	Instruments	Details view parameters	Rattles	other	UI label
+logic:Studio Bass	Studio Bass	Instruments	Details view parameters	Releases	other	UI label
+logic:Studio Bass	Studio Bass	Instruments	Details view parameters	Handling	other	UI label
+logic:Studio Bass	Studio Bass	Instruments	Details view parameters	Voice Mode	ctl.select	UI label
+logic:Studio Bass	Studio Bass	Instruments	Details view parameters	Open Strings	other	UI label
+logic:Studio Horns	Studio Horns	Instruments	Extended parameters	Vibrato Controller	other	UI label
+logic:Studio Horns	Studio Horns	Instruments	Extended parameters	Manual Vibrato Mode	ctl.select	UI label
+logic:Studio Horns	Studio Horns	Instruments	Extended parameters	Dynamic Controller	other	UI label
+logic:Studio Horns	Studio Horns	Instruments	Extended parameters	Dynamic Controller Mode	ctl.select	UI label
+logic:Studio Horns	Studio Horns	Instruments	Extended parameters	Legato Transitions	other	UI label
+logic:Studio Horns	Studio Horns	Instruments	Extended parameters	Release Samples	other	UI label
+logic:Studio Horns	Studio Horns	Instruments	Extended parameters	Pitch Bend Range	system	UI label
+logic:Studio Horns	Studio Horns	Instruments	Extended parameters	Extended Key Range	system	UI label
+logic:Studio Horns	Studio Horns	Instruments	Extended parameters	Allow Unison	other	UI label
+logic:Studio Horns	Studio Horns	Instruments	Extended parameters	Split Voicing	other	UI label
+logic:Studio Horns	Studio Horns	Instruments	Extended parameters	Split Mode	ctl.select	UI label
+logic:Studio Horns	Studio Horns	Instruments	Extended parameters	Split Key	other	UI label
+logic:Studio Horns	Studio Horns	Instruments	Extended parameters	Inst via MIDI Channel	other	UI label
+logic:Studio Strings	Studio Strings	Instruments	Extended parameters	Vibrato Controller	other	UI label
+logic:Studio Strings	Studio Strings	Instruments	Extended parameters	Dynamic Controller	other	UI label
+logic:Studio Strings	Studio Strings	Instruments	Extended parameters	Dynamic Controller Mode	ctl.select	UI label
+logic:Studio Strings	Studio Strings	Instruments	Extended parameters	Legato Transitions	other	UI label
+logic:Studio Strings	Studio Strings	Instruments	Extended parameters	Release Samples	other	UI label
+logic:Studio Strings	Studio Strings	Instruments	Extended parameters	Pitch Bend Range	system	UI label
+logic:Studio Strings	Studio Strings	Instruments	Extended parameters	Extended Key Range	system	UI label
+logic:Studio Strings	Studio Strings	Instruments	Extended parameters	Allow Unison	other	UI label
+logic:Studio Strings	Studio Strings	Instruments	Extended parameters	Split Voicing	other	UI label
+logic:Studio Strings	Studio Strings	Instruments	Extended parameters	Split Mode	ctl.select	UI label
+logic:Studio Strings	Studio Strings	Instruments	Extended parameters	Split Key	other	UI label
+logic:Studio Strings	Studio Strings	Instruments	Extended parameters	Inst via MIDI Channel	other	UI label
+logic:Ultrabeat	Ultrabeat	Instruments	Oscillator 1 phase oscillator mode	Slope	other	UI label
+logic:Ultrabeat	Ultrabeat	Instruments	Oscillator 1 phase oscillator mode	Saturation	other	UI label
+logic:Ultrabeat	Ultrabeat	Instruments	Oscillator 1 phase oscillator mode	Asymmetry	other	UI label
+logic:Ultrabeat	Ultrabeat	Instruments	Oscillator 2 phase oscillator mode	Asym(metry)	other	UI label
+logic:Ultrabeat	Ultrabeat	Instruments	Ring modulator controls	Ring Modulator On/Off	ctl.switch	UI label
+logic:Ultrabeat	Ultrabeat	Instruments	Ring modulator controls	Level	amp.gain	UI label
+logic:Ultrabeat	Ultrabeat	Instruments	Ring modulator controls	Mod	other	UI label
+logic:Ultrabeat	Ultrabeat	Instruments	Ring modulator controls	via	other	UI label
+logic:Ultrabeat	Ultrabeat	Instruments	Ring modulator controls	Signal Flow	other	UI label
+logic:Ultrabeat	Ultrabeat	Instruments	Noise generator controls	Filter Type	ctl.select	UI label
+logic:Ultrabeat	Ultrabeat	Instruments	Noise generator controls	Cutoff	filter.cutoff	UI label
+logic:Ultrabeat	Ultrabeat	Instruments	Noise generator controls	Resonance	filter.resonance	UI label
+logic:Ultrabeat	Ultrabeat	Instruments	Noise generator controls	Dirt	fx.drive	UI label
+logic:Ultrabeat	Ultrabeat	Instruments	Noise generator controls	Volume	amp.gain	UI label
+logic:Ultrabeat	Ultrabeat	Instruments	Filter section controls	Filter (On/Off)	other	UI label
+logic:Ultrabeat	Ultrabeat	Instruments	Filter section controls	Filter Slope	ctl.select	UI label
+logic:Ultrabeat	Ultrabeat	Instruments	Distortion circuit controls	Crush	fx.drive	UI label
+logic:Ultrabeat	Ultrabeat	Instruments	Distortion circuit controls	Distort	other	UI label
+logic:Ultrabeat	Ultrabeat	Instruments	Distortion circuit controls	Drive	fx.drive	UI label
+logic:Ultrabeat	Ultrabeat	Instruments	Distortion circuit controls	Color	fx.tone	UI label
+logic:Ultrabeat	Ultrabeat	Instruments	Two-band EQ parameters	Band 1/2	other	UI label
+logic:Ultrabeat	Ultrabeat	Instruments	Two-band EQ parameters	EQ type	ctl.select	UI label
+logic:Ultrabeat	Ultrabeat	Instruments	Two-band EQ parameters	Gain	amp.gain	UI label
+logic:Ultrabeat	Ultrabeat	Instruments	Two-band EQ parameters	Frequency	filter.cutoff	UI label
+logic:Ultrabeat	Ultrabeat	Instruments	Two-band EQ parameters	Q	other	UI label
+logic:Ultrabeat	Ultrabeat	Instruments	Trigger mode controls	Trigger	other	UI label
+logic:Ultrabeat	Ultrabeat	Instruments	Trigger mode controls	Group	other	UI label
+logic:Ultrabeat	Ultrabeat	Instruments	Trigger mode controls	Gate	other	UI label
+logic:Ultrabeat	Ultrabeat	Instruments	Envelope parameters	Zoom scroll	other	UI label
+logic:Ultrabeat	Ultrabeat	Instruments	Envelope parameters	Env mod	other	UI label
+logic:Ultrabeat	Ultrabeat	Instruments	Envelope parameters	Mod via vel	system	UI label
+logic:Ultrabeat	Ultrabeat	Instruments	Envelope parameters	Sustain	env.sustain	UI label
+logic:Ultrabeat	Ultrabeat	Instruments	Envelope parameters	Zoom to fit	other	UI label
+logic:Ultrabeat	Ultrabeat	Instruments	Envelope parameters	Zoom A/D	other	UI label
+logic:Ultrabeat	Ultrabeat	Instruments	Global sequencer controls	Edit mode	ctl.select	UI label
+logic:Ultrabeat	Ultrabeat	Instruments	Global sequencer controls	Transport	other	UI label
+logic:Ultrabeat	Ultrabeat	Instruments	Global sequencer controls	Swing	other	UI label
+logic:Ultrabeat	Ultrabeat	Instruments	Pattern controls	Pattern	other	UI label
+logic:Ultrabeat	Ultrabeat	Instruments	Pattern controls	Resolution	other	UI label
+logic:Ultrabeat	Ultrabeat	Instruments	Pattern controls	Accent	other	UI label
+logic:Ultrabeat	Ultrabeat	Instruments	Pattern controls	Swing Enable	ctl.switch	UI label
+logic:Vintage B3 Organ	Vintage B3 Organ	Instruments	Scanner Vibrato and Chorus	Upper/Lower	other	UI label
+logic:Vintage B3 Organ	Vintage B3 Organ	Instruments	Scanner Vibrato and Chorus	Type	ctl.select	UI label
+logic:Vintage B3 Organ	Vintage B3 Organ	Instruments	Scanner Vibrato and Chorus	Mode	ctl.select	UI label
+logic:Vintage B3 Organ	Vintage B3 Organ	Instruments	Scanner Vibrato and Chorus	Rate	lfo.rate	UI label
+logic:Vintage B3 Organ	Vintage B3 Organ	Instruments	Scanner Vibrato and Chorus	Depth	lfo.amount	UI label
+logic:Vintage B3 Organ	Vintage B3 Organ	Instruments	Percussion effect	Percussion	other	UI label
+logic:Vintage B3 Organ	Vintage B3 Organ	Instruments	Percussion effect	Harmonic	other	UI label
+logic:Vintage B3 Organ	Vintage B3 Organ	Instruments	Percussion effect	Time	other	UI label
+logic:Vintage B3 Organ	Vintage B3 Organ	Instruments	Percussion effect	Volume	amp.gain	UI label
+logic:Vintage B3 Organ	Vintage B3 Organ	Instruments	Percussion effect	Upper Level	other	UI label
+logic:Vintage B3 Organ	Vintage B3 Organ	Instruments	Percussion effect	Velocity	system	UI label
+logic:Vintage B3 Organ	Vintage B3 Organ	Instruments	Advanced Cabinet parameters	Cabinet	other	UI label
+logic:Vintage B3 Organ	Vintage B3 Organ	Instruments	Advanced Cabinet parameters	Deflector	other	UI label
+logic:Vintage B3 Organ	Vintage B3 Organ	Instruments	Advanced Motor parameters	Acceleration	other	UI label
+logic:Vintage B3 Organ	Vintage B3 Organ	Instruments	Advanced Motor parameters	Max Rate	other	UI label
+logic:Vintage B3 Organ	Vintage B3 Organ	Instruments	Advanced Motor parameters	Motor Control	other	UI label
+logic:Vintage B3 Organ	Vintage B3 Organ	Instruments	Advanced Motor parameters	Speed MIDI Control	other	UI label
+logic:Vintage B3 Organ	Vintage B3 Organ	Instruments	Advanced Brake parameters	Dry Level	other	UI label
+logic:Vintage B3 Organ	Vintage B3 Organ	Instruments	Advanced Brake parameters	Output	amp.gain	UI label
+logic:Vintage B3 Organ	Vintage B3 Organ	Instruments	Advanced Brake parameters	Horn/Drum Position	other	UI label
+logic:Vintage B3 Organ	Vintage B3 Organ	Instruments	Microphone parameters	Mic Position	other	UI label
+logic:Vintage B3 Organ	Vintage B3 Organ	Instruments	Microphone parameters	Horn	other	UI label
+logic:Vintage B3 Organ	Vintage B3 Organ	Instruments	Microphone parameters	Drum	other	UI label
+logic:Vintage B3 Organ	Vintage B3 Organ	Instruments	Microphone parameters	Distance	other	UI label
+logic:Vintage B3 Organ	Vintage B3 Organ	Instruments	Microphone parameters	Angle	other	UI label
+logic:Vintage B3 Organ	Vintage B3 Organ	Instruments	Microphone parameters	Balance	amp.pan	UI label
+logic:Vintage B3 Organ	Vintage B3 Organ	Instruments	Master and Click controls	Tune	osc.pitch	UI label
+logic:Vintage B3 Organ	Vintage B3 Organ	Instruments	Master and Click controls	Expression	other	UI label
+logic:Vintage B3 Organ	Vintage B3 Organ	Instruments	Master and Click controls	Key On/Off	ctl.switch	UI label
+logic:Vintage B3 Organ	Vintage B3 Organ	Instruments	Master and Click controls	Pedal	other	UI label
+logic:Vintage B3 Organ	Vintage B3 Organ	Instruments	Morph parameters	Upper Morph	other	UI label
+logic:Vintage B3 Organ	Vintage B3 Organ	Instruments	Morph parameters	Range	system	UI label
+logic:Vintage B3 Organ	Vintage B3 Organ	Instruments	Morph parameters	MIDI Controller	other	UI label
+logic:Vintage B3 Organ	Vintage B3 Organ	Instruments	EQ controls	EQ On/Off	ctl.switch	UI label
+logic:Vintage B3 Organ	Vintage B3 Organ	Instruments	EQ controls	Output Level	amp.gain	UI label
+logic:Vintage B3 Organ	Vintage B3 Organ	Instruments	EQ controls	Low	other	UI label
+logic:Vintage B3 Organ	Vintage B3 Organ	Instruments	EQ controls	Mid	other	UI label
+logic:Vintage B3 Organ	Vintage B3 Organ	Instruments	EQ controls	High	other	UI label
+logic:Vintage B3 Organ	Vintage B3 Organ	Instruments	Wah effect controls	Wah On/Off	ctl.switch	UI label
+logic:Vintage B3 Organ	Vintage B3 Organ	Instruments	Wah effect controls	Sweep MIDI Ctrl	other	UI label
+logic:Vintage B3 Organ	Vintage B3 Organ	Instruments	Wah effect controls	Bite	other	UI label
+logic:Vintage B3 Organ	Vintage B3 Organ	Instruments	Distortion effect controls	Distortion On/Off	ctl.switch	UI label
+logic:Vintage B3 Organ	Vintage B3 Organ	Instruments	Distortion effect controls	Tone	fx.tone	UI label
+logic:Vintage B3 Organ	Vintage B3 Organ	Instruments	Distortion effect controls	Drive	fx.drive	UI label
+logic:Vintage B3 Organ	Vintage B3 Organ	Instruments	Reverb effect controls	Reverb On/Off	ctl.switch	UI label
+logic:Vintage B3 Organ	Vintage B3 Organ	Instruments	Reverb effect controls	Pre/Post	other	UI label
+logic:Vintage B3 Organ	Vintage B3 Organ	Instruments	Reverb effect controls	Level	amp.gain	UI label
+logic:Vintage B3 Organ	Vintage B3 Organ	Instruments	Pitch controls	Upper Stretch	other	UI label
+logic:Vintage B3 Organ	Vintage B3 Organ	Instruments	Pitch controls	Lower Stretch	other	UI label
+logic:Vintage B3 Organ	Vintage B3 Organ	Instruments	Pitch controls	Warmth	fx.tone	UI label
+logic:Vintage B3 Organ	Vintage B3 Organ	Instruments	Pitch controls	Pitchbend Up/Down	other	UI label
+logic:Vintage B3 Organ	Vintage B3 Organ	Instruments	Sustain controls	Upper Manual	other	UI label
+logic:Vintage B3 Organ	Vintage B3 Organ	Instruments	Sustain controls	Lower Manual	other	UI label
+logic:Vintage B3 Organ	Vintage B3 Organ	Instruments	Sustain controls	Pedals	other	UI label
+logic:Vintage B3 Organ	Vintage B3 Organ	Instruments	Condition controls	Click Minimum/Maximum	other	UI label
+logic:Vintage B3 Organ	Vintage B3 Organ	Instruments	Condition controls	Click Color	fx.tone	UI label
+logic:Vintage B3 Organ	Vintage B3 Organ	Instruments	Condition controls	Filter Age	other	UI label
+logic:Vintage B3 Organ	Vintage B3 Organ	Instruments	Condition controls	Leakage	other	UI label
+logic:Vintage B3 Organ	Vintage B3 Organ	Instruments	Condition controls	Drawbar Leak	other	UI label
+logic:Vintage B3 Organ	Vintage B3 Organ	Instruments	Condition controls	Crosstalk	other	UI label
+logic:Vintage B3 Organ	Vintage B3 Organ	Instruments	Condition controls	Random FM	other	UI label
+logic:Vintage B3 Organ	Vintage B3 Organ	Instruments	Organ Model controls	Maximum Wheels	other	UI label
+logic:Vintage B3 Organ	Vintage B3 Organ	Instruments	Organ Model controls	Tonal Balance	amp.pan	UI label
+logic:Vintage B3 Organ	Vintage B3 Organ	Instruments	Organ Model controls	Lower Manual Volume	other	UI label
+logic:Vintage B3 Organ	Vintage B3 Organ	Instruments	Organ Model controls	Pedals Volume	other	UI label
+logic:Vintage B3 Organ	Vintage B3 Organ	Instruments	Organ Model controls	Shape	ctl.select	UI label
+logic:Vintage B3 Organ	Vintage B3 Organ	Instruments	Organ Model controls	Bass Filter	filter.cutoff	UI label
+logic:Vintage B3 Organ	Vintage B3 Organ	Instruments	Organ Model controls	Extended bass	other	UI label
+logic:Vintage B3 Organ	Vintage B3 Organ	Instruments	Organ Model controls	Ultrabass	other	UI label
+logic:Vintage Clav	Vintage Clav	Instruments	Vintage Clav interface	Model	ctl.select	UI label
+logic:Vintage Clav	Vintage Clav	Instruments	Vintage Clav interface	Main	other	UI label
+logic:Vintage Clav	Vintage Clav	Instruments	Vintage Clav interface	Effects	other	UI label
+logic:Vintage Clav	Vintage Clav	Instruments	Vintage Clav interface	Details	other	UI label
+logic:Vintage Clav	Vintage Clav	Instruments	Compressor effect controls	Ratio	other	UI label
+logic:Vintage Clav	Vintage Clav	Instruments	Distortion effect controls	Gain	amp.gain	UI label
+logic:Vintage Clav	Vintage Clav	Instruments	Distortion effect controls	Tone	fx.tone	UI label
+logic:Vintage Clav	Vintage Clav	Instruments	Modulation effect controls	Mode	ctl.select	UI label
+logic:Vintage Clav	Vintage Clav	Instruments	Modulation effect controls	Intensity	lfo.amount	UI label
+logic:Vintage Clav	Vintage Clav	Instruments	Modulation effect controls	Sync	system	UI label
+logic:Vintage Clav	Vintage Clav	Instruments	Modulation effect controls	Rate	lfo.rate	UI label
+logic:Vintage Clav	Vintage Clav	Instruments	Wah effect controls	Range	system	UI label
+logic:Vintage Clav	Vintage Clav	Instruments	Wah effect controls	Envelope	other	UI label
+logic:Vintage Clav	Vintage Clav	Instruments	Excite and Click parameters	Shape	ctl.select	UI label
+logic:Vintage Clav	Vintage Clav	Instruments	Excite and Click parameters	Random	other	UI label
+logic:Vintage Clav	Vintage Clav	Instruments	Excite and Click parameters	Velocity	system	UI label
+logic:Vintage Clav	Vintage Clav	Instruments	Excite and Click parameters	Velocity mode	ctl.select	UI label
+logic:Vintage Clav	Vintage Clav	Instruments	String parameters	Release	env.release	UI label
+logic:Vintage Clav	Vintage Clav	Instruments	String parameters	Damping	fx.tone	UI label
+logic:Vintage Clav	Vintage Clav	Instruments	String parameters	Stiffness/Inharmonicity	other	UI label
+logic:Vintage Clav	Vintage Clav	Instruments	String parameters	Tension Mod	other	UI label
+logic:Vintage Clav	Vintage Clav	Instruments	String parameters	Pitch Fall	other	UI label
+logic:Vintage Clav	Vintage Clav	Instruments	Pitch parameters	Tune	osc.pitch	UI label
+logic:Vintage Clav	Vintage Clav	Instruments	Pitch parameters	Stretch Tuning	other	UI label
+logic:Vintage Clav	Vintage Clav	Instruments	Pitch parameters	Warmth	fx.tone	UI label
+logic:Vintage Clav	Vintage Clav	Instruments	Pitch parameters	Pitch Wheel	other	UI label
+logic:Vintage Clav	Vintage Clav	Instruments	Pitch parameters	Pitch Pressure	other	UI label
+logic:Vintage Clav	Vintage Clav	Instruments	Misc parameters	Voices	system	UI label
+logic:Vintage Clav	Vintage Clav	Instruments	Misc parameters	Velocity Curve	other	UI label
+logic:Vintage Clav	Vintage Clav	Instruments	Misc parameters	Damper Control	fx.tone	UI label
+logic:Vintage Clav	Vintage Clav	Instruments	Misc parameters	Wah Control	other	UI label
+logic:Vintage Clav	Vintage Clav	Instruments	Extended parameters	MIDI Mono Mode	ctl.select	UI label
+logic:Vintage Clav	Vintage Clav	Instruments	Extended parameters	Mono Mode Bend Range	system	UI label
+logic:Vintage Electric Piano	Vintage Electric Piano	Instruments	Vintage Electric Piano interface	Model	ctl.select	UI label
+logic:Vintage Electric Piano	Vintage Electric Piano	Instruments	Vintage Electric Piano interface	Effects	other	UI label
+logic:Vintage Electric Piano	Vintage Electric Piano	Instruments	Vintage Electric Piano interface	Details	other	UI label
+logic:Vintage Electric Piano	Vintage Electric Piano	Instruments	Vintage Electric Piano interface	Bass Boost	other	UI label
+logic:Vintage Electric Piano	Vintage Electric Piano	Instruments	Vintage Electric Piano interface	Volume	amp.gain	UI label
+logic:Vintage Electric Piano	Vintage Electric Piano	Instruments	EQ controls	Bass	fx.eq.gain	UI label
+logic:Vintage Electric Piano	Vintage Electric Piano	Instruments	EQ controls	Treble	fx.eq.gain	UI label
+logic:Vintage Electric Piano	Vintage Electric Piano	Instruments	Drive effect controls	Drive mode	ctl.select	UI label
+logic:Vintage Electric Piano	Vintage Electric Piano	Instruments	Drive effect controls	Gain	amp.gain	UI label
+logic:Vintage Electric Piano	Vintage Electric Piano	Instruments	Drive effect controls	Tone	fx.tone	UI label
+logic:Vintage Electric Piano	Vintage Electric Piano	Instruments	Chorus effect controls	Rate	lfo.rate	UI label
+logic:Vintage Electric Piano	Vintage Electric Piano	Instruments	Chorus effect controls	Intensity	lfo.amount	UI label
+logic:Vintage Electric Piano	Vintage Electric Piano	Instruments	Phaser effect controls	Sync	system	UI label
+logic:Vintage Electric Piano	Vintage Electric Piano	Instruments	Phaser effect controls	Color	fx.tone	UI label
+logic:Vintage Electric Piano	Vintage Electric Piano	Instruments	Phaser effect controls	Stereo	other	UI label
+logic:Vintage Electric Piano	Vintage Electric Piano	Instruments	Model controls	Voices	system	UI label
+logic:Vintage Electric Piano	Vintage Electric Piano	Instruments	Model controls	Decay	env.decay	UI label
+logic:Vintage Electric Piano	Vintage Electric Piano	Instruments	Model controls	Release	env.release	UI label
+logic:Vintage Electric Piano	Vintage Electric Piano	Instruments	Model controls	Stereo Width	stereo.width	UI label
+logic:Vintage Electric Piano	Vintage Electric Piano	Instruments	Model controls	Tine Bell	other	UI label
+logic:Vintage Electric Piano	Vintage Electric Piano	Instruments	Model controls	Damper Noise	other	UI label
+logic:Vintage Electric Piano	Vintage Electric Piano	Instruments	Pitch controls	Tune	osc.pitch	UI label
+logic:Vintage Electric Piano	Vintage Electric Piano	Instruments	Pitch controls	Down/Up	other	UI label
+logic:Vintage Electric Piano	Vintage Electric Piano	Instruments	Pitch controls	Warmth	fx.tone	UI label
+logic:Vintage Electric Piano	Vintage Electric Piano	Instruments	Pitch controls	Lower	other	UI label
+logic:Vintage Electric Piano	Vintage Electric Piano	Instruments	Pitch controls	Upper	other	UI label
+logic:Vintage Electric Piano	Vintage Electric Piano	Instruments	Extended parameters	Delay Pianissimo	other	UI label
+logic:Vintage Electric Piano	Vintage Electric Piano	Instruments	Extended parameters	Delay Fortissimo	other	UI label
+logic:Vintage Electric Piano	Vintage Electric Piano	Instruments	Extended parameters	MIDI Mode	ctl.select	UI label
+logic:Vintage Mellotron	Vintage Mellotron	Instruments	Vintage Mellotron controls	Sound A/B	other	UI label
+logic:Vintage Mellotron	Vintage Mellotron	Instruments	Vintage Mellotron controls	Sound A/B Transpose	osc.pitch	UI label
+logic:Vintage Mellotron	Vintage Mellotron	Instruments	Vintage Mellotron controls	Blend A/B	other	UI label
+logic:Vintage Mellotron	Vintage Mellotron	Instruments	Vintage Mellotron controls	Tape Speed	other	UI label
+logic:Vintage Mellotron	Vintage Mellotron	Instruments	Vintage Mellotron controls	Tone	fx.tone	UI label
+logic:Vintage Mellotron	Vintage Mellotron	Instruments	Vintage Mellotron controls	Volume	amp.gain	UI label
+logic:Vintage Mellotron	Vintage Mellotron	Instruments	Vintage Mellotron controls	Attack	env.attack	UI label
+logic:Vintage Mellotron	Vintage Mellotron	Instruments	Vintage Mellotron controls	Release	env.release	UI label
+logic:Vintage Mellotron	Vintage Mellotron	Instruments	Vintage Mellotron controls	Pitch Bend Range	system	UI label
+logic:Vintage Mellotron	Vintage Mellotron	Instruments	Vintage Mellotron controls	Fixed Velocity	other	UI label
+logic:Stereo Spread	Stereo Spread	Effects	Stereo Spread controls	Lower Intensity	stereo.width	UI label
+logic:Stereo Spread	Stereo Spread	Effects	Stereo Spread controls	Upper Intensity	stereo.width	UI label
+logic:Stereo Spread	Stereo Spread	Effects	Stereo Spread controls	Upper/Lower Frequency	other	UI label
+logic:Stereo Spread	Stereo Spread	Effects	Stereo Spread controls	Order	other	UI label
+logic:Gain	Gain	Effects	Gain controls	Gain	unsafe	UI label
+logic:Gain	Gain	Effects	Gain controls	Phase Invert Left/Right	ctl.switch	UI label
+logic:Gain	Gain	Effects	Gain controls	Balance	amp.pan	UI label
+logic:Gain	Gain	Effects	Gain controls	Swap L/R	ctl.switch	UI label
+logic:Studio Piano	Studio Piano	Instruments	Studio Piano	Instrument	ctl.select	UI label
+logic:Studio Piano	Studio Piano	Instruments	Studio Piano	Stereo Mic A	other	UI label
+logic:Studio Piano	Studio Piano	Instruments	Studio Piano	Stereo Mic B	other	UI label
+logic:Studio Piano	Studio Piano	Instruments	Studio Piano	Mono Mic	other	UI label
+logic:Studio Piano	Studio Piano	Instruments	Studio Piano	Stereo Mic A On/Off	ctl.switch	UI label
+logic:Studio Piano	Studio Piano	Instruments	Studio Piano	Stereo Mic B On/Off	ctl.switch	UI label
+logic:Studio Piano	Studio Piano	Instruments	Studio Piano	Mono Mic On/Off	ctl.switch	UI label

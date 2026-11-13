@@ -15,6 +15,10 @@ plugin/assistant/completion):
                         Same label choice as export_completion.py (earlier
                         label runs win per plugin id, final class first);
                         placeholder names (MIDI CC slots) are left out.
+                        Hand-labelled stock plugins come from stock.py:
+                        FL's effects (tools/mapping/fl/stock_labels.tsv)
+                        and Live's devices as "ableton:<class_name>"
+                        (tools/mapping/ableton/stock_labels.tsv).
   paramsense/meta.json, paramsense/weights.f16.bin
                         the param-sense run, copied unchanged
 
@@ -37,6 +41,8 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 
+import stock
+
 ROOT = Path(__file__).resolve().parents[2]
 DATA = ROOT / "data" / "mapping"
 OUTS = [DATA / "completion", ROOT / "plugin" / "assistant" / "completion"]
@@ -49,6 +55,8 @@ PARITY_PLUGINS = ["Xfer Records/Serum 2", "Output/Portal", "FabFilter/Pro-Q 3",
 
 def placeholder(name: str) -> bool:
     """Same rule as is_placeholder in plugin/synthexis/src/fl.rs."""
+    if any(ord(c) < 32 or ord(c) == 127 for c in name):
+        return True
     n = name.strip().lower()
     return bool(re.match(r"midi cc($|[ #0-9])", n) or re.match(r"cc[ #0-9]", n)
                 or re.search(r" chan \d+$", n) or re.fullmatch(r"reserved ?\d*", n)
@@ -92,6 +100,7 @@ def ctx_feats(plugin: str, names: list) -> list:
 
 def known_table(data: Path) -> dict:
     owner, out = {}, {}
+    owner_names = set()
     for run in LABEL_RUNS:
         for line in open(data / "labels" / run / "labels.jsonl", encoding="utf-8"):
             r = json.loads(line)
@@ -100,7 +109,14 @@ def known_table(data: Path) -> dict:
                 continue
             cls = r["final"][0] if "final" in r else r["class"]
             plug = pid.split("/", 1)[-1].casefold().strip()
+            owner_names.add(plug)
             out.setdefault(plug, {})[r["name"].casefold().strip()] = cls
+    # stock plugins labelled by hand (stock.py): FL reports some names in
+    # its own case ("Fruity delay 2"); Live devices are "ableton:<class_name>"
+    for plug, name, cls in stock.rows():
+        if plug.casefold() in owner_names:
+            continue
+        out.setdefault(plug.casefold().strip(), {})[name.casefold().strip()] = cls
     return out
 
 

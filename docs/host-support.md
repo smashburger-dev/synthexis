@@ -37,7 +37,7 @@ Research run on 2026-11-13: code read of the FL coupling, web research on Logic 
 |---|---|---|---|
 | Read plugin and parameter names | device script, every plugin | no public API; AppleScript has only Standard and Text suites; undocumented Lua MIDI Device Scripts send names of assigned parameters only | MIDI Remote Script (Python 3, `~/Music/Ableton/User Library/Remote Scripts`), LOM `Device.parameters`, stock devices by name |
 | Write parameters | REC events, recorded | Controller Assignments Learn (Cmd-K, Cmd-L), Smart Controls; recorded in Latch/Touch | MIDI Map (Cmd+M) with Remote on; remote script via `Live.MidiMap` mappings |
-| Stock plugins | Fruity plugins readable, unlabelled | Learn reaches them (Apple: "channel strip and plug-in parameters"); not AudioComponents, so `au_harvest` misses them | every device, names via LOM |
+| Stock plugins | Fruity plugins readable and writable, effects hand-labelled (`probes/fl-stock-plugins`) | Learn reaches them (Apple: "channel strip and plug-in parameters"); not AudioComponents, so `au_harvest` misses them | every device, names via LOM |
 
 Whether a remote script setting `DeviceParameter.value` records automation: UNVERIFIED. Writing through script-built MIDI mappings records like a controller.
 

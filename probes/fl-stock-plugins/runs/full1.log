@@ -1,0 +1,53 @@
+  FLEX: 42 named, wrote 16, 16 moved, 0 stuck
+  FPC: 512 named, wrote 16, 16 moved, 0 stuck
+  Fruit kick: 89 named, wrote 16, 16 moved, 0 stuck
+  Fruity DX10: 105 named, wrote 16, 16 moved, 0 stuck
+  Fruity Dance: 7 named, wrote 7, 7 moved, 0 stuck
+  Fruity DrumSynth Live: 4096 named, wrote 16, 16 moved, 0 stuck
+  Fruity Envelope Controller: 90 named, wrote 16, 16 moved, 0 stuck
+  Fruity granulizer: 95 named, wrote 16, 16 moved, 0 stuck
+  Fruity Keyboard Controller: 2 named, wrote 2, 2 moved, 0 stuck
+  Fruity Slicer 2: 1029 named, wrote 16, 16 moved, 0 stuck
+  not loaded under their file name: ['Fruit Kick', 'Fruity Granulizer']
+  Fruity Slicer: 83 named, wrote 16, 16 moved, 0 stuck
+  Fruity Voltage Controller: 16 named, wrote 16, 16 moved, 0 stuck
+  GMS: 205 named, wrote 16, 4 moved, 12 stuck
+  Harmless: 100 named, wrote 16, 16 moved, 0 stuck
+  Harmor: 825 named, wrote 16, 16 moved, 0 stuck
+  Kepler Exo: 155 named, wrote 16, 16 moved, 0 stuck
+  Kepler: 36 named, wrote 16, 16 moved, 0 stuck
+  MiniSynth: 172 named, wrote 16, 16 moved, 0 stuck
+  Morphine: 252 named, wrote 16, 16 moved, 0 stuck
+  Ogun: 89 named, wrote 16, 16 moved, 0 stuck
+  Patcher: 0 named, wrote 0, 0 moved, 0 stuck
+  PLUCKED!: 5 named, wrote 5, 5 moved, 0 stuck
+  Poizone: 203 named, wrote 16, 16 moved, 0 stuck
+  Sakura: 207 named, wrote 16, 16 moved, 0 stuck
+  Sawer: 202 named, wrote 16, 16 moved, 0 stuck
+  SimSynth Live: 26 named, wrote 16, 16 moved, 0 stuck
+  Slicex: 352 named, wrote 16, 16 moved, 0 stuck
+  SoundFont Player: 11 named, wrote 11, 11 moved, 0 stuck
+  Sytrus: 597 named, wrote 16, 16 moved, 0 stuck
+  Toxic Biohazard: 423 named, wrote 16, 16 moved, 0 stuck
+  not loaded under their file name: ['Plucked!', 'PoiZone', 'SimSynth', 'Soundfont Player']
+_LSOpenURLsWithCompletionHandler() failed for the application /Applications/FL Studio 2026.app with error -600 for the file /Users/no8/Desktop/life/Lifemaxxing/synthexis/.claude/worktrees/train-packer-cc8951/probes/fl-stock-plugins/runs/flp/batch4.flp.
+Traceback (most recent call last):
+  File "/Users/no8/Desktop/life/Lifemaxxing/synthexis/.claude/worktrees/train-packer-cc8951/probes/fl-stock-plugins/run_stock.py", line 185, in <module>
+    main()
+    ~~~~^^
+  File "/Users/no8/Desktop/life/Lifemaxxing/synthexis/.claude/worktrees/train-packer-cc8951/probes/fl-stock-plugins/run_stock.py", line 179, in main
+    run_batch(n, fsts, log, dumped, save)
+    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/no8/Desktop/life/Lifemaxxing/synthexis/.claude/worktrees/train-packer-cc8951/probes/fl-stock-plugins/run_stock.py", line 128, in run_batch
+    restart_fl(flp)
+    ~~~~~~~~~~^^^^^
+  File "/Users/no8/Desktop/life/Lifemaxxing/synthexis/.claude/worktrees/train-packer-cc8951/probes/fl-stock-plugins/run_stock.py", line 83, in restart_fl
+    open_in_fl(flp)
+    ~~~~~~~~~~^^^^^
+  File "/Users/no8/Desktop/life/Lifemaxxing/synthexis/.claude/worktrees/train-packer-cc8951/probes/fl-stock-plugins/run_stock.py", line 71, in open_in_fl
+    subprocess.run(["open", "-g", "-a", FL, str(path)], check=True)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/no8/.local/share/uv/python/cpython-3.13.17-macos-aarch64-none/lib/python3.13/subprocess.py", line 578, in run
+    raise CalledProcessError(retcode, process.args,
+                             output=stdout, stderr=stderr)
+subprocess.CalledProcessError: Command '['open', '-g', '-a', 'FL Studio 2026', '/Users/no8/Desktop/life/Lifemaxxing/synthexis/.claude/worktrees/train-packer-cc8951/probes/fl-stock-plugins/runs/flp/batch4.flp']' returned non-zero exit status 1.
