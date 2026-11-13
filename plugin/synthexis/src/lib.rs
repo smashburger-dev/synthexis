@@ -156,7 +156,8 @@ pub struct Synthexis {
 impl Default for Synthexis {
     fn default() -> Self {
         log::log(&format!(
-            "synthexis v0.1.0 build={}",
+            "synthexis v{} build={}",
+            env!("CARGO_PKG_VERSION"),
             env!("SYNTHEXIS_BUILD")
         ));
         let params = Arc::new(SynthexisParams::default());
@@ -177,7 +178,7 @@ impl Plugin for Synthexis {
     const VENDOR: &'static str = "synthexis";
     const URL: &'static str = "";
     const EMAIL: &'static str = "";
-    const VERSION: &'static str = "0.1.4";
+    const VERSION: &'static str = env!("CARGO_PKG_VERSION");
 
     const AUDIO_IO_LAYOUTS: &'static [AudioIOLayout] = &[AudioIOLayout {
         main_input_channels: None,
