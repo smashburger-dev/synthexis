@@ -39,13 +39,13 @@ The plug-ins are signed ad hoc, not notarized by Apple; the installer clears the
 
 | | FL Studio | Logic Pro | Ableton Live |
 |---|---|---|---|
-| Loads synthexis | VST3, CLAP | needs an Audio Unit build | VST3, after a one-line fix |
-| Camera inside the plugin | yes | blocked: Logic gives plugins no camera access, so a small camera app takes over | expected, Live 12 untested |
+| Loads synthexis | VST3, CLAP | Audio Unit built, passes auval; not yet opened in Logic | VST3 with the event input that Live asks for; not yet opened in Live |
+| Camera inside the plugin | yes | Logic gives plugins no camera access; synthexis sees that and does not ask. A small camera app will take over | expected, Live 12 untested |
 | Reads plugin and parameter names | yes, through the bridge script | no host interface; you pick the plugin in synthexis | through a Live remote script, stock devices included |
 | Moves parameters, recorded as automation | yes | through Controller Assignments Learn | through MIDI Map (Cmd+M), later the remote script |
 | Stock plugins | reachable, labels coming | Learn reaches Logic's own plugins | every Live device |
 | MIDI parts | into any channel | into the selected track | into any MIDI track |
-| Status | **tested** | planned, untested | planned, untested |
+| Status | **tested** | AU builds and validates, Logic untested | load fix in, Live untested |
 
 Only FL Studio is tested. FL lets a script list and move the parameters of every loaded plugin, and synthexis talks to that script, so routes work with no setup. Logic Pro and Ableton Live will get a MIDI port that you map once with the DAW's own learn mode; that path reaches their stock plugins too. Ableton's remote scripts can also read device names, so Live can later work like FL. In any DAW that loads synthexis, the 32 Signal macros can be automated like any other plugin knob.
 
