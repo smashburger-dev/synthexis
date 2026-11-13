@@ -49,16 +49,25 @@ if ! command -v cargo >/dev/null 2>&1; then
     fi
 fi
 
+# The target dir is shared by all worktrees (target-dir.sh). Hold its lock
+# from the build to the last copy, so no other worktree's bundle lands in
+# between.
+TARGET=$(./target-dir.sh)
+if [ "$TARGET" != "$PWD/target" ]; then
+    . ./target-lock.sh
+    target_lock "$TARGET"
+fi
 GUARD_MAX_LOAD=${GUARD_MAX_LOAD:-80} ./guarded-cargo.sh xtask bundle synthexis --release
+BUNDLED=$TARGET/bundled
 
-codesign --force --deep -s - target/bundled/synthexis.vst3
-codesign --force --deep -s - target/bundled/synthexis.clap
-codesign --force --deep -s - target/bundled/synthexis.app
+codesign --force --deep -s - "$BUNDLED"/synthexis.vst3
+codesign --force --deep -s - "$BUNDLED"/synthexis.clap
+codesign --force --deep -s - "$BUNDLED"/synthexis.app
 
 rm -rf "$HOME/Library/Audio/Plug-Ins/VST3/synthexis.vst3"
 rm -rf "$HOME/Library/Audio/Plug-Ins/CLAP/synthexis.clap"
-cp -R target/bundled/synthexis.vst3 "$HOME/Library/Audio/Plug-Ins/VST3/"
-cp -R target/bundled/synthexis.clap "$HOME/Library/Audio/Plug-Ins/CLAP/"
+cp -R "$BUNDLED"/synthexis.vst3 "$HOME/Library/Audio/Plug-Ins/VST3/"
+cp -R "$BUNDLED"/synthexis.clap "$HOME/Library/Audio/Plug-Ins/CLAP/"
 echo "installed synthexis.vst3 + synthexis.clap"
 
 # FL device script. With it in place FL sets up the plugin's "synthexis"

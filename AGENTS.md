@@ -19,6 +19,10 @@
 - Every number in `docs/` or `spec/` cites the probe or source that measured it. Unmeasured values are marked `hypothesis`.
 - Latency and throughput claims need a probe run on the real hardware (M1 Pro, macOS 27) or the real cloud GPU, with median and p95.
 
+## Builds
+
+- Build, test and bundle through `plugin/guarded-cargo.sh`, never bare `cargo`: it guards RAM, swap and load, and puts every worktree's build into the main checkout's `plugin/target` (`plugin/target-dir.sh`). A worktree with its own target costs 2 to 5 GB.
+
 ## Design
 
 - Before any UI work load the skills `design-glass`, `design-rust` and `build-rust`. The plugin UI uses Noa's glass language and the lessons from chiasma (`/Users/no8/Desktop/life/Lifemaxxing/chiasma/docs/STYLE.md`) as its foundation: camera canvas edge to edge, glass panels and floating bar over it, ring knobs for continuous values, colour only on values.

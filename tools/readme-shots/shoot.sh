@@ -12,7 +12,7 @@
 set -euo pipefail
 HERE=$(cd "$(dirname "$0")" && pwd)
 REPO=$(cd "$HERE/../.." && pwd)
-BIN=$REPO/plugin/target/debug/synthexis
+BIN=$("$REPO/plugin/target-dir.sh")/debug/synthexis
 OUT=${OUT:-$(mktemp -d)}
 DST=${DST:-$REPO/docs/img}
 mkdir -p "$OUT/env/parts"

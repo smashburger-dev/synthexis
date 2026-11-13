@@ -22,8 +22,15 @@ FL records only those.
 ./guarded-cargo.sh xtask bundle synthexis --release
 ./install.sh                              # build+sign+install (see FL note)
 SYNTHEXIS_TEST="test_signal=on" \
-  target/bundled/synthexis.app/Contents/MacOS/synthexis -r 44100
+  "$(./target-dir.sh)"/bundled/synthexis.app/Contents/MacOS/synthexis -r 44100
 ```
+
+Every git worktree of this repo builds into the main checkout's
+`plugin/target` (`./target-dir.sh` prints the path), so a new worktree
+reuses the compiled dependencies instead of filling the disk with its own
+2 to 5 GB. Build through `guarded-cargo.sh`, which sets `CARGO_TARGET_DIR`;
+bare `cargo` in a worktree still builds a private `target`.
+`SYNTHEXIS_OWN_TARGET=1` opts out.
 
 install.sh needs Apple's Command Line Tools and Rust. When one is missing
 it says so and offers the official installer (`xcode-select --install`,
@@ -109,7 +116,7 @@ Offline bench over a recording (no camera needed):
 
 ```
 SYNTHEXIS_BENCH=../data/recordings/2026-11-01-S4/cam0.mov \
-  SYNTHEXIS_BENCH_OUT=/tmp/s4.jsonl target/release/synthexis
+  SYNTHEXIS_BENCH_OUT=/tmp/s4.jsonl "$(./target-dir.sh)"/release/synthexis
 python3 ../probes/plugin-perception/eval.py /tmp/s4.jsonl \
   ../data/recordings/2026-11-01-S4/segments.json
 ```
