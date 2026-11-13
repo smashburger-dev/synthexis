@@ -14,6 +14,14 @@ if pgrep -x OsxFL >/dev/null && [ "$INSTALLED" = 1 ]; then
     exit 1
 fi
 
+# The same for Logic Pro and the Audio Unit.
+if pgrep -f "Logic Pro.app/Contents/MacOS/Logic Pro" >/dev/null \
+    && [ -d "$HOME/Library/Audio/Plug-Ins/Components/synthexis.component" ]; then
+    echo "Logic Pro is running and synthexis.component is already installed — refusing."
+    echo "Quit Logic, then re-run: $0"
+    exit 1
+fi
+
 # Building from source needs Apple's Command Line Tools (clang and the
 # linker Rust uses) and Rust (cargo). A missing one is offered through its
 # official installer and installed only after a yes.
@@ -54,12 +62,20 @@ GUARD_MAX_LOAD=${GUARD_MAX_LOAD:-80} ./guarded-cargo.sh xtask bundle synthexis -
 codesign --force --deep -s - target/bundled/synthexis.vst3
 codesign --force --deep -s - target/bundled/synthexis.clap
 codesign --force --deep -s - target/bundled/synthexis.app
+codesign --force --deep -s - target/bundled/synthexis.component
 
 rm -rf "$HOME/Library/Audio/Plug-Ins/VST3/synthexis.vst3"
 rm -rf "$HOME/Library/Audio/Plug-Ins/CLAP/synthexis.clap"
 cp -R target/bundled/synthexis.vst3 "$HOME/Library/Audio/Plug-Ins/VST3/"
 cp -R target/bundled/synthexis.clap "$HOME/Library/Audio/Plug-Ins/CLAP/"
 echo "installed synthexis.vst3 + synthexis.clap"
+# Audio Unit for Logic Pro (xtask/src/auv2.rs). The registrar caches the
+# component list; it restarts on its own and rescans.
+mkdir -p "$HOME/Library/Audio/Plug-Ins/Components"
+rm -rf "$HOME/Library/Audio/Plug-Ins/Components/synthexis.component"
+cp -R target/bundled/synthexis.component "$HOME/Library/Audio/Plug-Ins/Components/"
+killall -9 AudioComponentRegistrar 2>/dev/null || true
+echo "installed synthexis.component (auval -v aumu sgnl Snxs)"
 
 # FL device script. With it in place FL sets up the plugin's "synthexis"
 # MIDI ports itself (fl/device_synthexis_bridge.py, header). FL reads the

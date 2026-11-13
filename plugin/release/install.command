@@ -1,12 +1,16 @@
 #!/bin/bash
-# Installs the synthexis release on this Mac: the VST3 and CLAP plug-ins,
+# Installs the synthexis release on this Mac: the VST3, CLAP and AU plug-ins,
 # the perception models, the FL Studio device script, and the sentence
 # parser (downloaded once from the GitHub release, about 450 MB).
-# Run it with FL Studio closed. Double-click, or: bash install.command
+# Run it with FL Studio and Logic Pro closed. Double-click, or: bash install.command
 set -euo pipefail
 cd "$(dirname "$0")"
 if pgrep -x OsxFL >/dev/null; then
     echo "FL Studio is running. Quit it, then run this again."
+    exit 1
+fi
+if pgrep -f "Logic Pro.app/Contents/MacOS/Logic Pro" >/dev/null; then
+    echo "Logic Pro is running. Quit it, then run this again."
     exit 1
 fi
 # Downloaded files carry Apple's quarantine flag; the ad-hoc signed
@@ -15,12 +19,19 @@ xattr -dr com.apple.quarantine . 2>/dev/null || true
 
 VST3="$HOME/Library/Audio/Plug-Ins/VST3"
 CLAP="$HOME/Library/Audio/Plug-Ins/CLAP"
+AU="$HOME/Library/Audio/Plug-Ins/Components"
 APP="$HOME/Library/Application Support/synthexis"
-mkdir -p "$VST3" "$CLAP" "$APP/models"
-rm -rf "$VST3/synthexis.vst3" "$CLAP/synthexis.clap"
+mkdir -p "$VST3" "$CLAP" "$AU" "$APP/models"
+rm -rf "$VST3/synthexis.vst3" "$CLAP/synthexis.clap" "$AU/synthexis.component"
 cp -R synthexis.vst3 "$VST3/"
 cp -R synthexis.clap "$CLAP/"
 echo "installed synthexis.vst3 and synthexis.clap"
+# The Audio Unit for Logic Pro, if this release has one.
+if [ -d synthexis.component ]; then
+    cp -R synthexis.component "$AU/"
+    killall -9 AudioComponentRegistrar 2>/dev/null || true
+    echo "installed synthexis.component"
+fi
 
 for name in seg hand face; do
     rm -rf "$APP/models/$name.mlmodelc" "$APP/models/$name.mlpackage" "$APP/models/$name.source-sha256"

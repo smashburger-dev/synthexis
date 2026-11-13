@@ -31,7 +31,7 @@ use objc2_core_video::{
     CVPixelBufferGetHeight, CVPixelBufferGetWidth, CVPixelBufferLockBaseAddress,
     CVPixelBufferLockFlags, CVPixelBufferUnlockBaseAddress,
 };
-use objc2_foundation::{NSDictionary, NSNumber, NSObjectProtocol, NSString};
+use objc2_foundation::{ns_string, NSBundle, NSDictionary, NSNumber, NSObjectProtocol, NSString};
 
 use crate::log;
 use crate::signal::{Sample, SIG_BRIGHTNESS, SIG_MOTION};
@@ -343,11 +343,33 @@ fn auth_status_string() -> String {
     }
 }
 
+/// auth_status when the host app declares no camera use (editor.rs).
+pub const NO_HOST_ACCESS: &str = "noHostAccess";
+
+/// Whether the host app (the main bundle the plugin runs in) declares
+/// NSCameraUsageDescription. Without it TCC may kill the host when the
+/// plugin asks for the camera (Logic 12.4 has none; REAPER crashed this
+/// way, SPARTA#82), so synthexis does not ask (docs/host-support.md).
+fn host_declares_camera() -> bool {
+    NSBundle::mainBundle()
+        .infoDictionary()
+        .is_some_and(|info| info.objectForKey(ns_string!("NSCameraUsageDescription")).is_some())
+}
+
 fn run_session(shared: Arc<EngineShared>) {
     // Nothing happens (no permission prompt either, e.g. during a plugin
     // scan) until a window or a route needs the camera.
     while !crate::engine::engine().demand().camera {
         std::thread::sleep(POLL);
+    }
+    // A host without a usage string gets no request. Access granted
+    // earlier still works, so only an unanswered or denied status stops.
+    let declared = host_declares_camera();
+    log::log(&format!("host declares camera use: {declared}"));
+    if !declared && auth_status_string() != "authorized" {
+        *shared.auth_status.lock() = NO_HOST_ACCESS.into();
+        log::log("host app declares no camera use, not asking for access");
+        return;
     }
     // Permission gate, same as the probe.
     if auth_status_string() == "notDetermined" {

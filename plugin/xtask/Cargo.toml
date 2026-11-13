@@ -9,3 +9,4 @@ workspace = true
 
 [dependencies]
 nih_plug_xtask = { path = "../vendor/nih-plug/nih_plug_xtask" }
+anyhow = "1"

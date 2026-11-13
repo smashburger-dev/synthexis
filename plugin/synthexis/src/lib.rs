@@ -185,7 +185,10 @@ impl Plugin for Synthexis {
         ..AudioIOLayout::const_default()
     }];
 
-    const MIDI_INPUT: MidiConfig = MidiConfig::None;
+    // Unused: process() reads no events. An event input bus is needed
+    // because Live 12 refuses a VST3 instrument without one
+    // (clap-wrapper#635, docs/host-support.md).
+    const MIDI_INPUT: MidiConfig = MidiConfig::Basic;
     const MIDI_OUTPUT: MidiConfig = MidiConfig::Basic;
     const SAMPLE_ACCURATE_AUTOMATION: bool = false;
 
@@ -289,3 +292,6 @@ impl Vst3Plugin for Synthexis {
 
 nih_export_clap!(Synthexis);
 nih_export_vst3!(Synthexis);
+// The Audio Unit (synthexis.component, bundled by xtask) is the same
+// binary: clap-wrapper's AUv2 factory hosts the CLAP plugin above.
+clap_wrapper::export_auv2!();

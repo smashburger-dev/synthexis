@@ -564,6 +564,15 @@ version = "0.5.0"
 source = "git+https://github.com/micahrj/clap-sys.git?rev=25d7f53fdb6363ad63fbd80049cb7a42a97ac156#25d7f53fdb6363ad63fbd80049cb7a42a97ac156"
 
 [[package]]
+name = "clap-wrapper"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bd1028157e0bb8ddb7b0f95269da629bb1b717e904752316ef7752b85c4bde82"
+dependencies = [
+ "cc",
+]
+
+[[package]]
 name = "clap_builder"
 version = "4.6.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3381,6 +3390,7 @@ name = "synthexis"
 version = "0.1.1"
 dependencies = [
  "block2 0.6.2",
+ "clap-wrapper",
  "coremidi",
  "crossbeam-channel",
  "dispatch2",
@@ -4300,6 +4310,7 @@ checksum = "b9cc00251562a284751c9973bace760d86c0276c471b4be569fe6b068ee97a56"
 name = "xtask"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "nih_plug_xtask",
 ]
 
