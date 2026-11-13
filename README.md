@@ -43,11 +43,31 @@ The plug-ins are signed ad hoc, not notarized by Apple; the installer clears the
 | Camera inside the plugin | yes | blocked: Logic gives plugins no camera access, so a small camera app takes over | expected, Live 12 untested |
 | Reads plugin and parameter names | yes, through the bridge script | no host interface; you pick the plugin in synthexis | through a Live remote script, stock devices included |
 | Moves parameters, recorded as automation | yes | through Controller Assignments Learn | through MIDI Map (Cmd+M), later the remote script |
-| Stock plugins | reachable, labels coming | Learn reaches Logic's own plugins | every Live device |
+| Stock plugins | 99 of 106, also by name in the sentence (see [Stock plugins](#stock-plugins)) | Learn reaches Logic's own plugins | every Live device |
 | MIDI parts | into any channel | into the selected track | into any MIDI track |
 | Status | **tested** | planned, untested | planned, untested |
 
 Only FL Studio is tested. FL lets a script list and move the parameters of every loaded plugin, and synthexis talks to that script, so routes work with no setup. Logic Pro and Ableton Live will get a MIDI port that you map once with the DAW's own learn mode; that path reaches their stock plugins too. Ableton's remote scripts can also read device names, so Live can later work like FL. In any DAW that loads synthexis, the 32 Signal macros can be automated like any other plugin knob.
+
+## Stock plugins
+
+| DAW | Stock plugins | What synthexis reaches | Labels | Status |
+|---|---|---|---|---|
+| FL Studio | 109 loaded in the test (64 effects, 42 generators, 3 without parameters) | 99 of 106 plugins with parameters take every tested write (the first 16 parameters of each); FL recorded both write paths as automation (Fruity Reeverb 2, 3x Osc) | 56 stock effects labelled by hand; synths and large racks guessed from their names | **tested** in FL Studio 2026 |
+| Ableton Live | every Live device | nothing yet, needs the Live bridge | planned, from Ableton's device reference | planned |
+| Logic Pro | Logic's own plugins | through Controller Assignments Learn, once the MIDI port exists | planned, hand-made list | planned, untested |
+
+The FL Studio stock plugins that do not work fully:
+
+| Plugin | What happens |
+|---|---|
+| FL Slayer, WASP, WASP XT, Fruity LSD | FL reports control characters as parameter names and ignores every write. synthexis hides them from the picker. |
+| GMS | 12 of 16 tested parameters stay put: the ten FX slot selectors, FX Activate and FX LFO Shape Switch. The rest moves. |
+| Fruity Scratcher | Mute does not toggle; 13 of 14 parameters move. |
+| Fruity Love Philter | No write moved in the batch test, but a single write afterwards moved Master level. Probably a timing effect of the test. |
+| Patcher, Wave Traveller, Soundgoodizer | FL scripts see no parameters, so no route reaches them. Not counted in the 106. |
+
+Stock plugins looked broken because of synthexis, not FL. synthexis resolved every sentence on the picked plugin (FL's focus or the pin) and ignored the plugin the sentence named, so "open the filter on Fruity Filter" with Fruity Blood Overdrive in focus gave a route to Blood Overdrive's Post filter. Stock parameters also had no labels. Since 0.1.2 the picker jumps to the named plugin. Measurements: [probes/fl-stock-plugins](probes/fl-stock-plugins/RESULT.md); changes: [CHANGELOG.md](CHANGELOG.md).
 
 ## What you can play
 
@@ -185,9 +205,9 @@ From the [planning board](https://www.figma.com/board/WJIE59w34hCSTXuq3XpKGH), w
 
 ## Status
 
-Works in FL Studio: camera in the plugin at 30 fps, routes from sentences (three at once with both hands, recorded as automation), the plugin picker that follows FL's focus, MIDI parts, Pong, the head section, presets and profiles.
+Works in FL Studio: camera in the plugin at 30 fps, routes from sentences (three at once with both hands, recorded as automation), the plugin picker that follows FL's focus or the plugin a sentence names, FL's stock plugins (99 of 106; a stock route has not yet been played with a real hand), MIDI parts, Pong, the head section, presets and profiles.
 
-Next: Logic Pro and Ableton Live (see [DAW support](#daw-support)), labels for the FL Studio stock plugins, a notarized release, Windows. A Windows port would run the same model weights through ONNX Runtime and swap Apple Vision for MediaPipe Face Landmarker.
+Next: Logic Pro and Ableton Live (see [DAW support](#daw-support)), labels for the FL Studio stock synths and large effect racks, a notarized release, Windows. A Windows port would run the same model weights through ONNX Runtime and swap Apple Vision for MediaPipe Face Landmarker.
 
 <details>
 <summary>More screenshots</summary>

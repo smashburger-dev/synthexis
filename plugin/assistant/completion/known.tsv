@@ -25457,6 +25457,19 @@ mode	ctl.select
 outputgain	amp.gain
 saturation	fx.drive
 style	ctl.select
+#effector
+effect kind	ctl.select
+fx bypass	ctl.switch
+input level	amp.gain
+mod amount x	mod.amount
+mod amount y	mod.amount
+mod rate	fx.mod.rate
+mod shape	ctl.select
+output gain	unsafe
+param x	macro
+param y	macro
+tempo reduce	other
+wet mix	fx.mix
 #effectrix
 bypass_chorus	ctl.switch
 bypass_crush	ctl.switch
@@ -25764,6 +25777,24 @@ hit it!	ctl.switch
 mode select	ctl.select
 sustain/gain l	other
 trim	amp.gain
+#emphasis
+bypass	ctl.switch
+channel mode	ctl.select
+delta	ctl.switch
+emphasis amount	fx.comp.amount
+emphasis mode	ctl.select
+envelope order	ctl.select
+input gain	fx.comp.amount
+linking	other
+output ceiling	amp.gain
+true peak detection	system
+#emphasizer
+bypass	ctl.switch
+clipping	ctl.select
+emphasis	fx.comp.amount
+input gain	fx.comp.amount
+level matching	ctl.switch
+output gain	amp.gain
 #emulator ii v
 active filter category	system
 active filter preset	system
@@ -29004,6 +29035,431 @@ sonson	ctl.switch
 treble	fx.eq.gain
 width	stereo.width
 widthon	ctl.switch
+#frequency shifter
+dry/wet mix	fx.mix
+feedback	fx.mod.depth
+frequency	fx.pitch
+l/r phase	other
+left shape	other
+right shape	other
+start phase	other
+stereo	stereo.width
+type	ctl.select
+#frequency splitter
+high	fx.eq.gain
+high main output	amp.gain
+linear phase	ctl.select
+linear phase mod speed	system
+linear phase quality	system
+low	fx.eq.gain
+low main output	amp.gain
+low/mid freq	fx.eq.freq
+low/mid slope	ctl.select
+mid	fx.eq.gain
+mid main output	amp.gain
+mid/high freq	fx.eq.freq
+mid/high slope	ctl.select
+number of bands	ctl.select
+#fruity 7 band equalizer
+band 1 level	fx.eq.gain
+band 2 level	fx.eq.gain
+band 3 level	fx.eq.gain
+band 4 level	fx.eq.gain
+band 5 level	fx.eq.gain
+band 6 level	fx.eq.gain
+band 7 level	fx.eq.gain
+#fruity balance
+balance	amp.pan
+volume	amp.gain
+#fruity bass boost
+amount	fx.eq.gain
+frequency	fx.eq.freq
+#fruity blood overdrive
+color	fx.tone
+post filter	fx.tone
+post gain	amp.gain
+pre amp	fx.drive
+pre band	fx.tone
+x100	ctl.switch
+#fruity center
+status	ctl.switch
+#fruity chorus
+cross cutoff	fx.tone
+cross type	ctl.select
+delay	other
+depth	fx.mod.depth
+lfo 1 frequency	fx.mod.rate
+lfo 1 wave	ctl.select
+lfo 2 frequency	fx.mod.rate
+lfo 2 wave	ctl.select
+lfo 3 frequency	fx.mod.rate
+lfo 3 wave	ctl.select
+stereo	stereo.width
+wet only	ctl.switch
+#fruity compressor
+attack	other
+gain	unsafe
+ratio	fx.comp.amount
+release	other
+threshold	fx.comp.amount
+type	ctl.select
+#fruity convolver
+dry level	other
+input stereo separation	stereo.width
+wet level	fx.reverb.mix
+wet stereo separation	stereo.width
+#fruity delay
+cutoff	fx.tone
+feedback	fx.delay.feedback
+input	fx.delay.mix
+mode	ctl.select
+steps	fx.delay.time
+tempo	system
+#fruity delay 2
+cutoff freq	fx.tone
+dry level	other
+feedback level	fx.delay.feedback
+feedback mode	ctl.select
+input panning	amp.pan
+input volume	amp.gain
+time	fx.delay.time
+time stereo offset	other
+#fruity delay 3
+bits reduction	fx.drive
+delay time r/l offset	other
+delay type	ctl.select
+diffusion level	other
+diffusion spread	other
+distortion	fx.drive
+distortion type	ctl.select
+feedback cutoff	fx.tone
+feedback level	fx.delay.feedback
+feedback resonance	fx.tone
+filter mode	ctl.select
+input wet	fx.delay.mix
+keep pitch	ctl.switch
+modulation cutoff	fx.mod.depth
+modulation rate	fx.mod.rate
+modulation time	fx.mod.depth
+output dry	other
+output tone	fx.tone
+output wet	fx.delay.mix
+rate reduction	fx.drive
+stereo spread	stereo.width
+tempo sync	system
+time	fx.delay.time
+time smooth	other
+#fruity fast dist
+distortion type	ctl.select
+mix level	fx.mix
+post gain	amp.gain
+pre amp	fx.drive
+threshold	fx.drive
+#fruity fast lp
+cutoff	filter.cutoff
+resonance	filter.resonance
+#fruity filter
+band pass	ctl.select
+cutoff frequency	filter.cutoff
+high pass	ctl.select
+low pass	ctl.select
+resonance	filter.resonance
+x 2	ctl.switch
+#fruity flanger
+cross	other
+damp	fx.tone
+delay	other
+depth	fx.mod.depth
+dry	other
+feed	fx.mod.depth
+invert feedback	ctl.switch
+invert wet	ctl.switch
+phase	other
+rate	fx.mod.rate
+shape	ctl.select
+wet	fx.mod.mix
+#fruity flangus
+cross	other
+delay	other
+depth	fx.mod.depth
+dry level	other
+order	ctl.select
+speed	fx.mod.rate
+spread	stereo.width
+wet level	fx.mod.mix
+#fruity formula controller
+a parameter	macro
+b parameter	macro
+c parameter	macro
+#fruity free filter
+frequency	filter.cutoff
+gain	fx.eq.gain
+q	filter.resonance
+type	ctl.select
+#fruity limiter
+comp attack time	other
+comp curve	other
+comp knee	other
+comp ratio	fx.comp.amount
+comp release time	other
+comp rms window	other
+comp threshold	fx.comp.amount
+gain	unsafe
+limiter attack curve	other
+limiter attack time	other
+limiter ceiling	fx.comp.amount
+limiter peak window	other
+limiter release curve	other
+limiter release time	other
+noise gain	fx.gate
+noise release time	other
+noise threshold	fx.gate
+soft saturation threshold	fx.drive
+#fruity multiband compressor
+filter type	ctl.select
+h attack	other
+h freq	fx.eq.freq
+h knee	other
+h output	amp.gain
+h ratio	fx.comp.amount
+h release	other
+h threshold	fx.comp.amount
+high band state	ctl.switch
+l attack	other
+l freq	fx.eq.freq
+l knee	other
+l output	amp.gain
+l ratio	fx.comp.amount
+l release	other
+l threshold	fx.comp.amount
+limiter	ctl.switch
+low band state	ctl.switch
+m attack	other
+m freq h	fx.eq.freq
+m freq l	fx.eq.freq
+m knee	other
+m output	amp.gain
+m ratio	fx.comp.amount
+m release	other
+m threshold	fx.comp.amount
+master volume	unsafe
+mid band state	ctl.switch
+#fruity mute 2
+channel	ctl.select
+mute	ctl.switch
+#fruity panomatic
+lfo amount	lfo.amount
+lfo shape	ctl.select
+lfo speed	lfo.rate
+lfo target	ctl.select
+panning	amp.pan
+volume	amp.gain
+#fruity parametric eq
+band 1 freq	fx.eq.freq
+band 1 level	fx.eq.gain
+band 1 type	ctl.select
+band 1 width	fx.eq.q
+band 2 freq	fx.eq.freq
+band 2 level	fx.eq.gain
+band 2 type	ctl.select
+band 2 width	fx.eq.q
+band 3 freq	fx.eq.freq
+band 3 level	fx.eq.gain
+band 3 type	ctl.select
+band 3 width	fx.eq.q
+band 4 freq	fx.eq.freq
+band 4 level	fx.eq.gain
+band 4 type	ctl.select
+band 4 width	fx.eq.q
+band 5 freq	fx.eq.freq
+band 5 level	fx.eq.gain
+band 5 type	ctl.select
+band 5 width	fx.eq.q
+band 6 freq	fx.eq.freq
+band 6 level	fx.eq.gain
+band 6 type	ctl.select
+band 6 width	fx.eq.q
+band 7 freq	fx.eq.freq
+band 7 level	fx.eq.gain
+band 7 type	ctl.select
+band 7 width	fx.eq.q
+main level	amp.gain
+#fruity parametric eq 2
+band 1 freq	fx.eq.freq
+band 1 level	fx.eq.gain
+band 1 order	ctl.select
+band 1 type	ctl.select
+band 1 width	fx.eq.q
+band 2 freq	fx.eq.freq
+band 2 level	fx.eq.gain
+band 2 order	ctl.select
+band 2 type	ctl.select
+band 2 width	fx.eq.q
+band 3 freq	fx.eq.freq
+band 3 level	fx.eq.gain
+band 3 order	ctl.select
+band 3 type	ctl.select
+band 3 width	fx.eq.q
+band 4 freq	fx.eq.freq
+band 4 level	fx.eq.gain
+band 4 order	ctl.select
+band 4 type	ctl.select
+band 4 width	fx.eq.q
+band 5 freq	fx.eq.freq
+band 5 level	fx.eq.gain
+band 5 order	ctl.select
+band 5 type	ctl.select
+band 5 width	fx.eq.q
+band 6 freq	fx.eq.freq
+band 6 level	fx.eq.gain
+band 6 order	ctl.select
+band 6 type	ctl.select
+band 6 width	fx.eq.q
+band 7 freq	fx.eq.freq
+band 7 level	fx.eq.gain
+band 7 order	ctl.select
+band 7 type	ctl.select
+band 7 width	fx.eq.q
+main level	unsafe
+#fruity peak controller
+lfo amount	lfo.amount
+lfo base level	other
+lfo phase	other
+lfo shape	ctl.select
+lfo speed	lfo.rate
+lfo tension	other
+peak amount	mod.amount
+peak base level	other
+peak decay speed	other
+peak tension	other
+#fruity phase inverter
+state	ctl.select
+#fruity phaser
+dry - wet	fx.mod.mix
+feedback	fx.mod.depth
+frequency range	other
+maximum depth	fx.mod.depth
+minimum depth	fx.mod.depth
+number of stages	ctl.select
+output gain	amp.gain
+stereo	stereo.width
+sweep frequency	fx.mod.rate
+#fruity reeverb
+color	fx.tone
+decay	fx.reverb.decay
+diffusion	other
+dry	other
+high cut	fx.tone
+high damping	fx.tone
+low cut	fx.tone
+predelay	other
+reverb	fx.reverb.mix
+room size	fx.reverb.decay
+#fruity reeverb 2
+bass multiplier	other
+crossover	other
+decay time	fx.reverb.decay
+diffusion	other
+dry level	other
+early reflection level	other
+high cut	fx.tone
+high damping	fx.tone
+low cut	fx.tone
+mod depth	fx.mod.depth
+mod speed	fx.mod.rate
+predelay	other
+room size	fx.reverb.decay
+stereo separation	stereo.width
+wet level	fx.reverb.mix
+#fruity scratcher
+mute	ctl.switch
+pan	amp.pan
+rotations	other
+smooth 1	other
+smooth 2	other
+smooth 3	other
+smooth 4	other
+transport	ctl.select
+turntable acceleration	other
+turntable hold	ctl.switch
+turntable sensitivity	other
+turntable speed	other
+volume	amp.gain
+wave position	sample.position
+#fruity send
+dry level	other
+send panning	amp.pan
+send volume	amp.gain
+#fruity soft clipper
+post gain	amp.gain
+threshold	fx.drive
+#fruity squeeze
+amount	fx.drive
+filter	ctl.switch
+filter cutoff	filter.cutoff
+filter position	ctl.select
+filter resonance	filter.resonance
+filter type	ctl.select
+gain	amp.gain
+impact	other
+mix	fx.mix
+preserve	other
+relation	ctl.select
+steps	fx.drive
+#fruity stereo enhancer
+panning	amp.pan
+phase effect position	ctl.select
+phase inversion	ctl.select
+phase offset	stereo.width
+stereo separation	stereo.width
+volume	amp.gain
+#fruity stereo shaper
+left / right delay	stereo.width
+left / right dephasing	stereo.width
+left channel volume	amp.gain
+left into right channel volume	stereo.width
+right channel volume	amp.gain
+right into left channel volume	stereo.width
+#fruity vocoder
+attack	other
+bandwidth	other
+carrier level	amp.gain
+ending freq	fx.tone
+formant	fx.pitch
+freq scale	other
+hold modulator	ctl.switch
+invert modulator freqs	ctl.switch
+modulator level	amp.gain
+release	other
+starting freq	fx.tone
+wet level	fx.mix
+#fruity waveshaper
+mix level	fx.mix
+post gain	amp.gain
+pre amp	fx.drive
+#fruity x-y controller
+acceleration	other
+speed	other
+x level	macro
+x max	other
+x min	other
+x tension	other
+y level	macro
+y max	other
+y min	other
+y tension	other
+#fruity x-y-z controller
+external controller speed	other
+global smoothing speed	other
+x smoothing acceleration	other
+x smoothing speed	other
+x value	macro
+y smoothing acceleration	other
+y smoothing speed	other
+y value	macro
+z smoothing acceleration	other
+z smoothing speed	other
+z value	macro
 #fuchs train ii
 accent	fx.tone
 bank	ctl.select
@@ -30459,6 +30915,16 @@ midi release	env.release
 midi sustain	env.sustain
 mix	fx.mix
 volume	amp.gain
+#gross beat
+hold delay (bar repeat)	ctl.switch
+time mix	fx.mix
+time offset (scratching)	other
+time slot	ctl.select
+volume envelope tension	other
+volume mix	fx.gate
+volume slot	ctl.select
+volume smoothing attack	other
+volume smoothing release	other
 #h-comp (m)
 analog	ctl.select
 attack	other
@@ -34203,6 +34669,18 @@ voice preset 3	unsafe
 voice preset 4	unsafe
 voice preset 5	unsafe
 voice preset 6	unsafe
+#hyper chorus
+delay	other
+delay lines	ctl.select
+feedback	fx.mod.depth
+high pass	fx.tone
+lfo phase difference	stereo.width
+low pass	fx.tone
+mix	fx.mod.mix
+modulation amount	fx.mod.depth
+modulation rate	fx.mod.rate
+movement amount	fx.mod.depth
+movement rate	fx.mod.rate
 #i wish
 attack	env.attack
 bypass	ctl.switch
@@ -60406,6 +60884,72 @@ mixslice	fx.mix
 pitchbend	mod.amount
 slicerandom	unsafe
 startstop	ctl.switch
+#low lifter
+crossover cutoff	fx.eq.freq
+diffuser coefficient	other
+diffuser mix	other
+dry/wet	fx.mix
+enabled	ctl.switch
+harmonics decay slope	other
+high band	ctl.switch
+high band gain	fx.eq.gain
+invert harmonics polarity	ctl.switch
+lookahead	system
+low band	ctl.switch
+low band gain	fx.eq.gain
+low cut	fx.tone
+multiband processsing	ctl.switch
+pre-shaping boost	fx.drive
+#luxeverb
+envelope attack	other
+envelope decay	other
+envelope low cut	other
+envelope mode	ctl.select
+envelope offset	other
+envelope scale	mod.amount
+envelope sidechain	ctl.switch
+envelope smoothing	other
+envelope threshold	other
+feedback delay	other
+feedback delay synced	other
+feedback gain	other
+feedback high cut	fx.tone
+feedback low cut	fx.tone
+feedback pitch shift	fx.pitch
+feedback reverb mix	other
+feedforward amp 1	other
+feedforward amp 2	other
+feedforward delay 1	other
+feedforward delay 1 synced	other
+feedforward delay 2	other
+feedforward delay 2 synced	other
+feedforward pitch 1	fx.pitch
+feedforward pitch 2	fx.pitch
+feedforward unpitched	other
+input high cut	fx.tone
+input low cut	fx.tone
+input wet gain	fx.reverb.mix
+limiter	ctl.switch
+output dry level	other
+output peak frequency	fx.eq.freq
+output peak gain	fx.eq.gain
+output peak q	fx.eq.q
+output stereo width	stereo.width
+output wet level	fx.reverb.mix
+pitch type	ctl.select
+reverb brightness	fx.tone
+reverb character	other
+reverb decay	fx.reverb.decay
+reverb diffusion	other
+reverb freeze mode	ctl.switch
+reverb high quality	system
+reverb mod amp	fx.mod.depth
+reverb mod frequency	fx.mod.rate
+reverb pre-delay	other
+reverb pre-delay synced	other
+reverb size	fx.reverb.decay
+toggle feedback	ctl.switch
+toggle reverb	ctl.switch
 #lx480 complete
 ams - ambience size	fx.reverb.decay
 ang - speaker angle	stereo.width
@@ -66504,6 +67048,66 @@ zone6 enablesteal	system
 zone6 midibegin	system
 zone6 midiend	system
 zone6 mode	ctl.select
+#maximus
+high band attack / release 2 curve	other
+high band attack time	other
+high band frequency	fx.eq.freq
+high band mode	ctl.switch
+high band post gain	amp.gain
+high band pre gain	fx.comp.amount
+high band release 2 time	other
+high band release curve	other
+high band release time	other
+high band slope	ctl.select
+high band soft saturation ceiling	other
+high band soft saturation threshold	fx.drive
+high band stereo separation	stereo.width
+high band sustain mode	ctl.select
+high band sustain window	other
+lmh lookahead delay	system
+lmh mix	fx.mix
+low band attack / release 2 curve	other
+low band attack time	other
+low band frequency	fx.eq.freq
+low band mode	ctl.switch
+low band post gain	amp.gain
+low band pre gain	fx.comp.amount
+low band release 2 time	other
+low band release curve	other
+low band release time	other
+low band slope	ctl.select
+low band soft saturation ceiling	other
+low band soft saturation threshold	fx.drive
+low band stereo separation	stereo.width
+low band sustain mode	ctl.select
+low band sustain window	other
+low cut	fx.tone
+master attack / release 2 curve	other
+master attack time	other
+master mode	ctl.switch
+master post gain	unsafe
+master pre gain	fx.comp.amount
+master release 2 time	other
+master release curve	other
+master release time	other
+master soft saturation ceiling	other
+master soft saturation threshold	fx.drive
+master stereo separation	stereo.width
+master sustain mode	ctl.select
+master sustain window	other
+mid band attack / release 2 curve	other
+mid band attack time	other
+mid band mode	ctl.switch
+mid band post gain	amp.gain
+mid band pre gain	fx.comp.amount
+mid band release 2 time	other
+mid band release curve	other
+mid band release time	other
+mid band soft saturation ceiling	other
+mid band soft saturation threshold	fx.drive
+mid band stereo separation	stereo.width
+mid band sustain mode	ctl.select
+mid band sustain window	other
 #mellotron v
 (unassigned)	system
 active filter category	system
@@ -73179,6 +73783,20 @@ wavetable 2 unison mode	ctl.select
 wavetable 2 unison phase	other
 wavetable 2 unison stereo	stereo.width
 wavetable 2 unison voices	system
+#pitch shifter
+analysis channel	system
+delay	fx.delay.time
+delay mode	ctl.select
+density	other
+duration	other
+feedback	fx.delay.feedback
+formant	fx.pitch
+formant correction	other
+jitter	other
+mix	fx.mix
+pitch	fx.pitch
+pitch mode	ctl.select
+rand	other
 #pitchmonster
 bypass	ctl.switch
 chord slot	ctl.select
@@ -88177,6 +88795,12 @@ thd	fx.drive
 thd powerthdpwr	ctl.switch
 tmt channel	ctl.select
 v-gain	amp.gain
+#spreader
+enabled	ctl.switch
+low-frequency bypass	other
+mono	ctl.switch
+spread	stereo.width
+stereo separation	stereo.width
 #sq80 v
 active filter category	system
 active filter preset	system
@@ -94761,6 +95385,16 @@ vu meter in l	system
 vu meter in r	system
 vu meter out l	system
 vu meter out r	system
+#transient processor
+attack	other
+attack shape	ctl.select
+drive	fx.drive
+effect	ctl.switch
+gain	amp.gain
+release	other
+release shape	ctl.select
+split balance	fx.mix
+split frequency	other
 #transit
 -- transition control	macro
 --- global mix	fx.mix
@@ -94993,6 +95627,29 @@ utility pan static	amp.pan
 utility tone end	fx.tone
 utility tone start	fx.tone
 utility tone static	fx.tone
+#transporter
+a/b ratio	other
+bouncing rate	other
+bypass	ctl.switch
+dry levels	other
+flush	ctl.switch
+ignore bias	other
+ignore transients	ctl.switch
+loop level a	fx.mix
+loop level b	fx.mix
+loop mode	ctl.select
+minimum length a	other
+octave down up bias	fx.pitch
+octave shift bias	fx.pitch
+probabilities	ctl.select
+reverse bias	other
+spread and auto panning	stereo.width
+tempo ratio length	ctl.select
+tempo ratio trigger	ctl.select
+transient sensitivity	other
+update loop a	ctl.switch
+update loop a/b	ctl.switch
+update loop b	ctl.switch
 #transx multi (m)
 band 1 energy	system
 band 1 onoff	ctl.switch
@@ -103232,6 +103889,59 @@ system a	system
 system b	system
 threshold a	fx.comp.amount
 threshold b	fx.comp.amount
+#vintage chorus
+feedback	fx.mod.depth
+gain	amp.gain
+high pass	fx.tone
+invert wet	ctl.switch
+lfo type	ctl.select
+link chorus i+ii	ctl.switch
+lr phase	stereo.width
+mix	fx.mod.mix
+mode	ctl.select
+mono input	ctl.switch
+noise	other
+noise gate	ctl.switch
+speed	fx.mod.rate
+start phase	other
+tempo sync	system
+time 1	other
+time 2	other
+#vintage phaser
+color low shelf frequency	fx.eq.freq
+color low shelf gain	fx.eq.gain
+delay active	ctl.switch
+delay feedback	fx.delay.feedback
+delay high pass	fx.tone
+delay keep pitch	ctl.switch
+delay low pass	fx.tone
+delay mix	fx.delay.mix
+delay stereo	stereo.width
+delay time	fx.delay.time
+drive	fx.drive
+engine	ctl.select
+feedback	fx.mod.depth
+feedback hp frequency	fx.tone
+high quality	system
+input hp frequency	fx.tone
+invert feedback	ctl.switch
+lfo max depth pull down	other
+lfo max depth scale	fx.mod.depth
+lfo type	ctl.select
+lr phase	stereo.width
+manual frequency	other
+max frequency	fx.mod.depth
+min frequency	fx.mod.depth
+mix	fx.mod.mix
+mono input	ctl.switch
+noise	other
+noise gate	ctl.switch
+rate frequency	fx.mod.rate
+rate frequency 2	fx.mod.rate
+speed	fx.mod.rate
+start phase	other
+tempo sync	system
+tension	other
 #vital
 band lower ratio	fx.comp.amount
 band lower threshold	fx.comp.amount
@@ -104502,6 +105212,27 @@ vocoder sample & hold	ctl.switch
 vocoder synth input level	amp.gain
 vocoder voice input level	amp.gain
 voice mode	ctl.select
+#vocodex
+attack curve	other
+attack time	other
+band width	other
+carrier added noise highpass frequency	fx.tone
+carrier added noise level	other
+carrier pass-through level	amp.gain
+carrier pass-through lowpass frequency	fx.tone
+filter flatness	other
+freeze envelope	ctl.switch
+hold time	other
+modulator band width multiplier	other
+modulator pass-through highpass frequency	fx.tone
+modulator pass-through level	amp.gain
+modulator pitch shift	fx.pitch
+modulator unison panning	stereo.width
+modulator unison shift	other
+release curve	other
+release time	other
+soundgoodizing level	fx.drive
+wet level	fx.mix
 #volcano 3
 audition signal	system
 auto mute self-osc	system

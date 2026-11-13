@@ -1,0 +1,18 @@
+priority: 106 plugins matched; unmatched explicit names: ['ZENOLOGY', 'Serum 2', 'Serum 2 FX', 'Serum', 'Omnisphere', 'FX-Omnisphere', 'Analog Lab V', 'Phase Plant', 'imagiro piano 2.2', 'shearwater piano', 'Portal', 'Yak Delay', 'BadChannel', 'Bad Channel', 'Vital']
+unmatched favorites: 342 (FL stock/not harvested, expected)
+PRIORITY 106 plugins: 3832 LLM lines x2 passes in 58+58 jobs, 11176 copies, 1152 rule, estimate $2.258 + adjudication
+[label-fl-prio-v1-a] 58 jobs: 0 cached, 58 to send, up-front estimate $1.129
+[label-fl-prio-v1-a] pilot spent $0.000 -> re-estimate $0.000 (up-front $1.129)
+[label-fl-prio-v1-a] 10/58 spent $0.000 mean $0.0000/job rpm 0 cache-hit 0%
+[label-fl-prio-v1-a] 20/58 spent $0.000 mean $0.0000/job rpm 386 cache-hit 0%
+[label-fl-prio-v1-a] 30/58 spent $0.000 mean $0.0000/job rpm 414 cache-hit 0%
+[label-fl-prio-v1-a] 40/58 spent $0.000 mean $0.0000/job rpm 433 cache-hit 0%
+[label-fl-prio-v1-a] 50/58 spent $0.000 mean $0.0000/job rpm 442 cache-hit 0%
+[label-fl-prio-v1-a] 58/58 spent $0.000 mean $0.0000/job rpm 429 cache-hit 0%
+[label-fl-prio-v1-b] 58 jobs: 0 cached, 58 to send, up-front estimate $1.129
+[label-fl-prio-v1-b] pilot spent $0.000 -> re-estimate $0.000 (up-front $1.129)
+[label-fl-prio-v1-b] 10/58 spent $0.000 mean $0.0000/job rpm 0 cache-hit 0%
+[label-fl-prio-v1-b] 20/58 spent $0.000 mean $0.0000/job rpm 227 cache-hit 0%
+[label-fl-prio-v1-b] 30/58 spent $0.000 mean $0.0000/job rpm 260 cache-hit 0%
+[label-fl-prio-v1-b] 40/58 spent $0.000 mean $0.0000/job rpm 245 cache-hit 0%
+[label-fl-prio-v1-b] 50/58 spent $0.000 mean $0.0000/job rpm 226 cache-hit 0%

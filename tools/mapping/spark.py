@@ -27,6 +27,15 @@ Cost guards (same pattern as tools/labels/run.py):
 Every HTTP attempt is appended to data/mapping/spark/ledger.jsonl;
 finished job attempts go to data/mapping/spark/<run>/replies.jsonl and
 make reruns resumable (same request hash -> returned from cache).
+
+SYNTHEXIS_SPARK_BACKEND=deepseek sends the same jobs, with the same
+guards and ledger, to DeepSeek V4.1 Flash (api.deepseek.com, model
+"deepseek-flash", key in Keychain item DEEPSEEK_API_KEY as in
+probes/real-eval/teacher_check.py, thinking off). Its prices below are
+DeepSeek's peak prices, twice the off-peak ones, so the guards never
+undercount. Used on 2026-11-13 for the FL stock labels, after Baseten
+answered "Model version ... is deactivated" for muse-spark-open-1026 and
+403 for every other model with this key.
 """
 
 import argparse
@@ -45,11 +54,21 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable
 
-ENDPOINT = "https://inference.baseten.co/v1/chat/completions"
-MODEL = "meta-models/muse-spark-open-1026"
-PRICE_IN = 1.25e-6          # $/token, uncached input
-PRICE_IN_CACHED = 0.15e-6   # $/token, cached input
-PRICE_OUT = 4.25e-6         # $/token, output incl. reasoning
+BACKEND = os.environ.get("SYNTHEXIS_SPARK_BACKEND", "baseten")
+if BACKEND == "deepseek":
+    ENDPOINT = "https://api.deepseek.com/chat/completions"
+    MODEL = "deepseek-flash"
+    KEY_ITEM = ["-a", os.environ.get("USER", ""), "-s", "DEEPSEEK_API_KEY"]
+    PRICE_IN = 0.30e-6          # $/token at peak (off-peak 0.15e-6)
+    PRICE_IN_CACHED = 0.006e-6
+    PRICE_OUT = 1.20e-6
+else:
+    ENDPOINT = "https://inference.baseten.co/v1/chat/completions"
+    MODEL = "meta-models/muse-spark-open-1026"
+    KEY_ITEM = ["-s", "synthexis.baseten"]
+    PRICE_IN = 1.25e-6          # $/token, uncached input
+    PRICE_IN_CACHED = 0.15e-6   # $/token, cached input
+    PRICE_OUT = 4.25e-6         # $/token, output incl. reasoning
 CHARS_PER_TOKEN = 3.2       # for the up-front estimate
 IMAGE_TOKENS_EST = 450      # per image part (768x432: 407); callers may raise it
 DEFAULT_CAP_ENV = "SYNTHEXIS_BASETEN_CAP"
@@ -91,12 +110,11 @@ def _key() -> str:
     global _api_key
     if _api_key is None:
         r = subprocess.run(
-            ["security", "find-generic-password", "-s",
-             "synthexis.baseten", "-w"],
+            ["security", "find-generic-password", *KEY_ITEM, "-w"],
             capture_output=True, text=True)
         if r.returncode != 0:
             raise RuntimeError(
-                "keychain item 'synthexis.baseten' unavailable")
+                f"keychain item {KEY_ITEM[-1]!r} unavailable")
         _api_key = r.stdout.strip()
     return _api_key
 
@@ -309,6 +327,8 @@ def _attempt(job: Job, req_hash: str, attempt_no: int, *,
         body["temperature"] = temperature
     if reasoning_effort is not None:
         body["reasoning_effort"] = reasoning_effort
+    elif BACKEND == "deepseek":
+        body["thinking"] = {"type": "disabled"}
 
     def on_http(status, usage, lat, err):
         line = {

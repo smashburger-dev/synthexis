@@ -1,0 +1,681 @@
+plugin	index	name	class
+Effector	0	Effect kind	ctl.select
+Effector	1	FX Bypass	ctl.switch
+Effector	2	Wet Mix	fx.mix
+Effector	3	Param X	macro
+Effector	4	Param Y	macro
+Effector	5	Mod Rate	fx.mod.rate
+Effector	6	Tempo reduce	other
+Effector	7	Mod Amount X	mod.amount
+Effector	8	Mod Amount Y	mod.amount
+Effector	9	Mod shape	ctl.select
+Effector	10	Input Level	amp.gain
+Effector	11	Output Gain	unsafe
+Emphasis	0	Bypass	ctl.switch
+Emphasis	1	Delta	ctl.switch
+Emphasis	2	Envelope order	ctl.select
+Emphasis	3	True peak detection 	system
+Emphasis	4	Channel mode	ctl.select
+Emphasis	5	Emphasis mode	ctl.select
+Emphasis	6	Input gain	fx.comp.amount
+Emphasis	7	Linking	other
+Emphasis	8	Emphasis amount	fx.comp.amount
+Emphasis	9	Output ceiling	amp.gain
+Emphasizer	0	Input gain	fx.comp.amount
+Emphasizer	1	Emphasis	fx.comp.amount
+Emphasizer	2	Clipping	ctl.select
+Emphasizer	3	Level matching	ctl.switch
+Emphasizer	4	Bypass	ctl.switch
+Emphasizer	5	Output gain	amp.gain
+Frequency Shifter	0	Dry/Wet mix	fx.mix
+Frequency Shifter	1	Type	ctl.select
+Frequency Shifter	2	Frequency	fx.pitch
+Frequency Shifter	3	L/R Phase	other
+Frequency Shifter	4	Left shape	other
+Frequency Shifter	5	Right Shape	other
+Frequency Shifter	6	Feedback	fx.mod.depth
+Frequency Shifter	7	Stereo	stereo.width
+Frequency Shifter	8	Type	ctl.select
+Frequency Shifter	9	Start phase	other
+Frequency Splitter	0	Low/Mid Freq	fx.eq.freq
+Frequency Splitter	1	Mid/High Freq	fx.eq.freq
+Frequency Splitter	2	Low/Mid Slope	ctl.select
+Frequency Splitter	3	Mid/High Slope	ctl.select
+Frequency Splitter	4	Linear phase	ctl.select
+Frequency Splitter	5	Number of bands	ctl.select
+Frequency Splitter	6	Linear Phase Quality	system
+Frequency Splitter	7	Linear phase mod speed	system
+Frequency Splitter	8	Low	fx.eq.gain
+Frequency Splitter	9	Mid	fx.eq.gain
+Frequency Splitter	10	High	fx.eq.gain
+Frequency Splitter	11	Low main output	amp.gain
+Frequency Splitter	12	Mid main output	amp.gain
+Frequency Splitter	13	High main output	amp.gain
+Fruity 7 Band Equalizer	0	Band 1 level	fx.eq.gain
+Fruity 7 Band Equalizer	1	Band 2 level	fx.eq.gain
+Fruity 7 Band Equalizer	2	Band 3 level	fx.eq.gain
+Fruity 7 Band Equalizer	3	Band 4 level	fx.eq.gain
+Fruity 7 Band Equalizer	4	Band 5 level	fx.eq.gain
+Fruity 7 Band Equalizer	5	Band 6 level	fx.eq.gain
+Fruity 7 Band Equalizer	6	Band 7 level	fx.eq.gain
+Fruity Balance	0	Balance	amp.pan
+Fruity Balance	1	Volume	amp.gain
+Fruity Bass Boost	0	Frequency	fx.eq.freq
+Fruity Bass Boost	1	Amount	fx.eq.gain
+Fruity Blood Overdrive	0	Pre band	fx.tone
+Fruity Blood Overdrive	1	Color	fx.tone
+Fruity Blood Overdrive	2	Pre amp	fx.drive
+Fruity Blood Overdrive	3	x100	ctl.switch
+Fruity Blood Overdrive	4	Post filter	fx.tone
+Fruity Blood Overdrive	5	Post gain	amp.gain
+Fruity Center	0	Status	ctl.switch
+Fruity Chorus	0	Delay	other
+Fruity Chorus	1	Depth	fx.mod.depth
+Fruity Chorus	2	Stereo	stereo.width
+Fruity Chorus	3	LFO 1 Frequency	fx.mod.rate
+Fruity Chorus	4	LFO 2 Frequency	fx.mod.rate
+Fruity Chorus	5	LFO 3 Frequency	fx.mod.rate
+Fruity Chorus	6	LFO 1 Wave	ctl.select
+Fruity Chorus	7	LFO 2 Wave	ctl.select
+Fruity Chorus	8	LFO 3 Wave	ctl.select
+Fruity Chorus	9	Cross Type	ctl.select
+Fruity Chorus	10	Cross Cutoff	fx.tone
+Fruity Chorus	11	Wet only	ctl.switch
+Fruity Compressor	0	Threshold	fx.comp.amount
+Fruity Compressor	1	Ratio	fx.comp.amount
+Fruity Compressor	2	Gain	unsafe
+Fruity Compressor	3	Attack	other
+Fruity Compressor	4	Release	other
+Fruity Compressor	5	Type	ctl.select
+Fruity Convolver	0	Dry level	other
+Fruity Convolver	1	Wet level	fx.reverb.mix
+Fruity Convolver	2	Input stereo separation	stereo.width
+Fruity Convolver	3	Wet stereo separation	stereo.width
+Fruity delay 2	0	Input panning	amp.pan
+Fruity delay 2	1	Input volume	amp.gain
+Fruity delay 2	2	Dry level	other
+Fruity delay 2	3	Feedback level	fx.delay.feedback
+Fruity delay 2	4	Time	fx.delay.time
+Fruity delay 2	5	Time stereo offset	other
+Fruity delay 2	6	Feedback mode	ctl.select
+Fruity delay 2	7	Cutoff freq	fx.tone
+Fruity Delay 3	0	Input wet	fx.delay.mix
+Fruity Delay 3	1	Delay type	ctl.select
+Fruity Delay 3	2	Tempo sync	system
+Fruity Delay 3	3	Keep pitch	ctl.switch
+Fruity Delay 3	4	Time	fx.delay.time
+Fruity Delay 3	5	Delay time R/L offset	other
+Fruity Delay 3	6	Time smooth	other
+Fruity Delay 3	7	Stereo spread	stereo.width
+Fruity Delay 3	8	Modulation rate	fx.mod.rate
+Fruity Delay 3	9	Modulation time	fx.mod.depth
+Fruity Delay 3	10	Modulation cutoff	fx.mod.depth
+Fruity Delay 3	11	Diffusion level	other
+Fruity Delay 3	12	Diffusion spread	other
+Fruity Delay 3	13	Distortion type	ctl.select
+Fruity Delay 3	14	Feedback level	fx.delay.feedback
+Fruity Delay 3	15	Filter mode	ctl.select
+Fruity Delay 3	16	Feedback cutoff	fx.tone
+Fruity Delay 3	17	Feedback resonance	fx.tone
+Fruity Delay 3	18	Distortion	fx.drive
+Fruity Delay 3	19	Distortion	fx.drive
+Fruity Delay 3	20	Distortion	fx.drive
+Fruity Delay 3	21	Rate reduction	fx.drive
+Fruity Delay 3	22	Bits reduction	fx.drive
+Fruity Delay 3	23	Output wet	fx.delay.mix
+Fruity Delay 3	24	Output tone	fx.tone
+Fruity Delay 3	25	Output dry	other
+Fruity Delay	0	Input	fx.delay.mix
+Fruity Delay	1	Feedback	fx.delay.feedback
+Fruity Delay	2	Cutoff	fx.tone
+Fruity Delay	3	Tempo	system
+Fruity Delay	4	Steps	fx.delay.time
+Fruity Delay	5	Mode	ctl.select
+Fruity Fast Dist	0	Pre amp	fx.drive
+Fruity Fast Dist	1	Threshold	fx.drive
+Fruity Fast Dist	2	Distortion type	ctl.select
+Fruity Fast Dist	3	Mix level	fx.mix
+Fruity Fast Dist	4	Post gain	amp.gain
+Fruity Fast LP	0	Cutoff	filter.cutoff
+Fruity Fast LP	1	Resonance	filter.resonance
+Fruity Filter	0	Cutoff frequency	filter.cutoff
+Fruity Filter	1	Resonance	filter.resonance
+Fruity Filter	2	Low pass	ctl.select
+Fruity Filter	3	Band pass	ctl.select
+Fruity Filter	4	High pass	ctl.select
+Fruity Filter	5	X 2	ctl.switch
+Fruity Flanger	0	Delay	other
+Fruity Flanger	1	Depth	fx.mod.depth
+Fruity Flanger	2	Rate	fx.mod.rate
+Fruity Flanger	3	Phase	other
+Fruity Flanger	4	Damp	fx.tone
+Fruity Flanger	5	Shape	ctl.select
+Fruity Flanger	6	Feed	fx.mod.depth
+Fruity Flanger	7	Invert feedback	ctl.switch
+Fruity Flanger	8	Invert wet	ctl.switch
+Fruity Flanger	9	Dry	other
+Fruity Flanger	10	Wet	fx.mod.mix
+Fruity Flanger	11	Cross	other
+Fruity Flangus	0	Order	ctl.select
+Fruity Flangus	1	Depth	fx.mod.depth
+Fruity Flangus	2	Speed	fx.mod.rate
+Fruity Flangus	3	Delay	other
+Fruity Flangus	4	Spread	stereo.width
+Fruity Flangus	5	Cross	other
+Fruity Flangus	6	Dry level	other
+Fruity Flangus	7	Wet level	fx.mod.mix
+Fruity formula controller	0	a parameter	macro
+Fruity formula controller	1	b parameter	macro
+Fruity formula controller	2	c parameter	macro
+Fruity Free Filter	0	Type	ctl.select
+Fruity Free Filter	1	Frequency	filter.cutoff
+Fruity Free Filter	2	Q	filter.resonance
+Fruity Free Filter	3	Gain	fx.eq.gain
+Fruity Limiter	0	Gain	unsafe
+Fruity Limiter	1	Soft saturation threshold	fx.drive
+Fruity Limiter	2	Limiter ceiling	fx.comp.amount
+Fruity Limiter	3	Limiter attack time	other
+Fruity Limiter	4	Limiter attack curve	other
+Fruity Limiter	5	Limiter release time	other
+Fruity Limiter	6	Limiter release curve	other
+Fruity Limiter	7	Limiter peak window	other
+Fruity Limiter	8	Comp threshold	fx.comp.amount
+Fruity Limiter	9	Comp ratio	fx.comp.amount
+Fruity Limiter	10	Comp knee	other
+Fruity Limiter	11	Comp attack time	other
+Fruity Limiter	12	Comp release time	other
+Fruity Limiter	13	Comp curve	other
+Fruity Limiter	14	Comp RMS window	other
+Fruity Limiter	15	Noise gain	fx.gate
+Fruity Limiter	16	Noise threshold	fx.gate
+Fruity Limiter	17	Noise release time	other
+Fruity Multiband Compressor	0	Master volume	unsafe
+Fruity Multiband Compressor	1	Limiter	ctl.switch
+Fruity Multiband Compressor	2	Filter type	ctl.select
+Fruity Multiband Compressor	3	High band state	ctl.switch
+Fruity Multiband Compressor	4	H Freq	fx.eq.freq
+Fruity Multiband Compressor	5	H Output	amp.gain
+Fruity Multiband Compressor	6	H Threshold	fx.comp.amount
+Fruity Multiband Compressor	7	H Ratio	fx.comp.amount
+Fruity Multiband Compressor	8	H Attack	other
+Fruity Multiband Compressor	9	H Release	other
+Fruity Multiband Compressor	10	H Knee	other
+Fruity Multiband Compressor	11	Mid band state	ctl.switch
+Fruity Multiband Compressor	12	M Freq H	fx.eq.freq
+Fruity Multiband Compressor	13	M Freq L	fx.eq.freq
+Fruity Multiband Compressor	14	M Output	amp.gain
+Fruity Multiband Compressor	15	M Threshold	fx.comp.amount
+Fruity Multiband Compressor	16	M Ratio	fx.comp.amount
+Fruity Multiband Compressor	17	M Attack	other
+Fruity Multiband Compressor	18	M Release	other
+Fruity Multiband Compressor	19	M Knee	other
+Fruity Multiband Compressor	20	Low band state	ctl.switch
+Fruity Multiband Compressor	21	L Freq	fx.eq.freq
+Fruity Multiband Compressor	22	L Output	amp.gain
+Fruity Multiband Compressor	23	L Threshold	fx.comp.amount
+Fruity Multiband Compressor	24	L Ratio	fx.comp.amount
+Fruity Multiband Compressor	25	L Attack	other
+Fruity Multiband Compressor	26	L Release	other
+Fruity Multiband Compressor	27	L Knee	other
+Fruity Mute 2	0	Mute	ctl.switch
+Fruity Mute 2	1	Channel	ctl.select
+Fruity PanOMatic	0	Panning	amp.pan
+Fruity PanOMatic	1	Volume	amp.gain
+Fruity PanOMatic	2	LFO shape	ctl.select
+Fruity PanOMatic	3	LFO target	ctl.select
+Fruity PanOMatic	4	LFO amount	lfo.amount
+Fruity PanOMatic	5	LFO speed	lfo.rate
+Fruity parametric EQ 2	0	Band 1 level	fx.eq.gain
+Fruity parametric EQ 2	1	Band 2 level	fx.eq.gain
+Fruity parametric EQ 2	2	Band 3 level	fx.eq.gain
+Fruity parametric EQ 2	3	Band 4 level	fx.eq.gain
+Fruity parametric EQ 2	4	Band 5 level	fx.eq.gain
+Fruity parametric EQ 2	5	Band 6 level	fx.eq.gain
+Fruity parametric EQ 2	6	Band 7 level	fx.eq.gain
+Fruity parametric EQ 2	7	Band 1 freq	fx.eq.freq
+Fruity parametric EQ 2	8	Band 2 freq	fx.eq.freq
+Fruity parametric EQ 2	9	Band 3 freq	fx.eq.freq
+Fruity parametric EQ 2	10	Band 4 freq	fx.eq.freq
+Fruity parametric EQ 2	11	Band 5 freq	fx.eq.freq
+Fruity parametric EQ 2	12	Band 6 freq	fx.eq.freq
+Fruity parametric EQ 2	13	Band 7 freq	fx.eq.freq
+Fruity parametric EQ 2	14	Band 1 width	fx.eq.q
+Fruity parametric EQ 2	15	Band 2 width	fx.eq.q
+Fruity parametric EQ 2	16	Band 3 width	fx.eq.q
+Fruity parametric EQ 2	17	Band 4 width	fx.eq.q
+Fruity parametric EQ 2	18	Band 5 width	fx.eq.q
+Fruity parametric EQ 2	19	Band 6 width	fx.eq.q
+Fruity parametric EQ 2	20	Band 7 width	fx.eq.q
+Fruity parametric EQ 2	21	Band 1 type	ctl.select
+Fruity parametric EQ 2	22	Band 2 type	ctl.select
+Fruity parametric EQ 2	23	Band 3 type	ctl.select
+Fruity parametric EQ 2	24	Band 4 type	ctl.select
+Fruity parametric EQ 2	25	Band 5 type	ctl.select
+Fruity parametric EQ 2	26	Band 6 type	ctl.select
+Fruity parametric EQ 2	27	Band 7 type	ctl.select
+Fruity parametric EQ 2	28	Band 1 order	ctl.select
+Fruity parametric EQ 2	29	Band 2 order	ctl.select
+Fruity parametric EQ 2	30	Band 3 order	ctl.select
+Fruity parametric EQ 2	31	Band 4 order	ctl.select
+Fruity parametric EQ 2	32	Band 5 order	ctl.select
+Fruity parametric EQ 2	33	Band 6 order	ctl.select
+Fruity parametric EQ 2	34	Band 7 order	ctl.select
+Fruity parametric EQ 2	35	Main level	unsafe
+Fruity parametric EQ	0	Band 1 level	fx.eq.gain
+Fruity parametric EQ	1	Band 2 level	fx.eq.gain
+Fruity parametric EQ	2	Band 3 level	fx.eq.gain
+Fruity parametric EQ	3	Band 4 level	fx.eq.gain
+Fruity parametric EQ	4	Band 5 level	fx.eq.gain
+Fruity parametric EQ	5	Band 6 level	fx.eq.gain
+Fruity parametric EQ	6	Band 7 level	fx.eq.gain
+Fruity parametric EQ	7	Band 1 freq	fx.eq.freq
+Fruity parametric EQ	8	Band 2 freq	fx.eq.freq
+Fruity parametric EQ	9	Band 3 freq	fx.eq.freq
+Fruity parametric EQ	10	Band 4 freq	fx.eq.freq
+Fruity parametric EQ	11	Band 5 freq	fx.eq.freq
+Fruity parametric EQ	12	Band 6 freq	fx.eq.freq
+Fruity parametric EQ	13	Band 7 freq	fx.eq.freq
+Fruity parametric EQ	14	Band 1 width	fx.eq.q
+Fruity parametric EQ	15	Band 2 width	fx.eq.q
+Fruity parametric EQ	16	Band 3 width	fx.eq.q
+Fruity parametric EQ	17	Band 4 width	fx.eq.q
+Fruity parametric EQ	18	Band 5 width	fx.eq.q
+Fruity parametric EQ	19	Band 6 width	fx.eq.q
+Fruity parametric EQ	20	Band 7 width	fx.eq.q
+Fruity parametric EQ	21	Band 1 type	ctl.select
+Fruity parametric EQ	22	Band 2 type	ctl.select
+Fruity parametric EQ	23	Band 3 type	ctl.select
+Fruity parametric EQ	24	Band 4 type	ctl.select
+Fruity parametric EQ	25	Band 5 type	ctl.select
+Fruity parametric EQ	26	Band 6 type	ctl.select
+Fruity parametric EQ	27	Band 7 type	ctl.select
+Fruity parametric EQ	28	Main level	amp.gain
+Fruity peak controller	0	Peak base level	other
+Fruity peak controller	1	Peak amount	mod.amount
+Fruity peak controller	2	Peak tension	other
+Fruity peak controller	3	Peak decay speed	other
+Fruity peak controller	4	LFO base level	other
+Fruity peak controller	5	LFO amount	lfo.amount
+Fruity peak controller	6	LFO tension	other
+Fruity peak controller	7	LFO speed	lfo.rate
+Fruity peak controller	8	LFO shape	ctl.select
+Fruity peak controller	9	LFO phase	other
+Fruity Phase Inverter	0	State	ctl.select
+Fruity Phaser	0	Sweep frequency	fx.mod.rate
+Fruity Phaser	1	Minimum depth	fx.mod.depth
+Fruity Phaser	2	Maximum depth	fx.mod.depth
+Fruity Phaser	3	Frequency range	other
+Fruity Phaser	4	Stereo	stereo.width
+Fruity Phaser	5	Number of stages	ctl.select
+Fruity Phaser	6	Feedback	fx.mod.depth
+Fruity Phaser	7	Dry - Wet	fx.mod.mix
+Fruity Phaser	8	Output gain	amp.gain
+Fruity Reeverb 2	0	Low cut	fx.tone
+Fruity Reeverb 2	1	High cut	fx.tone
+Fruity Reeverb 2	2	Predelay	other
+Fruity Reeverb 2	3	Room size	fx.reverb.decay
+Fruity Reeverb 2	4	Diffusion	other
+Fruity Reeverb 2	5	Decay time	fx.reverb.decay
+Fruity Reeverb 2	6	High damping	fx.tone
+Fruity Reeverb 2	7	Bass multiplier	other
+Fruity Reeverb 2	8	Crossover	other
+Fruity Reeverb 2	9	Stereo separation	stereo.width
+Fruity Reeverb 2	10	Dry level	other
+Fruity Reeverb 2	11	Early reflection level	other
+Fruity Reeverb 2	12	Wet level	fx.reverb.mix
+Fruity Reeverb 2	13	Mod Speed	fx.mod.rate
+Fruity Reeverb 2	14	Mod Depth	fx.mod.depth
+Fruity Reeverb	0	Low cut	fx.tone
+Fruity Reeverb	1	High cut	fx.tone
+Fruity Reeverb	2	Predelay	other
+Fruity Reeverb	3	Room size	fx.reverb.decay
+Fruity Reeverb	4	Diffusion	other
+Fruity Reeverb	5	Color	fx.tone
+Fruity Reeverb	6	Decay	fx.reverb.decay
+Fruity Reeverb	7	High damping	fx.tone
+Fruity Reeverb	8	Dry	other
+Fruity Reeverb	9	Reverb	fx.reverb.mix
+Fruity Scratcher	0	Wave position	sample.position
+Fruity Scratcher	1	Mute	ctl.switch
+Fruity Scratcher	2	Turntable speed	other
+Fruity Scratcher	3	Turntable acceleration	other
+Fruity Scratcher	4	Pan	amp.pan
+Fruity Scratcher	5	Volume	amp.gain
+Fruity Scratcher	6	Turntable hold	ctl.switch
+Fruity Scratcher	7	Turntable sensitivity	other
+Fruity Scratcher	8	Transport	ctl.select
+Fruity Scratcher	9	Smooth 1	other
+Fruity Scratcher	10	Smooth 2	other
+Fruity Scratcher	11	Smooth 3	other
+Fruity Scratcher	12	Smooth 4	other
+Fruity Scratcher	13	Rotations	other
+Fruity send	0	Send panning	amp.pan
+Fruity send	1	Send volume	amp.gain
+Fruity send	2	Dry level	other
+Fruity soft clipper	0	Threshold	fx.drive
+Fruity soft clipper	1	Post gain	amp.gain
+Fruity Squeeze	0	Gain	amp.gain
+Fruity Squeeze	1	Mix	fx.mix
+Fruity Squeeze	2	Steps	fx.drive
+Fruity Squeeze	3	Filter	ctl.switch
+Fruity Squeeze	4	Filter type	ctl.select
+Fruity Squeeze	5	Filter Resonance	filter.resonance
+Fruity Squeeze	6	Filter Cutoff	filter.cutoff
+Fruity Squeeze	7	Filter Position	ctl.select
+Fruity Squeeze	8	Relation	ctl.select
+Fruity Squeeze	9	Impact	other
+Fruity Squeeze	10	Preserve	other
+Fruity Squeeze	11	Amount	fx.drive
+Fruity Stereo Enhancer	0	Panning	amp.pan
+Fruity Stereo Enhancer	1	Volume	amp.gain
+Fruity Stereo Enhancer	2	Stereo separation	stereo.width
+Fruity Stereo Enhancer	3	Phase offset	stereo.width
+Fruity Stereo Enhancer	4	Phase effect position	ctl.select
+Fruity Stereo Enhancer	5	Phase inversion	ctl.select
+Fruity Stereo Shaper	0	Right into left channel volume	stereo.width
+Fruity Stereo Shaper	1	Left channel volume	amp.gain
+Fruity Stereo Shaper	2	Right channel volume	amp.gain
+Fruity Stereo Shaper	3	Left into right channel volume	stereo.width
+Fruity Stereo Shaper	4	Left / right delay	stereo.width
+Fruity Stereo Shaper	5	Left / right dephasing	stereo.width
+Fruity Vocoder	0	Starting freq	fx.tone
+Fruity Vocoder	1	Ending freq	fx.tone
+Fruity Vocoder	2	Freq scale	other
+Fruity Vocoder	3	Invert modulator freqs	ctl.switch
+Fruity Vocoder	4	Formant	fx.pitch
+Fruity Vocoder	5	Bandwidth	other
+Fruity Vocoder	6	Attack	other
+Fruity Vocoder	7	Release	other
+Fruity Vocoder	8	Hold modulator	ctl.switch
+Fruity Vocoder	9	Modulator level	amp.gain
+Fruity Vocoder	10	Carrier level	amp.gain
+Fruity Vocoder	11	Wet level	fx.mix
+Fruity WaveShaper	0	Pre amp	fx.drive
+Fruity WaveShaper	1	Mix level	fx.mix
+Fruity WaveShaper	2	Post gain	amp.gain
+Fruity X-Y controller	0	X Level	macro
+Fruity X-Y controller	1	X Min	other
+Fruity X-Y controller	2	X Max	other
+Fruity X-Y controller	3	X Tension	other
+Fruity X-Y controller	4	Y Level	macro
+Fruity X-Y controller	5	Y Min	other
+Fruity X-Y controller	6	Y Max	other
+Fruity X-Y controller	7	Y Tension	other
+Fruity X-Y controller	8	Speed	other
+Fruity X-Y controller	9	Acceleration	other
+Fruity X-Y-Z Controller	0	X value	macro
+Fruity X-Y-Z Controller	1	Y value	macro
+Fruity X-Y-Z Controller	2	Z value	macro
+Fruity X-Y-Z Controller	3	X smoothing speed	other
+Fruity X-Y-Z Controller	4	Y smoothing speed	other
+Fruity X-Y-Z Controller	5	Z smoothing speed	other
+Fruity X-Y-Z Controller	6	X smoothing acceleration	other
+Fruity X-Y-Z Controller	7	Y smoothing acceleration	other
+Fruity X-Y-Z Controller	8	Z smoothing acceleration	other
+Fruity X-Y-Z Controller	9	Global smoothing speed	other
+Fruity X-Y-Z Controller	10	External controller speed	other
+Gross Beat	0	Time slot	ctl.select
+Gross Beat	1	Volume slot	ctl.select
+Gross Beat	2	Time mix	fx.mix
+Gross Beat	3	Volume mix	fx.gate
+Gross Beat	4	Volume smoothing attack	other
+Gross Beat	5	Volume smoothing release	other
+Gross Beat	6	Volume envelope tension	other
+Gross Beat	7	Hold delay (bar repeat)	ctl.switch
+Gross Beat	8	Time offset (scratching)	other
+Hyper Chorus	0	Delay	other
+Hyper Chorus	1	Feedback	fx.mod.depth
+Hyper Chorus	2	Modulation rate	fx.mod.rate
+Hyper Chorus	3	Modulation amount	fx.mod.depth
+Hyper Chorus	4	Movement amount	fx.mod.depth
+Hyper Chorus	5	Movement rate	fx.mod.rate
+Hyper Chorus	6	Delay lines	ctl.select
+Hyper Chorus	7	Low pass	fx.tone
+Hyper Chorus	8	High pass	fx.tone
+Hyper Chorus	9	Mix	fx.mod.mix
+Hyper Chorus	10	LFO phase difference	stereo.width
+Low Lifter	0	Enabled	ctl.switch
+Low Lifter	1	Dry/Wet	fx.mix
+Low Lifter	2	Low band gain	fx.eq.gain
+Low Lifter	3	Harmonics decay slope	other
+Low Lifter	4	Lookahead	system
+Low Lifter	5	Invert harmonics polarity	ctl.switch
+Low Lifter	6	Pre-shaping boost	fx.drive
+Low Lifter	7	Diffuser mix	other
+Low Lifter	8	Diffuser coefficient	other
+Low Lifter	9	High band gain	fx.eq.gain
+Low Lifter	10	Crossover cutoff	fx.eq.freq
+Low Lifter	11	Low cut	fx.tone
+Low Lifter	12	Multiband processsing	ctl.switch
+Low Lifter	13	High band	ctl.switch
+Low Lifter	14	Low band	ctl.switch
+LuxeVerb	0	Input wet gain	fx.reverb.mix
+LuxeVerb	1	Input high cut	fx.tone
+LuxeVerb	2	Input low cut	fx.tone
+LuxeVerb	3	Toggle reverb	ctl.switch
+LuxeVerb	4	Reverb decay	fx.reverb.decay
+LuxeVerb	5	Reverb pre-delay	other
+LuxeVerb	6	Reverb pre-delay synced	other
+LuxeVerb	7	Reverb brightness	fx.tone
+LuxeVerb	8	Reverb character	other
+LuxeVerb	9	Reverb size	fx.reverb.decay
+LuxeVerb	10	Reverb mod frequency	fx.mod.rate
+LuxeVerb	11	Reverb mod amp	fx.mod.depth
+LuxeVerb	12	Reverb diffusion	other
+LuxeVerb	13	Reverb freeze mode	ctl.switch
+LuxeVerb	14	Reverb high quality	system
+LuxeVerb	15	Toggle feedback	ctl.switch
+LuxeVerb	16	Feedback pitch shift	fx.pitch
+LuxeVerb	17	Feedback delay	other
+LuxeVerb	18	Feedback delay synced	other
+LuxeVerb	19	Feedback gain	other
+LuxeVerb	20	Feedback high cut	fx.tone
+LuxeVerb	21	Feedback low cut	fx.tone
+LuxeVerb	22	Feedback reverb mix	other
+LuxeVerb	23	Envelope scale	mod.amount
+LuxeVerb	24	Envelope threshold	other
+LuxeVerb	25	Envelope attack	other
+LuxeVerb	26	Envelope decay	other
+LuxeVerb	27	Envelope offset	other
+LuxeVerb	28	Envelope mode	ctl.select
+LuxeVerb	29	Envelope sidechain	ctl.switch
+LuxeVerb	30	Envelope low cut	other
+LuxeVerb	31	Envelope smoothing	other
+LuxeVerb	32	Output dry level	other
+LuxeVerb	33	Output wet level	fx.reverb.mix
+LuxeVerb	34	Output peak frequency	fx.eq.freq
+LuxeVerb	35	Output peak gain	fx.eq.gain
+LuxeVerb	36	Output peak q	fx.eq.q
+LuxeVerb	37	Output stereo width	stereo.width
+LuxeVerb	38	Limiter	ctl.switch
+LuxeVerb	39	Pitch type	ctl.select
+LuxeVerb	40	Feedforward unpitched	other
+LuxeVerb	41	Feedforward pitch 1	fx.pitch
+LuxeVerb	42	Feedforward pitch 2	fx.pitch
+LuxeVerb	43	Feedforward amp 1	other
+LuxeVerb	44	Feedforward amp 2	other
+LuxeVerb	45	Feedforward delay 1	other
+LuxeVerb	46	Feedforward delay 1 synced	other
+LuxeVerb	47	Feedforward delay 2	other
+LuxeVerb	48	Feedforward delay 2 synced	other
+Maximus	0	Low band frequency	fx.eq.freq
+Maximus	1	Low band slope	ctl.select
+Maximus	2	High band frequency	fx.eq.freq
+Maximus	3	High band slope	ctl.select
+Maximus	4	LMH lookahead delay	system
+Maximus	5	LMH mix	fx.mix
+Maximus	6	Low cut	fx.tone
+Maximus	7	Low band mode	ctl.switch
+Maximus	8	Low band pre gain	fx.comp.amount
+Maximus	9	Low band post gain	amp.gain
+Maximus	10	Low band stereo separation	stereo.width
+Maximus	11	Low band soft saturation threshold	fx.drive
+Maximus	12	Low band soft saturation ceiling	other
+Maximus	13	Low band attack time	other
+Maximus	14	Low band release 2 time	other
+Maximus	15	Low band attack / release 2 curve	other
+Maximus	16	Low band release time	other
+Maximus	17	Low band release curve	other
+Maximus	18	Low band sustain window	other
+Maximus	19	Low band sustain mode	ctl.select
+Maximus	20	Mid band mode	ctl.switch
+Maximus	21	Mid band pre gain	fx.comp.amount
+Maximus	22	Mid band post gain	amp.gain
+Maximus	23	Mid band stereo separation	stereo.width
+Maximus	24	Mid band soft saturation threshold	fx.drive
+Maximus	25	Mid band soft saturation ceiling	other
+Maximus	26	Mid band attack time	other
+Maximus	27	Mid band release 2 time	other
+Maximus	28	Mid band attack / release 2 curve	other
+Maximus	29	Mid band release time	other
+Maximus	30	Mid band release curve	other
+Maximus	31	Mid band sustain window	other
+Maximus	32	Mid band sustain mode	ctl.select
+Maximus	33	High band mode	ctl.switch
+Maximus	34	High band pre gain	fx.comp.amount
+Maximus	35	High band post gain	amp.gain
+Maximus	36	High band stereo separation	stereo.width
+Maximus	37	High band soft saturation threshold	fx.drive
+Maximus	38	High band soft saturation ceiling	other
+Maximus	39	High band attack time	other
+Maximus	40	High band release 2 time	other
+Maximus	41	High band attack / release 2 curve	other
+Maximus	42	High band release time	other
+Maximus	43	High band release curve	other
+Maximus	44	High band sustain window	other
+Maximus	45	High band sustain mode	ctl.select
+Maximus	46	Master mode	ctl.switch
+Maximus	47	Master pre gain	fx.comp.amount
+Maximus	48	Master post gain	unsafe
+Maximus	49	Master stereo separation	stereo.width
+Maximus	50	Master soft saturation threshold	fx.drive
+Maximus	51	Master soft saturation ceiling	other
+Maximus	52	Master attack time	other
+Maximus	53	Master release 2 time	other
+Maximus	54	Master attack / release 2 curve	other
+Maximus	55	Master release time	other
+Maximus	56	Master release curve	other
+Maximus	57	Master sustain window	other
+Maximus	58	Master sustain mode	ctl.select
+Pitch Shifter	0	Pitch	fx.pitch
+Pitch Shifter	1	Formant	fx.pitch
+Pitch Shifter	2	Analysis Channel	system
+Pitch Shifter	3	Mix	fx.mix
+Pitch Shifter	4	Duration	other
+Pitch Shifter	5	Density	other
+Pitch Shifter	6	Jitter	other
+Pitch Shifter	7	Rand	other
+Pitch Shifter	8	Delay	fx.delay.time
+Pitch Shifter	9	Feedback	fx.delay.feedback
+Pitch Shifter	10	Delay mode	ctl.select
+Pitch Shifter	11	Formant correction	other
+Pitch Shifter	12	Pitch mode	ctl.select
+Spreader	0	Spread	stereo.width
+Spreader	1	Stereo separation	stereo.width
+Spreader	2	Low-Frequency Bypass	other
+Spreader	3	Mono	ctl.switch
+Spreader	4	Enabled	ctl.switch
+Transient Processor	0	Attack	other
+Transient Processor	1	Drive	fx.drive
+Transient Processor	2	Release	other
+Transient Processor	3	Gain	amp.gain
+Transient Processor	4	Attack Shape	ctl.select
+Transient Processor	5	Release Shape	ctl.select
+Transient Processor	6	Split Frequency	other
+Transient Processor	7	Split Balance	fx.mix
+Transient Processor	8	Effect	ctl.switch
+Transporter	0	Dry levels	other
+Transporter	1	Loop level A	fx.mix
+Transporter	2	Loop level B	fx.mix
+Transporter	3	Reverse bias	other
+Transporter	4	Octave shift bias	fx.pitch
+Transporter	5	Octave down up bias	fx.pitch
+Transporter	6	Spread and auto panning	stereo.width
+Transporter	7	Minimum length A	other
+Transporter	8	A/B ratio	other
+Transporter	9	Transient sensitivity	other
+Transporter	10	Bouncing rate	other
+Transporter	11	Ignore transients	ctl.switch
+Transporter	12	Flush	ctl.switch
+Transporter	13	Loop mode	ctl.select
+Transporter	14	Bypass	ctl.switch
+Transporter	15	Update loop A	ctl.switch
+Transporter	16	Update loop B	ctl.switch
+Transporter	17	Update loop A/B	ctl.switch
+Transporter	18	Probabilities	ctl.select
+Transporter	19	Tempo ratio length	ctl.select
+Transporter	20	Tempo ratio trigger	ctl.select
+Transporter	21	Ignore bias	other
+Vintage Chorus	0	Mode	ctl.select
+Vintage Chorus	1	Link Chorus I+II	ctl.switch
+Vintage Chorus	2	Speed	fx.mod.rate
+Vintage Chorus	3	LFO type	ctl.select
+Vintage Chorus	4	LR Phase	stereo.width
+Vintage Chorus	5	Time 1	other
+Vintage Chorus	6	Time 2	other
+Vintage Chorus	7	Mix	fx.mod.mix
+Vintage Chorus	8	Mono input	ctl.switch
+Vintage Chorus	9	Invert wet	ctl.switch
+Vintage Chorus	10	Feedback	fx.mod.depth
+Vintage Chorus	11	High pass	fx.tone
+Vintage Chorus	12	Gain	amp.gain
+Vintage Chorus	13	Noise	other
+Vintage Chorus	14	Noise gate	ctl.switch
+Vintage Chorus	15	Tempo sync	system
+Vintage Chorus	16	Start phase	other
+Vintage Phaser	0	Min Frequency	fx.mod.depth
+Vintage Phaser	1	Max Frequency	fx.mod.depth
+Vintage Phaser	2	Feedback	fx.mod.depth
+Vintage Phaser	3	Manual frequency	ctl.switch
+Vintage Phaser	4	Manual Frequency	other
+Vintage Phaser	5	High quality	system
+Vintage Phaser	6	Speed	fx.mod.rate
+Vintage Phaser	7	Tempo sync	system
+Vintage Phaser	8	LFO type	ctl.select
+Vintage Phaser	9	Tension	other
+Vintage Phaser	10	Start phase	other
+Vintage Phaser	11	LR Phase	stereo.width
+Vintage Phaser	12	Delay active	ctl.switch
+Vintage Phaser	13	Delay keep pitch	ctl.switch
+Vintage Phaser	14	Delay mix	fx.delay.mix
+Vintage Phaser	15	Delay Stereo	stereo.width
+Vintage Phaser	16	Delay Time	fx.delay.time
+Vintage Phaser	17	Tempo sync	system
+Vintage Phaser	18	Delay feedback	fx.delay.feedback
+Vintage Phaser	19	Delay low pass	fx.tone
+Vintage Phaser	20	Delay high pass	fx.tone
+Vintage Phaser	21	Mix	fx.mod.mix
+Vintage Phaser	22	Mono input	ctl.switch
+Vintage Phaser	23	Noise	other
+Vintage Phaser	24	Noise gate	ctl.switch
+Vintage Phaser	25	Color low shelf gain	fx.eq.gain
+Vintage Phaser	26	Color low shelf frequency	fx.eq.freq
+Vintage Phaser	27	Input HP Frequency	fx.tone
+Vintage Phaser	28	Feedback HP frequency	fx.tone
+Vintage Phaser	29	Rate frequency	fx.mod.rate
+Vintage Phaser	30	Rate frequency 2	fx.mod.rate
+Vintage Phaser	31	LFO max depth scale	fx.mod.depth
+Vintage Phaser	32	LFO max depth pull down	other
+Vintage Phaser	33	Engine	ctl.select
+Vintage Phaser	34	Drive	fx.drive
+Vintage Phaser	35	Invert Feedback	ctl.switch
+Vocodex	0	Wet level	fx.mix
+Vocodex	1	Soundgoodizing level	fx.drive
+Vocodex	2	Modulator pass-through level	amp.gain
+Vocodex	3	Modulator pass-through highpass frequency	fx.tone
+Vocodex	4	Carrier pass-through level	amp.gain
+Vocodex	5	Carrier pass-through lowpass frequency	fx.tone
+Vocodex	6	Carrier added noise level	other
+Vocodex	7	Carrier added noise highpass frequency	fx.tone
+Vocodex	8	Hold time	other
+Vocodex	9	Attack time	other
+Vocodex	10	Attack curve	other
+Vocodex	11	Release time	other
+Vocodex	12	Release curve	other
+Vocodex	13	Freeze envelope	ctl.switch
+Vocodex	14	Band width	other
+Vocodex	15	Filter flatness	other
+Vocodex	16	Modulator band width multiplier	other
+Vocodex	17	Modulator pitch shift	fx.pitch
+Vocodex	18	Modulator unison shift	other
+Vocodex	19	Modulator unison panning	stereo.width

@@ -1,0 +1,120 @@
+{"plugin": "3x Osc", "kind": "gen", "index": 1, "slot": -1, "params": 16, "moved": 16, "stuck": []}
+{"plugin": "Autogun", "kind": "gen", "index": 2, "slot": -1, "params": 1, "moved": 1, "stuck": []}
+{"plugin": "Bassdrum", "kind": "gen", "index": 3, "slot": -1, "params": 16, "moved": 16, "stuck": []}
+{"plugin": "BeepMap", "kind": "gen", "index": 4, "slot": -1, "params": 16, "moved": 16, "stuck": []}
+{"plugin": "BooBass", "kind": "gen", "index": 5, "slot": -1, "params": 3, "moved": 3, "stuck": []}
+{"plugin": "DirectWave", "kind": "gen", "index": 6, "slot": -1, "params": 16, "moved": 16, "stuck": []}
+{"plugin": "Drumaxx", "kind": "gen", "index": 7, "slot": -1, "params": 16, "moved": 16, "stuck": []}
+{"plugin": "Drumpad", "kind": "gen", "index": 8, "slot": -1, "params": 16, "moved": 16, "stuck": []}
+{"plugin": "FL Keys", "kind": "gen", "index": 9, "slot": -1, "params": 15, "moved": 15, "stuck": []}
+{"plugin": "FL Slayer", "kind": "gen", "index": 10, "slot": -1, "params": 16, "moved": 0, "stuck": [[0, "\u0013", 0.0, 0.9, 0.0], [1, "\u0013", 0.0, 0.9, 0.0], [2, "\u0013", 0.0, 0.9, 0.0], [3, "\u0013", 0.0, 0.9, 0.0], [4, "\u0013", 0.0, 0.9, 0.0], [5, "\u0013", 0.0, 0.9, 0.0], [6, "\u0013", 0.0, 0.9, 0.0], [7, "\u0013", 0.0, 0.9, 0.0], [8, "\u0013", 0.0, 0.9, 0.0], [9, "\u0013", 0.0, 0.9, 0.0], [10, "\u0013", 0.0, 0.9, 0.0], [11, "\u0013", 0.0, 0.9, 0.0], [12, "\u0013", 0.0, 0.9, 0.0], [13, "\u0013", 0.0, 0.9, 0.0], [14, "\u0013", 0.0, 0.9, 0.0], [15, "\u0013", 0.0, 0.9, 0.0]]}
+{"plugin": "FLEX", "kind": "gen", "index": 1, "slot": -1, "params": 16, "moved": 16, "stuck": []}
+{"plugin": "FPC", "kind": "gen", "index": 2, "slot": -1, "params": 16, "moved": 16, "stuck": []}
+{"plugin": "Fruit kick", "kind": "gen", "index": 3, "slot": -1, "params": 16, "moved": 16, "stuck": []}
+{"plugin": "Fruity DX10", "kind": "gen", "index": 4, "slot": -1, "params": 16, "moved": 16, "stuck": []}
+{"plugin": "Fruity Dance", "kind": "gen", "index": 5, "slot": -1, "params": 7, "moved": 7, "stuck": []}
+{"plugin": "Fruity DrumSynth Live", "kind": "gen", "index": 6, "slot": -1, "params": 16, "moved": 16, "stuck": []}
+{"plugin": "Fruity Envelope Controller", "kind": "gen", "index": 7, "slot": -1, "params": 16, "moved": 16, "stuck": []}
+{"plugin": "Fruity granulizer", "kind": "gen", "index": 8, "slot": -1, "params": 16, "moved": 16, "stuck": []}
+{"plugin": "Fruity Keyboard Controller", "kind": "gen", "index": 9, "slot": -1, "params": 2, "moved": 2, "stuck": []}
+{"plugin": "Fruity Slicer 2", "kind": "gen", "index": 10, "slot": -1, "params": 16, "moved": 16, "stuck": []}
+{"plugin": "Fruity Slicer", "kind": "gen", "index": 1, "slot": -1, "params": 16, "moved": 16, "stuck": []}
+{"plugin": "Fruity Voltage Controller", "kind": "gen", "index": 2, "slot": -1, "params": 16, "moved": 16, "stuck": []}
+{"plugin": "GMS", "kind": "gen", "index": 3, "slot": -1, "params": 16, "moved": 4, "stuck": [[0, "FX 1", 0.0, 0.9, 0.0], [1, "FX 2", 0.0, 0.9, 0.0], [2, "FX 3", 0.0, 0.9, 0.0], [3, "FX 4", 0.0, 0.9, 0.0], [4, "FX 5", 0.0, 0.9, 0.0], [5, "FX 6", 0.0, 0.9, 0.0], [6, "FX 7", 0.0, 0.9, 0.0], [7, "FX 8", 0.0, 0.9, 0.0], [8, "FX 9", 0.0, 0.9, 0.0], [9, "FX 10", 0.0, 0.9, 0.0], [10, "FX Activate", 0.0, 0.9, 0.0], [14, "FX LFO Shape Switch", 0.0, 0.9, 0.0]]}
+{"plugin": "Harmless", "kind": "gen", "index": 4, "slot": -1, "params": 16, "moved": 16, "stuck": []}
+{"plugin": "Harmor", "kind": "gen", "index": 5, "slot": -1, "params": 16, "moved": 16, "stuck": []}
+{"plugin": "Kepler Exo", "kind": "gen", "index": 6, "slot": -1, "params": 16, "moved": 16, "stuck": []}
+{"plugin": "Kepler", "kind": "gen", "index": 7, "slot": -1, "params": 16, "moved": 16, "stuck": []}
+{"plugin": "MiniSynth", "kind": "gen", "index": 8, "slot": -1, "params": 16, "moved": 16, "stuck": []}
+{"plugin": "Morphine", "kind": "gen", "index": 9, "slot": -1, "params": 16, "moved": 16, "stuck": []}
+{"plugin": "Ogun", "kind": "gen", "index": 10, "slot": -1, "params": 16, "moved": 16, "stuck": []}
+{"plugin": "Patcher", "kind": "gen", "index": 1, "slot": -1, "params": 0, "moved": 0, "stuck": []}
+{"plugin": "PLUCKED!", "kind": "gen", "index": 2, "slot": -1, "params": 5, "moved": 5, "stuck": []}
+{"plugin": "Poizone", "kind": "gen", "index": 3, "slot": -1, "params": 16, "moved": 16, "stuck": []}
+{"plugin": "Sakura", "kind": "gen", "index": 4, "slot": -1, "params": 16, "moved": 16, "stuck": []}
+{"plugin": "Sawer", "kind": "gen", "index": 5, "slot": -1, "params": 16, "moved": 16, "stuck": []}
+{"plugin": "SimSynth Live", "kind": "gen", "index": 6, "slot": -1, "params": 16, "moved": 16, "stuck": []}
+{"plugin": "Slicex", "kind": "gen", "index": 7, "slot": -1, "params": 16, "moved": 16, "stuck": []}
+{"plugin": "SoundFont Player", "kind": "gen", "index": 8, "slot": -1, "params": 11, "moved": 11, "stuck": []}
+{"plugin": "Sytrus", "kind": "gen", "index": 9, "slot": -1, "params": 16, "moved": 16, "stuck": []}
+{"plugin": "Toxic Biohazard", "kind": "gen", "index": 10, "slot": -1, "params": 16, "moved": 16, "stuck": []}
+{"plugin": "Patcher", "kind": "gen", "index": 1, "slot": -1, "params": 0, "moved": 0, "stuck": []}
+{"plugin": "PLUCKED!", "kind": "gen", "index": 2, "slot": -1, "params": 5, "moved": 5, "stuck": []}
+{"plugin": "Poizone", "kind": "gen", "index": 3, "slot": -1, "params": 16, "moved": 16, "stuck": []}
+{"plugin": "Sakura", "kind": "gen", "index": 4, "slot": -1, "params": 16, "moved": 16, "stuck": []}
+{"plugin": "Sawer", "kind": "gen", "index": 5, "slot": -1, "params": 16, "moved": 16, "stuck": []}
+{"plugin": "SimSynth Live", "kind": "gen", "index": 6, "slot": -1, "params": 16, "moved": 16, "stuck": []}
+{"plugin": "Slicex", "kind": "gen", "index": 7, "slot": -1, "params": 16, "moved": 16, "stuck": []}
+{"plugin": "SoundFont Player", "kind": "gen", "index": 8, "slot": -1, "params": 11, "moved": 11, "stuck": []}
+{"plugin": "Sytrus", "kind": "gen", "index": 9, "slot": -1, "params": 16, "moved": 16, "stuck": []}
+{"plugin": "Toxic Biohazard", "kind": "gen", "index": 10, "slot": -1, "params": 16, "moved": 16, "stuck": []}
+{"plugin": "Transistor Bass", "kind": "gen", "index": 1, "slot": -1, "params": 16, "moved": 16, "stuck": []}
+{"plugin": "WASP XT", "kind": "gen", "index": 2, "slot": -1, "params": 16, "moved": 0, "stuck": [[0, "\u0013", 0.0, 0.9, 0.0], [1, "\u0013", 0.0, 0.9, 0.0], [2, "\u0013", 0.0, 0.9, 0.0], [3, "\u0013", 0.0, 0.9, 0.0], [4, "\u0013", 0.0, 0.9, 0.0], [5, "\u0013", 0.0, 0.9, 0.0], [6, "\u0013", 0.0, 0.9, 0.0], [7, "\u0013", 0.0, 0.9, 0.0], [8, "\u0013", 0.0, 0.9, 0.0], [9, "\u0013", 0.0, 0.9, 0.0], [10, "\u0013", 0.0, 0.9, 0.0], [11, "\u0013", 0.0, 0.9, 0.0], [12, "\u0013", 0.0, 0.9, 0.0], [13, "\u0013", 0.0, 0.9, 0.0], [14, "\u0013", 0.0, 0.9, 0.0], [15, "\u0013", 0.0, 0.9, 0.0]]}
+{"plugin": "WASP", "kind": "gen", "index": 3, "slot": -1, "params": 16, "moved": 0, "stuck": [[0, "\u0013", 0.0, 0.9, 0.0], [1, "\u0013", 0.0, 0.9, 0.0], [2, "\u0013", 0.0, 0.9, 0.0], [3, "\u0013", 0.0, 0.9, 0.0], [4, "\u0013", 0.0, 0.9, 0.0], [5, "\u0013", 0.0, 0.9, 0.0], [6, "\u0013", 0.0, 0.9, 0.0], [7, "\u0013", 0.0, 0.9, 0.0], [8, "\u0013", 0.0, 0.9, 0.0], [9, "\u0013", 0.0, 0.9, 0.0], [10, "\u0013", 0.0, 0.9, 0.0], [11, "\u0013", 0.0, 0.9, 0.0], [12, "\u0013", 0.0, 0.9, 0.0], [13, "\u0013", 0.0, 0.9, 0.0], [14, "\u0013", 0.0, 0.9, 0.0], [15, "\u0013", 0.0, 0.9, 0.0]]}
+{"plugin": "Wave Traveller", "kind": "gen", "index": 4, "slot": -1, "params": 0, "moved": 0, "stuck": []}
+{"plugin": "Distructor", "kind": "fx", "index": 0, "slot": 0, "params": 16, "moved": 16, "stuck": []}
+{"plugin": "EQUO", "kind": "fx", "index": 0, "slot": 1, "params": 16, "moved": 16, "stuck": []}
+{"plugin": "Effector", "kind": "fx", "index": 0, "slot": 2, "params": 12, "moved": 12, "stuck": []}
+{"plugin": "Emphasis", "kind": "fx", "index": 0, "slot": 3, "params": 10, "moved": 10, "stuck": []}
+{"plugin": "Emphasizer", "kind": "fx", "index": 0, "slot": 4, "params": 6, "moved": 6, "stuck": []}
+{"plugin": "Frequency Shifter", "kind": "fx", "index": 0, "slot": 5, "params": 10, "moved": 10, "stuck": []}
+{"plugin": "Frequency Splitter", "kind": "fx", "index": 0, "slot": 6, "params": 14, "moved": 14, "stuck": []}
+{"plugin": "Fruity 7 Band Equalizer", "kind": "fx", "index": 0, "slot": 7, "params": 7, "moved": 7, "stuck": []}
+{"plugin": "Fruity Balance", "kind": "fx", "index": 0, "slot": 8, "params": 2, "moved": 2, "stuck": []}
+{"plugin": "Fruity Bass Boost", "kind": "fx", "index": 0, "slot": 9, "params": 2, "moved": 2, "stuck": []}
+{"plugin": "Fruity Blood Overdrive", "kind": "fx", "index": 0, "slot": 0, "params": 6, "moved": 6, "stuck": []}
+{"plugin": "Fruity Center", "kind": "fx", "index": 0, "slot": 1, "params": 1, "moved": 1, "stuck": []}
+{"plugin": "Fruity Chorus", "kind": "fx", "index": 0, "slot": 2, "params": 12, "moved": 12, "stuck": []}
+{"plugin": "Fruity Compressor", "kind": "fx", "index": 0, "slot": 3, "params": 6, "moved": 6, "stuck": []}
+{"plugin": "Fruity Convolver", "kind": "fx", "index": 0, "slot": 4, "params": 4, "moved": 4, "stuck": []}
+{"plugin": "Fruity delay 2", "kind": "fx", "index": 0, "slot": 5, "params": 8, "moved": 8, "stuck": []}
+{"plugin": "Fruity Delay 3", "kind": "fx", "index": 0, "slot": 6, "params": 16, "moved": 16, "stuck": []}
+{"plugin": "Fruity delay bank", "kind": "fx", "index": 0, "slot": 7, "params": 16, "moved": 16, "stuck": []}
+{"plugin": "Fruity Delay", "kind": "fx", "index": 0, "slot": 8, "params": 6, "moved": 6, "stuck": []}
+{"plugin": "Fruity Fast Dist", "kind": "fx", "index": 0, "slot": 9, "params": 5, "moved": 5, "stuck": []}
+{"plugin": "Fruity Fast LP", "kind": "fx", "index": 0, "slot": 0, "params": 2, "moved": 2, "stuck": []}
+{"plugin": "Fruity Filter", "kind": "fx", "index": 0, "slot": 1, "params": 6, "moved": 6, "stuck": []}
+{"plugin": "Fruity Flanger", "kind": "fx", "index": 0, "slot": 2, "params": 12, "moved": 12, "stuck": []}
+{"plugin": "Fruity Flangus", "kind": "fx", "index": 0, "slot": 3, "params": 8, "moved": 8, "stuck": []}
+{"plugin": "Fruity formula controller", "kind": "fx", "index": 0, "slot": 4, "params": 3, "moved": 3, "stuck": []}
+{"plugin": "Fruity Free Filter", "kind": "fx", "index": 0, "slot": 5, "params": 4, "moved": 4, "stuck": []}
+{"plugin": "Fruity LSD", "kind": "fx", "index": 0, "slot": 6, "params": 1, "moved": 0, "stuck": [[0, "\u0013", 0.0, 0.9, 0.0]]}
+{"plugin": "Fruity Limiter", "kind": "fx", "index": 0, "slot": 7, "params": 16, "moved": 16, "stuck": []}
+{"plugin": "Fruity Love Philter", "kind": "fx", "index": 0, "slot": 8, "params": 16, "moved": 0, "stuck": [[0, "Master level", 0.65, 0.1, 0.65], [1, "Master LFO level", 1.0, 0.1, 1.0], [2, "Envelope follower level", 0.8, 0.1, 0.8], [3, "Envelope follower attack", 0.25, 0.9, 0.25], [4, "Envelope follower release", 0.5, 0.1, 0.5], [5, "Pattern number", 0.0, 0.9, 0.0], [6, "Modulation X", 0.5, 0.1, 0.5], [7, "Modulation Y", 0.5, 0.1, 0.5], [8, "Filter 1 - Cutoff envelope / LFO / IEF amount", 0.5, 0.1, 0.5], [9, "Filter 1 - Cutoff frequency", 0.5, 0.1, 0.5], [10, "Filter 1 - Resonance / bandwidth", 0.5, 0.1, 0.5], [11, "Filter 1 - Low / gain / drive", 1.0, 0.1, 1.0], [12, "Filter 1 - Band", 0.0, 0.9, 0.0], [13, "Filter 1 - High", 0.0, 0.9, 0.0], [14, "Filter 1 - Waveshaper pre amp", 0.5, 0.1, 0.5], [15, "Filter 1 - Waveshaper mix", 1.0, 0.1, 1.0]]}
+{"plugin": "Fruity Multiband Compressor", "kind": "fx", "index": 0, "slot": 9, "params": 16, "moved": 16, "stuck": []}
+{"plugin": "Fruity Mute 2", "kind": "fx", "index": 0, "slot": 0, "params": 2, "moved": 2, "stuck": []}
+{"plugin": "Fruity PanOMatic", "kind": "fx", "index": 0, "slot": 1, "params": 6, "moved": 6, "stuck": []}
+{"plugin": "Fruity parametric EQ 2", "kind": "fx", "index": 0, "slot": 2, "params": 16, "moved": 16, "stuck": []}
+{"plugin": "Fruity parametric EQ", "kind": "fx", "index": 0, "slot": 3, "params": 16, "moved": 16, "stuck": []}
+{"plugin": "Fruity peak controller", "kind": "fx", "index": 0, "slot": 4, "params": 10, "moved": 10, "stuck": []}
+{"plugin": "Fruity Phase Inverter", "kind": "fx", "index": 0, "slot": 5, "params": 1, "moved": 1, "stuck": []}
+{"plugin": "Fruity Phaser", "kind": "fx", "index": 0, "slot": 6, "params": 9, "moved": 9, "stuck": []}
+{"plugin": "Fruity Reeverb 2", "kind": "fx", "index": 0, "slot": 7, "params": 15, "moved": 15, "stuck": []}
+{"plugin": "Fruity Reeverb", "kind": "fx", "index": 0, "slot": 8, "params": 10, "moved": 10, "stuck": []}
+{"plugin": "Fruity Scratcher", "kind": "fx", "index": 0, "slot": 9, "params": 14, "moved": 13, "stuck": [[1, "Mute", 0.0, 0.9, 0.0]]}
+{"plugin": "Fruity send", "kind": "fx", "index": 0, "slot": 0, "params": 3, "moved": 3, "stuck": []}
+{"plugin": "Fruity soft clipper", "kind": "fx", "index": 0, "slot": 1, "params": 2, "moved": 2, "stuck": []}
+{"plugin": "Fruity Squeeze", "kind": "fx", "index": 0, "slot": 2, "params": 12, "moved": 12, "stuck": []}
+{"plugin": "Fruity Stereo Enhancer", "kind": "fx", "index": 0, "slot": 3, "params": 6, "moved": 6, "stuck": []}
+{"plugin": "Fruity Stereo Shaper", "kind": "fx", "index": 0, "slot": 4, "params": 6, "moved": 6, "stuck": []}
+{"plugin": "Fruity Vocoder", "kind": "fx", "index": 0, "slot": 5, "params": 12, "moved": 12, "stuck": []}
+{"plugin": "Fruity WaveShaper", "kind": "fx", "index": 0, "slot": 6, "params": 3, "moved": 3, "stuck": []}
+{"plugin": "Fruity X-Y controller", "kind": "fx", "index": 0, "slot": 7, "params": 10, "moved": 10, "stuck": []}
+{"plugin": "Fruity X-Y-Z Controller", "kind": "fx", "index": 0, "slot": 8, "params": 11, "moved": 11, "stuck": []}
+{"plugin": "Gross Beat", "kind": "fx", "index": 0, "slot": 9, "params": 9, "moved": 9, "stuck": []}
+{"plugin": "Hardcore", "kind": "fx", "index": 0, "slot": 0, "params": 16, "moved": 16, "stuck": []}
+{"plugin": "Hyper Chorus", "kind": "fx", "index": 0, "slot": 1, "params": 11, "moved": 11, "stuck": []}
+{"plugin": "Low Lifter", "kind": "fx", "index": 0, "slot": 2, "params": 15, "moved": 15, "stuck": []}
+{"plugin": "LuxeVerb", "kind": "fx", "index": 0, "slot": 3, "params": 16, "moved": 16, "stuck": []}
+{"plugin": "Maximus", "kind": "fx", "index": 0, "slot": 4, "params": 16, "moved": 16, "stuck": []}
+{"plugin": "Multiband Delay", "kind": "fx", "index": 0, "slot": 5, "params": 16, "moved": 16, "stuck": []}
+{"plugin": "Patcher", "kind": "fx", "index": 0, "slot": 6, "params": 0, "moved": 0, "stuck": []}
+{"plugin": "Pitch Shifter", "kind": "fx", "index": 0, "slot": 7, "params": 13, "moved": 13, "stuck": []}
+{"plugin": "Pitcher", "kind": "fx", "index": 0, "slot": 8, "params": 16, "moved": 16, "stuck": []}
+{"plugin": "Soundgoodizer", "kind": "fx", "index": 0, "slot": 9, "params": 0, "moved": 0, "stuck": []}
+{"plugin": "Spreader", "kind": "fx", "index": 0, "slot": 0, "params": 5, "moved": 5, "stuck": []}
+{"plugin": "Transient Processor", "kind": "fx", "index": 0, "slot": 1, "params": 9, "moved": 9, "stuck": []}
+{"plugin": "Transporter", "kind": "fx", "index": 0, "slot": 2, "params": 16, "moved": 16, "stuck": []}
+{"plugin": "Vintage Chorus", "kind": "fx", "index": 0, "slot": 3, "params": 16, "moved": 16, "stuck": []}
+{"plugin": "Vintage Phaser", "kind": "fx", "index": 0, "slot": 4, "params": 16, "moved": 16, "stuck": []}
+{"plugin": "Vocodex", "kind": "fx", "index": 0, "slot": 5, "params": 16, "moved": 16, "stuck": []}

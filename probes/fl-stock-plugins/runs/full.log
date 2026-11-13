@@ -1,0 +1,21 @@
+  3x Osc: 104 named, wrote 16, 16 moved, 0 stuck
+  Autogun: 1 named, wrote 1, 1 moved, 0 stuck
+  Bassdrum: 23 named, wrote 16, 16 moved, 0 stuck
+  BeepMap: 90 named, wrote 16, 16 moved, 0 stuck
+  BooBass: 3 named, wrote 3, 3 moved, 0 stuck
+  DirectWave: 2048 named, wrote 16, 16 moved, 0 stuck
+  Drumaxx: 719 named, wrote 16, 16 moved, 0 stuck
+  Drumpad: 38 named, wrote 16, 16 moved, 0 stuck
+  FL Keys: 15 named, wrote 15, 15 moved, 0 stuck
+  FL Slayer: 29 named, wrote 16, 0 moved, 16 stuck
+  not loaded under their file name: ['BassDrum']
+Traceback (most recent call last):
+  File "/Users/no8/Desktop/life/Lifemaxxing/synthexis/.claude/worktrees/train-packer-cc8951/probes/fl-stock-plugins/run_stock.py", line 175, in <module>
+    main()
+    ~~~~^^
+  File "/Users/no8/Desktop/life/Lifemaxxing/synthexis/.claude/worktrees/train-packer-cc8951/probes/fl-stock-plugins/run_stock.py", line 169, in main
+    run_batch(n, fsts, log, dumped, save)
+    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/no8/Desktop/life/Lifemaxxing/synthexis/.claude/worktrees/train-packer-cc8951/probes/fl-stock-plugins/run_stock.py", line 122, in run_batch
+    raise RuntimeError("FL is not safe to edit (a dialog open?)")
+RuntimeError: FL is not safe to edit (a dialog open?)

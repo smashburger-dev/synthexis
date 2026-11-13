@@ -151,10 +151,15 @@ fn is_self(plugin: &str) -> bool {
 /// (tools/mapping/fl_param_counts.py has the same rule): a plugin's own MIDI
 /// slots ("MIDI CC 7|0" in JUCE plugins, "MIDI CC" in FabFilter, "CC0 Chan 1"
 /// and "Pitch Bend Chan 16" in Serum), unused or internal slots ("Reserved3"
-/// in Valhalla, "X (Reserved)" in ShaperBox, "Internal", "unused"). FL's
-/// appended CC entries (index >= 4096) never arrive, the script stops
-/// before them.
+/// in Valhalla, "X (Reserved)" in ShaperBox, "Internal", "unused"), and
+/// names with control characters: FL Slayer, WASP and Fruity LSD list
+/// "\u{13}" or "p\u{17}" on FL 2026 and ignore writes
+/// (probes/fl-stock-plugins/RESULT.md). FL's appended CC entries (index
+/// >= 4096) never arrive, the script stops before them.
 fn is_placeholder(name: &str) -> bool {
+    if name.chars().any(char::is_control) {
+        return true;
+    }
     let n = name.trim().to_lowercase();
     let digits = |r: &str| !r.is_empty() && r.chars().all(|c| c.is_ascii_digit());
     let midi = match n.strip_prefix("midi cc") {
@@ -1035,7 +1040,7 @@ mod tests {
     #[test]
     fn placeholders() {
         for n in ["CC 74", "CC0 Chan 1", "MIDI CC 7", "MIDI CC 7|0", "MIDI CC", "Midi CC 64 (Sustain Pedal)",
-            "Reserved4", "Reserved", "X (Reserved)", "Aftertouch Chan 16", "Internal", "unused"]
+            "Reserved4", "Reserved", "X (Reserved)", "Aftertouch Chan 16", "Internal", "unused", "\u{13}", "p\u{17}"]
         {
             assert!(is_placeholder(n), "{n}");
         }

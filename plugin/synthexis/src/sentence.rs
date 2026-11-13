@@ -149,7 +149,16 @@ pub struct Sentence {
     /// the plugin it was resolved on.
     /// In the order sent, so a "clear" typed before a "map" is applied
     /// first; with the sentence as typed.
-    reply: std::collections::VecDeque<(Receiver<assistant::Reply>, Option<fl::Key>, String)>,
+    /// With its chips, so it can be sent again on the plugin it names.
+    reply: std::collections::VecDeque<Sent>,
+    /// The plugin a sentence named ("... on Fruity Filter") when that was
+    /// not the target it was resolved on: the target until FL's focus or
+    /// the pin changes (`named_target`), with the focus and pin it began
+    /// with.
+    named: Option<(fl::Key, Option<fl::Key>, Option<String>)>,
+    /// That sentence and its chips, sent again once the named plugin's
+    /// parameters are the engine's.
+    redo: Option<(fl::Key, String, Vec<Pin>)>,
     next_batch: u64,
     next_line: u64,
     /// What the last sentence did when it made no route ("no route (none)").
@@ -532,6 +541,33 @@ struct MidiKept {
 }
 
 
+/// The project's plugin a sentence names (`named`, the PLUGIN span's
+/// text), when it is not `current`, the one the sentence was resolved on:
+/// the same name in any case first ("fruity parametric eq 2" for FL's
+/// "Fruity parametric EQ 2"), else a name that contains the other
+/// ("Reeverb 2"), in inventory order; synthexis itself never.
+fn named_target(targets: &[fl::Target], named: Option<&str>, current: Option<&fl::Key>) -> Option<fl::Key> {
+    let norm = |s: &str| s.split_whitespace().collect::<Vec<_>>().join(" ").to_lowercase();
+    let n = norm(named?);
+    if n.chars().filter(|c| c.is_alphanumeric()).count() < 3 {
+        return None;
+    }
+    let near = |plugin: &str| {
+        let p = norm(plugin);
+        p == n || p.contains(&n) || n.contains(&p)
+    };
+    if current.is_some_and(|k| near(&k.plugin)) {
+        return None;
+    }
+    let ours = |t: &&fl::Target| !t.key.plugin.trim().eq_ignore_ascii_case("synthexis");
+    let exact = targets.iter().filter(ours).find(|t| norm(&t.key.plugin) == n);
+    exact.or_else(|| targets.iter().filter(ours).find(|t| near(&t.key.plugin))).map(|t| t.key.clone())
+}
+
+/// A sentence sent to the assistant: where its reply arrives, the plugin
+/// it was resolved on, the text as typed and its chips.
+type Sent = (Receiver<assistant::Reply>, Option<fl::Key>, String, Vec<Pin>);
+
 /// Parameter name -> class of the exported plugin named `plugin`.
 fn exported_classes(plugins: &[PluginInfo], plugin: &str) -> HashMap<String, String> {
     let info = plugins.iter().find(|p| p.name.eq_ignore_ascii_case(plugin));
@@ -704,6 +740,8 @@ impl Sentence {
             last_warm: None,
             status,
             reply: std::collections::VecDeque::new(),
+            named: None,
+            redo: None,
             next_batch: 1,
             next_line: 1,
             mapped: Vec::new(),
@@ -926,9 +964,20 @@ impl Sentence {
                 pin.write().clear();
             }
         }
-        let target = fl::Key::parse(&pin.read()).or_else(|| self.focus.clone());
+        // a plugin a sentence named holds until the user picks another
+        if let Some((_, _, p @ None)) = &mut self.named {
+            *p = Some(pin.read().clone());
+        }
+        let moved = |(k, focus, p): &(fl::Key, Option<fl::Key>, Option<String>)| {
+            *focus != self.focus || p.as_deref() != Some(pin.read().as_str()) || (self.fl_loaded && !self.targets.iter().any(|t| t.key == *k))
+        };
+        if self.named.as_ref().is_some_and(moved) {
+            self.named = None;
+            self.redo = None;
+        }
+        let target = self.named.as_ref().map(|(k, ..)| k.clone()).or_else(|| fl::Key::parse(&pin.read())).or_else(|| self.focus.clone());
         if target != self.want {
-            let how = if pin.read().is_empty() { "follows FL" } else { "pinned" };
+            let how = if self.named.is_some() { "named in the sentence" } else if pin.read().is_empty() { "follows FL" } else { "pinned" };
             log(&format!("picker: {} ({how})", target.as_ref().map_or("none".into(), fl::Key::label)));
             self.want = target;
             if let Some(k) = &self.want {
@@ -969,7 +1018,12 @@ impl Sentence {
                 }
                 self.applied = Some(want);
             }
-            Err(e) => self.pick_note = PickNote::Error(e),
+            Err(e) => {
+                if self.redo.as_ref().is_some_and(|(k, ..)| *k == want) {
+                    self.redo = None;
+                }
+                self.pick_note = PickNote::Error(e);
+            }
         }
     }
 
@@ -1125,7 +1179,7 @@ impl Sentence {
     /// Window captures: carries out `routes` for the plugin `key` as the
     /// typed `text` would (a map reply) and keeps them if `keep`.
     pub fn shot_said(&mut self, routes: Vec<synthexis_parser::resolve::Route>, key: &fl::Key, text: &str, keep: bool) {
-        let r = assistant::Reply { intent: "map".into(), rest: Vec::new(), routes, lines: vec![text.to_string()] };
+        let r = assistant::Reply { intent: "map".into(), routes, lines: vec![text.to_string()], ..assistant::Reply::default() };
         self.apply_said(r, Some(key), text);
         if keep {
             self.keep();
@@ -1249,11 +1303,19 @@ impl Sentence {
 
     /// The assistant's replies in the order sent; asks for frames meanwhile.
     fn poll_reply(&mut self, ctx: &egui::Context) {
-        while let Some((rx, key, text)) = self.reply.front() {
+        while let Some((rx, key, text, pins)) = self.reply.front() {
             match rx.try_recv() {
                 Ok(r) => {
-                    let (key, text) = (key.clone(), text.clone());
+                    let (key, text, pins) = (key.clone(), text.clone(), pins.clone());
                     self.reply.pop_front();
+                    // the sentence names another plugin of the project:
+                    // pick it and read the sentence again on its parameters
+                    if let Some(k) = named_target(&self.targets, r.named.as_deref(), key.as_ref()) {
+                        log(&format!("picker: \"{text}\" names {}", k.label()));
+                        self.named = Some((k.clone(), self.focus.clone(), None));
+                        self.redo = Some((k, text, pins));
+                        continue;
+                    }
                     self.apply_said(r, key.as_ref(), &text);
                 }
                 Err(TryRecvError::Disconnected) => {
@@ -1976,6 +2038,15 @@ impl Sentence {
             .filter(|c| c.range.end <= text.len())
             .map(|c| to_pin(&c.range, &c.chip))
             .collect();
+        self.send(text, pins);
+        self.doc.clear();
+        self.cursor = 0;
+        self.sugg.clear();
+        self.list_open = false;
+    }
+
+    /// Sends `text` to the assistant, resolved on the plugin the engine holds.
+    fn send(&mut self, text: String, pins: Vec<Pin>) {
         let asked = self.applied.clone();
         let scope = self.applied.as_ref().map(|k| assistant::Scope {
             key: k.id(),
@@ -1985,12 +2056,8 @@ impl Sentence {
         });
         // the strip says "Reading the sentence" until the reply is back
         self.mapped.clear();
-        let rx = assistant::submit(&text, pins, scope);
-        self.reply.push_back((rx, asked, text));
-        self.doc.clear();
-        self.cursor = 0;
-        self.sugg.clear();
-        self.list_open = false;
+        let rx = assistant::submit(&text, pins.clone(), scope);
+        self.reply.push_back((rx, asked, text, pins));
     }
 
     /// Polls (loader, state, FL, MIDI, reply); once per frame before the
@@ -2005,6 +2072,11 @@ impl Sentence {
             self.refresh(self.enabled);
         }
         self.sync_fl(pin);
+        if self.redo.as_ref().is_some_and(|(k, ..)| self.applied.as_ref() == Some(k)) {
+            if let Some((_, text, pins)) = self.redo.take() {
+                self.send(text, pins);
+            }
+        }
         self.sync_midi();
         self.poll_reply(ctx);
         // after sync_state: a loaded project's lines are never overwritten
@@ -3011,7 +3083,7 @@ mod tests {
                 bound: Some(Bound { index: 12, name: "Amp Drive".into(), via: Via::Name, plugin: None }),
             }],
         };
-        let reply = |intent: &str, routes| assistant::Reply { intent: intent.into(), rest: Vec::new(), routes, lines: vec!["x".into()] };
+        let reply = |intent: &str, routes| assistant::Reply { intent: intent.into(), rest: Vec::new(), routes, lines: vec!["x".into()], named: None };
         h.s.apply(reply("map", vec![route(Some("left"))]), Some(&key));
         assert_eq!(h.s.pending.len(), 1);
         assert_eq!(h.s.pending[0].line(&i18n::EN), "left hand openness -> Topos / Amp Drive");
@@ -3072,6 +3144,7 @@ mod tests {
             rest: rest.iter().map(|t| t.to_string()).collect(),
             routes,
             lines: vec!["x".into()],
+            named: None,
         };
         // one Keep of two routes, then a second Keep
         h.s.apply(reply("map", vec![route("hand.openness", "left", 12, &[]), route("hand.y", "right", 13, &[])], &[]), Some(&key));
@@ -3129,7 +3202,7 @@ mod tests {
                 bound: Some(Bound { index: 12, name: "Drive".into(), via: Via::Name, plugin: None }),
             }],
         };
-        let reply = |intent: &str, routes| assistant::Reply { intent: intent.into(), rest: Vec::new(), routes, lines: vec!["x".into()] };
+        let reply = |intent: &str, routes| assistant::Reply { intent: intent.into(), rest: Vec::new(), routes, lines: vec!["x".into()], named: None };
         let lines = |h: &Harness| h.s.kept.iter().map(|m| m.line(&i18n::EN)).collect::<Vec<_>>();
         h.s.apply(reply("map", vec![route("hand.openness", Some("left"), &[])]), Some(&key));
         h.s.keep();
@@ -3194,7 +3267,7 @@ mod tests {
                 bound: Some(Bound { index: 3, name: "Amp Drive".into(), via: Via::Chip, plugin: None }),
             }],
         };
-        let reply = |intent: &str, routes| assistant::Reply { intent: intent.into(), rest: Vec::new(), routes, lines: vec!["x".into()] };
+        let reply = |intent: &str, routes| assistant::Reply { intent: intent.into(), rest: Vec::new(), routes, lines: vec!["x".into()], named: None };
         h.s.apply(reply("map", vec![route("hand.openness", "left"), route("hand.x", "both")]), Some(&key));
         h.s.keep();
         h.s.apply(reply("unmap", vec![route("hand.x", "right")]), Some(&key));
@@ -3241,6 +3314,7 @@ mod tests {
             rest: rest.iter().map(|t| t.to_string()).collect(),
             routes,
             lines: vec!["x".into()],
+            named: None,
         };
         let store = || writer.player.store();
         // a note and a parameter: the parameter runs too; no flip on the MIDI line
@@ -3320,6 +3394,70 @@ mod tests {
         assert_eq!(m.line(&i18n::EN), "left hand openness inverted -> Topos / Amp Drive (range 0-80 %, snappy)");
         let (m, _) = Mapped::new(r(None), Some(&key), &i18n::DE);
         assert!(m.line(&i18n::DE).ends_with("welche Hand? sag links oder rechts"), "{}", m.line(&i18n::DE));
+    }
+
+    #[test]
+    fn a_plugin_the_sentence_names_is_found_in_the_project() {
+        let t = |track, slot, plugin: &str| fl::Target { key: fl::Key { at: fl::At::Fx { track, slot }, plugin: plugin.into() }, track, track_name: String::new() };
+        let targets = vec![
+            t(0, 0, "Fruity Filter"),
+            t(0, 1, "Fruity Delay 3"),
+            t(0, 2, "Fruity parametric EQ 2"),
+            t(0, 4, "Fruity Blood Overdrive"),
+            t(1, 0, "Fruity Reeverb 2"),
+            t(2, 0, "synthexis"),
+        ];
+        let current = targets[3].key.clone();
+        let pick = |named: Option<&str>| named_target(&targets, named, Some(&current)).map(|k| k.plugin);
+        assert_eq!(pick(Some("Fruity Filter")).as_deref(), Some("Fruity Filter"));
+        assert_eq!(pick(Some("Fruity Parametric EQ 2")).as_deref(), Some("Fruity parametric EQ 2"), "FL's own case");
+        assert_eq!(pick(Some("reeverb  2")).as_deref(), Some("Fruity Reeverb 2"), "part of the name");
+        assert_eq!(pick(Some("Fruity Blood Overdrive")), None, "already the one resolved on");
+        assert_eq!(pick(Some("Serum 2")), None, "not in the project");
+        assert_eq!(pick(Some("synthexis")), None);
+        assert_eq!(pick(Some("eq")), None, "too short to say");
+        assert_eq!(pick(None), None);
+    }
+
+    /// "... on Fruity Filter" while the picker shows Blood Overdrive (FL
+    /// 11-13: the route went to Blood Overdrive's Post filter): the picker
+    /// moves to Fruity Filter and the sentence waits for its parameters;
+    /// the next plugin the user clicks in FL takes over again.
+    #[test]
+    fn a_sentence_naming_another_plugin_moves_the_picker_until_fl_focus_moves() {
+        let b = fl::Bridge::detached();
+        let mut h = Harness::new();
+        h.s.bridge = Some(b);
+        let key = |t, s, p: &str| fl::Key { at: fl::At::Fx { track: t, slot: s }, plugin: p.into() };
+        let (od, filt, eq) = (key(0, 4, "Fruity Blood Overdrive"), key(0, 0, "Fruity Filter"), key(0, 2, "Fruity parametric EQ 2"));
+        b.update(|v| {
+            v.link = fl::Link::Up;
+            v.loaded = true;
+            v.targets = [&od, &filt, &eq].iter().map(|k| fl::Target { key: (*k).clone(), track: 0, track_name: String::new() }).collect();
+            v.focus = Some(od.clone());
+            v.params = Some((od.clone(), Ok(vec![(4, "Post filter".into())])));
+        });
+        h.frame(vec![]);
+        assert_eq!(h.s.applied, Some(od.clone()));
+        let (tx, rx) = bounded(1);
+        let said = "spread my right fingers to open the filter on Fruity Filter";
+        let _ = tx.send(assistant::Reply { intent: "map".into(), named: Some("Fruity Filter".into()), ..assistant::Reply::default() });
+        h.s.reply.push_back((rx, Some(od.clone()), said.into(), Vec::new()));
+        // the reply arrives after this frame's FL sync; the next one moves the picker
+        h.frame(vec![]);
+        h.frame(vec![]);
+        assert_eq!(h.s.want, Some(filt.clone()), "the picker shows the plugin the sentence names");
+        assert!(h.s.pending.is_empty(), "nothing resolved on Blood Overdrive");
+        assert_eq!(h.s.redo.as_ref().map(|(k, t, _)| (k, t.as_str())), Some((&filt, said)));
+        assert!(h.picked.read().is_empty(), "no pin");
+        h.frame(vec![]);
+        h.frame(vec![]);
+        assert_eq!(h.s.want, Some(filt.clone()), "it holds over frames");
+        // the user clicks another plugin in FL
+        b.update(|v| v.focus = Some(eq.clone()));
+        h.frame(vec![]);
+        assert_eq!(h.s.want, Some(eq.clone()));
+        assert!(h.s.named.is_none() && h.s.redo.is_none());
     }
 
     #[test]
@@ -3763,7 +3901,7 @@ mod tests {
     }
 
     fn reply(intent: &str, rest: &[String], routes: Vec<synthexis_parser::resolve::Route>) -> assistant::Reply {
-        assistant::Reply { intent: intent.into(), rest: rest.to_vec(), routes, lines: vec!["x".into()] }
+        assistant::Reply { intent: intent.into(), rest: rest.to_vec(), routes, lines: vec!["x".into()], named: None }
     }
 
     /// A reopened project builds the window before set_state: the field

@@ -1,0 +1,90 @@
+  Patcher: 0 named, wrote 0, 0 moved, 0 stuck
+  PLUCKED!: 5 named, wrote 5, 5 moved, 0 stuck
+  Poizone: 203 named, wrote 16, 16 moved, 0 stuck
+  Sakura: 207 named, wrote 16, 16 moved, 0 stuck
+  Sawer: 202 named, wrote 16, 16 moved, 0 stuck
+  SimSynth Live: 26 named, wrote 16, 16 moved, 0 stuck
+  Slicex: 352 named, wrote 16, 16 moved, 0 stuck
+  SoundFont Player: 11 named, wrote 11, 11 moved, 0 stuck
+  Sytrus: 597 named, wrote 16, 16 moved, 0 stuck
+  Toxic Biohazard: 423 named, wrote 16, 16 moved, 0 stuck
+  not loaded under their file name: ['Plucked!', 'PoiZone', 'SimSynth', 'Soundfont Player']
+  Transistor Bass: 42 named, wrote 16, 16 moved, 0 stuck
+  WASP XT: 56 named, wrote 16, 0 moved, 16 stuck
+  WASP: 41 named, wrote 16, 0 moved, 16 stuck
+  Wave Traveller: 0 named, wrote 0, 0 moved, 0 stuck
+  not loaded under their file name: ['Wasp XT', 'Wasp']
+  Distructor: 196 named, wrote 16, 16 moved, 0 stuck
+  EQUO: 842 named, wrote 16, 16 moved, 0 stuck
+  Effector: 12 named, wrote 12, 12 moved, 0 stuck
+  Emphasis: 10 named, wrote 10, 10 moved, 0 stuck
+  Emphasizer: 6 named, wrote 6, 6 moved, 0 stuck
+  Frequency Shifter: 10 named, wrote 10, 10 moved, 0 stuck
+  Frequency Splitter: 14 named, wrote 14, 14 moved, 0 stuck
+  Fruity 7 Band Equalizer: 7 named, wrote 7, 7 moved, 0 stuck
+  Fruity Balance: 2 named, wrote 2, 2 moved, 0 stuck
+  Fruity Bass Boost: 2 named, wrote 2, 2 moved, 0 stuck
+  not loaded under their file name: ['Fruity 7 Band EQ']
+  Fruity Blood Overdrive: 6 named, wrote 6, 6 moved, 0 stuck
+  Fruity Center: 1 named, wrote 1, 1 moved, 0 stuck
+  Fruity Chorus: 12 named, wrote 12, 12 moved, 0 stuck
+  Fruity Compressor: 6 named, wrote 6, 6 moved, 0 stuck
+  Fruity Convolver: 4 named, wrote 4, 4 moved, 0 stuck
+  Fruity delay 2: 8 named, wrote 8, 8 moved, 0 stuck
+  Fruity Delay 3: 26 named, wrote 16, 16 moved, 0 stuck
+  Fruity delay bank: 131 named, wrote 16, 16 moved, 0 stuck
+  Fruity Delay: 6 named, wrote 6, 6 moved, 0 stuck
+  Fruity Fast Dist: 5 named, wrote 5, 5 moved, 0 stuck
+  not loaded under their file name: ['Fruity Delay 2', 'Fruity Delay Bank']
+  Fruity Fast LP: 2 named, wrote 2, 2 moved, 0 stuck
+  Fruity Filter: 6 named, wrote 6, 6 moved, 0 stuck
+  Fruity Flanger: 12 named, wrote 12, 12 moved, 0 stuck
+  Fruity Flangus: 8 named, wrote 8, 8 moved, 0 stuck
+  Fruity formula controller: 3 named, wrote 3, 3 moved, 0 stuck
+  Fruity Free Filter: 4 named, wrote 4, 4 moved, 0 stuck
+  Fruity LSD: 1 named, wrote 1, 0 moved, 1 stuck
+  Fruity Limiter: 18 named, wrote 16, 16 moved, 0 stuck
+  Fruity Love Philter: 359 named, wrote 16, 0 moved, 16 stuck
+  Fruity Multiband Compressor: 28 named, wrote 16, 16 moved, 0 stuck
+  not loaded under their file name: ['Fruity Formula Controller']
+  Fruity Mute 2: 2 named, wrote 2, 2 moved, 0 stuck
+  Fruity PanOMatic: 6 named, wrote 6, 6 moved, 0 stuck
+  Fruity parametric EQ 2: 36 named, wrote 16, 16 moved, 0 stuck
+  Fruity parametric EQ: 29 named, wrote 16, 16 moved, 0 stuck
+  Fruity peak controller: 10 named, wrote 10, 10 moved, 0 stuck
+  Fruity Phase Inverter: 1 named, wrote 1, 1 moved, 0 stuck
+  Fruity Phaser: 9 named, wrote 9, 9 moved, 0 stuck
+  Fruity Reeverb 2: 15 named, wrote 15, 15 moved, 0 stuck
+  Fruity Reeverb: 10 named, wrote 10, 10 moved, 0 stuck
+  Fruity Scratcher: 14 named, wrote 14, 13 moved, 1 stuck
+  not loaded under their file name: ['Fruity Parametric EQ 2', 'Fruity Parametric EQ', 'Fruity Peak Controller']
+_LSOpenURLsWithCompletionHandler() failed for the application /Applications/FL Studio 2026.app with error -600 for the file /Users/no8/Desktop/life/Lifemaxxing/synthexis/.claude/worktrees/train-packer-cc8951/probes/fl-stock-plugins/runs/flp/batch9.flp.
+  Fruity send: 3 named, wrote 3, 3 moved, 0 stuck
+  Fruity soft clipper: 2 named, wrote 2, 2 moved, 0 stuck
+  Fruity Squeeze: 12 named, wrote 12, 12 moved, 0 stuck
+  Fruity Stereo Enhancer: 6 named, wrote 6, 6 moved, 0 stuck
+  Fruity Stereo Shaper: 6 named, wrote 6, 6 moved, 0 stuck
+  Fruity Vocoder: 12 named, wrote 12, 12 moved, 0 stuck
+  Fruity WaveShaper: 3 named, wrote 3, 3 moved, 0 stuck
+  Fruity X-Y controller: 10 named, wrote 10, 10 moved, 0 stuck
+  Fruity X-Y-Z Controller: 11 named, wrote 11, 11 moved, 0 stuck
+  Gross Beat: 9 named, wrote 9, 9 moved, 0 stuck
+  not loaded under their file name: ['Fruity Send', 'Fruity Soft Clipper', 'Fruity X-Y Controller']
+  Hardcore: 170 named, wrote 16, 16 moved, 0 stuck
+  Hyper Chorus: 11 named, wrote 11, 11 moved, 0 stuck
+  Low Lifter: 15 named, wrote 15, 15 moved, 0 stuck
+  LuxeVerb: 49 named, wrote 16, 16 moved, 0 stuck
+  Maximus: 59 named, wrote 16, 16 moved, 0 stuck
+  Multiband Delay: 396 named, wrote 16, 16 moved, 0 stuck
+  Patcher: 0 named, wrote 0, 0 moved, 0 stuck
+  Pitch Shifter: 13 named, wrote 13, 13 moved, 0 stuck
+  Pitcher: 150 named, wrote 16, 16 moved, 0 stuck
+  Soundgoodizer: 0 named, wrote 0, 0 moved, 0 stuck
+  Spreader: 5 named, wrote 5, 5 moved, 0 stuck
+  Transient Processor: 9 named, wrote 9, 9 moved, 0 stuck
+  Transporter: 22 named, wrote 16, 16 moved, 0 stuck
+  Vintage Chorus: 17 named, wrote 16, 16 moved, 0 stuck
+  Vintage Phaser: 36 named, wrote 16, 16 moved, 0 stuck
+  Vocodex: 20 named, wrote 16, 16 moved, 0 stuck
+dump: 80 plugins -> /Users/no8/Documents/synthexis-harvest/20261113-164827.json
+unsafe retries: 0 []

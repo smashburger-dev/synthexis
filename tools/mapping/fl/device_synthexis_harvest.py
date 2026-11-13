@@ -3,6 +3,11 @@
 # the open project to ~/Documents/synthexis-harvest/<ts>.json.
 # Runs on OnInit and again on any note-on. One plugin per OnIdle call
 # so FL never blocks for long.
+#
+# FL 2026 (API 45) gives scripts no file writes: os.makedirs and open(...,
+# "w") raise SystemError, so _flush fails there. The dump that ran on
+# 2026-11-13 exec'd this file in probes/fl-stock-plugins/device_synthexis_dev.py
+# and fetched _dump_one page by page over MIDI (probes/fl-stock-plugins/run_stock.py).
 
 import json
 import os
@@ -26,7 +31,7 @@ def _enqueue():
     global _queue, _result
     _queue, _result = [], []
     try:
-        for ch in range(channels.channelCount()):
+        for ch in range(channels.channelCount(True)):
             _queue.append(("chan", ch))
     except Exception:
         pass
@@ -49,49 +54,39 @@ def _try(fn, *args):
         return None
 
 
-def _chan_params(ch):
-    """Channel rack plugins: index = channel, slotIndex = -1 (FL API stubs)."""
-    try:
-        n = plugins.getParamCount(ch, -1)
-        if n and n > 0:
-            return ch, -1, n
-    except Exception:
-        pass
-    return None, None, 0
-
-
-def _dump_one(item):
+def _dump_one(item, start=0, stop=MAX_PARAM):
+    """One plugin, parameters start..stop (a page, so a big plugin fits a
+    SysEx reply). Channels go by FL's global index (g=True), so the channel
+    rack's group filter cannot hide or renumber them."""
     kind = item[0]
     rec = {"params": []}
     if kind == "chan":
-        _, ch = item
-        name = _try(plugins.getPluginName, ch, -1, True)
-        name2 = _try(plugins.getPluginName, ch, -1)
-        tr, sl, n = _chan_params(ch)
-        if tr is None:
-            rec.update({"name": name or name2, "n_params": 0})
-            return rec
+        _, idx = item
+        sl, g = -1, True
+        if not _try(plugins.isValid, idx, -1, True):
+            return None  # Sampler, audio clip, automation clip: no plugin
     else:
-        _, tr, sl = item
-        name = _try(plugins.getPluginName, tr, sl, True)
-        name2 = _try(plugins.getPluginName, tr, sl)
-        n = _try(plugins.getParamCount, tr, sl) or 0
+        _, idx, sl = item
+        g = False
+    name = _try(plugins.getPluginName, idx, sl, False, g)
+    user = _try(plugins.getPluginName, idx, sl, True, g)
+    n = _try(plugins.getParamCount, idx, sl, g) or 0
     rec.update({"location": f"{kind}:{item[1:]}",
-                "name": name or name2 or "?", "name_vst": name2,
+                "name": name or user or "?", "user_name": user,
                 "n_params": n})
-    for i in range(min(n or 0, MAX_PARAM)):
-        pname = _try(plugins.getParamName, i, tr, sl)
+    for i in range(start, min(n, stop, MAX_PARAM)):
+        pname = _try(plugins.getParamName, i, idx, sl, g)
         if not pname:
             continue
-        cur = _try(plugins.getParamValue, i, tr, sl)
+        cur = _try(plugins.getParamValue, i, idx, sl, g)
         strs = []
-        # setParamValue(value, paramIndex, index, slotIndex): value first
+        # setParamValue(value, paramIndex, index, slotIndex, pickupMode, useGlobalIndex)
         for t in T_STEPS:
-            _try(plugins.setParamValue, t, i, tr, sl)
-            s = _try(plugins.getParamValueString, i, tr, sl)
+            _try(plugins.setParamValue, t, i, idx, sl, 0, g)
+            s = _try(plugins.getParamValueString, i, idx, sl, g)
             strs.append([t, s if s is not None else ""])
         if cur is not None:
-            _try(plugins.setParamValue, cur, i, tr, sl)
+            _try(plugins.setParamValue, cur, i, idx, sl, 0, g)
         rec["params"].append(
             {"index": i, "name": pname, "value": cur, "samples": strs})
     return rec
@@ -131,10 +126,9 @@ def OnIdle():
         return
     if _queue:
         item = _queue.pop(0)
-        try:
-            _result.append(_dump_one(item))
-        except Exception:
-            pass
+        r = _try(_dump_one, item)
+        if r is not None:
+            _result.append(r)
     else:
         _busy = False
         _flush()
