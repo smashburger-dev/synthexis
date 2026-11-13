@@ -44,7 +44,9 @@ FL_MEASURED = {
 
 
 def placeholder(name: str) -> str | None:
-    """Family of a placeholder name, or None for a real parameter."""
+    """Family of a placeholder name, or None for a real parameter: the rule
+    of is_placeholder in plugin/synthexis/src/fl.rs (test_mapping.py runs
+    the fl.rs test cases through it). export_paramsense.py uses it too."""
     if any(ord(c) < 32 or ord(c) == 127 for c in name):
         return "control chars"
     n = name.strip().lower()

@@ -1,7 +1,8 @@
 # /// script
 # requires-python = ">=3.11"
 # ///
-"""Unit tests for label.py / commands.py / edits.py (no network).
+"""Unit tests for label.py / commands.py / edits.py / fl_param_counts.py
+(no network).
 
   uv run --with pytest --with httpx --with pyyaml pytest \
       tools/mapping/test_mapping.py
@@ -9,6 +10,7 @@
 
 import json
 import random
+import re
 import sys
 from pathlib import Path
 
@@ -18,6 +20,7 @@ import yaml
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import commands  # noqa: E402
 import edits as ed  # noqa: E402
+import fl_param_counts  # noqa: E402
 import label  # noqa: E402
 import spark  # noqa: E402
 
@@ -376,3 +379,17 @@ def test_copy_chain_plugin_then_template():
     }
     assert list(label._copy_chain(label_of, "B", 5)) == [("A", 5), ("A", 2)]
     assert label._copy_resolved(label_of, {("A", 2): {}}, "B", 5)
+
+
+def test_placeholder_matches_fl_rs():
+    """fl_param_counts.placeholder (also export_paramsense.py's) against
+    the cases of fl.rs's own `placeholders` test, read from the source."""
+    src = (HERE.parents[1] / "plugin" / "synthexis" / "src" / "fl.rs").read_text()
+    body = src[src.index("fn placeholders()"):]
+    unescape = lambda s: re.sub(r"\\u\{([0-9a-fA-F]+)\}",  # noqa: E731
+                                lambda m: chr(int(m.group(1), 16)), s)
+    yes, no = [[unescape(x) for x in re.findall(r'"((?:[^"\\]|\\.)*)"', lst)]
+               for lst in re.findall(r"for n in \[(.*?)\]\s*\{", body, re.S)[:2]]
+    assert len(yes) >= 10 and len(no) >= 5 and "\x13" in yes
+    assert [n for n in yes if not fl_param_counts.placeholder(n)] == []
+    assert [n for n in no if fl_param_counts.placeholder(n)] == []
