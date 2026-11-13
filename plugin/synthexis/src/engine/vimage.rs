@@ -1,5 +1,5 @@
-//! vImage (Accelerate) scaling for the seg input and the 128 px crops;
-//! the pure-Rust versions in geom.rs stay as the tested reference.
+//! vImage (Accelerate) scaling for the 128 px crops; geom::crop_square
+//! stays as the tested reference and the fallback.
 #![allow(unsafe_code)]
 
 use std::ffi::c_void;
@@ -50,13 +50,6 @@ fn scale(src: &Bgra, sr: (usize, usize, usize, usize), dst: &mut [u8], ds: usize
     }
 }
 
-/// Whole-frame downscale (seg input).
-pub fn resize(src: &Bgra, dst: &mut [u8], ds: usize, dw: usize, dh: usize) {
-    if !scale(src, (0, 0, src.w, src.h), dst, ds, dh, (0, 0, dw, dh)) {
-        super::geom::resize_area(src, dst, ds, dw, dh);
-    }
-}
-
 /// Square crop with black padding outside the frame (same contract as
 /// geom::crop_square).
 pub fn crop_square(src: &Bgra, x0: f32, y0: f32, side: f32, dst: &mut [u8], ds: usize, n: usize) {
@@ -92,8 +85,5 @@ mod tests {
         // Left half is outside the frame: black. Right half: the colour.
         assert_eq!(&a[(8 * 16 + 1) * 4..(8 * 16 + 1) * 4 + 3], &[0, 0, 0]);
         assert_eq!(&a[(8 * 16 + 12) * 4..(8 * 16 + 12) * 4 + 3], &[10, 20, 30]);
-        let mut small = vec![0u8; 8 * 5 * 4];
-        resize(&src, &mut small, 8 * 4, 8, 5);
-        assert_eq!(&small[..4], &[10, 20, 30, 255]);
     }
 }

@@ -134,7 +134,6 @@ impl Outputs {
 /// IOSurface-backed BGRA pixel buffer, reused across frames.
 pub struct PixelBuf {
     buf: CFRetained<CVPixelBuffer>,
-    pub w: usize,
     pub h: usize,
 }
 
@@ -155,7 +154,7 @@ impl PixelBuf {
                 NonNull::from(&mut out),
             );
             let ptr = NonNull::new(out).ok_or(format!("CVPixelBufferCreate failed ({rc})"))?;
-            Ok(Self { buf: CFRetained::from_raw(ptr), w, h })
+            Ok(Self { buf: CFRetained::from_raw(ptr), h })
         }
     }
 

@@ -57,35 +57,6 @@ pub struct Bgra<'a> {
     pub h: usize,
 }
 
-/// Area-average downscale of `src` into a BGRA `dst` of `dw` x `dh`
-/// (stride `ds`). Alpha is set to 255.
-pub fn resize_area(src: &Bgra, dst: &mut [u8], ds: usize, dw: usize, dh: usize) {
-    for dy in 0..dh {
-        let y0 = dy * src.h / dh;
-        let y1 = ((dy + 1) * src.h / dh).max(y0 + 1).min(src.h);
-        for dx in 0..dw {
-            let x0 = dx * src.w / dw;
-            let x1 = ((dx + 1) * src.w / dw).max(x0 + 1).min(src.w);
-            let mut acc = [0u32; 3];
-            for y in y0..y1 {
-                let row = &src.data[y * src.stride..];
-                for x in x0..x1 {
-                    let p = &row[x * 4..x * 4 + 3];
-                    acc[0] += p[0] as u32;
-                    acc[1] += p[1] as u32;
-                    acc[2] += p[2] as u32;
-                }
-            }
-            let n = ((y1 - y0) * (x1 - x0)) as u32;
-            let o = dy * ds + dx * 4;
-            dst[o] = (acc[0] / n) as u8;
-            dst[o + 1] = (acc[1] / n) as u8;
-            dst[o + 2] = (acc[2] / n) as u8;
-            dst[o + 3] = 255;
-        }
-    }
-}
-
 /// Fast downscale: each output pixel averages 2x2 samples at the quarter
 /// points of its source block (an area filter for ratios around 3).
 pub fn resize_quad(src: &Bgra, dst: &mut [u8], ds: usize, dw: usize, dh: usize) {
@@ -1930,12 +1901,9 @@ mod tests {
             p.copy_from_slice(&[10, 20, 30, 255]);
         }
         let src = Bgra { data: &img, stride: w * 4, w, h };
-        let mut small = vec![0u8; 8 * 4 * 4];
-        resize_area(&src, &mut small, 8 * 4, 8, 4);
-        assert_eq!(&small[..4], &[10, 20, 30, 255]);
         let mut quad = vec![0u8; 8 * 4 * 4];
         resize_quad(&src, &mut quad, 8 * 4, 8, 4);
-        assert_eq!(quad, small);
+        assert!(quad.chunks(4).all(|p| p == [10, 20, 30, 255]));
         let mut crop = vec![0u8; 8 * 8 * 4];
         crop_square(&src, -20.0, 0.0, 40.0, &mut crop, 8 * 4, 8);
         assert_eq!(&crop[..3], &[0, 0, 0]);

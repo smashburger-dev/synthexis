@@ -10,7 +10,6 @@ pub mod perception;
 pub mod vimage;
 pub mod vision;
 
-use std::sync::atomic::AtomicBool;
 use std::sync::{Arc, OnceLock, Weak};
 use std::thread;
 use std::time::{Duration, Instant};
@@ -108,7 +107,6 @@ pub fn set_finger_thresholds(t: Option<[[f32; 5]; 2]>) {
 pub struct Engine {
     pub subscribers: Mutex<Vec<Weak<dyn SignalSubscriber>>>,
     pub camera: &'static Arc<camera::EngineShared>,
-    pub running: AtomicBool,
 }
 
 impl Engine {
@@ -153,13 +151,7 @@ impl Engine {
 /// Start (or get) the process-wide engine. Camera + triangle threads.
 pub fn engine() -> &'static Engine {
     ENGINE.get_or_init(|| {
-        let camera = camera::start();
-        let e = Engine {
-            subscribers: Mutex::new(Vec::new()),
-            camera,
-            running: AtomicBool::new(true),
-        };
-        e
+        Engine { subscribers: Mutex::new(Vec::new()), camera: camera::start() }
     })
 }
 
