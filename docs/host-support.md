@@ -1,6 +1,15 @@
-# Host support: Logic Pro and Ableton Live (state 2026-11-13)
+# Host support: Logic Pro and Ableton Live (state 2026-11-13, steps 1-3 built)
 
-Research run on 2026-11-13: code read of the FL coupling, web research on Logic Pro 12.4 and Ableton Live 12.4, one adversarial check of the claims below. Logic was inspected on this Mac (bundle, entitlements, signing). Nothing here has been run in Logic or Live yet. UNVERIFIED marks claims without a primary source or a test.
+Research run on 2026-11-13: code read of the FL coupling, web research on Logic Pro 12.4 and Ableton Live 12.4, one adversarial check of the claims below. Logic was inspected on this Mac (bundle, entitlements, signing). UNVERIFIED marks claims without a primary source or a test.
+
+## Measured (2026-11-13, `probes/logic-au/RESULT.md`)
+
+- Steps 1 to 3 are built: camera guard, `MIDI_INPUT = Basic`, AUv2 `synthexis.component` (`aumu sgnl Snxs`). `auval -v aumu sgnl Snxs` passes.
+- Logic 12.4 runs third-party AUs out of process on this Mac: `AUHostingServiceXPC` and `AUHostingServiceXPC_arrow`, both children of launchd, hold the project's AU binaries; Logic itself holds none. An AU crash takes down the hosting service, not Logic.
+- Logic scans AUs only at launch (8 validator processes, `~/Library/Caches/AudioUnitCache/Logs/AUScan*.plist`). A component installed while Logic runs needs a restart or Plug-in Manager, Reset & Rescan.
+- The camera guard works in a minimal in-process AU host without `NSCameraUsageDescription`: synthexis logs `host declares camera use: false` and does not ask; no TCC prompt, no crash.
+- Not measured yet: loading synthexis inside Logic, the camera inside AUHostingService, the CoreMIDI ports from there, Signal automation in Logic. The probe session could not get the screen (see RESULT.md).
+- Live: not run. The VST3 now has an event input bus (the cause of the Live 12.4 refusal).
 
 ## Why only FL works today
 
@@ -14,10 +23,10 @@ Research run on 2026-11-13: code read of the FL coupling, web research on Logic 
 
 | Host | Blocker | Severity | Check |
 |---|---|---|---|
-| Logic | No Audio Unit build. Logic loads AUv2/AUv3 only; synthexis exports CLAP and VST3 (`lib.rs:290-291`), nih-plug has no AU export. Route: Rust crate `clap-wrapper` (0.3.1, `export_auv2!()`), type `aumu` from the Instrument feature. A nih-plug CLAP wrapped to AUv2 has run in Logic before ([nih-plug#63](https://github.com/robbert-vdh/nih-plug/issues/63)). | critical | `auval -a \| grep -i synthexis` is empty today |
-| Logic | Camera in the plugin very likely blocked. Logic 12.4 declares no `NSCameraUsageDescription` and no camera entitlement; neither does `AUHostingServiceXPC_arrow.xpc`, where Logic hosts AUs on Apple Silicon. `engine/camera.rs:353-366` asks AVFoundation without checking. Silent deny or TCC killing the host: UNVERIFIED. Precedent: [SPARTA#82](https://github.com/leomccormack/SPARTA/issues/82) (REAPER SIGABRT). | critical | `plutil -p "/Applications/Logic Pro.app/Contents/Info.plist" \| grep -i camera` prints nothing |
-| Logic | Which process hosts the AU decides whether it can open CoreMIDI virtual ports and read `~/Library/Application Support/synthexis`. | high | `ps aux \| grep -i AUHostingService` with synthexis loaded |
-| Live | Current VST3 very likely refused: Instrument category with `MIDI_INPUT = None` (`lib.rs:188`), so nih-plug builds no event input bus (`vendor/nih-plug/src/wrapper/vst3/wrapper.rs:123-127`). Live 12.4 logs "instrument category, but no valid event input bus" for that case ([clap-wrapper#635](https://github.com/free-audio/clap-wrapper/issues/635), a user report). Live does not load CLAP. | high | Live `Log.txt` after a rescan |
+| Logic | DONE (step 3): AUv2 build, auval passes, not yet loaded in Logic. Before: no Audio Unit build. Logic loads AUv2/AUv3 only; synthexis exports CLAP and VST3 (`lib.rs:290-291`), nih-plug has no AU export. Route: Rust crate `clap-wrapper` (0.3.1, `export_auv2!()`), type `aumu` from the Instrument feature. A nih-plug CLAP wrapped to AUv2 has run in Logic before ([nih-plug#63](https://github.com/robbert-vdh/nih-plug/issues/63)). | critical | `auval -v aumu sgnl Snxs` (`auval -a` crashes on this Mac in an unrelated plugin) |
+| Logic | Camera in the plugin very likely blocked. Logic 12.4 declares no `NSCameraUsageDescription` and no camera entitlement; neither does `AUHostingServiceXPC_arrow.xpc`, where Logic hosts AUs on Apple Silicon. `engine/camera.rs:353-366` asked AVFoundation without checking; since step 1 it reads the key first and does not ask without it. Silent deny or TCC killing the host: UNVERIFIED. Precedent: [SPARTA#82](https://github.com/leomccormack/SPARTA/issues/82) (REAPER SIGABRT). | critical | `plutil -p "/Applications/Logic Pro.app/Contents/Info.plist" \| grep -i camera` prints nothing |
+| Logic | Which process hosts the AU decides whether it can open CoreMIDI virtual ports and read `~/Library/Application Support/synthexis`. Measured: third-party AUs run in `AUHostingServiceXPC` / `_arrow`; its entitlements have no app sandbox and no camera entry, its Info.plist no camera usage string. CoreMIDI ports from there: UNVERIFIED. | high | `lsof -p <pid> \| grep .component/` on the AUHostingService processes |
+| Live | FIXED in code (step 2), untested in Live: `MIDI_INPUT = Basic` gives the VST3 an event input bus. Before: Instrument category with `MIDI_INPUT = None` (`lib.rs:188`), so nih-plug builds no event input bus (`vendor/nih-plug/src/wrapper/vst3/wrapper.rs:123-127`). Live 12.4 logs "instrument category, but no valid event input bus" for that case ([clap-wrapper#635](https://github.com/free-audio/clap-wrapper/issues/635), a user report). Live does not load CLAP. | high | Live `Log.txt` after a rescan |
 | Live | Camera probably fine: Live 10 and 11 declare camera access ([zvid#196](https://github.com/lsegal/zvid/issues/196)); Live 12 not rechecked; one black-screen report ([motion2midi#1](https://github.com/froehlicht/motion2midi/issues/1)). | medium | `plutil` and `codesign -d --entitlements -` on the Live 12 bundle |
 | Live | Third-party plugins with more than 64 parameters expose only configured parameters to MIDI Map and the LOM ([Live manual, plug-ins](https://www.ableton.com/en/live-manual/12/using-plug-ins/)). Serum 2 needs Configure first. | low | load a large plugin, panel stays empty |
 | all | The FL bridge always starts in `initialize` (`lib.rs:224`), pings SysEx every 2 s and shows FL-only text after 20 s. Logic may record those pings on an armed track (UNVERIFIED). | medium | record 30 s on an armed MIDI track |
@@ -34,10 +43,10 @@ Whether a remote script setting `DeviceParameter.value` records automation: UNVE
 
 ## Plan
 
-1. Camera guard (2-3 h, all hosts). Read `NSCameraUsageDescription` from the main bundle before calling AVFoundation; when missing, show "this DAW gives plugins no camera access" instead of risking a host crash. `engine/camera.rs:346-375`, `i18n.rs`.
-2. Live load fix (1 h + FL check). `MIDI_INPUT = MidiConfig::Basic` in `lib.rs:188`, ignore incoming events. Recheck loading and recording in FL.
-3. AUv2 probe build (0.5-1 day). `clap-wrapper` with `export_auv2!()`, xtask writes `synthexis.component` (type `aumu`, own codes), ad-hoc sign, install to `~/Library/Audio/Plug-Ins/Components`, `auval`. Keep param ids `sig01..sig32`.
-4. Logic probe with Noa (checklist below). Decides the architecture. Results to `probes/logic-au/RESULT.md`.
+1. DONE. Camera guard (2-3 h, all hosts). Read `NSCameraUsageDescription` from the main bundle before calling AVFoundation; when missing, show "this DAW gives plugins no camera access" instead of risking a host crash. `engine/camera.rs:346-375`, `i18n.rs`.
+2. DONE in code; FL recheck still open (FL was busy). Live load fix (1 h + FL check). `MIDI_INPUT = MidiConfig::Basic` in `lib.rs:188`, ignore incoming events. Recheck loading and recording in FL.
+3. DONE, auval passes. AUv2 probe build (0.5-1 day). `clap-wrapper` with `export_auv2!()`, xtask writes `synthexis.component` (type `aumu`, own codes), ad-hoc sign, install to `~/Library/Audio/Plug-Ins/Components`, `auval`. Keep param ids `sig01..sig32`.
+4. PARTLY RUN (auval, hosting process, scan, guard in a test host; Logic UI steps open). Logic probe with Noa (checklist below). Decides the architecture. Results to `probes/logic-au/RESULT.md`.
 5. HostBridge refactor (3-5 days). Trait with `link`, `view`, `want_params`, `write(key, index, v)`, `notes`, `caps`; `fl.rs` moves behind `FlBridge` unchanged. Versioned `TargetKey { Fl, Ableton, Learn }` that migrates old `fx:`/`gen:` ids. Route `writer.rs`, `midi::Bridge`, `pong::FlSink` and the GUI call sites through it.
 6. Bridge selection (1 day). Host name from VST3 `IHostApplication::getName` / CLAP `host->name` through a small nih-plug patch (UNVERIFIED), manual override in settings. Open the FL ports only when an FL or Ableton bridge is active.
 7. LearnBridge (3-5 days), shared by Logic, Live, Bitwig, Reaper. CoreMIDI sources "synthexis control" (CC) and "synthexis notes". CC = round(v*127). Learn slots with labels, a per-route "wiggle" button that sweeps the CC for the DAW's learn mode, all-notes-off on stop. 14-bit CC later, per route.

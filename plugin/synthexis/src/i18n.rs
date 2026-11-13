@@ -133,6 +133,8 @@ texts! {
     cam_asking: "Waiting for camera permission", "Warte auf die Kamerafreigabe";
     cam_denied: "No camera access. Allow it in System Settings > Privacy & Security > Camera, then reopen the plugin.",
         "Kein Kamerazugriff. In Systemeinstellungen > Datenschutz & Sicherheit > Kamera erlauben, dann das Plugin neu öffnen.";
+    cam_no_host: "This DAW gives plug-ins no camera access. It declares no camera use, and asking could make macOS quit it.",
+        "Diese DAW gibt Plug-ins keinen Kamerazugriff. Sie meldet keine Kameranutzung an, und eine Anfrage könnte macOS dazu bringen, sie zu beenden.";
     cam_no_picture: "The camera sends no picture (in use by another app?)", "Die Kamera liefert kein Bild (von einer anderen App belegt?)";
     // settings overlay
     settings_title: "Settings", "Einstellungen";

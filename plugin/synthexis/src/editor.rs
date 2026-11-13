@@ -440,6 +440,7 @@ fn camera_status(t: &Text, shared: &EngineShared) -> (String, bool) {
     let last = *shared.last_cb.lock();
     match auth.as_str() {
         "denied" | "restricted" => (t.cam_denied.to_string(), true),
+        crate::engine::camera::NO_HOST_ACCESS => (t.cam_no_host.to_string(), true),
         "notDetermined" => (t.cam_asking.to_string(), false),
         "authorized" => match last {
             Some(at) if at.elapsed() < STALE => {

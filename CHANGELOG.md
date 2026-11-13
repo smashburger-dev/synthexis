@@ -2,6 +2,20 @@
 
 synthexis for FL Studio on macOS (Apple Silicon), VST3 and CLAP. Downloads on the [releases page](https://github.com/smashburger-dev/synthexis/releases).
 
+## 0.1.4 (2026-11-14)
+
+First steps toward Logic Pro and Ableton Live ([docs/host-support.md](docs/host-support.md), [probes/logic-au](probes/logic-au/RESULT.md)).
+
+Changed:
+- synthexis also builds as an Audio Unit (`synthexis.component`, type `aumu`), the format Logic Pro loads. It passes Apple's `auval`. Both installers put it in `~/Library/Audio/Plug-Ins/Components` and refuse to replace it while Logic runs.
+- The VST3 declares a MIDI input, because Live 12 refuses a VST3 instrument without one. synthexis ignores incoming MIDI.
+- Before it asks for the camera, synthexis checks whether the host declares camera use. Logic 12.4 does not, so synthexis shows a message instead of asking, which could crash the host. Access granted earlier still works.
+- The code version goes from 0.1.2 to 0.1.4; 0.1.3 was only a label update and never set in the code.
+
+Known limits:
+- synthexis has not been opened in Logic or Live yet.
+- The VST3 with the new MIDI input has not been checked again in FL Studio. That check comes before the next release.
+
 ## 0.1.3 (2026-11-13)
 
 Labels for the stock plugins of Ableton Live and Logic Pro, ready for the bridges that will report their names ([probes/ableton-stock](probes/ableton-stock/RESULT.md), [probes/logic-stock](probes/logic-stock/RESULT.md)).
