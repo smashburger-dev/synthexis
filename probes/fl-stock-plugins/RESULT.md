@@ -30,7 +30,7 @@ The rest:
 
 - Patcher, Wave Traveller, Soundgoodizer: 0 parameters through the script API, so no route can reach them.
 - FL Slayer, WASP, WASP XT, Fruity LSD: control-character names, no write moves anything (dropped now, see above).
-- GMS: 12 of 16 stuck, all of them the FX slot selectors and FX Activate.
+- GMS: 12 of 16 stuck: the ten FX slot selectors, FX Activate and FX LFO Shape Switch.
 - Fruity Scratcher: Mute did not toggle (13 of 14 moved).
 - Fruity Love Philter: 0 of 16 in the batch; a single REC write to Master level afterwards moved it from 0.65 to 0.20 within 0.6 s. A timing effect of the batch, not a dead path.
 

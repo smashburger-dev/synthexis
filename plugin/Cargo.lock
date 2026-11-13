@@ -3378,7 +3378,7 @@ dependencies = [
 
 [[package]]
 name = "synthexis"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "block2 0.6.2",
  "coremidi",
