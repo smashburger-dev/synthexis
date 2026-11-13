@@ -63256,6 +63256,1819 @@ type b (digital)	ctl.select
 type b (glitch)	ctl.select
 type b (texture)	ctl.select
 type b (utility)	ctl.select
+#logic:adaptive limiter
+gain	amp.gain
+lookahead	system
+optimal lookahead	system
+out ceiling	other
+remove dc offset	other
+true peak detection	other
+#logic:alchemy
+(loop) end/length	other
+(loop) start	other
+(noise) vol	other
+(oscillator) vol	other
+action pop-up menu	other
+additive effect 1	other
+additive effect 2	other
+additive effect 3	other
+additive effect on/off	ctl.switch
+additive/va	other
+alpha	other
+amount	mod.amount
+arp overlap legacy mode	ctl.select
+attack	env.attack
+auto align	other
+auto gain	other
+beta	other
+bins	other
+bipolar	other
+bitcrusher	other
+bottom	other
+breakpoint	other
+bright	other
+center	other
+coarse tune	osc.pitch
+coarse/fine tune	osc.pitch
+color	fx.tone
+condition	other
+crossover	other
+ctrl a	other
+ctrl b	other
+ctrl c	other
+ctrl d	other
+current ahdsr	other
+current env follower	other
+current lfo	other
+current modmap	other
+current mseg	other
+current sequencer	other
+cutoff	filter.cutoff
+cycles	other
+damp (damping)	fx.tone
+damping	fx.tone
+decay	env.decay
+delay	other
+density	other
+depth	lfo.amount
+detune	osc.fine
+diffusion	other
+drive	fx.drive
+dry	other
+edit mode	ctl.select
+end	other
+envelope	other
+eq	other
+factor	other
+fade	other
+feedback	other
+fifths	other
+filter a/b	other
+filter type	ctl.select
+fine tune	osc.fine
+fixed pitch	osc.pitch
+formant	other
+formant shift	other
+frequency	other
+fundamental	other
+fx master	other
+gain	amp.gain
+gate	other
+glide	voice.glide
+grain shape	ctl.select
+group	other
+hi key	other
+hi vel	other
+hi/lo cut	other
+high	other
+high cut	other
+high mid	other
+hold	other
+initial pan	amp.pan
+input gain	amp.gain
+interval	ctl.select
+invert	ctl.switch
+ir	other
+key	other
+key trigger	other
+keyscale	system
+keyswitch	other
+ktrack	other
+l/r feedback	other
+l/r offset	other
+l/r rate	other
+latch	ctl.switch
+left	other
+length	other
+lo key	other
+lo vel	other
+loop mode	ctl.select
+loop xfade	other
+low	other
+low cut	fx.tone
+low cut/high cut	fx.tone
+low mid	other
+low res/high res	other
+lp cutoff	filter.cutoff
+makeup gain	other
+mech	other
+midi mono mode	ctl.select
+min. partial	other
+mix	fx.mix
+mod targets	other
+mode	ctl.select
+modmap	other
+modulation source	ctl.select
+modulation target	other
+modwheel	other
+mono mode bend range	system
+mono/stereo	ctl.select
+morph type	ctl.select
+noise	other
+noise on/off	ctl.switch
+note vel	other
+num partials	other
+num taps	other
+num(ber of voices)	other
+num(ber)	other
+octave	osc.pitch
+octaves	other
+odd/even	other
+order	other
+oscillator on/off	ctl.switch
+pan	amp.pan
+par/ser	other
+partial	other
+pattern	other
+period	other
+phase	other
+phase on/off	ctl.switch
+phat	other
+pitch	osc.pitch
+pitch bend up/down	other
+pitch/noise	other
+poles	other
+position	other
+post gain	other
+pre gain	other
+pre-delay	other
+predelay	other
+pulse/saw	other
+pvar	other
+q	other
+quality	ctl.select
+ramp	other
+range	system
+rate	lfo.rate
+rate/time	other
+ratio	other
+release	env.release
+resolution	other
+resonance	filter.resonance
+reverse	other
+right	other
+rpan	other
+rtime	other
+sample tempo	other
+scale	other
+select	other
+send	other
+send destination	other
+ser/par	other
+shape	ctl.select
+shift	other
+shimmer	other
+simplify	other
+sine/complex	other
+size	other
+smooth	other
+snap pitch	osc.pitch
+snap vol	other
+snap x	other
+snap y	other
+solo	ctl.switch
+source	ctl.select
+source group	other
+source on/off	ctl.switch
+source select	other
+spectral effect	other
+spectral effect on/off	ctl.switch
+spectral/granular	other
+speed	other
+split	other
+spread	stereo.width
+start	other
+starts	other
+step on/off	ctl.switch
+stereo	other
+stoffset	other
+string	other
+sustain	env.sustain
+swing	other
+sym	other
+sync	system
+synthesis element	other
+tap delay	other
+tap interval	ctl.select
+tap spacing	other
+target	other
+threshold	other
+tie	other
+time	other
+tone	fx.tone
+top	other
+trigger	other
+trigger mode	ctl.select
+tube	other
+tune	osc.pitch
+tuned	other
+type	ctl.select
+value	other
+value snap	other
+variance	other
+variation	other
+voice priority	other
+vol	amp.gain
+volume	amp.gain
+wait	other
+wave	ctl.select
+wet	fx.mix
+width	stereo.width
+x/y	other
+xcite	other
+zone fade	other
+#logic:amp designer
+depth	fx.mod.depth
+gain	fx.drive
+level	amp.gain
+master	fx.drive
+mic	other
+microphone	other
+output	amp.gain
+presence	fx.tone
+reverb	other
+speed	fx.mod.rate
+sync/free	other
+trem/vib	other
+#logic:arpeggiator
+capture live performance	other
+crescendo/random	other
+cycle length	other
+delete last	other
+input snap	other
+latch	ctl.switch
+latch mode	ctl.select
+note length	other
+options	other
+play	other
+random	other
+root	other
+scale	other
+swing	other
+vel (velocity base)	other
+velocity	system
+#logic:autofilter
+4-pole lowpass	ctl.select
+attack	other
+decay	other
+dry signal	other
+dynamic	other
+envelope	filter.env_amount
+fatness	other
+lfo	lfo.amount
+main out	amp.gain
+mode	ctl.select
+post filter	fx.drive
+pre filter	fx.drive
+pulse width	other
+rate	fx.mod.rate
+release	other
+resonance	filter.resonance
+retrigger	ctl.switch
+spread	stereo.width
+state variable	ctl.select
+stereo phase	stereo.width
+sustain	other
+sync	system
+sync phase	other
+threshold	other
+waveform	ctl.select
+#logic:bass amp designer
+1-2-3	other
+bass	other
+bright	other
+channel i/ii	other
+comp(ression)	other
+compressor on/off	ctl.switch
+eq on/off	ctl.switch
+frequency	other
+gain	amp.gain
+hard/soft	other
+high	other
+khz	other
+low	other
+master	amp.gain
+mic	other
+microphone	other
+mids	other
+output	amp.gain
+pre/post	other
+q	other
+treble	other
+type	ctl.select
+#logic:beat breaker
+bypass below	other
+clear all values	other
+cutoff	filter.cutoff
+edit mode	ctl.select
+length	other
+mode	ctl.select
+more	other
+pan	amp.pan
+pattern	other
+pattern off	ctl.switch
+pattern slot edit	other
+repeat	other
+resonance	filter.resonance
+time	other
+volume	amp.gain
+#logic:bitcrusher
+clip	other
+clip level	other
+downsampling	fx.drive
+drive	fx.drive
+fold	other
+mix	fx.mix
+mode	ctl.select
+resolution	other
+wrap	other
+#logic:channel eq
+analyzer	ctl.switch
+analyzer (pre/post)	ctl.switch
+analyzer decay	system
+band 1 on/off	ctl.switch
+band 2 on/off	ctl.switch
+band 3 on/off	ctl.switch
+band 4 on/off	ctl.switch
+band 5 on/off	ctl.switch
+band 6 on/off	ctl.switch
+band 7 on/off	ctl.switch
+band 8 on/off	ctl.switch
+hq	ctl.switch
+master gain	amp.gain
+processing	ctl.select
+q-couple	ctl.switch
+#logic:chorus
+d-mode	other
+intensity	fx.mod.depth
+mix	fx.mod.mix
+rate	fx.mod.rate
+#logic:chromaglow
+bypass below	other
+drive	fx.drive
+frequency	other
+high cut	other
+level in	other
+level out	other
+low cut	fx.tone
+mix	fx.mix
+model	ctl.select
+pre/post	other
+resonance	other
+slope	other
+style	ctl.select
+#logic:chromaverb
+attack	other
+band 1 on/off	ctl.switch
+band 2 on/off	ctl.switch
+band 3 on/off	ctl.switch
+band 4 on/off	ctl.switch
+band 5 on/off	ctl.switch
+band 6 on/off	ctl.switch
+decay	fx.reverb.decay
+decay sync	system
+density	other
+distance	other
+dry/wet	fx.reverb.mix
+early/late mix	other
+freeze	ctl.switch
+frequency	fx.eq.freq
+gain	fx.eq.gain
+mod depth	fx.mod.depth
+mod source	ctl.select
+mod speed	fx.mod.rate
+mono maker	other
+mono maker on/off	ctl.switch
+order	ctl.select
+output eq on/off	ctl.switch
+predelay	other
+predelay sync	system
+q	fx.eq.q
+quality	ctl.select
+ratio	other
+room type	ctl.select
+size	fx.reverb.decay
+smoothing	other
+visualization on/off	ctl.switch
+width	stereo.width
+#logic:clip distortion
+clip filter	fx.tone
+drive	fx.drive
+gain	amp.gain
+high shelving	other
+input gain	amp.gain
+lp filter	fx.tone
+mix	fx.mix
+output gain	amp.gain
+symmetry	other
+tone	fx.tone
+#logic:compressor
+attack	other
+auto gain	ctl.select
+auto release	ctl.switch
+circuit type	ctl.select
+detection	ctl.select
+distortion	ctl.select
+filter	ctl.switch
+filter mode	ctl.select
+frequency	system
+gain	system
+input gain	amp.gain
+knee	other
+limiter	ctl.switch
+limiter threshold	other
+make up	unsafe
+max	ctl.select
+mix	fx.mix
+output	amp.gain
+output gain	amp.gain
+peak/rms	ctl.select
+q	system
+ratio	fx.comp.amount
+release	other
+side chain	system
+sum	ctl.select
+threshold	fx.comp.amount
+#logic:deesser 2
+detection max	other
+filter	fx.tone
+filter solo	other
+frequency	other
+max reduction	other
+mode	ctl.select
+range	system
+reduction max	other
+threshold	fx.comp.amount
+#logic:delay designer
+cutoff hp/lp	fx.tone
+feedback	fx.delay.feedback
+feedback level	other
+feedback tap	other
+filter on/off	ctl.switch
+flip	other
+level	amp.gain
+mix	fx.delay.mix
+mute	ctl.switch
+pan	amp.pan
+pitch on/off	ctl.switch
+reso(nance)	other
+slope	other
+spread	stereo.width
+tap delay	other
+transp(ose)	other
+#logic:distortion
+drive	fx.drive
+level compensation	other
+output	amp.gain
+tone	fx.tone
+#logic:distortion ii
+distortion output level	other
+drive	fx.drive
+level compensation	other
+mix	fx.mix
+pregain	other
+tone	fx.tone
+type	ctl.select
+#logic:drum synth
+attack	env.attack
+bell	other
+body	other
+character	other
+color	fx.tone
+crush	fx.drive
+cycles	other
+decay	env.decay
+dirt	fx.drive
+dissonance	other
+harmonic	other
+material	ctl.select
+metallic	other
+noise	other
+pitch	osc.pitch
+position	other
+punch	other
+saturation	other
+shape	ctl.select
+size	other
+snap	other
+speed	lfo.rate
+sweep	other
+tension	other
+tone	fx.tone
+volume	amp.gain
+#logic:echo
+color	fx.tone
+dry	other
+feedback	fx.delay.feedback
+note	fx.delay.time
+wet	fx.delay.mix
+#logic:efm1
+attack	env.attack
+decay	env.decay
+fm depth	osc.fm
+glide	voice.glide
+lfo	other
+main level	amp.gain
+main pitch bend range	system
+midi mono mode	ctl.select
+modulation envelope	other
+modulator pitch	osc.pitch
+mono mode bend range	system
+rate	lfo.rate
+release	env.release
+stereo detune	unison.detune
+sub osc level	osc.level
+sustain	env.sustain
+transpose	osc.pitch
+tune	osc.pitch
+unison	other
+velocity	system
+voices	system
+#logic:ensemble
+intensity	fx.mod.depth
+lfo1/lfo2/random on/off	ctl.switch
+output mix	fx.mod.mix
+phase	other
+rate	fx.mod.rate
+stereo spread	stereo.width
+voices	system
+volume compensation	other
+#logic:enveloper
+(attack) gain	other
+(attack) time	other
+(release) gain	other
+(release) time	other
+lookahead	system
+out level	other
+threshold	fx.comp.amount
+#logic:enverb
+attack	other
+crossover	other
+decay	fx.reverb.decay
+density	other
+dry signal delay	other
+dry/wet	fx.reverb.mix
+high cut	other
+hold (sustain)	other
+low freq level	other
+predelay	other
+release	other
+spread	stereo.width
+sustain (hold)	other
+#logic:es e
+ar int	other
+attack	env.attack
+bend down	other
+bend up	other
+chorus i	other
+cutoff	filter.cutoff
+ii/ensemble	other
+release	env.release
+resonance	filter.resonance
+speed	lfo.rate
+tune	osc.pitch
+velo filter	system
+velo volume	system
+vib/pwm	other
+volume	amp.gain
+wave	ctl.select
+#logic:es m
+cutoff	filter.cutoff
+decay	env.decay
+glide	voice.glide
+int	other
+mix	fx.mix
+overdrive	other
+pitch bend down	other
+pitch bend up	other
+resonance	filter.resonance
+tune	osc.pitch
+velo	other
+vol	amp.gain
+#logic:es p
+1/3	other
+2/3	other
+3/3	other
+adsr int	filter.env_amount
+attack	env.attack
+bend down	other
+bend up	other
+chorus	other
+decay	env.decay
+frequency	filter.cutoff
+noise generator	other
+overdrive	fx.drive
+rectangle oscillator	other
+release	env.release
+resonance	filter.resonance
+sawtooth oscillator	other
+speed	lfo.rate
+sub-oscillator -1 octave	osc.pitch
+sustain	env.sustain
+triangle oscillator	other
+tune	osc.pitch
+velo filter	system
+velo volume	system
+vib/wah	other
+volume	amp.gain
+#logic:es1
+16’	other
+2’	other
+32’	other
+4’	other
+8’	other
+adsr via vel	system
+amplifier envelope selector	other
+analog	other
+attack	env.attack
+bender range	system
+chorus	other
+cutoff	filter.cutoff
+decay	env.decay
+drive	fx.drive
+glide	voice.glide
+key	other
+level via vel	system
+mix	osc.level
+out level	amp.gain
+release	env.release
+resonance	filter.resonance
+slope	other
+sub	osc.level
+sustain	env.sustain
+tune	osc.pitch
+voices	system
+wave	ctl.select
+#logic:es2
+attack	env.attack
+attack via velocity	system
+decay	env.decay
+decay/release mode	ctl.select
+distortion	fx.drive
+hard	other
+intensity	lfo.amount
+midi mono mode	ctl.select
+mono mode bend range	system
+release time	other
+soft	other
+speed	lfo.rate
+sustain/sustain time	other
+tone	fx.tone
+trigger modes	other
+velocity sensitivity	system
+#logic:evoc 20 filterbank
+bands	other
+boost a	other
+boost b	other
+fade ab	other
+fade lfo intensity	other
+formant shift	other
+highest	other
+level	amp.gain
+lowest	other
+overdrive	other
+rate	fx.mod.rate
+resonance	filter.resonance
+shift lfo intensity	other
+slope	other
+stereo mode	ctl.select
+stereo width	stereo.width
+waveform	ctl.select
+#logic:evoc 20 polysynth
+analog	other
+attack	env.attack
+balance	amp.pan
+bend range	system
+color	fx.tone
+cutoff	filter.cutoff
+detune	osc.fine
+ensemble	other
+fm int	other
+formant shift	other
+formant stretch	other
+glide	voice.glide
+highest	other
+int via whl	other
+intensity	lfo.amount
+level	amp.gain
+lowest	other
+mode	ctl.select
+poly/mono/legato	other
+rate	lfo.rate
+ratio coarse	osc.pitch
+ratio fine	osc.fine
+release	env.release
+resonance	filter.resonance
+semi	osc.pitch
+sensitivity	other
+signal	other
+stereo width	stereo.width
+tune	osc.pitch
+u/v level	other
+unison	other
+voices	system
+waveform	ctl.select
+#logic:evoc 20 trackoscillator
+bands	other
+coarse tune	fx.pitch
+fine tune	fx.pitch
+fixed note	other
+fm int	other
+fm ratio	other
+formant shift	other
+formant stretch	other
+highest	other
+level	amp.gain
+lfo rate	fx.mod.rate
+lowest	other
+max track	other
+mode	ctl.select
+oscillator wave	ctl.select
+pitch intensity	other
+pitch quantize glide	voice.glide
+pitch quantize strength	other
+resonance	other
+root/scale	other
+sensitivity	other
+shift intensity	other
+signal	other
+stereo mode	ctl.select
+stereo width	stereo.width
+synthesis in	other
+track mode	ctl.select
+waveform	ctl.select
+#logic:exciter
+color 1	fx.tone
+dry signal	other
+frequency	other
+harmonics	other
+#logic:expander
+attack	other
+auto gain	other
+gain	amp.gain
+knee	other
+output clip	other
+peak/rms	other
+ratio	fx.comp.amount
+release	other
+threshold	fx.comp.amount
+#logic:flanger
+feedback	other
+intensity	fx.mod.depth
+mix	fx.mod.mix
+rate	fx.mod.rate
+sync	system
+#logic:fuzz-wah
+attack	other
+auto gain	other
+depth	fx.mod.depth
+gain	amp.gain
+range	system
+ratio	other
+relative q	other
+release	other
+tone	fx.tone
+wah level	other
+wah type	ctl.select
+#logic:limiter
+gain	amp.gain
+lookahead	system
+mode	ctl.select
+output level	amp.gain
+release	other
+#logic:linear phase eq
+analyzer	ctl.switch
+analyzer (pre/post)	ctl.switch
+analyzer decay	ctl.switch
+band 1 on/off	ctl.switch
+band 2 on/off	ctl.switch
+band 3 on/off	ctl.switch
+band 4 on/off	ctl.switch
+band 5 on/off	ctl.switch
+band 6 on/off	ctl.switch
+band 7 on/off	ctl.switch
+band 8 on/off	ctl.switch
+master gain	amp.gain
+processing	other
+q-couple	ctl.switch
+#logic:match eq
+analyzer	ctl.switch
+analyzer pre/post	ctl.switch
+apply	other
+channel	other
+channel link	ctl.switch
+current	other
+current learn	other
+ease-in/ease-out	other
+eq curve	other
+eq curve match	other
+hide others	other
+lfe handling	other
+limit boost	other
+limit cut	other
+phase	other
+reference	other
+reference learn	other
+smoothing	other
+#logic:microphaser
+feedback	other
+intensity	fx.mod.depth
+rate	fx.mod.rate
+sync	system
+#logic:modifier
+add	other
+input event	other
+input thru	other
+re-assign to	other
+scale	other
+#logic:modulation delay
+constant mod	other
+d-mode	other
+de-warble	other
+distribution	other
+feedback	other
+filter	fx.tone
+lfo 1/2 rate	fx.mod.rate
+link l & r	other
+low/high cut	other
+mix	fx.mod.mix
+mod intensity	other
+output mix	fx.mod.mix
+phase	other
+time	other
+volume mod	other
+#logic:modulator
+env to lfo amp	other
+env to lfo rate	fx.mod.rate
+envelope on/off	ctl.switch
+lfo on/off	ctl.switch
+offset	other
+output level	amp.gain
+rate	fx.mod.rate
+similarity	other
+steps per env(elope) pass	other
+steps per lfo cycle (smoothing)	other
+symmetry	other
+sync	system
+to	other
+trigger	other
+waveform shape	ctl.select
+#logic:multipressor
+attack	other
+auto gain	other
+band on/off	ctl.switch
+bypass	ctl.switch
+compression ratio	other
+compression threshold	other
+crossover	other
+expansion ratio	other
+expansion reduction	other
+expansion threshold	other
+gain make-up	other
+lookahead	system
+out	other
+peak/rms	other
+release	other
+solo	ctl.switch
+#logic:note repeater
+delay	other
+delay sync	system
+input thru	other
+repeats	other
+transpose	fx.pitch
+velocity ramp	other
+#logic:overdrive
+drive	fx.drive
+level compensation	other
+output	amp.gain
+tone	fx.tone
+#logic:pedalboard
+1/2 speed	other
+2x speed	other
+a/mix/b	other
+attack	other
+bias	other
+bp/lp	other
+bright	other
+bright/dark	other
+bright/fat	other
+cabinet	other
+contour	other
+crunch	fx.drive
+curve	other
+cutoff	fx.tone
+density	other
+depth	fx.mod.depth
+direct	other
+dirt	fx.drive
+distortion	fx.drive
+drive	fx.drive
+fast rate	other
+fat	other
+fb (feedback)	other
+feedback	other
+filter	fx.tone
+fine	fx.pitch
+flutter	other
+freq	other
+frequency	other
+full/scoop	other
+fuzz	other
+grain	other
+grind	other
+growl	other
+hi/lo	other
+high	other
+input	amp.gain
+intensity	fx.mod.depth
+level	amp.gain
+lfo 1/2 feedback	other
+lfo 1/2 floor/ceiling	other
+lfo 1/2 mix	other
+lfo 1/2 order	other
+lfo 1/2 rate	fx.mod.rate
+lfo 1/2 tone	fx.tone
+lin/exp	other
+listen	ctl.switch
+lo/hi cut	fx.tone
+low	other
+manual	other
+mid freq	other
+mid gain	other
+mix	fx.mix
+mode	ctl.select
+mute	ctl.switch
+norm/reverse	other
+octave 1/2	other
+output	amp.gain
+pan a/b	other
+q	other
+rate	fx.mod.rate
+repeats	other
+reso	other
+response	other
+roar	other
+sensitivity	other
+slow down	other
+slow/brake/fast	other
+smooth	other
+speed up	other
+split/freq mode	ctl.select
+squash	other
+style	ctl.select
+sustain	other
+symmetry	other
+sync	system
+texture	other
+time	other
+tone	fx.tone
+tone cut	fx.tone
+treble/full	other
+tune	fx.pitch
+type	ctl.select
+up/down	other
+vintage/modern	other
+volume	amp.gain
+wave	ctl.select
+#logic:phase distortion
+cutoff	fx.tone
+delay	other
+intensity	fx.mod.depth
+mix	fx.mix
+monitor	system
+phase reverse	other
+resonance	other
+#logic:phaser
+(lfo) mix	other
+(out) mix	other
+ceiling/floor	other
+distribution	other
+filter	fx.tone
+level	amp.gain
+low/high cut	other
+phase	other
+rate 1/2	other
+stages	other
+sweep mode	ctl.select
+sync	system
+warmth	fx.tone
+#logic:phat fx
+amount	other
+attack	other
+cutoff	filter.cutoff
+depth	fx.mod.depth
+drive	fx.drive
+input	amp.gain
+lfo rate	fx.mod.rate
+limiter	other
+low/high	other
+low/high res	other
+mix	fx.mix
+output	amp.gain
+rate	fx.mod.rate
+reject mix	other
+release	other
+res	filter.resonance
+sync	system
+target	other
+tune	fx.pitch
+type	ctl.select
+waveform	ctl.select
+xy	other
+y depth	other
+y target	other
+#logic:pitch correction
+bypass all	other
+bypass notes	other
+detune	fx.pitch
+edit scale	other
+global tuning	other
+neural pitch detection	other
+pitch range	system
+reference	other
+response	other
+root note	other
+scale/chord	other
+show pitch	fx.pitch
+tolerance	other
+#logic:quantec room simulator
+1st phase reverse	other
+1st refl. delay	other
+1st refl. level	other
+1st refl. source	ctl.select
+1st refl. spread	stereo.width
+1st reflection delay	other
+1st reflection level	other
+1st reflection source	ctl.select
+1st reflection spread	stereo.width
+ad/da converters	other
+ad/da drive	other
+add	other
+bass crossover	other
+bass gain	other
+details	other
+dry level	other
+dry source	ctl.select
+enhance	other
+extended	other
+freeze	ctl.switch
+high	other
+l correlation pattern	other
+low	other
+mode	ctl.select
+pattern correlation	other
+pre delay	other
+pre high cut	other
+pre level	other
+primary	other
+r correlation pattern	other
+reverb correlation	other
+reverb delay	other
+reverb density	other
+reverb high cut	other
+reverb level	other
+reverb level b/t	other
+reverb level r/f	other
+reverb model	ctl.select
+reverb time	fx.reverb.decay
+room input	other
+room size	other
+secondary	other
+subsonic	other
+xover	other
+#logic:quick sampler
+(flex) speed	other
+amount	mod.amount
+attack	env.attack
+bend range	system
+coarse	osc.pitch
+cutoff	filter.cutoff
+decay	env.decay
+division	ctl.select
+drive	fx.drive
+env depth	filter.env_amount
+envelope type	ctl.select
+fade in	other
+fade mode	ctl.select
+fade out	other
+fade time	other
+fine	osc.fine
+flex on/off	ctl.switch
+follow tempo	other
+gate	other
+glide	voice.glide
+hold	other
+input	amp.gain
+key tracking	system
+key trigger	other
+keyscale	system
+lfo rate	lfo.rate
+loop mode	ctl.select
+midi mono mode	ctl.select
+mode	ctl.select
+monitor	system
+mono mode bend range	system
+pan	amp.pan
+phase	other
+play to end	other
+playback	other
+polarity	other
+polyphony	system
+record start	other
+release	env.release
+reso	filter.resonance
+root key	system
+sensitivity	other
+slices	other
+source	ctl.select
+start key	other
+start key mapping	other
+sustain	env.sustain
+sync	system
+target	other
+tune	osc.pitch
+type	ctl.select
+vel	system
+via	other
+volume	amp.gain
+waveform	ctl.select
+#logic:randomizer
+amount	other
+event type	ctl.select
+input range	system
+output offset	other
+weight	other
+#logic:remix fx
+combine effects on a locked	other
+downsampler	other
+fx lock	other
+gater	other
+reverse	other
+scratch	other
+settings	other
+tape stop	other
+#logic:retro synth
+aftertouch to	other
+assignable cc	other
+bend	other
+bend type	ctl.select
+cents	osc.fine
+depth	lfo.amount
+effect type	ctl.select
+filter env(elope)	filter.env_amount
+filter fm/drive	fx.drive
+filter type	ctl.select
+fm (amount)	osc.fm
+fm/harmonic target	other
+harmonic/inharmonic	other
+key (follow)	system
+lfo	other
+lfo sync	system
+midi mono mode	ctl.select
+mix	osc.level
+mod wheel to	other
+mode	ctl.select
+modulation	other
+mono mode bend range	system
+polyphony	system
+rate	lfo.rate
+semitones	osc.pitch
+shape	ctl.select
+shape 1	osc.shape
+shape 2	osc.shape
+shape modulation	other
+shape/formant	osc.shape
+sine level	osc.level
+source	ctl.select
+stereo spread	stereo.width
+sync	system
+sync modulation	other
+time	other
+transpose	osc.pitch
+tune	osc.pitch
+unison	other
+velocity	system
+velocity to	other
+vibrato	lfo.amount
+voice detune	unison.detune
+volume	amp.gain
+wavetable	osc.shape
+#logic:ringshifter
+delay low/high cut	other
+dry/wet	fx.mix
+env follow	other
+feedback	other
+level	amp.gain
+lfo	other
+stereo width	stereo.width
+sync	system
+time	other
+#logic:rotor cabinet
+acceleration	other
+angle	other
+balance	amp.pan
+distance	other
+drum	other
+horn	other
+max rate	other
+mic position	other
+motor control	other
+#logic:sample alchemy
+amp/mod	other
+attack	env.attack
+center	other
+cutoff	filter.cutoff
+density	other
+depth	lfo.amount
+effect	other
+feedback	other
+fifths	other
+filter on/off	ctl.switch
+filter type	ctl.select
+formant shift	other
+fundamental	other
+gate	other
+global	other
+high cut	other
+interval	ctl.select
+key track	other
+length	other
+low cut	fx.tone
+mix	fx.mix
+mod matrix	other
+num partials	other
+num taps	other
+octaves	other
+odd/even	other
+pitch var	other
+random pan	amp.pan
+random time	other
+res(onance)	filter.resonance
+shift	other
+simplify	other
+size	other
+source	ctl.select
+symmetry	other
+tap spacing	other
+target	other
+threshold	other
+variance	other
+vowel	other
+#logic:sample delay
+delay knob (l/r) and	other
+link l & r	other
+unit	ctl.select
+#logic:sampler
+amp key scale	system
+amp velocity curve	other
+coarse tune remote	other
+cutoff	filter.cutoff
+details	other
+drive	fx.drive
+filter blend	other
+filter configuration	other
+filter on/off	ctl.switch
+filter type	ctl.select
+fine	osc.fine
+glide	voice.glide
+high	other
+ignore release velocity	other
+low	other
+midi mono mode	ctl.select
+mode	ctl.select
+mono mode bend range	system
+pan	amp.pan
+parallel	other
+pitch bend up/down	other
+polyphony	system
+random detune	osc.fine
+resonance	filter.resonance
+sample select random	other
+series	other
+transpose	osc.pitch
+tune	osc.pitch
+unison	other
+used voices	system
+velocity offset	other
+velocity random	other
+volume	amp.gain
+xfade	other
+xfade type	ctl.select
+#logic:scanner vibrato
+depth	fx.mod.depth
+rate left	other
+rate right	other
+stereo phase	other
+type	ctl.select
+#logic:sculpture
+a-time velosens	other
+amount	mod.amount
+amount 1/2	other
+amt	other
+attack soft/hard	other
+bender range up/down	other
+curve	other
+cutoff	filter.cutoff
+decay	env.decay
+depth	lfo.amount
+depthviavibctrl	other
+env +	other
+filter on/off	ctl.switch
+filter type	ctl.select
+fine structure	ctl.select
+formant–intensity	other
+formant–shift	other
+formant–stretch	other
+glide time	voice.glide
+high/stretch	other
+intensity	lfo.amount
+invert	ctl.switch
+jitter 1/2 on/off	ctl.switch
+key	other
+key spread	stereo.width
+keyscale	system
+level	amp.gain
+level limiter mode	ctl.select
+lfo 1/2 on/off	ctl.switch
+low/int	other
+media loss	other
+media loss high scaling	other
+media loss low scaling	other
+mid frequency/fine structure	ctl.select
+mid/shift	other
+midi mono mode	ctl.select
+mode	ctl.select
+modulation	other
+modulation source	ctl.select
+modulation target	other
+mono mode bend range	system
+object position	other
+offset	other
+pad mode	ctl.select
+phase	other
+pickup a position	other
+pickup b position	other
+pickup spread	stereo.width
+rate	lfo.rate
+release	env.release
+render mode	ctl.select
+resolution	other
+resolution high scaling	other
+resolution low scaling	other
+resonance	filter.resonance
+sustain	env.sustain
+sustain mode	ctl.select
+sync	system
+sync/free	other
+target	other
+target 1/2	other
+tension mod	other
+tension mod high scaling	other
+tension mod resolution low scaling	other
+timescale	other
+transition	other
+transpose	osc.pitch
+trigger mode	ctl.select
+tune	osc.pitch
+velo sens	system
+via	other
+via amount	mod.amount
+via source	ctl.select
+voices	system
+warmth	fx.tone
+waveform	ctl.select
+#logic:silververb
+density/time	other
+dry/wet	fx.reverb.mix
+high cut	other
+intensity	fx.mod.depth
+low cut	fx.tone
+modulation on/off	ctl.switch
+phase	other
+predelay	other
+rate	fx.mod.rate
+reflectivity	other
+size	fx.reverb.decay
+#logic:single band eq
+frequency	other
+gain	amp.gain
+mode	ctl.select
+q factor	other
+slope	other
+#logic:space designer
+attack	other
+band 1 on/off	ctl.switch
+band 2 on/off	ctl.switch
+band 3 on/off	ctl.switch
+band 4 on/off	ctl.switch
+band 5 on/off	ctl.switch
+band 6 on/off	ctl.switch
+break level	other
+decay	fx.reverb.decay
+density env	other
+density env on/off	ctl.switch
+end density	other
+end freq	other
+end level	other
+eq on/off	ctl.switch
+filter env	other
+filter env on/off	ctl.switch
+filter type	ctl.select
+gain	fx.eq.gain
+order	other
+output eq	other
+output eq on/off	ctl.switch
+q	fx.eq.q
+ramp time	other
+reflection shape	ctl.select
+res(onance)	other
+volume env	other
+volume env on/off	ctl.switch
+#logic:spreader
+channel delay	other
+intensity	fx.mod.depth
+mix	fx.mod.mix
+rate	fx.mod.rate
+#logic:step fx
+attack	other
+cutoff	filter.cutoff
+delay	other
+depth	fx.mod.depth
+dirt	fx.drive
+exciter	other
+feedback	other
+filter type	ctl.select
+hold	other
+input	amp.gain
+mix	fx.mix
+modulator target	other
+output	amp.gain
+rate	fx.mod.rate
+release	other
+res	filter.resonance
+step modulator select	other
+swing	other
+sync	system
+time	other
+time l/r	other
+type	ctl.select
+xy	other
+y depth	other
+y target	other
+#logic:stereo delay
+crossfeed left to right (right to left)	other
+crossfeed phase	ctl.switch
+delay time	fx.delay.time
+deviation	other
+feedback	fx.delay.feedback
+feedback phase	ctl.switch
+input	ctl.select
+low/high cut	fx.tone
+note	fx.delay.time
+output mix	fx.delay.mix
+routing	ctl.select
+stereo link	ctl.switch
+tempo sync	ctl.switch
+#logic:studio bass
+bass	other
+bridge tone	fx.tone
+bridge volume	other
+definition	other
+handling	other
+hum & hiss	other
+last played	other
+mute	ctl.switch
+neck tone	fx.tone
+neck volume	other
+open strings	other
+pickup	other
+playing style	ctl.select
+portamento	other
+rattles	other
+release noise	other
+releases	other
+rhythm/solo	other
+scrapes	other
+string noise	other
+tempo sync	ctl.switch
+tone	fx.tone
+treble	other
+voice mode	ctl.select
+volume	amp.gain
+#logic:studio horns
+allow unison	other
+dynamic controller	other
+dynamic controller mode	ctl.select
+extended key range	system
+inst via midi channel	other
+legato transitions	other
+manual vibrato mode	ctl.select
+pitch bend range	system
+release samples	other
+split key	other
+split mode	ctl.select
+split voicing	other
+vibrato controller	other
+#logic:studio strings
+allow unison	other
+dynamic controller	other
+dynamic controller mode	ctl.select
+extended key range	system
+inst via midi channel	other
+legato transitions	other
+pitch bend range	system
+release samples	other
+split key	other
+split mode	ctl.select
+split voicing	other
+vibrato controller	other
+#logic:subbass
+dry	other
+freq. mix	other
+high bandwidth	stereo.width
+high center	other
+high ratio	other
+low bandwidth	stereo.width
+low center	other
+low ratio	other
+wet	fx.mix
+#logic:tape delay
+clip threshold	fx.drive
+delay time	fx.delay.time
+deviation	other
+dry/wet	fx.delay.mix
+feedback	fx.delay.feedback
+flutter rate/intensity	fx.mod.depth
+freeze	ctl.switch
+lfo intensity	fx.mod.depth
+lfo rate	fx.mod.rate
+low/high cut	fx.tone
+note	fx.delay.time
+smoothing	other
+spread	stereo.width
+tape head mode	ctl.select
+tempo sync	ctl.switch
+#logic:transposer
+root	other
+scale	other
+transpose	fx.pitch
+#logic:tremolo
+depth	fx.mod.depth
+distribution	other
+offset	other
+phase	other
+rate	fx.mod.rate
+smoothing	other
+symmetry	other
+sync	system
+#logic:ultrabeat
+accent	other
+asym(metry)	other
+asymmetry	other
+band 1/2	other
+color	fx.tone
+crush	fx.drive
+cutoff	filter.cutoff
+dirt	fx.drive
+distort	other
+drive	fx.drive
+edit mode	ctl.select
+env mod	other
+eq type	ctl.select
+filter (on/off)	other
+filter slope	ctl.select
+filter type	ctl.select
+frequency	filter.cutoff
+gain	amp.gain
+gate	other
+group	other
+level	amp.gain
+mod	other
+mod via vel	system
+pattern	other
+q	other
+resolution	other
+resonance	filter.resonance
+ring modulator on/off	ctl.switch
+saturation	other
+signal flow	other
+slope	other
+sustain	env.sustain
+swing	other
+swing enable	ctl.switch
+transport	other
+trigger	other
+via	other
+volume	amp.gain
+zoom a/d	other
+zoom scroll	other
+zoom to fit	other
+#logic:velocity processor
+auto (gain)	other
+make-up	other
+range	system
+ratio	other
+threshold	other
+value	other
+value/range	other
+#logic:vintage b3 organ
+acceleration	other
+angle	other
+balance	amp.pan
+bass filter	filter.cutoff
+bite	other
+cabinet	other
+click color	fx.tone
+click minimum/maximum	other
+crosstalk	other
+deflector	other
+depth	lfo.amount
+distance	other
+distortion on/off	ctl.switch
+drawbar leak	other
+drive	fx.drive
+drum	other
+dry level	other
+eq on/off	ctl.switch
+expression	other
+extended bass	other
+filter age	other
+harmonic	other
+high	other
+horn	other
+horn/drum position	other
+key on/off	ctl.switch
+leakage	other
+level	amp.gain
+low	other
+lower manual	other
+lower manual volume	other
+lower stretch	other
+max rate	other
+maximum wheels	other
+mic position	other
+mid	other
+midi controller	other
+mode	ctl.select
+motor control	other
+output	amp.gain
+output level	amp.gain
+pedal	other
+pedals	other
+pedals volume	other
+percussion	other
+pitchbend up/down	other
+pre/post	other
+random fm	other
+range	system
+rate	lfo.rate
+reverb on/off	ctl.switch
+shape	ctl.select
+speed midi control	other
+sweep midi ctrl	other
+time	other
+tonal balance	amp.pan
+tone	fx.tone
+tune	osc.pitch
+type	ctl.select
+ultrabass	other
+upper level	other
+upper manual	other
+upper morph	other
+upper stretch	other
+upper/lower	other
+velocity	system
+volume	amp.gain
+wah on/off	ctl.switch
+warmth	fx.tone
+#logic:vintage clav
+damper control	fx.tone
+damping	fx.tone
+details	other
+effects	other
+envelope	other
+gain	amp.gain
+intensity	lfo.amount
+main	other
+midi mono mode	ctl.select
+mode	ctl.select
+model	ctl.select
+mono mode bend range	system
+pitch fall	other
+pitch pressure	other
+pitch wheel	other
+random	other
+range	system
+rate	lfo.rate
+ratio	other
+release	env.release
+shape	ctl.select
+stiffness/inharmonicity	other
+stretch tuning	other
+sync	system
+tension mod	other
+tone	fx.tone
+tune	osc.pitch
+velocity	system
+velocity curve	other
+velocity mode	ctl.select
+voices	system
+wah control	other
+warmth	fx.tone
+#logic:vintage electric piano
+bass	fx.eq.gain
+bass boost	other
+color	fx.tone
+damper noise	other
+decay	env.decay
+delay fortissimo	other
+delay pianissimo	other
+details	other
+down/up	other
+drive mode	ctl.select
+effects	other
+gain	amp.gain
+intensity	lfo.amount
+lower	other
+midi mode	ctl.select
+model	ctl.select
+rate	lfo.rate
+release	env.release
+stereo	other
+stereo width	stereo.width
+sync	system
+tine bell	other
+tone	fx.tone
+treble	fx.eq.gain
+tune	osc.pitch
+upper	other
+voices	system
+volume	amp.gain
+warmth	fx.tone
+#logic:vintage eq collection
+dip	other
+dip freq	other
+eq band	other
+high	other
+high atten	other
+high atten sel	other
+high bandwidth	stereo.width
+high boost	other
+high freq	other
+high gain	other
+high peak	other
+in/out	other
+low	other
+low atten	other
+low boost	other
+low cut	fx.tone
+low freq	other
+low gain	other
+low peak	other
+mid	other
+mid freq	other
+mid gain	other
+tune	fx.pitch
+#logic:vintage mellotron
+attack	env.attack
+blend a/b	other
+fixed velocity	other
+pitch bend range	system
+release	env.release
+sound a/b	other
+sound a/b transpose	osc.pitch
+tape speed	other
+tone	fx.tone
+volume	amp.gain
+#logic:vocal transformer
+and	other
+field	other
+formant	other
+mix	fx.mix
+pitch	fx.pitch
+pitch base	ctl.select
+robotize	other
+tracking slider	other
 #looperator
 aftertouch	mod.amount
 bypass	ctl.switch

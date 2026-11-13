@@ -4,16 +4,21 @@
                                           the plugin name FL reports
   tools/mapping/ableton/stock_labels.tsv  Ableton Live stock devices, keyed
                                           "ableton:<Device.class_name>"
+  tools/mapping/logic/stock_labels.tsv    Logic Pro's own plug-ins, keyed
+                                          "logic:<plug-in name>"
 
 Both TSVs have a header with at least the columns plugin, name, class.
-No dependencies, so export_paramsense.py and ableton/merge_known.py share it.
+No dependencies, so export_paramsense.py and merge_known.py share it.
 """
 
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 TABLES = [ROOT / "tools" / "mapping" / "fl" / "stock_labels.tsv",
-          ROOT / "tools" / "mapping" / "ableton" / "stock_labels.tsv"]
+          ROOT / "tools" / "mapping" / "ableton" / "stock_labels.tsv",
+          ROOT / "tools" / "mapping" / "logic" / "stock_labels.tsv"]
+# key prefixes of the DAW tables whose plugins are not plug-in names
+PREFIXES = ("ableton:", "logic:")
 
 
 def rows(tables=TABLES):

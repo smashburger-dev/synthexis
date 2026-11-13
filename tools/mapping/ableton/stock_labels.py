@@ -147,7 +147,7 @@ def rule(fam: str, n: str) -> str:
         return "cut" if (instr or fam == "filter") else "t"
     if has(r"(^| )(f\d|filter \d|flt \d|filter|flt|lp|hp|noise filter) ?(res|reso|resonance|q)$|^f\d resonance$"):
         return "res" if (instr or fam == "filter") else "o"
-    if has(r"tone|color|colour|brightness|warmth|presence|damp|hi ?cut|low ?cut|high-cut|low-cut|hipass|hi pass"):
+    if has(r"\btone\b|color|colour|brightness|warmth|presence|damp|hi ?cut|low ?cut|high-cut|low-cut|hipass|hi pass"):
         return "t"
     # envelopes (effects: attack/release are "other")
     if instr and has(r"(^| |_)(attack|att)$|_times_attack$"):
