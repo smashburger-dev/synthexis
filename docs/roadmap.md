@@ -64,7 +64,7 @@ Hard dates: S3 and S4 recorded 10-30/10-31, training from 11-01 (new Modal credi
 
 - [x] Taxonomy final: 44 classes plus ontology of sources, targets, intents, modifiers (`tools/mapping/ontology.yaml`; spec merge proposed in `probes/mapping-pipeline/SPEC_PROPOSAL.md`)
 - [x] Parameter harvest AU (886 of 906 plugins, 122,664 params) and VST3 (405 of 549 bundles) with own tools (`tools/mapping/harvest/`)
-- [ ] FL stock plugins: FL script dump (`tools/mapping/fl/README.md`, Noa, about 10 min)
+- [x] FL stock plugins: dump of 109 stock plugins through a probe-only dev script (FL 2026 scripts cannot write files), writes and recording measured, sentences that name a plugin now pick it, hand labels for 56 Fruity effects (`probes/fl-stock-plugins/RESULT.md`, 11-13). Open: the paid label run for the synths (Baseten deactivated muse-spark-open-1026) and one test with a real hand
 - [x] Spark Open labels: 302 priority plugins double-labelled and adjudicated, 583 more single pass; VST3 labels running
 - [x] Glossary EN/DE (11,333 phrases, 416 concepts)
 - [x] Synthetic commands generator v3 with validators and round-trip check; stage 1 (8,000 edits) generated

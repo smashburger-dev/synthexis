@@ -43,7 +43,7 @@ The plug-ins are signed ad hoc, not notarized by Apple; the installer clears the
 | Camera inside the plugin | yes | blocked: Logic gives plugins no camera access, so a small camera app takes over | expected, Live 12 untested |
 | Reads plugin and parameter names | yes, through the bridge script | no host interface; you pick the plugin in synthexis | through a Live remote script, stock devices included |
 | Moves parameters, recorded as automation | yes | through Controller Assignments Learn | through MIDI Map (Cmd+M), later the remote script |
-| Stock plugins | reachable, labels coming | Learn reaches Logic's own plugins | every Live device |
+| Stock plugins | yes, also by name in the sentence; Fruity effects labelled, synths guessed | Learn reaches Logic's own plugins | every Live device |
 | MIDI parts | into any channel | into the selected track | into any MIDI track |
 | Status | **tested** | planned, untested | planned, untested |
 

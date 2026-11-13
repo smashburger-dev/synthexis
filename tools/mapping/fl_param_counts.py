@@ -45,6 +45,8 @@ FL_MEASURED = {
 
 def placeholder(name: str) -> str | None:
     """Family of a placeholder name, or None for a real parameter."""
+    if any(ord(c) < 32 or ord(c) == 127 for c in name):
+        return "control chars"
     n = name.strip().lower()
     if re.match(r"midi cc($|[ #0-9])", n) or re.match(r"cc[ #0-9]", n):
         return "midi cc"

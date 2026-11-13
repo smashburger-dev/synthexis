@@ -15,6 +15,8 @@ plugin/assistant/completion):
                         Same label choice as export_completion.py (earlier
                         label runs win per plugin id, final class first);
                         placeholder names (MIDI CC slots) are left out.
+                        The FL stock effects come from
+                        tools/mapping/fl/stock_labels.tsv (hand labels).
   paramsense/meta.json, paramsense/weights.f16.bin
                         the param-sense run, copied unchanged
 
@@ -40,6 +42,7 @@ import torch.nn.functional as F
 ROOT = Path(__file__).resolve().parents[2]
 DATA = ROOT / "data" / "mapping"
 OUTS = [DATA / "completion", ROOT / "plugin" / "assistant" / "completion"]
+STOCK = ROOT / "tools" / "mapping" / "fl" / "stock_labels.tsv"
 FIXTURE = ROOT / "plugin" / "synthexis" / "tests" / "fixtures" / "paramsense_parity.json"
 LABEL_RUNS = ["label-vst3-prio-v1", "label-vst3-bulk-v1", "label-prio-v1", "label-bulk-v1"]
 PARITY_PLUGINS = ["Xfer Records/Serum 2", "Output/Portal", "FabFilter/Pro-Q 3",
@@ -49,6 +52,8 @@ PARITY_PLUGINS = ["Xfer Records/Serum 2", "Output/Portal", "FabFilter/Pro-Q 3",
 
 def placeholder(name: str) -> bool:
     """Same rule as is_placeholder in plugin/synthexis/src/fl.rs."""
+    if any(ord(c) < 32 or ord(c) == 127 for c in name):
+        return True
     n = name.strip().lower()
     return bool(re.match(r"midi cc($|[ #0-9])", n) or re.match(r"cc[ #0-9]", n)
                 or re.search(r" chan \d+$", n) or re.fullmatch(r"reserved ?\d*", n)
@@ -92,6 +97,7 @@ def ctx_feats(plugin: str, names: list) -> list:
 
 def known_table(data: Path) -> dict:
     owner, out = {}, {}
+    owner_names = set()
     for run in LABEL_RUNS:
         for line in open(data / "labels" / run / "labels.jsonl", encoding="utf-8"):
             r = json.loads(line)
@@ -100,7 +106,15 @@ def known_table(data: Path) -> dict:
                 continue
             cls = r["final"][0] if "final" in r else r["class"]
             plug = pid.split("/", 1)[-1].casefold().strip()
+            owner_names.add(plug)
             out.setdefault(plug, {})[r["name"].casefold().strip()] = cls
+    # FL stock effects, labelled by hand (tools/mapping/fl/stock_labels.py);
+    # FL reports some names in its own case ("Fruity delay 2")
+    for line in STOCK.read_text(encoding="utf-8").splitlines()[1:]:
+        plug, _, name, cls = line.split("\t")
+        if plug.casefold() in owner_names:
+            continue
+        out.setdefault(plug.casefold().strip(), {})[name.casefold().strip()] = cls
     return out
 
 
