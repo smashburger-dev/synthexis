@@ -4,8 +4,7 @@
 
 <p align="center">
   <img alt="Winner: Best Creative Build, Meta Global AI Developer Hackathon 2026" src="https://img.shields.io/badge/Winner-Best_Creative_Build-0866FF?style=for-the-badge&logo=meta&logoColor=white">
-  <!-- demo video badge goes here once the YouTube link is in:
-  <a href="https://www.youtube.com/watch?v=VIDEO_ID"><img alt="Watch the demo on YouTube" src="https://img.shields.io/badge/Watch_the_demo-YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white"></a> -->
+  <a href="https://www.youtube.com/watch?v=EbNaVOHnnvo"><img alt="Watch the demo on YouTube" src="https://img.shields.io/badge/Watch_the_demo-YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white"></a>
 </p>
 
 <p align="center">
@@ -21,8 +20,9 @@
 > Built in ten days, Oct 26 to Nov 4, 2026, in the Indie track under the theme "Build for Your World". The commit history starts on Oct 26.
 
 <p align="center">
-  <img src="docs/img/hero.png" alt="The synthexis window: the mirrored camera on top shows a person in a red shirt with three Pong projectiles flying from the fingertip; below it the plugin picker, the sentence field, the preset picker, profiles 1 2 3 and the Pong section with its four walls" width="100%">
+  <a href="https://www.youtube.com/watch?v=EbNaVOHnnvo"><img src="docs/img/hero.png" alt="The synthexis window: the mirrored camera on top shows a person in a red shirt with three Pong projectiles flying from the fingertip; below it the plugin picker, the sentence field, the preset picker, profiles 1 2 3 and the Pong section with its four walls" width="100%"></a>
 </p>
+<p align="center"><sub>Click the picture for the demo video.</sub></p>
 
 Serum 2 has 2,622 parameters, and you reach them one at a time with a mouse. synthexis turns the camera into the controller. Open your fist and the reverb on your pad blooms. Show two fingers and the hi-hat switches to a trap roll. Open your mouth and the filter opens. Point your finger and a projectile bounces off a wall that plays a chord.
 
