@@ -1,5 +1,5 @@
 //! Parameter classes for the picked plugin: the label of a mapped plugin
-//! where there is one (known.tsv, 887 plugins), else param-sense, the
+//! where there is one (known.tsv, 1,101 plugins), else param-sense, the
 //! small classifier of tools/mapping/train_paramsense.py (hashed character
 //! n-grams of the name and words of the plugin, one hidden layer). Both come
 //! from tools/mapping/export_paramsense.py into the completion dir.
@@ -301,6 +301,22 @@ impl Sense {
     }
 }
 
+/// known.tsv: a line "#<plugin>" without a tab starts a plugin, the
+/// "<param>\t<class>" lines after it are its labels. A parameter may start
+/// with '#' too (Kontakt's "#000"), so the tab decides, not the '#'.
+fn parse_known(text: &str) -> HashMap<String, HashMap<String, String>> {
+    let mut known: HashMap<String, HashMap<String, String>> = HashMap::new();
+    let mut cur = String::new();
+    for line in text.lines() {
+        if let Some((n, c)) = line.split_once('\t') {
+            known.entry(cur.clone()).or_default().insert(n.to_string(), c.to_string());
+        } else if let Some(p) = line.strip_prefix('#') {
+            cur = p.to_string();
+        }
+    }
+    known
+}
+
 /// Labels of the mapped plugins plus param-sense for the rest.
 #[derive(Default)]
 pub struct Classes {
@@ -321,20 +337,12 @@ impl Classes {
     /// left out and named in the returned notes.
     pub fn load(dir: &Path) -> (Classes, Vec<String>) {
         let mut notes = Vec::new();
-        let mut known: HashMap<String, HashMap<String, String>> = HashMap::new();
-        match std::fs::read_to_string(dir.join("known.tsv")) {
-            Ok(text) => {
-                let mut cur = String::new();
-                for line in text.lines() {
-                    if let Some(p) = line.strip_prefix('#') {
-                        cur = p.to_string();
-                    } else if let Some((n, c)) = line.split_once('\t') {
-                        known.entry(cur.clone()).or_default().insert(n.to_string(), c.to_string());
-                    }
-                }
-            }
-            Err(e) => notes.push(format!("known.tsv: {e}")),
-        }
+        let known = std::fs::read_to_string(dir.join("known.tsv"))
+            .map(|text| parse_known(&text))
+            .unwrap_or_else(|e| {
+                notes.push(format!("known.tsv: {e}"));
+                HashMap::new()
+            });
         let sense = Sense::load(&dir.join("paramsense")).map_err(|e| notes.push(e)).ok();
         (Classes { known, sense }, notes)
     }
@@ -425,12 +433,27 @@ mod tests {
         let names: Vec<String> = ["Filter 1 Freq", "A Level"].map(String::from).to_vec();
         let (cls, src) = c.of("Serum 2", &names, &HashMap::new());
         assert_eq!((cls[0].as_str(), src.labelled, src.sensed), ("filter.cutoff", 2, 0));
+        // parameters named "#000" belong to Kontakt, they are no plugins
+        let names: Vec<String> = ["#000", "#511"].map(String::from).to_vec();
+        let (cls, src) = c.of("Kontakt 7", &names, &HashMap::new());
+        assert_eq!((cls[0].as_str(), src.labelled), ("macro", 2));
+        assert!(!c.known.keys().any(|p| p.contains('\t')));
         let names: Vec<String> = (0..2600).map(|i| format!("Osc {} Cutoff Freq", i % 40)).collect();
         let t0 = std::time::Instant::now();
         let (cls, src) = c.of("Totally Unknown Synth", &names, &HashMap::new());
         assert_eq!((src.labelled, src.sensed), (0, 2600));
         assert_eq!(cls[0], "filter.cutoff");
         eprintln!("param-sense: 2600 names in {:.1} ms", t0.elapsed().as_secs_f64() * 1e3);
+    }
+
+    #[test]
+    fn hash_named_parameters_are_no_plugins() {
+        let known = parse_known("#kontakt 8\n#000\tmacro\n#001\tmacro\n#quanta 2\n# grains\tother\nbypass\tctl.switch\n");
+        assert_eq!(known.len(), 2, "{known:?}");
+        assert_eq!(known["kontakt 8"].len(), 2);
+        assert_eq!(known["kontakt 8"]["#001"], "macro");
+        assert_eq!(known["quanta 2"]["# grains"], "other");
+        assert_eq!(known["quanta 2"]["bypass"], "ctl.switch");
     }
 
     #[test]
