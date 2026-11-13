@@ -482,7 +482,6 @@ def main() -> None:
             status = "12.4"
         elif name == "Device On":
             status = "12.1"
-            status = "12.4"
         elif cls in CHANGED_12_4:
             status = "UNVERIFIED in 12.4"
         else:

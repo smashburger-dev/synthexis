@@ -64050,6 +64050,11 @@ release	other
 tone	fx.tone
 wah level	other
 wah type	ctl.select
+#logic:gain
+balance	amp.pan
+gain	unsafe
+phase invert left/right	ctl.switch
+swap l/r	ctl.switch
 #logic:limiter
 gain	amp.gain
 lookahead	system
@@ -64670,11 +64675,11 @@ rate	fx.mod.rate
 reflectivity	other
 size	fx.reverb.decay
 #logic:single band eq
-frequency	other
-gain	amp.gain
+frequency	fx.eq.freq
+gain	fx.eq.gain
 mode	ctl.select
-q factor	other
-slope	other
+q factor	fx.eq.q
+slope	ctl.select
 #logic:space designer
 attack	other
 band 1 on/off	ctl.switch
@@ -64749,6 +64754,11 @@ output mix	fx.delay.mix
 routing	ctl.select
 stereo link	ctl.switch
 tempo sync	ctl.switch
+#logic:stereo spread
+lower intensity	stereo.width
+order	other
+upper intensity	stereo.width
+upper/lower frequency	other
 #logic:studio bass
 bass	other
 bridge tone	fx.tone
@@ -64789,6 +64799,14 @@ split key	other
 split mode	ctl.select
 split voicing	other
 vibrato controller	other
+#logic:studio piano
+instrument	ctl.select
+mono mic	other
+mono mic on/off	ctl.switch
+stereo mic a	other
+stereo mic a on/off	ctl.switch
+stereo mic b	other
+stereo mic b on/off	ctl.switch
 #logic:studio strings
 allow unison	other
 dynamic controller	other

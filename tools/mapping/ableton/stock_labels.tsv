@@ -1,7 +1,7 @@
 plugin	class_name	display_name	display_in_manual	name	class	status	manual	sources
 ableton:Amp	Amp	Amp	yes	Amp Type	ctl.select	12.1	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:Amp	Amp	Amp	yes	Bass	fx.eq.gain	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
-ableton:Amp	Amp	Amp	yes	Device On	ctl.switch	12.4	no	on-12.0,on-12.1
+ableton:Amp	Amp	Amp	yes	Device On	ctl.switch	12.1	-	on-12.0,on-12.1
 ableton:Amp	Amp	Amp	yes	Dry/Wet	fx.mix	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:Amp	Amp	Amp	yes	Dual Mono	ctl.switch	12.1	no	v3-12.0,v2-12.0,generic-12.0,v3-12.1
 ableton:Amp	Amp	Amp	yes	Gain	fx.drive	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
@@ -9,7 +9,7 @@ ableton:Amp	Amp	Amp	yes	Middle	fx.eq.gain	12.4	yes	v3-12.0,v2-12.0,push2-12.0,ge
 ableton:Amp	Amp	Amp	yes	Presence	fx.tone	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:Amp	Amp	Amp	yes	Treble	fx.eq.gain	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:Amp	Amp	Amp	yes	Volume	amp.gain	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
-ableton:AudioEffectGroupDevice	AudioEffectGroupDevice	Audio Effect Rack	no	Device On	ctl.switch	12.4	-	on-12.0,on-12.1
+ableton:AudioEffectGroupDevice	AudioEffectGroupDevice	Audio Effect Rack	no	Device On	ctl.switch	12.1	-	on-12.0,on-12.1
 ableton:AudioEffectGroupDevice	AudioEffectGroupDevice	Audio Effect Rack	no	Macro 1	macro	12.1	-	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:AudioEffectGroupDevice	AudioEffectGroupDevice	Audio Effect Rack	no	Macro 10	macro	12.1	-	v3-12.0,v2-12.0,generic-12.0,v3-12.1
 ableton:AudioEffectGroupDevice	AudioEffectGroupDevice	Audio Effect Rack	no	Macro 11	macro	12.1	-	v3-12.0,v2-12.0,generic-12.0,v3-12.1
@@ -26,7 +26,7 @@ ableton:AudioEffectGroupDevice	AudioEffectGroupDevice	Audio Effect Rack	no	Macro
 ableton:AudioEffectGroupDevice	AudioEffectGroupDevice	Audio Effect Rack	no	Macro 7	macro	12.1	-	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:AudioEffectGroupDevice	AudioEffectGroupDevice	Audio Effect Rack	no	Macro 8	macro	12.1	-	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:AudioEffectGroupDevice	AudioEffectGroupDevice	Audio Effect Rack	no	Macro 9	macro	12.1	-	v3-12.0,v2-12.0,generic-12.0,v3-12.1
-ableton:AutoFilter	AutoFilter	Auto Filter (legacy)	no	Device On	ctl.switch	12.4	-	on-12.0,on-12.1
+ableton:AutoFilter	AutoFilter	Auto Filter (legacy)	no	Device On	ctl.switch	12.1	-	on-12.0,on-12.1
 ableton:AutoFilter	AutoFilter	Auto Filter (legacy)	no	Drive	fx.drive	12.0	-	v3-12.0,v2-12.0,push2-12.0
 ableton:AutoFilter	AutoFilter	Auto Filter (legacy)	no	Env. Attack	other	12.0	-	v3-12.0,v2-12.0,push2-12.0,generic-12.0
 ableton:AutoFilter	AutoFilter	Auto Filter (legacy)	no	Env. Modulation	filter.env_amount	12.0	-	v3-12.0,v2-12.0,push2-12.0,generic-12.0
@@ -55,7 +55,7 @@ ableton:AutoFilter	AutoFilter	Auto Filter (legacy)	no	S/C Mix	system	12.0	-	v3-1
 ableton:AutoFilter	AutoFilter	Auto Filter (legacy)	no	S/C On	ctl.switch	12.0	-	v3-12.0,v2-12.0,push2-12.0,generic-12.0
 ableton:AutoFilter	AutoFilter	Auto Filter (legacy)	no	Slope	ctl.select	12.0	-	v3-12.0,v2-12.0
 ableton:AutoFilter2	AutoFilter2	Auto Filter	yes	Control	other	12.4	yes	move-12.4
-ableton:AutoFilter2	AutoFilter2	Auto Filter	yes	Device On	ctl.switch	12.4	no	on-12.0,on-12.1
+ableton:AutoFilter2	AutoFilter2	Auto Filter	yes	Device On	ctl.switch	12.1	-	on-12.0,on-12.1
 ableton:AutoFilter2	AutoFilter2	Auto Filter	yes	Drive	fx.drive	12.4	yes	move-12.4
 ableton:AutoFilter2	AutoFilter2	Auto Filter	yes	Dry/Wet	fx.mix	12.4	yes	move-12.4
 ableton:AutoFilter2	AutoFilter2	Auto Filter	yes	Filter Morph	osc.shape	12.4	no	move-12.4
@@ -72,7 +72,7 @@ ableton:AutoFilter2	AutoFilter2	Auto Filter	yes	LFO Wave	ctl.select	12.4	no	move
 ableton:AutoFilter2	AutoFilter2	Auto Filter	yes	Pitch	other	12.4	yes	move-12.4
 ableton:AutoFilter2	AutoFilter2	Auto Filter	yes	Resonance	filter.resonance	12.4	yes	move-12.4
 ableton:AutoPan	AutoPan	Auto Pan (legacy)	no	Amount	fx.mod.depth	12.1	-	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
-ableton:AutoPan	AutoPan	Auto Pan (legacy)	no	Device On	ctl.switch	12.4	-	on-12.0,on-12.1
+ableton:AutoPan	AutoPan	Auto Pan (legacy)	no	Device On	ctl.switch	12.1	-	on-12.0,on-12.1
 ableton:AutoPan	AutoPan	Auto Pan (legacy)	no	Frequency	fx.mod.rate	12.1	-	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:AutoPan	AutoPan	Auto Pan (legacy)	no	Invert	ctl.switch	12.1	-	v3-12.0,v2-12.0,push2-12.0,v3-12.1
 ableton:AutoPan	AutoPan	Auto Pan (legacy)	no	LFO Type	ctl.select	12.1	-	v3-12.0,v2-12.0,push2-12.0,v3-12.1
@@ -87,7 +87,7 @@ ableton:AutoPan	AutoPan	Auto Pan (legacy)	no	Width (Random)	other	12.1	-	v3-12.0
 ableton:AutoPan2	AutoPan2	Auto Pan-Tremolo	yes	16th	fx.mod.rate	12.4	yes	move-12.4
 ableton:AutoPan2	AutoPan2	Auto Pan-Tremolo	yes	Amount	fx.mod.depth	12.4	yes	move-12.4
 ableton:AutoPan2	AutoPan2	Auto Pan-Tremolo	yes	Attack Time	other	12.4	yes	move-12.4
-ableton:AutoPan2	AutoPan2	Auto Pan-Tremolo	yes	Device On	ctl.switch	12.4	no	on-12.0,on-12.1
+ableton:AutoPan2	AutoPan2	Auto Pan-Tremolo	yes	Device On	ctl.switch	12.1	-	on-12.0,on-12.1
 ableton:AutoPan2	AutoPan2	Auto Pan-Tremolo	yes	Dyn Mod	other	12.4	no	move-12.4
 ableton:AutoPan2	AutoPan2	Auto Pan-Tremolo	yes	Frequency	fx.mod.rate	12.4	yes	move-12.4
 ableton:AutoPan2	AutoPan2	Auto Pan-Tremolo	yes	Harmonic	other	12.4	yes	move-12.4
@@ -102,7 +102,7 @@ ableton:AutoPan2	AutoPan2	Auto Pan-Tremolo	yes	Time	fx.mod.rate	12.4	yes	move-12
 ableton:AutoPan2	AutoPan2	Auto Pan-Tremolo	yes	Time Mode	ctl.select	12.4	yes	move-12.4
 ableton:AutoPan2	AutoPan2	Auto Pan-Tremolo	yes	Tremolo Shape	ctl.select	12.4	no	move-12.4
 ableton:AutoPan2	AutoPan2	Auto Pan-Tremolo	yes	Waveform	ctl.select	12.4	yes	move-12.4
-ableton:AutoShift	AutoShift	Auto Shift	yes	Device On	ctl.switch	12.4	no	on-12.0,on-12.1
+ableton:AutoShift	AutoShift	Auto Shift	yes	Device On	ctl.switch	12.1	-	on-12.0,on-12.1
 ableton:AutoShift	AutoShift	Auto Shift	yes	Dry/Wet	fx.mix	12.4	yes	move-12.4
 ableton:AutoShift	AutoShift	Auto Shift	yes	Formant Follow	other	12.4	yes	move-12.4
 ableton:AutoShift	AutoShift	Auto Shift	yes	Formant Shift	fx.pitch	12.4	yes	move-12.4
@@ -118,7 +118,7 @@ ableton:AutoShift	AutoShift	Auto Shift	yes	Vibrato Rate	fx.mod.rate	12.4	yes	mov
 ableton:BeatRepeat	BeatRepeat	Beat Repeat	yes	Block Triplets	ctl.switch	12.1	no	v3-12.0,v2-12.0,v3-12.1
 ableton:BeatRepeat	BeatRepeat	Beat Repeat	yes	Chance	other	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:BeatRepeat	BeatRepeat	Beat Repeat	yes	Decay	other	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
-ableton:BeatRepeat	BeatRepeat	Beat Repeat	yes	Device On	ctl.switch	12.4	no	on-12.0,on-12.1
+ableton:BeatRepeat	BeatRepeat	Beat Repeat	yes	Device On	ctl.switch	12.1	-	on-12.0,on-12.1
 ableton:BeatRepeat	BeatRepeat	Beat Repeat	yes	Filter Freq	fx.tone	12.1	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:BeatRepeat	BeatRepeat	Beat Repeat	yes	Filter On	ctl.switch	12.4	yes	v3-12.0,v2-12.0,v3-12.1
 ableton:BeatRepeat	BeatRepeat	Beat Repeat	yes	Filter Width	other	12.1	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
@@ -134,12 +134,12 @@ ableton:BeatRepeat	BeatRepeat	Beat Repeat	yes	Variation	other	12.4	yes	v3-12.0,v
 ableton:BeatRepeat	BeatRepeat	Beat Repeat	yes	Variation Type	ctl.select	12.1	no	v3-12.0,v2-12.0,push2-12.0,v3-12.1
 ableton:BeatRepeat	BeatRepeat	Beat Repeat	yes	Volume	fx.mix	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:Cabinet	Cabinet	Cabinet	yes	Cabinet Type	ctl.select	12.1	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
-ableton:Cabinet	Cabinet	Cabinet	yes	Device On	ctl.switch	12.4	no	on-12.0,on-12.1
+ableton:Cabinet	Cabinet	Cabinet	yes	Device On	ctl.switch	12.1	-	on-12.0,on-12.1
 ableton:Cabinet	Cabinet	Cabinet	yes	Dry/Wet	fx.mix	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:Cabinet	Cabinet	Cabinet	yes	Dual Mono	ctl.switch	12.1	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:Cabinet	Cabinet	Cabinet	yes	Microphone Position	ctl.select	12.1	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:Cabinet	Cabinet	Cabinet	yes	Microphone Type	ctl.select	12.1	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
-ableton:ChannelEq	ChannelEq	Channel EQ	yes	Device On	ctl.switch	12.4	no	on-12.0,on-12.1
+ableton:ChannelEq	ChannelEq	Channel EQ	yes	Device On	ctl.switch	12.1	-	on-12.0,on-12.1
 ableton:ChannelEq	ChannelEq	Channel EQ	yes	Gain	amp.gain	12.4	yes	v3-12.0,v2-12.0,push2-12.0,v3-12.1,move-12.1
 ableton:ChannelEq	ChannelEq	Channel EQ	yes	High Gain	fx.eq.gain	12.4	no	v3-12.0,v2-12.0,push2-12.0,move-12.4,v3-12.1,move-12.1
 ableton:ChannelEq	ChannelEq	Channel EQ	yes	Highpass On	ctl.switch	12.4	no	v3-12.0,v2-12.0,push2-12.0,move-12.4,v3-12.1,move-12.1
@@ -151,7 +151,7 @@ ableton:Chorus	Chorus	Chorus (legacy)	no	Delay 1 HiPass	other	12.1	-	v3-12.0,v2-
 ableton:Chorus	Chorus	Chorus (legacy)	no	Delay 1 Time	other	12.1	-	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:Chorus	Chorus	Chorus (legacy)	no	Delay 2 Mode	ctl.select	12.1	-	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:Chorus	Chorus	Chorus (legacy)	no	Delay 2 Time	other	12.1	-	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
-ableton:Chorus	Chorus	Chorus (legacy)	no	Device On	ctl.switch	12.4	-	on-12.0,on-12.1
+ableton:Chorus	Chorus	Chorus (legacy)	no	Device On	ctl.switch	12.1	-	on-12.0,on-12.1
 ableton:Chorus	Chorus	Chorus (legacy)	no	Dry/Wet	fx.mod.mix	12.1	-	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:Chorus	Chorus	Chorus (legacy)	no	Feedback	fx.mod.depth	12.1	-	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:Chorus	Chorus	Chorus (legacy)	no	LFO Amount	fx.mod.depth	12.1	-	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
@@ -160,7 +160,7 @@ ableton:Chorus	Chorus	Chorus (legacy)	no	LFO Rate	fx.mod.rate	12.1	-	v3-12.0,v2-
 ableton:Chorus	Chorus	Chorus (legacy)	no	Link On	ctl.switch	12.1	-	v3-12.0,v2-12.0,push2-12.0,v3-12.1
 ableton:Chorus	Chorus	Chorus (legacy)	no	Polarity	ctl.select	12.1	-	v3-12.0,v2-12.0,push2-12.0,v3-12.1
 ableton:Chorus2	Chorus2	Chorus-Ensemble	yes	Amount	fx.mod.depth	12.4	yes	v3-12.0,push2-12.0,move-12.4,v3-12.1,move-12.1
-ableton:Chorus2	Chorus2	Chorus-Ensemble	yes	Device On	ctl.switch	12.4	no	on-12.0,on-12.1
+ableton:Chorus2	Chorus2	Chorus-Ensemble	yes	Device On	ctl.switch	12.1	-	on-12.0,on-12.1
 ableton:Chorus2	Chorus2	Chorus-Ensemble	yes	Dry/Wet	fx.mod.mix	12.4	yes	v3-12.0,push2-12.0,move-12.4,v3-12.1,move-12.1
 ableton:Chorus2	Chorus2	Chorus-Ensemble	yes	Feedback	fx.mod.depth	12.4	yes	v3-12.0,push2-12.0,move-12.4,v3-12.1,move-12.1
 ableton:Chorus2	Chorus2	Chorus-Ensemble	yes	Gain	amp.gain	12.4	yes	v3-12.0,push2-12.0,v3-12.1
@@ -172,7 +172,7 @@ ableton:Chorus2	Chorus2	Chorus-Ensemble	yes	Rate	fx.mod.rate	12.4	yes	v3-12.0,pu
 ableton:Chorus2	Chorus2	Chorus-Ensemble	yes	Shape	ctl.select	12.4	yes	push2-12.0,move-12.4,move-12.1
 ableton:Chorus2	Chorus2	Chorus-Ensemble	yes	Warmth	fx.tone	12.4	yes	v3-12.0,push2-12.0,move-12.4,v3-12.1,move-12.1
 ableton:Chorus2	Chorus2	Chorus-Ensemble	yes	Width	stereo.width	12.4	yes	v3-12.0,push2-12.0,move-12.4,v3-12.1,move-12.1
-ableton:Collision	Collision	Collision	yes	Device On	ctl.switch	12.4	no	on-12.0,on-12.1
+ableton:Collision	Collision	Collision	yes	Device On	ctl.switch	12.1	-	on-12.0,on-12.1
 ableton:Collision	Collision	Collision	yes	LFO 1 Amt A	lfo.amount	12.0	no	push2-12.0
 ableton:Collision	Collision	Collision	yes	LFO 1 Amt B	lfo.amount	12.0	no	push2-12.0
 ableton:Collision	Collision	Collision	yes	LFO 1 Depth	lfo.amount	12.0	no	v2-12.0,push2-12.0
@@ -308,7 +308,7 @@ ableton:Collision	Collision	Collision	yes	Structure	ctl.select	12.4	yes	v2-12.0
 ableton:Collision	Collision	Collision	yes	Volume	amp.gain	12.4	yes	v3-12.0,v2-12.0,push2-12.0
 ableton:Compressor2	Compressor2	Compressor	yes	Attack	other	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:Compressor2	Compressor2	Compressor	yes	Auto Release On/Off	ctl.switch	12.1	no	v3-12.0,v2-12.0,generic-12.0,v3-12.1
-ableton:Compressor2	Compressor2	Compressor	yes	Device On	ctl.switch	12.4	no	on-12.0,on-12.1
+ableton:Compressor2	Compressor2	Compressor	yes	Device On	ctl.switch	12.1	-	on-12.0,on-12.1
 ableton:Compressor2	Compressor2	Compressor	yes	Dry/Wet	fx.mix	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:Compressor2	Compressor2	Compressor	yes	Env Mode	ctl.select	12.1	no	v3-12.0,v2-12.0,generic-12.0,v3-12.1
 ableton:Compressor2	Compressor2	Compressor	yes	Expansion Ratio	other	12.1	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
@@ -332,7 +332,7 @@ ableton:Compressor2	Compressor2	Compressor	yes	Threshold	fx.comp.amount	12.4	yes
 ableton:Corpus	Corpus	Corpus	yes	Bleed	other	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0
 ableton:Corpus	Corpus	Corpus	yes	Brightness	fx.tone	12.0	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0
 ableton:Corpus	Corpus	Corpus	yes	Decay	fx.reverb.decay	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0
-ableton:Corpus	Corpus	Corpus	yes	Device On	ctl.switch	12.4	no	on-12.0,on-12.1
+ableton:Corpus	Corpus	Corpus	yes	Device On	ctl.switch	12.1	-	on-12.0,on-12.1
 ableton:Corpus	Corpus	Corpus	yes	Dry Wet	fx.mix	12.0	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0
 ableton:Corpus	Corpus	Corpus	yes	Filter On/Off	ctl.switch	12.0	no	v3-12.0,v2-12.0,push2-12.0
 ableton:Corpus	Corpus	Corpus	yes	Fine	fx.pitch	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0
@@ -368,7 +368,7 @@ ableton:Corpus	Corpus	Corpus	yes	Transpose	fx.pitch	12.4	yes	v3-12.0,v2-12.0,pus
 ableton:Corpus	Corpus	Corpus	yes	Tune	fx.pitch	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0
 ableton:Corpus	Corpus	Corpus	yes	Width	stereo.width	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0
 ableton:Delay	Delay	Delay	yes	Delay Mode	ctl.select	UNVERIFIED in 12.4	no	v3-12.0,v2-12.0
-ableton:Delay	Delay	Delay	yes	Device On	ctl.switch	12.4	no	on-12.0,on-12.1
+ableton:Delay	Delay	Delay	yes	Device On	ctl.switch	12.1	-	on-12.0,on-12.1
 ableton:Delay	Delay	Delay	yes	Dly < Mod	fx.mod.depth	UNVERIFIED in 12.4	no	v3-12.0,v2-12.0,push2-12.0,v3-12.1,move-12.1
 ableton:Delay	Delay	Delay	yes	Dry/Wet	fx.delay.mix	12.4	yes	v3-12.0,v2-12.0,push2-12.0,move-12.4,v3-12.1,move-12.1
 ableton:Delay	Delay	Delay	yes	Feedback	fx.delay.feedback	12.4	yes	v3-12.0,v2-12.0,push2-12.0,move-12.4,v3-12.1,move-12.1
@@ -398,7 +398,7 @@ ableton:Drift	Drift	Drift	yes	Cyc Env Synced	other	12.4	no	v3-12.0,v2-12.0,push2
 ableton:Drift	Drift	Drift	yes	Cyc Env Tilt	other	12.4	no	v3-12.0,v2-12.0,push2-12.0,move-12.4
 ableton:Drift	Drift	Drift	yes	Cyc Env Time	other	12.4	no	v3-12.0,v2-12.0,push2-12.0,move-12.4
 ableton:Drift	Drift	Drift	yes	Cyc Env Time Mode	ctl.select	12.4	no	v3-12.0,v2-12.0,push2-12.0,move-12.4
-ableton:Drift	Drift	Drift	yes	Device On	ctl.switch	12.4	no	on-12.0,on-12.1
+ableton:Drift	Drift	Drift	yes	Device On	ctl.switch	12.1	-	on-12.0,on-12.1
 ableton:Drift	Drift	Drift	yes	Drift	other	12.4	yes	v3-12.0,v2-12.0,push2-12.0,move-12.4
 ableton:Drift	Drift	Drift	yes	Env 1 Attack	env.attack	12.4	no	v3-12.0,v2-12.0,push2-12.0,move-12.4
 ableton:Drift	Drift	Drift	yes	Env 1 Decay	env.decay	12.4	no	v3-12.0,v2-12.0,push2-12.0,move-12.4
@@ -461,7 +461,7 @@ ableton:DrumBuss	DrumBuss	Drum Buss	yes	Boom Freq	fx.eq.freq	12.1	no	v3-12.0,v2-
 ableton:DrumBuss	DrumBuss	Drum Buss	yes	Compressor On	ctl.switch	12.1	no	v3-12.0,v2-12.0,generic-12.0,v3-12.1
 ableton:DrumBuss	DrumBuss	Drum Buss	yes	Crunch	fx.drive	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:DrumBuss	DrumBuss	Drum Buss	yes	Damping Freq	fx.tone	12.1	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
-ableton:DrumBuss	DrumBuss	Drum Buss	yes	Device On	ctl.switch	12.4	no	on-12.0,on-12.1
+ableton:DrumBuss	DrumBuss	Drum Buss	yes	Device On	ctl.switch	12.1	-	on-12.0,on-12.1
 ableton:DrumBuss	DrumBuss	Drum Buss	yes	Drive	fx.drive	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:DrumBuss	DrumBuss	Drum Buss	yes	Drive Type	ctl.select	12.1	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:DrumBuss	DrumBuss	Drum Buss	yes	Dry/Wet	fx.mix	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
@@ -473,7 +473,7 @@ ableton:DrumCell	DrumCell	Drum Sampler	yes	8-Bit Rate	fx.drive	12.4	no	move-12.4
 ableton:DrumCell	DrumCell	Drum Sampler	yes	Attack	env.attack	12.4	yes	push2-12.0,move-12.4
 ableton:DrumCell	DrumCell	Drum Sampler	yes	Decay	env.decay	12.4	yes	push2-12.0,move-12.4
 ableton:DrumCell	DrumCell	Drum Sampler	yes	Detune	osc.fine	12.4	yes	push2-12.0,move-12.4
-ableton:DrumCell	DrumCell	Drum Sampler	yes	Device On	ctl.switch	12.4	no	on-12.0,on-12.1
+ableton:DrumCell	DrumCell	Drum Sampler	yes	Device On	ctl.switch	12.1	-	on-12.0,on-12.1
 ableton:DrumCell	DrumCell	Drum Sampler	yes	Env Mode	ctl.select	12.4	no	move-12.4
 ableton:DrumCell	DrumCell	Drum Sampler	yes	Filter Freq	filter.cutoff	12.4	no	move-12.4
 ableton:DrumCell	DrumCell	Drum Sampler	yes	Filter Gain	fx.eq.gain	12.4	yes	move-12.4
@@ -508,7 +508,7 @@ ableton:DrumCell	DrumCell	Drum Sampler	yes	Sub Freq	other	12.4	no	move-12.4
 ableton:DrumCell	DrumCell	Drum Sampler	yes	Transpose	osc.pitch	12.4	yes	push2-12.0,move-12.4
 ableton:DrumCell	DrumCell	Drum Sampler	yes	Vel > Vol	system	12.4	no	push2-12.0,move-12.4
 ableton:DrumCell	DrumCell	Drum Sampler	yes	Volume	amp.gain	12.4	yes	push2-12.0
-ableton:DrumGroupDevice	DrumGroupDevice	Drum Rack	no	Device On	ctl.switch	12.4	-	on-12.0,on-12.1
+ableton:DrumGroupDevice	DrumGroupDevice	Drum Rack	no	Device On	ctl.switch	12.1	-	on-12.0,on-12.1
 ableton:DrumGroupDevice	DrumGroupDevice	Drum Rack	no	Macro 1	macro	12.1	-	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:DrumGroupDevice	DrumGroupDevice	Drum Rack	no	Macro 10	macro	12.1	-	v3-12.0,v2-12.0,generic-12.0,v3-12.1
 ableton:DrumGroupDevice	DrumGroupDevice	Drum Rack	no	Macro 11	macro	12.1	-	v3-12.0,v2-12.0,generic-12.0,v3-12.1
@@ -527,7 +527,7 @@ ableton:DrumGroupDevice	DrumGroupDevice	Drum Rack	no	Macro 8	macro	12.1	-	v3-12.
 ableton:DrumGroupDevice	DrumGroupDevice	Drum Rack	no	Macro 9	macro	12.1	-	v3-12.0,v2-12.0,generic-12.0,v3-12.1
 ableton:Echo	Echo	Echo	yes	Channel Mode	ctl.select	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0
 ableton:Echo	Echo	Echo	yes	Clip Dry	ctl.switch	12.0	no	v3-12.0,v2-12.0,generic-12.0
-ableton:Echo	Echo	Echo	yes	Device On	ctl.switch	12.4	no	on-12.0,on-12.1
+ableton:Echo	Echo	Echo	yes	Device On	ctl.switch	12.1	-	on-12.0,on-12.1
 ableton:Echo	Echo	Echo	yes	Dly < Mod	fx.mod.depth	12.0	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0
 ableton:Echo	Echo	Echo	yes	Dry Wet	fx.delay.mix	12.0	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0
 ableton:Echo	Echo	Echo	yes	Duck On	ctl.switch	12.0	no	v3-12.0,v2-12.0,generic-12.0
@@ -658,16 +658,16 @@ ableton:Eq8	Eq8	EQ Eight	yes	8 Gain B	fx.eq.gain	12.0	no	push2-12.0
 ableton:Eq8	Eq8	EQ Eight	yes	8 Resonance A	fx.eq.q	12.0	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0
 ableton:Eq8	Eq8	EQ Eight	yes	8 Resonance B	fx.eq.q	12.0	no	push2-12.0
 ableton:Eq8	Eq8	EQ Eight	yes	Adaptive Q	ctl.switch	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0
-ableton:Eq8	Eq8	EQ Eight	yes	Device On	ctl.switch	12.4	no	on-12.0,on-12.1
+ableton:Eq8	Eq8	EQ Eight	yes	Device On	ctl.switch	12.1	-	on-12.0,on-12.1
 ableton:Eq8	Eq8	EQ Eight	yes	Output Gain	amp.gain	12.0	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0
 ableton:Eq8	Eq8	EQ Eight	yes	Scale	fx.eq.gain	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0
 ableton:Erosion	Erosion	Erosion Legacy	yes	Amount	fx.drive	12.1	-	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
-ableton:Erosion	Erosion	Erosion Legacy	yes	Device On	ctl.switch	12.4	-	on-12.0,on-12.1
+ableton:Erosion	Erosion	Erosion Legacy	yes	Device On	ctl.switch	12.1	-	on-12.0,on-12.1
 ableton:Erosion	Erosion	Erosion Legacy	yes	Frequency	fx.tone	12.1	-	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:Erosion	Erosion	Erosion Legacy	yes	Mode	ctl.select	12.1	-	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:Erosion	Erosion	Erosion Legacy	yes	Width	other	12.1	-	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:Erosion2	Erosion2	Erosion	yes	Amount	fx.drive	12.4	yes	move-12.4
-ableton:Erosion2	Erosion2	Erosion	yes	Device On	ctl.switch	12.4	no	on-12.0,on-12.1
+ableton:Erosion2	Erosion2	Erosion	yes	Device On	ctl.switch	12.1	-	on-12.0,on-12.1
 ableton:Erosion2	Erosion2	Erosion	yes	Filter Width	other	12.4	yes	move-12.4
 ableton:Erosion2	Erosion2	Erosion	yes	Frequency	fx.tone	12.4	yes	move-12.4
 ableton:Erosion2	Erosion2	Erosion	yes	Noise Blend	other	12.4	yes	move-12.4
@@ -702,9 +702,9 @@ ableton:FilterDelay	FilterDelay	Filter Delay	yes	3 Input On	ctl.switch	12.0	no	v
 ableton:FilterDelay	FilterDelay	Filter Delay	yes	3 Pan	amp.pan	12.0	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0
 ableton:FilterDelay	FilterDelay	Filter Delay	yes	3 Time Delay	fx.delay.time	12.0	no	v3-12.0,v2-12.0,push2-12.0
 ableton:FilterDelay	FilterDelay	Filter Delay	yes	3 Volume	fx.delay.mix	12.0	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0
-ableton:FilterDelay	FilterDelay	Filter Delay	yes	Device On	ctl.switch	12.4	no	on-12.0,on-12.1
+ableton:FilterDelay	FilterDelay	Filter Delay	yes	Device On	ctl.switch	12.1	-	on-12.0,on-12.1
 ableton:FilterDelay	FilterDelay	Filter Delay	yes	Dry	other	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0
-ableton:FilterEQ3	FilterEQ3	EQ Three	yes	Device On	ctl.switch	12.4	no	on-12.0,on-12.1
+ableton:FilterEQ3	FilterEQ3	EQ Three	yes	Device On	ctl.switch	12.1	-	on-12.0,on-12.1
 ableton:FilterEQ3	FilterEQ3	EQ Three	yes	FreqHi	fx.eq.freq	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:FilterEQ3	FilterEQ3	EQ Three	yes	FreqLo	fx.eq.freq	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:FilterEQ3	FilterEQ3	EQ Three	yes	GainHi	fx.eq.gain	12.1	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
@@ -715,7 +715,7 @@ ableton:FilterEQ3	FilterEQ3	EQ Three	yes	LowOn	ctl.switch	12.1	no	v3-12.0,v2-12.
 ableton:FilterEQ3	FilterEQ3	EQ Three	yes	MidOn	ctl.switch	12.1	no	v3-12.0,v2-12.0,generic-12.0,v3-12.1
 ableton:FilterEQ3	FilterEQ3	EQ Three	yes	Slope	ctl.select	12.1	no	v3-12.0,v2-12.0,v3-12.1
 ableton:Flanger	Flanger	Flanger (legacy)	no	Delay Time	other	12.0	-	v3-12.0,v2-12.0,push2-12.0,generic-12.0
-ableton:Flanger	Flanger	Flanger (legacy)	no	Device On	ctl.switch	12.4	-	on-12.0,on-12.1
+ableton:Flanger	Flanger	Flanger (legacy)	no	Device On	ctl.switch	12.1	-	on-12.0,on-12.1
 ableton:Flanger	Flanger	Flanger (legacy)	no	Dry/Wet	fx.mod.mix	12.0	-	v3-12.0,v2-12.0,push2-12.0,generic-12.0
 ableton:Flanger	Flanger	Flanger (legacy)	no	Env. Attack	other	12.0	-	v3-12.0,v2-12.0,push2-12.0,generic-12.0
 ableton:Flanger	Flanger	Flanger (legacy)	no	Env. Modulation	fx.mod.depth	12.0	-	v3-12.0,v2-12.0,push2-12.0,generic-12.0
@@ -734,7 +734,7 @@ ableton:Flanger	Flanger	Flanger (legacy)	no	Polarity	ctl.select	12.0	-	v3-12.0,v
 ableton:Flanger	Flanger	Flanger (legacy)	no	Sync	system	12.0	-	v3-12.0,v2-12.0,push2-12.0,generic-12.0
 ableton:Flanger	Flanger	Flanger (legacy)	no	Sync Rate	fx.mod.rate	12.0	-	v3-12.0,v2-12.0,push2-12.0,generic-12.0
 ableton:FrequencyShifter	FrequencyShifter	Frequency Shifter (legacy)	no	Coarse	fx.pitch	12.1	-	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
-ableton:FrequencyShifter	FrequencyShifter	Frequency Shifter (legacy)	no	Device On	ctl.switch	12.4	-	on-12.0,on-12.1
+ableton:FrequencyShifter	FrequencyShifter	Frequency Shifter (legacy)	no	Device On	ctl.switch	12.1	-	on-12.0,on-12.1
 ableton:FrequencyShifter	FrequencyShifter	Frequency Shifter (legacy)	no	Drive	fx.drive	12.1	-	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:FrequencyShifter	FrequencyShifter	Frequency Shifter (legacy)	no	Drive On/Off	ctl.switch	12.1	-	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:FrequencyShifter	FrequencyShifter	Frequency Shifter (legacy)	no	Dry/Wet	fx.mix	12.1	-	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
@@ -753,7 +753,7 @@ ableton:FrequencyShifter	FrequencyShifter	Frequency Shifter (legacy)	no	Sync	sys
 ableton:FrequencyShifter	FrequencyShifter	Frequency Shifter (legacy)	no	Sync Rate	fx.mod.rate	12.1	-	v3-12.0,v2-12.0,push2-12.0,v3-12.1
 ableton:FrequencyShifter	FrequencyShifter	Frequency Shifter (legacy)	no	Wide	stereo.width	12.1	-	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:Gate	Gate	Gate	yes	Attack	other	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
-ableton:Gate	Gate	Gate	yes	Device On	ctl.switch	12.4	no	on-12.0,on-12.1
+ableton:Gate	Gate	Gate	yes	Device On	ctl.switch	12.1	-	on-12.0,on-12.1
 ableton:Gate	Gate	Gate	yes	FlipMode	ctl.switch	12.1	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:Gate	Gate	Gate	yes	Floor	fx.gate	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:Gate	Gate	Gate	yes	Hold	other	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
@@ -771,7 +771,7 @@ ableton:Gate	Gate	Gate	yes	S/C Mix	system	12.1	no	v3-12.0,v2-12.0,push2-12.0,gen
 ableton:Gate	Gate	Gate	yes	S/C On	ctl.switch	12.1	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:Gate	Gate	Gate	yes	Threshold	fx.gate	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:GlueCompressor	GlueCompressor	Glue Compressor	yes	Attack	other	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
-ableton:GlueCompressor	GlueCompressor	Glue Compressor	yes	Device On	ctl.switch	12.4	no	on-12.0,on-12.1
+ableton:GlueCompressor	GlueCompressor	Glue Compressor	yes	Device On	ctl.switch	12.1	-	on-12.0,on-12.1
 ableton:GlueCompressor	GlueCompressor	Glue Compressor	yes	Dry/Wet	fx.mix	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:GlueCompressor	GlueCompressor	Glue Compressor	yes	Makeup	unsafe	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:GlueCompressor	GlueCompressor	Glue Compressor	yes	Peak Clip In	ctl.switch	12.1	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
@@ -790,7 +790,7 @@ ableton:GlueCompressor	GlueCompressor	Glue Compressor	yes	Threshold	fx.comp.amou
 ableton:GrainDelay	GrainDelay	Grain Delay	yes	Beat Delay	fx.delay.time	12.1	no	v3-12.0,v2-12.0,push2-12.0,v3-12.1
 ableton:GrainDelay	GrainDelay	Grain Delay	yes	Beat Swing	other	12.1	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:GrainDelay	GrainDelay	Grain Delay	yes	Delay Mode	ctl.select	12.1	no	v3-12.0,v2-12.0,push2-12.0,v3-12.1
-ableton:GrainDelay	GrainDelay	Grain Delay	yes	Device On	ctl.switch	12.4	no	on-12.0,on-12.1
+ableton:GrainDelay	GrainDelay	Grain Delay	yes	Device On	ctl.switch	12.1	-	on-12.0,on-12.1
 ableton:GrainDelay	GrainDelay	Grain Delay	yes	DryWet	fx.delay.mix	12.1	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:GrainDelay	GrainDelay	Grain Delay	yes	Feedback	fx.delay.feedback	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:GrainDelay	GrainDelay	Grain Delay	yes	Frequency	other	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
@@ -803,7 +803,7 @@ ableton:Hybrid	Hybrid	Hybrid Reverb	yes	Algo Type	ctl.select	12.0	no	v3-12.0,v2-
 ableton:Hybrid	Hybrid	Hybrid Reverb	yes	Blend	other	12.4	yes	v3-12.0,v2-12.0,push2-12.0
 ableton:Hybrid	Hybrid	Hybrid Reverb	yes	Damping	fx.tone	12.4	yes	v3-12.0,v2-12.0,push2-12.0
 ableton:Hybrid	Hybrid	Hybrid Reverb	yes	Decay	fx.reverb.decay	12.4	yes	v3-12.0,v2-12.0,push2-12.0
-ableton:Hybrid	Hybrid	Hybrid Reverb	yes	Device On	ctl.switch	12.4	no	on-12.0,on-12.1
+ableton:Hybrid	Hybrid	Hybrid Reverb	yes	Device On	ctl.switch	12.1	-	on-12.0,on-12.1
 ableton:Hybrid	Hybrid	Hybrid Reverb	yes	DH Bass X	other	12.0	no	v3-12.0,v2-12.0,push2-12.0
 ableton:Hybrid	Hybrid	Hybrid Reverb	yes	DH BassMult	other	12.0	no	v3-12.0,v2-12.0,push2-12.0
 ableton:Hybrid	Hybrid	Hybrid Reverb	yes	DH Shape	other	12.0	no	v3-12.0,v2-12.0,push2-12.0
@@ -847,7 +847,7 @@ ableton:Hybrid	Hybrid	Hybrid Reverb	yes	Ti Tide	fx.mod.depth	12.0	no	v3-12.0,v2-
 ableton:Hybrid	Hybrid	Hybrid Reverb	yes	Ti Waveform	ctl.select	12.0	no	v3-12.0,v2-12.0,push2-12.0
 ableton:Hybrid	Hybrid	Hybrid Reverb	yes	Vintage	ctl.select	12.4	yes	v3-12.0,v2-12.0
 ableton:Hybrid	Hybrid	Hybrid Reverb	yes	Width	stereo.width	12.4	yes	v3-12.0,v2-12.0,push2-12.0
-ableton:InstrumentGroupDevice	InstrumentGroupDevice	Instrument Rack	no	Device On	ctl.switch	12.4	-	on-12.0,on-12.1
+ableton:InstrumentGroupDevice	InstrumentGroupDevice	Instrument Rack	no	Device On	ctl.switch	12.1	-	on-12.0,on-12.1
 ableton:InstrumentGroupDevice	InstrumentGroupDevice	Instrument Rack	no	Macro 1	macro	12.1	-	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:InstrumentGroupDevice	InstrumentGroupDevice	Instrument Rack	no	Macro 10	macro	12.1	-	v3-12.0,v2-12.0,generic-12.0,v3-12.1
 ableton:InstrumentGroupDevice	InstrumentGroupDevice	Instrument Rack	no	Macro 11	macro	12.1	-	v3-12.0,v2-12.0,generic-12.0,v3-12.1
@@ -1000,11 +1000,11 @@ ableton:InstrumentImpulse	InstrumentImpulse	Impulse	yes	8 Stretch Mode	ctl.selec
 ableton:InstrumentImpulse	InstrumentImpulse	Impulse	yes	8 Transpose	osc.pitch	12.0	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0
 ableton:InstrumentImpulse	InstrumentImpulse	Impulse	yes	8 Volume	osc.level	12.0	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0
 ableton:InstrumentImpulse	InstrumentImpulse	Impulse	yes	8 Volume <- Vel	system	12.0	no	v2-12.0,push2-12.0
-ableton:InstrumentImpulse	InstrumentImpulse	Impulse	yes	Device On	ctl.switch	12.4	no	on-12.0,on-12.1
+ableton:InstrumentImpulse	InstrumentImpulse	Impulse	yes	Device On	ctl.switch	12.1	-	on-12.0,on-12.1
 ableton:InstrumentImpulse	InstrumentImpulse	Impulse	yes	Global Time	other	12.0	no	v3-12.0,v2-12.0,push2-12.0
 ableton:InstrumentImpulse	InstrumentImpulse	Impulse	yes	Global Transpose	osc.pitch	12.0	no	v3-12.0,v2-12.0,push2-12.0
 ableton:InstrumentImpulse	InstrumentImpulse	Impulse	yes	Global Volume	amp.gain	12.0	no	v2-12.0,push2-12.0
-ableton:InstrumentMeld	InstrumentMeld	Meld	yes	Device On	ctl.switch	12.4	no	on-12.0,on-12.1
+ableton:InstrumentMeld	InstrumentMeld	Meld	yes	Device On	ctl.switch	12.1	-	on-12.0,on-12.1
 ableton:InstrumentMeld	InstrumentMeld	Meld	yes	MeldVoice_Drive	fx.drive	12.0	no	push2-12.0
 ableton:InstrumentMeld	InstrumentMeld	Meld	yes	MeldVoice_EngineA_AmpEnvelope_LoopMode	ctl.select	12.0	no	push2-12.0
 ableton:InstrumentMeld	InstrumentMeld	Meld	yes	MeldVoice_EngineA_AmpEnvelope_Slopes_Attack	other	12.0	no	push2-12.0
@@ -1099,7 +1099,7 @@ ableton:InstrumentVector	InstrumentVector	Wavetable	yes	Amp Loop Mode	ctl.select
 ableton:InstrumentVector	InstrumentVector	Wavetable	yes	Amp R Slope	other	UNVERIFIED in 12.4	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0
 ableton:InstrumentVector	InstrumentVector	Wavetable	yes	Amp Release	env.release	UNVERIFIED in 12.4	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0
 ableton:InstrumentVector	InstrumentVector	Wavetable	yes	Amp Sustain	env.sustain	UNVERIFIED in 12.4	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0
-ableton:InstrumentVector	InstrumentVector	Wavetable	yes	Device On	ctl.switch	12.4	no	on-12.0,on-12.1
+ableton:InstrumentVector	InstrumentVector	Wavetable	yes	Device On	ctl.switch	12.1	-	on-12.0,on-12.1
 ableton:InstrumentVector	InstrumentVector	Wavetable	yes	Env 2 A Slope	other	UNVERIFIED in 12.4	no	v2-12.0,push2-12.0
 ableton:InstrumentVector	InstrumentVector	Wavetable	yes	Env 2 Attack	env.attack	UNVERIFIED in 12.4	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0
 ableton:InstrumentVector	InstrumentVector	Wavetable	yes	Env 2 D Slope	other	UNVERIFIED in 12.4	no	v2-12.0,push2-12.0
@@ -1187,7 +1187,7 @@ ableton:InstrumentVector	InstrumentVector	Wavetable	yes	Unison Amount	unison.det
 ableton:InstrumentVector	InstrumentVector	Wavetable	yes	Volume	amp.gain	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0
 ableton:Limiter	Limiter	Limiter	yes	Auto	ctl.switch	12.4	yes	v3-12.0,v2-12.0,push2-12.0,v3-12.1
 ableton:Limiter	Limiter	Limiter	yes	Ceiling	amp.gain	12.4	yes	v3-12.0,v2-12.0,push2-12.0,v3-12.1
-ableton:Limiter	Limiter	Limiter	yes	Device On	ctl.switch	12.4	no	on-12.0,on-12.1
+ableton:Limiter	Limiter	Limiter	yes	Device On	ctl.switch	12.1	-	on-12.0,on-12.1
 ableton:Limiter	Limiter	Limiter	yes	Gain	fx.comp.amount	12.4	yes	v3-12.0,v2-12.0,push2-12.0
 ableton:Limiter	Limiter	Limiter	yes	Input Gain	fx.comp.amount	12.4	yes	v3-12.1
 ableton:Limiter	Limiter	Limiter	yes	Link	ctl.switch	12.4	yes	v3-12.1
@@ -1197,7 +1197,7 @@ ableton:Limiter	Limiter	Limiter	yes	M/S Link	ctl.switch	12.1	no	v3-12.1
 ableton:Limiter	Limiter	Limiter	yes	Mode	ctl.select	12.4	yes	v3-12.1
 ableton:Limiter	Limiter	Limiter	yes	Release	other	12.4	yes	v3-12.1
 ableton:Limiter	Limiter	Limiter	yes	Release time	other	12.4	yes	v3-12.0,v2-12.0,push2-12.0
-ableton:Looper	Looper	Looper	yes	Device On	ctl.switch	12.4	no	on-12.0,on-12.1
+ableton:Looper	Looper	Looper	yes	Device On	ctl.switch	12.1	-	on-12.0,on-12.1
 ableton:Looper	Looper	Looper	yes	Feedback	other	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:Looper	Looper	Looper	yes	Monitor	system	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:Looper	Looper	Looper	yes	Quantization	system	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
@@ -1210,7 +1210,7 @@ ableton:LoungeLizard	LoungeLizard	Electric	yes	Damp Amount	other	12.0	no	v3-12.0
 ableton:LoungeLizard	LoungeLizard	Electric	yes	Damp Balance	other	12.0	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0
 ableton:LoungeLizard	LoungeLizard	Electric	yes	Damp Tone	fx.tone	12.0	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0
 ableton:LoungeLizard	LoungeLizard	Electric	yes	Detune	osc.fine	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0
-ableton:LoungeLizard	LoungeLizard	Electric	yes	Device On	ctl.switch	12.4	no	on-12.0,on-12.1
+ableton:LoungeLizard	LoungeLizard	Electric	yes	Device On	ctl.switch	12.1	-	on-12.0,on-12.1
 ableton:LoungeLizard	LoungeLizard	Electric	yes	F Release	env.release	12.0	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0
 ableton:LoungeLizard	LoungeLizard	Electric	yes	F Tine < Key	system	12.0	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0
 ableton:LoungeLizard	LoungeLizard	Electric	yes	F Tine Color	fx.tone	12.0	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0
@@ -1240,7 +1240,7 @@ ableton:LoungeLizard	LoungeLizard	Electric	yes	Pickup Model	ctl.select	12.0	no	v
 ableton:LoungeLizard	LoungeLizard	Electric	yes	Semitone	osc.pitch	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0
 ableton:LoungeLizard	LoungeLizard	Electric	yes	Voices	system	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0
 ableton:LoungeLizard	LoungeLizard	Electric	yes	Volume	amp.gain	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0
-ableton:MidiArpeggiator	MidiArpeggiator	Arpeggiator	yes	Device On	ctl.switch	12.4	no	on-12.0,on-12.1
+ableton:MidiArpeggiator	MidiArpeggiator	Arpeggiator	yes	Device On	ctl.switch	12.1	-	on-12.0,on-12.1
 ableton:MidiArpeggiator	MidiArpeggiator	Arpeggiator	yes	Free Rate	other	12.4	yes	v3-12.0,v2-12.0,push2-12.0,v3-12.1
 ableton:MidiArpeggiator	MidiArpeggiator	Arpeggiator	yes	Gate	other	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:MidiArpeggiator	MidiArpeggiator	Arpeggiator	yes	Groove	other	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
@@ -1273,11 +1273,11 @@ ableton:MidiCcControl	MidiCcControl	CC Control	yes	Custom J	macro	12.0	no	push2-
 ableton:MidiCcControl	MidiCcControl	CC Control	yes	Custom K	macro	12.0	no	push2-12.0
 ableton:MidiCcControl	MidiCcControl	CC Control	yes	Custom L	macro	12.0	no	push2-12.0
 ableton:MidiCcControl	MidiCcControl	CC Control	yes	Custom M	macro	12.0	no	push2-12.0
-ableton:MidiCcControl	MidiCcControl	CC Control	yes	Device On	ctl.switch	12.4	no	on-12.0,on-12.1
+ableton:MidiCcControl	MidiCcControl	CC Control	yes	Device On	ctl.switch	12.1	-	on-12.0,on-12.1
 ableton:MidiCcControl	MidiCcControl	CC Control	yes	Mod Wheel	mod.amount	12.4	yes	push2-12.0,v3-12.1
 ableton:MidiCcControl	MidiCcControl	CC Control	yes	Pitch Bend	other	12.4	yes	push2-12.0,v3-12.1
 ableton:MidiCcControl	MidiCcControl	CC Control	yes	Pressure	other	12.4	yes	push2-12.0,v3-12.1
-ableton:MidiChord	MidiChord	Chord	yes	Device On	ctl.switch	12.4	no	on-12.0,on-12.1
+ableton:MidiChord	MidiChord	Chord	yes	Device On	ctl.switch	12.1	-	on-12.0,on-12.1
 ableton:MidiChord	MidiChord	Chord	yes	Shift1	other	12.1	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:MidiChord	MidiChord	Chord	yes	Shift2	other	12.1	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:MidiChord	MidiChord	Chord	yes	Shift3	other	12.1	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
@@ -1290,7 +1290,7 @@ ableton:MidiChord	MidiChord	Chord	yes	Velocity3	other	12.1	no	v3-12.0,v2-12.0,pu
 ableton:MidiChord	MidiChord	Chord	yes	Velocity4	other	12.1	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:MidiChord	MidiChord	Chord	yes	Velocity5	other	12.1	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:MidiChord	MidiChord	Chord	yes	Velocity6	other	12.1	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
-ableton:MidiEffectGroupDevice	MidiEffectGroupDevice	MIDI Effect Rack	no	Device On	ctl.switch	12.4	-	on-12.0,on-12.1
+ableton:MidiEffectGroupDevice	MidiEffectGroupDevice	MIDI Effect Rack	no	Device On	ctl.switch	12.1	-	on-12.0,on-12.1
 ableton:MidiEffectGroupDevice	MidiEffectGroupDevice	MIDI Effect Rack	no	Macro 1	macro	12.1	-	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:MidiEffectGroupDevice	MidiEffectGroupDevice	MIDI Effect Rack	no	Macro 10	macro	12.1	-	v3-12.0,v2-12.0,generic-12.0,v3-12.1
 ableton:MidiEffectGroupDevice	MidiEffectGroupDevice	MIDI Effect Rack	no	Macro 11	macro	12.1	-	v3-12.0,v2-12.0,generic-12.0,v3-12.1
@@ -1309,7 +1309,7 @@ ableton:MidiEffectGroupDevice	MidiEffectGroupDevice	MIDI Effect Rack	no	Macro 8	
 ableton:MidiEffectGroupDevice	MidiEffectGroupDevice	MIDI Effect Rack	no	Macro 9	macro	12.1	-	v3-12.0,v2-12.0,generic-12.0,v3-12.1
 ableton:MidiNoteLength	MidiNoteLength	Note Length	yes	Decay Key Scale	other	12.1	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:MidiNoteLength	MidiNoteLength	Note Length	yes	Decay Time	other	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0
-ableton:MidiNoteLength	MidiNoteLength	Note Length	yes	Device On	ctl.switch	12.4	no	on-12.0,on-12.1
+ableton:MidiNoteLength	MidiNoteLength	Note Length	yes	Device On	ctl.switch	12.1	-	on-12.0,on-12.1
 ableton:MidiNoteLength	MidiNoteLength	Note Length	yes	Gate	other	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:MidiNoteLength	MidiNoteLength	Note Length	yes	Latch	ctl.switch	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:MidiNoteLength	MidiNoteLength	Note Length	yes	Release Velocity	other	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
@@ -1317,24 +1317,24 @@ ableton:MidiNoteLength	MidiNoteLength	Note Length	yes	Sync On	ctl.switch	12.1	no
 ableton:MidiNoteLength	MidiNoteLength	Note Length	yes	Synced Length	other	12.1	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:MidiNoteLength	MidiNoteLength	Note Length	yes	Time Length	other	12.0	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0
 ableton:MidiNoteLength	MidiNoteLength	Note Length	yes	Trigger Source	ctl.select	12.4	yes	v3-12.0,v2-12.0,push2-12.0,v3-12.1
-ableton:MidiPitcher	MidiPitcher	Pitch	yes	Device On	ctl.switch	12.4	no	on-12.0,on-12.1
+ableton:MidiPitcher	MidiPitcher	Pitch	yes	Device On	ctl.switch	12.1	-	on-12.0,on-12.1
 ableton:MidiPitcher	MidiPitcher	Pitch	yes	Lowest	system	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:MidiPitcher	MidiPitcher	Pitch	yes	Pitch	osc.pitch	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:MidiPitcher	MidiPitcher	Pitch	yes	Range	system	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:MidiRandom	MidiRandom	Random	yes	Chance	other	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:MidiRandom	MidiRandom	Random	yes	Choices	other	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
-ableton:MidiRandom	MidiRandom	Random	yes	Device On	ctl.switch	12.4	no	on-12.0,on-12.1
+ableton:MidiRandom	MidiRandom	Random	yes	Device On	ctl.switch	12.1	-	on-12.0,on-12.1
 ableton:MidiRandom	MidiRandom	Random	yes	Interval	other	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:MidiRandom	MidiRandom	Random	yes	Mode	ctl.select	12.4	yes	v3-12.0,v2-12.0,push2-12.0,v3-12.1
 ableton:MidiRandom	MidiRandom	Random	yes	Sign	ctl.select	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:MidiScale	MidiScale	Scale	yes	Base	ctl.select	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
-ableton:MidiScale	MidiScale	Scale	yes	Device On	ctl.switch	12.4	no	on-12.0,on-12.1
+ableton:MidiScale	MidiScale	Scale	yes	Device On	ctl.switch	12.1	-	on-12.0,on-12.1
 ableton:MidiScale	MidiScale	Scale	yes	Fold	ctl.switch	12.4	yes	v3-12.0,v2-12.0,push2-12.0,v3-12.1
 ableton:MidiScale	MidiScale	Scale	yes	Lowest	system	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:MidiScale	MidiScale	Scale	yes	Range	system	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:MidiScale	MidiScale	Scale	yes	Transpose	osc.pitch	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:MidiVelocity	MidiVelocity	Velocity	yes	Compand	other	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
-ableton:MidiVelocity	MidiVelocity	Velocity	yes	Device On	ctl.switch	12.4	no	on-12.0,on-12.1
+ableton:MidiVelocity	MidiVelocity	Velocity	yes	Device On	ctl.switch	12.1	-	on-12.0,on-12.1
 ableton:MidiVelocity	MidiVelocity	Velocity	yes	Drive	other	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:MidiVelocity	MidiVelocity	Velocity	yes	Lowest	system	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:MidiVelocity	MidiVelocity	Velocity	yes	Mode	ctl.select	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
@@ -1361,7 +1361,7 @@ ableton:MultibandDynamics	MultibandDynamics	Multiband Dynamics	yes	Below Ratio (
 ableton:MultibandDynamics	MultibandDynamics	Multiband Dynamics	yes	Below Threshold (High)	fx.comp.amount	12.0	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0
 ableton:MultibandDynamics	MultibandDynamics	Multiband Dynamics	yes	Below Threshold (Low)	fx.comp.amount	12.0	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0
 ableton:MultibandDynamics	MultibandDynamics	Multiband Dynamics	yes	Below Threshold (Mid)	fx.comp.amount	12.0	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0
-ableton:MultibandDynamics	MultibandDynamics	Multiband Dynamics	yes	Device On	ctl.switch	12.4	no	on-12.0,on-12.1
+ableton:MultibandDynamics	MultibandDynamics	Multiband Dynamics	yes	Device On	ctl.switch	12.1	-	on-12.0,on-12.1
 ableton:MultibandDynamics	MultibandDynamics	Multiband Dynamics	yes	Input Gain (High)	amp.gain	12.0	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0
 ableton:MultibandDynamics	MultibandDynamics	Multiband Dynamics	yes	Input Gain (Low)	amp.gain	12.0	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0
 ableton:MultibandDynamics	MultibandDynamics	Multiband Dynamics	yes	Input Gain (Mid)	amp.gain	12.0	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0
@@ -1397,7 +1397,7 @@ ableton:MultiSampler	MultiSampler	Sampler	yes	Ae Release	env.release	12.0	no	v2-
 ableton:MultiSampler	MultiSampler	Sampler	yes	Ae Retrig	ctl.switch	12.0	no	v2-12.0,push2-12.0
 ableton:MultiSampler	MultiSampler	Sampler	yes	Ae Sustain	env.sustain	12.0	no	v2-12.0,push2-12.0
 ableton:MultiSampler	MultiSampler	Sampler	yes	Detune	osc.fine	12.4	yes	v2-12.0,push2-12.0
-ableton:MultiSampler	MultiSampler	Sampler	yes	Device On	ctl.switch	12.4	no	on-12.0,on-12.1
+ableton:MultiSampler	MultiSampler	Sampler	yes	Device On	ctl.switch	12.1	-	on-12.0,on-12.1
 ableton:MultiSampler	MultiSampler	Sampler	yes	F On	ctl.switch	12.0	no	v2-12.0,push2-12.0
 ableton:MultiSampler	MultiSampler	Sampler	yes	Fe < Env	filter.env_amount	12.0	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0
 ableton:MultiSampler	MultiSampler	Sampler	yes	Fe Attack	env.attack	12.0	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0
@@ -1585,7 +1585,7 @@ ableton:Operator	Operator	Operator	yes	De R < Vel	system	12.0	no	push2-12.0
 ableton:Operator	Operator	Operator	yes	De Release	env.release	12.0	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0
 ableton:Operator	Operator	Operator	yes	De Retrig	ctl.switch	12.0	no	push2-12.0
 ableton:Operator	Operator	Operator	yes	De Sustain	env.sustain	12.0	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0
-ableton:Operator	Operator	Operator	yes	Device On	ctl.switch	12.4	no	on-12.0,on-12.1
+ableton:Operator	Operator	Operator	yes	Device On	ctl.switch	12.1	-	on-12.0,on-12.1
 ableton:Operator	Operator	Operator	yes	Fe A Slope	other	12.0	no	push2-12.0
 ableton:Operator	Operator	Operator	yes	Fe Amount	filter.env_amount	12.0	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0
 ableton:Operator	Operator	Operator	yes	Fe Attack	env.attack	12.0	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0
@@ -1706,7 +1706,7 @@ ableton:Operator	Operator	Operator	yes	Tone	fx.tone	12.4	yes	v3-12.0,v2-12.0,pus
 ableton:Operator	Operator	Operator	yes	Transpose	osc.pitch	12.4	yes	v2-12.0,push2-12.0
 ableton:Operator	Operator	Operator	yes	Volume	amp.gain	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0
 ableton:OriginalSimpler	OriginalSimpler	Simpler	yes	Detune	osc.fine	12.4	yes	v2-12.0,push2-12.0,move-12.4
-ableton:OriginalSimpler	OriginalSimpler	Simpler	yes	Device On	ctl.switch	12.4	no	on-12.0,on-12.1
+ableton:OriginalSimpler	OriginalSimpler	Simpler	yes	Device On	ctl.switch	12.1	-	on-12.0,on-12.1
 ableton:OriginalSimpler	OriginalSimpler	Simpler	yes	Division	ctl.select	12.4	yes	v2-12.0,push2-12.0,move-12.4
 ableton:OriginalSimpler	OriginalSimpler	Simpler	yes	F On	ctl.switch	12.0	no	v2-12.0,push2-12.0
 ableton:OriginalSimpler	OriginalSimpler	Simpler	yes	Fade In	other	12.4	yes	v2-12.0,push2-12.0,move-12.4
@@ -1772,7 +1772,7 @@ ableton:OriginalSimpler	OriginalSimpler	Simpler	yes	Ve Sustain	env.sustain	12.4	
 ableton:OriginalSimpler	OriginalSimpler	Simpler	yes	Vol < LFO	lfo.amount	12.0	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0
 ableton:OriginalSimpler	OriginalSimpler	Simpler	yes	Vol < Vel	system	12.0	no	v2-12.0,push2-12.0
 ableton:OriginalSimpler	OriginalSimpler	Simpler	yes	Volume	amp.gain	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0
-ableton:Overdrive	Overdrive	Overdrive	yes	Device On	ctl.switch	12.4	no	on-12.0,on-12.1
+ableton:Overdrive	Overdrive	Overdrive	yes	Device On	ctl.switch	12.1	-	on-12.0,on-12.1
 ableton:Overdrive	Overdrive	Overdrive	yes	Drive	fx.drive	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:Overdrive	Overdrive	Overdrive	yes	Dry/Wet	fx.mix	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:Overdrive	Overdrive	Overdrive	yes	Filter Freq	fx.tone	12.1	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
@@ -1780,7 +1780,7 @@ ableton:Overdrive	Overdrive	Overdrive	yes	Filter Width	other	12.1	no	v3-12.0,v2-
 ableton:Overdrive	Overdrive	Overdrive	yes	Preserve Dynamics	other	12.1	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:Overdrive	Overdrive	Overdrive	yes	Tone	fx.tone	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:Pedal	Pedal	Pedal	yes	Bass	fx.eq.gain	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
-ableton:Pedal	Pedal	Pedal	yes	Device On	ctl.switch	12.4	no	on-12.0,on-12.1
+ableton:Pedal	Pedal	Pedal	yes	Device On	ctl.switch	12.1	-	on-12.0,on-12.1
 ableton:Pedal	Pedal	Pedal	yes	Dry/Wet	fx.mix	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:Pedal	Pedal	Pedal	yes	Gain	fx.drive	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:Pedal	Pedal	Pedal	yes	Mid	fx.eq.gain	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
@@ -1790,7 +1790,7 @@ ableton:Pedal	Pedal	Pedal	yes	Sub	ctl.switch	12.4	yes	v3-12.0,v2-12.0,push2-12.0
 ableton:Pedal	Pedal	Pedal	yes	Treble	fx.eq.gain	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:Pedal	Pedal	Pedal	yes	Type	ctl.select	12.1	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:Phaser	Phaser	Phaser (legacy)	no	Color	fx.tone	12.0	-	v3-12.0,v2-12.0,push2-12.0,generic-12.0
-ableton:Phaser	Phaser	Phaser (legacy)	no	Device On	ctl.switch	12.4	-	on-12.0,on-12.1
+ableton:Phaser	Phaser	Phaser (legacy)	no	Device On	ctl.switch	12.1	-	on-12.0,on-12.1
 ableton:Phaser	Phaser	Phaser (legacy)	no	Dry/Wet	fx.mod.mix	12.0	-	v3-12.0,v2-12.0,push2-12.0,generic-12.0
 ableton:Phaser	Phaser	Phaser (legacy)	no	Env. Attack	other	12.0	-	v3-12.0,v2-12.0,push2-12.0,generic-12.0
 ableton:Phaser	Phaser	Phaser (legacy)	no	Env. Modulation	fx.mod.depth	12.0	-	v3-12.0,v2-12.0,push2-12.0,generic-12.0
@@ -1811,7 +1811,7 @@ ableton:Phaser	Phaser	Phaser (legacy)	no	Poles	other	12.0	-	v3-12.0,v2-12.0,push
 ableton:Phaser	Phaser	Phaser (legacy)	no	Type	ctl.select	12.0	-	v3-12.0,v2-12.0,push2-12.0
 ableton:PhaserNew	PhaserNew	Phaser-Flanger	yes	Amount	fx.mod.depth	12.4	yes	v3-12.0,v2-12.0,push2-12.0,move-12.4,move-12.1
 ableton:PhaserNew	PhaserNew	Phaser-Flanger	yes	Center Freq	other	12.4	no	push2-12.0,move-12.4,move-12.1
-ableton:PhaserNew	PhaserNew	Phaser-Flanger	yes	Device On	ctl.switch	12.4	no	on-12.0,on-12.1
+ableton:PhaserNew	PhaserNew	Phaser-Flanger	yes	Device On	ctl.switch	12.1	-	on-12.0,on-12.1
 ableton:PhaserNew	PhaserNew	Phaser-Flanger	yes	Doubler Time	other	12.4	no	v3-12.0,v2-12.0,push2-12.0,move-12.4,move-12.1
 ableton:PhaserNew	PhaserNew	Phaser-Flanger	yes	Dry/Wet	fx.mod.mix	12.4	yes	v3-12.0,v2-12.0,push2-12.0,move-12.4,move-12.1
 ableton:PhaserNew	PhaserNew	Phaser-Flanger	yes	Duty Cycle	other	12.4	yes	v3-12.0,v2-12.0,push2-12.0
@@ -1843,13 +1843,13 @@ ableton:PhaserNew	PhaserNew	Phaser-Flanger	yes	Spread	stereo.width	12.4	yes	push
 ableton:PhaserNew	PhaserNew	Phaser-Flanger	yes	Warmth	fx.tone	12.4	yes	v3-12.0,v2-12.0,push2-12.0,move-12.4,move-12.1
 ableton:Redux	Redux	Redux (legacy)	no	Bit Depth	fx.drive	12.1	-	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:Redux	Redux	Redux (legacy)	no	Bit On	ctl.switch	12.1	-	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
-ableton:Redux	Redux	Redux (legacy)	no	Device On	ctl.switch	12.4	-	on-12.0,on-12.1
+ableton:Redux	Redux	Redux (legacy)	no	Device On	ctl.switch	12.1	-	on-12.0,on-12.1
 ableton:Redux	Redux	Redux (legacy)	no	Sample Hard	fx.drive	12.1	-	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:Redux	Redux	Redux (legacy)	no	Sample Mode	ctl.select	12.1	-	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:Redux	Redux	Redux (legacy)	no	Sample Soft	fx.drive	12.1	-	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:Redux2	Redux2	Redux	yes	Bit Depth	fx.drive	12.4	no	v3-12.0,v2-12.0,push2-12.0,move-12.4,v3-12.1,move-12.1
 ableton:Redux2	Redux2	Redux	yes	DC Shift	other	12.4	yes	v3-12.0,v2-12.0,push2-12.0,v3-12.1
-ableton:Redux2	Redux2	Redux	yes	Device On	ctl.switch	12.4	no	on-12.0,on-12.1
+ableton:Redux2	Redux2	Redux	yes	Device On	ctl.switch	12.1	-	on-12.0,on-12.1
 ableton:Redux2	Redux2	Redux	yes	Dry/Wet	fx.mix	12.4	yes	v3-12.0,v2-12.0,push2-12.0,move-12.4,v3-12.1,move-12.1
 ableton:Redux2	Redux2	Redux	yes	Jitter	fx.drive	12.4	yes	v3-12.0,v2-12.0,push2-12.0,move-12.4,v3-12.1,move-12.1
 ableton:Redux2	Redux2	Redux	yes	Post-Filter	fx.tone	12.4	yes	v3-12.0,v2-12.0,push2-12.0,move-12.4,v3-12.1,move-12.1
@@ -1860,7 +1860,7 @@ ableton:Redux2	Redux2	Redux	yes	Sample Rate	fx.drive	12.4	yes	v3-12.0,v2-12.0,pu
 ableton:Resonator	Resonator	Resonators	yes	Color	fx.tone	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0
 ableton:Resonator	Resonator	Resonators	yes	Const	ctl.switch	12.4	yes	v3-12.0,v2-12.0
 ableton:Resonator	Resonator	Resonators	yes	Decay	fx.reverb.decay	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0
-ableton:Resonator	Resonator	Resonators	yes	Device On	ctl.switch	12.4	no	on-12.0,on-12.1
+ableton:Resonator	Resonator	Resonators	yes	Device On	ctl.switch	12.1	-	on-12.0,on-12.1
 ableton:Resonator	Resonator	Resonators	yes	Dry/Wet	fx.mix	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0
 ableton:Resonator	Resonator	Resonators	yes	Filter On	ctl.switch	12.0	no	v3-12.0,v2-12.0
 ableton:Resonator	Resonator	Resonators	yes	Filter Type	ctl.select	12.0	no	v3-12.0,v2-12.0,push2-12.0
@@ -1893,7 +1893,7 @@ ableton:Reverb	Reverb	Reverb	yes	Chorus On	ctl.switch	UNVERIFIED in 12.4	no	v3-1
 ableton:Reverb	Reverb	Reverb	yes	Chorus Rate	fx.mod.rate	UNVERIFIED in 12.4	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:Reverb	Reverb	Reverb	yes	Decay Time	fx.reverb.decay	12.4	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0,move-12.4,v3-12.1,move-12.1
 ableton:Reverb	Reverb	Reverb	yes	Density	other	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
-ableton:Reverb	Reverb	Reverb	yes	Device On	ctl.switch	12.4	no	on-12.0,on-12.1
+ableton:Reverb	Reverb	Reverb	yes	Device On	ctl.switch	12.1	-	on-12.0,on-12.1
 ableton:Reverb	Reverb	Reverb	yes	Diff. Hi Freq	fx.tone	12.4	no	move-12.4
 ableton:Reverb	Reverb	Reverb	yes	Diff. Hi Type	ctl.select	12.4	no	move-12.4
 ableton:Reverb	Reverb	Reverb	yes	Diffuse Level	other	UNVERIFIED in 12.4	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
@@ -1925,7 +1925,7 @@ ableton:Reverb	Reverb	Reverb	yes	Size Smoothing	ctl.select	UNVERIFIED in 12.4	no
 ableton:Reverb	Reverb	Reverb	yes	Stereo Image	stereo.width	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0,move-12.4,v3-12.1,move-12.1
 ableton:Roar	Roar	Roar	yes	Blend	other	12.4	yes	push2-12.0
 ableton:Roar	Roar	Roar	yes	Comp Amt	fx.comp.amount	12.1	no	push2-12.0,v3-12.1
-ableton:Roar	Roar	Roar	yes	Device On	ctl.switch	12.4	no	on-12.0,on-12.1
+ableton:Roar	Roar	Roar	yes	Device On	ctl.switch	12.1	-	on-12.0,on-12.1
 ableton:Roar	Roar	Roar	yes	Drive	fx.drive	12.4	yes	push2-12.0,v3-12.1
 ableton:Roar	Roar	Roar	yes	Dry/Wet	fx.mix	12.4	yes	push2-12.0,v3-12.1
 ableton:Roar	Roar	Roar	yes	Env Attack	other	12.0	no	push2-12.0
@@ -2002,7 +2002,7 @@ ableton:Saturator	Saturator	Saturator	yes	Color Freq	other	12.4	no	move-12.4,v3-
 ableton:Saturator	Saturator	Saturator	yes	Color On	ctl.switch	12.1	no	v3-12.1
 ableton:Saturator	Saturator	Saturator	yes	Color Width	other	12.4	no	move-12.4,v3-12.1,move-12.1
 ableton:Saturator	Saturator	Saturator	yes	Depth	fx.tone	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0
-ableton:Saturator	Saturator	Saturator	yes	Device On	ctl.switch	12.4	no	on-12.0,on-12.1
+ableton:Saturator	Saturator	Saturator	yes	Device On	ctl.switch	12.1	-	on-12.0,on-12.1
 ableton:Saturator	Saturator	Saturator	yes	Drive	fx.drive	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0,move-12.4,v3-12.1,move-12.1
 ableton:Saturator	Saturator	Saturator	yes	Dry/Wet	fx.mix	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0,move-12.4,v3-12.1,move-12.1
 ableton:Saturator	Saturator	Saturator	yes	Frequency	other	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0
@@ -2021,7 +2021,7 @@ ableton:Shifter	Shifter	Shifter	yes	Delay Feedback	fx.delay.feedback	12.4	yes	pu
 ableton:Shifter	Shifter	Shifter	yes	Delay S. Time	fx.delay.time	12.0	no	push2-12.0
 ableton:Shifter	Shifter	Shifter	yes	Delay Sync	system	12.0	no	push2-12.0
 ableton:Shifter	Shifter	Shifter	yes	Delay Time	fx.delay.time	12.4	yes	push2-12.0
-ableton:Shifter	Shifter	Shifter	yes	Device On	ctl.switch	12.4	no	on-12.0,on-12.1
+ableton:Shifter	Shifter	Shifter	yes	Device On	ctl.switch	12.1	-	on-12.0,on-12.1
 ableton:Shifter	Shifter	Shifter	yes	Dry/Wet	fx.mix	12.4	yes	v3-12.0,push2-12.0,v3-12.1
 ableton:Shifter	Shifter	Shifter	yes	Env Amount Hz	fx.mod.depth	12.0	no	push2-12.0
 ableton:Shifter	Shifter	Shifter	yes	Env Amount St	fx.mod.depth	12.0	no	push2-12.0
@@ -2061,7 +2061,7 @@ ableton:Spectral	Spectral	Spectral Time	yes	Delay Tilt	fx.tone	12.1	no	v3-12.0,p
 ableton:Spectral	Spectral	Spectral Time	yes	Delay Time Divisions	fx.delay.time	12.1	no	v3-12.0,push2-12.0,v3-12.1
 ableton:Spectral	Spectral	Spectral Time	yes	Delay Time Seconds	fx.delay.time	12.1	no	v3-12.0,push2-12.0,v3-12.1
 ableton:Spectral	Spectral	Spectral Time	yes	Delay Time Sixteenths	fx.delay.time	12.1	no	v3-12.0,push2-12.0,v3-12.1
-ableton:Spectral	Spectral	Spectral Time	yes	Device On	ctl.switch	12.4	no	on-12.0,on-12.1
+ableton:Spectral	Spectral	Spectral Time	yes	Device On	ctl.switch	12.1	-	on-12.0,on-12.1
 ableton:Spectral	Spectral	Spectral Time	yes	Dry Wet	fx.delay.mix	12.1	no	v3-12.0,push2-12.0,v3-12.1
 ableton:Spectral	Spectral	Spectral Time	yes	Fade In	other	12.4	yes	push2-12.0
 ableton:Spectral	Spectral	Spectral Time	yes	Fade Out	other	12.4	yes	push2-12.0
@@ -2081,7 +2081,7 @@ ableton:StereoGain	StereoGain	Utility	yes	Bass Freq	other	12.1	no	v3-12.0,v2-12.
 ableton:StereoGain	StereoGain	Utility	yes	Bass Mono	ctl.switch	12.4	yes	v3-12.0,v2-12.0,generic-12.0,v3-12.1
 ableton:StereoGain	StereoGain	Utility	yes	Channel Mode	ctl.select	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:StereoGain	StereoGain	Utility	yes	DC Filter	ctl.switch	12.1	no	v3-12.0,v2-12.0,generic-12.0,v3-12.1
-ableton:StereoGain	StereoGain	Utility	yes	Device On	ctl.switch	12.4	no	on-12.0,on-12.1
+ableton:StereoGain	StereoGain	Utility	yes	Device On	ctl.switch	12.1	-	on-12.0,on-12.1
 ableton:StereoGain	StereoGain	Utility	yes	Gain	unsafe	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:StereoGain	StereoGain	Utility	yes	Gain (Legacy)	unsafe	12.1	no	v3-12.0,v2-12.0,push2-12.0,v3-12.1
 ableton:StereoGain	StereoGain	Utility	yes	Left Inv	ctl.switch	12.1	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
@@ -2110,7 +2110,7 @@ ableton:StringStudio	StringStudio	Tension	yes	Damp Pos	other	12.0	no	v3-12.0,v2-
 ableton:StringStudio	StringStudio	Tension	yes	Damper Gated	ctl.switch	12.0	no	v2-12.0
 ableton:StringStudio	StringStudio	Tension	yes	Damper Mass	other	12.0	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0
 ableton:StringStudio	StringStudio	Tension	yes	Damper On	ctl.switch	12.0	no	v3-12.0,v2-12.0,generic-12.0
-ableton:StringStudio	StringStudio	Tension	yes	Device On	ctl.switch	12.4	no	on-12.0,on-12.1
+ableton:StringStudio	StringStudio	Tension	yes	Device On	ctl.switch	12.1	-	on-12.0,on-12.1
 ableton:StringStudio	StringStudio	Tension	yes	E Pos	other	12.0	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0
 ableton:StringStudio	StringStudio	Tension	yes	E Pos < Key	system	12.0	no	v2-12.0,push2-12.0
 ableton:StringStudio	StringStudio	Tension	yes	E Pos < Vel	system	12.0	no	v2-12.0,push2-12.0
@@ -2199,7 +2199,7 @@ ableton:StringStudio	StringStudio	Tension	yes	Vibrato On/Off	ctl.switch	12.0	no	
 ableton:StringStudio	StringStudio	Tension	yes	Voices	system	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0
 ableton:StringStudio	StringStudio	Tension	yes	Volume	amp.gain	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0
 ableton:Transmute	Transmute	Spectral Resonator	yes	Decay	fx.reverb.decay	12.4	yes	v3-12.0,push2-12.0,v3-12.1
-ableton:Transmute	Transmute	Spectral Resonator	yes	Device On	ctl.switch	12.4	no	on-12.0,on-12.1
+ableton:Transmute	Transmute	Spectral Resonator	yes	Device On	ctl.switch	12.1	-	on-12.0,on-12.1
 ableton:Transmute	Transmute	Spectral Resonator	yes	Dry Wet	fx.mix	12.1	no	v3-12.0,push2-12.0,v3-12.1
 ableton:Transmute	Transmute	Spectral Resonator	yes	Freq. Hz	fx.pitch	12.1	no	v3-12.0,push2-12.0,v3-12.1
 ableton:Transmute	Transmute	Spectral Resonator	yes	Glide	other	12.4	yes	push2-12.0
@@ -2218,7 +2218,7 @@ ableton:Transmute	Transmute	Spectral Resonator	yes	Unison	other	12.4	yes	v3-12.0
 ableton:Transmute	Transmute	Spectral Resonator	yes	Unison Amount	unison.detune	12.0	no	push2-12.0
 ableton:Tube	Tube	Dynamic Tube	yes	Attack	other	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:Tube	Tube	Dynamic Tube	yes	Bias	fx.drive	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
-ableton:Tube	Tube	Dynamic Tube	yes	Device On	ctl.switch	12.4	no	on-12.0,on-12.1
+ableton:Tube	Tube	Dynamic Tube	yes	Device On	ctl.switch	12.1	-	on-12.0,on-12.1
 ableton:Tube	Tube	Dynamic Tube	yes	Drive	fx.drive	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:Tube	Tube	Dynamic Tube	yes	Dry/Wet	fx.mix	12.1	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:Tube	Tube	Dynamic Tube	yes	Envelope	other	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
@@ -2259,7 +2259,7 @@ ableton:UltraAnalog	UltraAnalog	Analog	yes	AMP2 Level	osc.level	12.0	no	v3-12.0,
 ableton:UltraAnalog	UltraAnalog	Analog	yes	AMP2 On/Off	ctl.switch	12.0	no	v2-12.0
 ableton:UltraAnalog	UltraAnalog	Analog	yes	AMP2 Pan	amp.pan	12.0	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0
 ableton:UltraAnalog	UltraAnalog	Analog	yes	Detune	osc.fine	12.4	yes	push2-12.0
-ableton:UltraAnalog	UltraAnalog	Analog	yes	Device On	ctl.switch	12.4	no	on-12.0,on-12.1
+ableton:UltraAnalog	UltraAnalog	Analog	yes	Device On	ctl.switch	12.1	-	on-12.0,on-12.1
 ableton:UltraAnalog	UltraAnalog	Analog	yes	F1 Drive	fx.drive	12.0	no	push2-12.0
 ableton:UltraAnalog	UltraAnalog	Analog	yes	F1 Freq	filter.cutoff	12.0	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0
 ableton:UltraAnalog	UltraAnalog	Analog	yes	F1 Freq < Env	filter.env_amount	12.0	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0
@@ -2384,7 +2384,7 @@ ableton:UltraAnalog	UltraAnalog	Analog	yes	Voices	system	12.4	yes	v2-12.0,push2-
 ableton:UltraAnalog	UltraAnalog	Analog	yes	Volume	amp.gain	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0
 ableton:Vinyl	Vinyl	Vinyl Distortion	yes	Crackle Density	other	12.1	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:Vinyl	Vinyl	Vinyl Distortion	yes	Crackle Volume	other	12.1	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
-ableton:Vinyl	Vinyl	Vinyl Distortion	yes	Device On	ctl.switch	12.4	no	on-12.0,on-12.1
+ableton:Vinyl	Vinyl	Vinyl Distortion	yes	Device On	ctl.switch	12.1	-	on-12.0,on-12.1
 ableton:Vinyl	Vinyl	Vinyl Distortion	yes	Global Drive	fx.drive	12.1	no	v3-12.0,v2-12.0,push2-12.0,v3-12.1
 ableton:Vinyl	Vinyl	Vinyl Distortion	yes	Pinch Drive	fx.drive	12.1	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:Vinyl	Vinyl	Vinyl Distortion	yes	Pinch Freq.	fx.tone	12.1	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
@@ -2397,7 +2397,7 @@ ableton:Vinyl	Vinyl	Vinyl Distortion	yes	Tracing Freq.	fx.tone	12.1	no	v3-12.0,v
 ableton:Vinyl	Vinyl	Vinyl Distortion	yes	Tracing On	ctl.switch	12.1	no	v3-12.0,v2-12.0,v3-12.1
 ableton:Vinyl	Vinyl	Vinyl Distortion	yes	Tracing Width	other	12.1	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:Vocoder	Vocoder	Vocoder	yes	Attack Time	other	12.1	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
-ableton:Vocoder	Vocoder	Vocoder	yes	Device On	ctl.switch	12.4	no	on-12.0,on-12.1
+ableton:Vocoder	Vocoder	Vocoder	yes	Device On	ctl.switch	12.1	-	on-12.0,on-12.1
 ableton:Vocoder	Vocoder	Vocoder	yes	Dry/Wet	fx.mix	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:Vocoder	Vocoder	Vocoder	yes	Enhance	ctl.switch	12.4	yes	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1
 ableton:Vocoder	Vocoder	Vocoder	yes	Envelope Depth	fx.mod.depth	12.1	no	v3-12.0,v2-12.0,push2-12.0,generic-12.0,v3-12.1

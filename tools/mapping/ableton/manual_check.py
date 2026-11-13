@@ -11,7 +11,8 @@ live-instrument-reference, live-midi-effect-reference), saved as
 Reverb") to the next one; a name counts as found when it appears there as a
 whole phrase, case ignored. The manual's labels often differ from the LOM
 names ("Decay" for "Decay Time"), so "no" does not mean a name is wrong.
-Devices without a section (legacy devices, racks) are left out. Only names
+Devices without a section (legacy devices, racks) and the generic "Device
+On" are left out. Only names
 and yes/no are written; no manual text is kept.
 """
 
@@ -50,7 +51,8 @@ def main() -> None:
     for line in (here / "lom_names.tsv").read_text(encoding="utf-8").splitlines()[1:]:
         cls, name, _ = line.split("\t")
         body = secs.get(DEVICES.get(cls, ("",))[0])
-        if body is None:
+        # "Device On" is the generic on switch; the phrase in prose says nothing
+        if body is None or name == "Device On":
             continue
         pat = r"(?<![\w])" + re.escape(name.strip().casefold()) + r"(?![\w])"
         print(f"{cls}\t{name}\t{'yes' if re.search(pat, body) else 'no'}")

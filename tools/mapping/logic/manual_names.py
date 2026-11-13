@@ -1,12 +1,13 @@
 """Control names of Logic Pro's own plug-ins from Apple's Logic Pro 13 User
 Guide for Mac (13.0, macOS 27), the only parameter list Apple publishes:
 
-  python3 -I tools/mapping/logic/manual_names.py <pages.tsv> <pages dir> \
+  python3 -I tools/mapping/logic/manual_names.py tools/mapping/logic/pages.tsv <pages dir> \
       > tools/mapping/logic/manual_names.tsv
 
 pages.tsv lists the guide pages read (kind, plug-in, page title, URL; see
 README.md for how it was made from the guide's table of contents) and the
-pages dir holds each page's article HTML as <line number>.html. A control
+pages dir holds each page's article HTML as <line number>.html (README.md
+has the command that fetches them). A control
 is a list item that starts with an emphasized label ending in a control
 word ("Threshold knob and field", "Bass, Mids, and Treble knobs"); the
 label without the control word is the name. Items that name no control

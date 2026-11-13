@@ -352,10 +352,10 @@ logic:Match EQ	Match EQ	Effects	Match EQ parameters	Limit Boost	other	UI label
 logic:Match EQ	Match EQ	Effects	Match EQ parameters	Limit Cut	other	UI label
 logic:Match EQ	Match EQ	Effects	Match EQ parameters	Phase	other	UI label
 logic:Single Band EQ	Single Band EQ	Effects	Single Band EQ controls	Mode	ctl.select	UI label
-logic:Single Band EQ	Single Band EQ	Effects	Single Band EQ controls	Frequency	other	UI label
-logic:Single Band EQ	Single Band EQ	Effects	Single Band EQ controls	Gain	amp.gain	UI label
-logic:Single Band EQ	Single Band EQ	Effects	Single Band EQ controls	Slope	other	UI label
-logic:Single Band EQ	Single Band EQ	Effects	Single Band EQ controls	Q Factor	other	UI label
+logic:Single Band EQ	Single Band EQ	Effects	Single Band EQ controls	Frequency	fx.eq.freq	UI label
+logic:Single Band EQ	Single Band EQ	Effects	Single Band EQ controls	Gain	fx.eq.gain	UI label
+logic:Single Band EQ	Single Band EQ	Effects	Single Band EQ controls	Slope	ctl.select	UI label
+logic:Single Band EQ	Single Band EQ	Effects	Single Band EQ controls	Q Factor	fx.eq.q	UI label
 logic:Vintage EQ Collection	Vintage EQ Collection	Effects	Vintage Console EQ controls	In/Out	other	UI label
 logic:Vintage EQ Collection	Vintage EQ Collection	Effects	Vintage Console EQ controls	Low Cut	fx.tone	UI label
 logic:Vintage EQ Collection	Vintage EQ Collection	Effects	Vintage Console EQ controls	Low	other	UI label
@@ -1728,3 +1728,18 @@ logic:Vintage Mellotron	Vintage Mellotron	Instruments	Vintage Mellotron controls
 logic:Vintage Mellotron	Vintage Mellotron	Instruments	Vintage Mellotron controls	Release	env.release	UI label
 logic:Vintage Mellotron	Vintage Mellotron	Instruments	Vintage Mellotron controls	Pitch Bend Range	system	UI label
 logic:Vintage Mellotron	Vintage Mellotron	Instruments	Vintage Mellotron controls	Fixed Velocity	other	UI label
+logic:Stereo Spread	Stereo Spread	Effects	Stereo Spread controls	Lower Intensity	stereo.width	UI label
+logic:Stereo Spread	Stereo Spread	Effects	Stereo Spread controls	Upper Intensity	stereo.width	UI label
+logic:Stereo Spread	Stereo Spread	Effects	Stereo Spread controls	Upper/Lower Frequency	other	UI label
+logic:Stereo Spread	Stereo Spread	Effects	Stereo Spread controls	Order	other	UI label
+logic:Gain	Gain	Effects	Gain controls	Gain	unsafe	UI label
+logic:Gain	Gain	Effects	Gain controls	Phase Invert Left/Right	ctl.switch	UI label
+logic:Gain	Gain	Effects	Gain controls	Balance	amp.pan	UI label
+logic:Gain	Gain	Effects	Gain controls	Swap L/R	ctl.switch	UI label
+logic:Studio Piano	Studio Piano	Instruments	Studio Piano	Instrument	ctl.select	UI label
+logic:Studio Piano	Studio Piano	Instruments	Studio Piano	Stereo Mic A	other	UI label
+logic:Studio Piano	Studio Piano	Instruments	Studio Piano	Stereo Mic B	other	UI label
+logic:Studio Piano	Studio Piano	Instruments	Studio Piano	Mono Mic	other	UI label
+logic:Studio Piano	Studio Piano	Instruments	Studio Piano	Stereo Mic A On/Off	ctl.switch	UI label
+logic:Studio Piano	Studio Piano	Instruments	Studio Piano	Stereo Mic B On/Off	ctl.switch	UI label
+logic:Studio Piano	Studio Piano	Instruments	Studio Piano	Mono Mic On/Off	ctl.switch	UI label

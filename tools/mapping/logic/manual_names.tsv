@@ -1728,3 +1728,18 @@ Instruments	Vintage Mellotron	Vintage Mellotron controls	Attack
 Instruments	Vintage Mellotron	Vintage Mellotron controls	Release
 Instruments	Vintage Mellotron	Vintage Mellotron controls	Pitch Bend Range
 Instruments	Vintage Mellotron	Vintage Mellotron controls	Fixed Velocity
+Effects	Stereo Spread	Stereo Spread controls	Lower Intensity
+Effects	Stereo Spread	Stereo Spread controls	Upper Intensity
+Effects	Stereo Spread	Stereo Spread controls	Upper/Lower Frequency
+Effects	Stereo Spread	Stereo Spread controls	Order
+Effects	Gain	Gain controls	Gain
+Effects	Gain	Gain controls	Phase Invert Left/Right
+Effects	Gain	Gain controls	Balance
+Effects	Gain	Gain controls	Swap L/R
+Instruments	Studio Piano	Studio Piano	Instrument
+Instruments	Studio Piano	Studio Piano	Stereo Mic A
+Instruments	Studio Piano	Studio Piano	Stereo Mic B
+Instruments	Studio Piano	Studio Piano	Mono Mic
+Instruments	Studio Piano	Studio Piano	Stereo Mic A On/Off
+Instruments	Studio Piano	Studio Piano	Stereo Mic B On/Off
+Instruments	Studio Piano	Studio Piano	Mono Mic On/Off

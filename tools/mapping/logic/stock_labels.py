@@ -35,7 +35,8 @@ for fam, names in {
            " Rotor Cabinet",
     "dist": "Bitcrusher, Clip Distortion, Distortion, Distortion II, Overdrive, Phase Distortion, ChromaGlow,"
             " Amp Designer, Bass Amp Designer, Pedalboard, Exciter, SubBass",
-    "dyn": "Compressor, Adaptive Limiter, Limiter, Multipressor, Expander, Enveloper, DeEsser 2",
+    "dyn": "Compressor, Adaptive Limiter, Limiter, Multipressor, Expander, Enveloper, DeEsser 2, Noise Gate",
+    "util": "Gain, Stereo Spread",
     "eq": "Channel EQ, Linear Phase EQ, Match EQ, Single Band EQ, Vintage EQ Collection",
     "filter": "AutoFilter, Fuzz-Wah, EVOC 20 Filterbank",
     "pitch": "Pitch Correction, Vocal Transformer, Ringshifter",
@@ -44,7 +45,7 @@ for fam, names in {
     "midi": "Arpeggiator, Modifier, Modulator, Note Repeater, Randomizer, Transposer, Velocity Processor",
     "synth": "Alchemy, Sculpture, Retro Synth, ES1, ES2, ES E, ES M, ES P, EFM1, EVOC 20 PolySynth,"
              " Vintage B3 Organ, Vintage Clav, Vintage Electric Piano, Vintage Mellotron, Studio Bass,"
-             " Studio Horns, Studio Strings, Drum Synth, Ultrabeat",
+             " Studio Horns, Studio Strings, Studio Piano, Drum Synth, Ultrabeat",
     "sampler": "Sampler, Quick Sampler, Sample Alchemy",
 }.items():
     for n in names.split(","):
@@ -108,6 +109,10 @@ O = {
                    " FM (Amount)=fm; Filter Env(elope)=fe; Filter FM/Drive=dr; Sine Level=ol; Mix=ol;"
                    " Voice Detune=ud; Vibrato=la; Velocity=sys; Polyphony=sys; Key (Follow)=sys",
     "Space Designer": "Gain=eg; Q=eq",
+    "Single Band EQ": "Frequency=ef; Gain=eg; Slope=sel; Q Factor=eq",
+    "Gain": "Gain=u; Phase Invert Left/Right=sw; Swap L/R=sw",
+    "Stereo Spread": "Lower Intensity=w; Upper Intensity=w; Upper/Lower Frequency=o; Order=o",
+    "Studio Piano": "Instrument=sel; Stereo Mic A=o; Stereo Mic B=o; Mono Mic=o",
     "Alchemy": "Frequency=o; Fine Tune=of; Speed=o",
     "ES P": "ADSR Int=fe; Overdrive=dr",
     "ES1": "Mix=ol; Out Level=g; Sub=ol",

@@ -1,7 +1,6 @@
 class_name	name	in_manual
 Amp	Amp Type	no
 Amp	Bass	yes
-Amp	Device On	no
 Amp	Dry/Wet	yes
 Amp	Dual Mono	no
 Amp	Gain	yes
@@ -10,7 +9,6 @@ Amp	Presence	yes
 Amp	Treble	yes
 Amp	Volume	yes
 AutoFilter2	Control	yes
-AutoFilter2	Device On	no
 AutoFilter2	Drive	yes
 AutoFilter2	Dry/Wet	yes
 AutoFilter2	Filter Morph	no
@@ -29,7 +27,6 @@ AutoFilter2	Resonance	yes
 AutoPan2	16th	yes
 AutoPan2	Amount	yes
 AutoPan2	Attack Time	yes
-AutoPan2	Device On	no
 AutoPan2	Dyn Mod	no
 AutoPan2	Frequency	yes
 AutoPan2	Harmonic	yes
@@ -44,7 +41,6 @@ AutoPan2	Time	yes
 AutoPan2	Time Mode	yes
 AutoPan2	Tremolo Shape	no
 AutoPan2	Waveform	yes
-AutoShift	Device On	no
 AutoShift	Dry/Wet	yes
 AutoShift	Formant Follow	yes
 AutoShift	Formant Shift	yes
@@ -60,7 +56,6 @@ AutoShift	Vibrato Rate	yes
 BeatRepeat	Block Triplets	no
 BeatRepeat	Chance	yes
 BeatRepeat	Decay	yes
-BeatRepeat	Device On	no
 BeatRepeat	Filter Freq	no
 BeatRepeat	Filter On	yes
 BeatRepeat	Filter Width	no
@@ -76,12 +71,10 @@ BeatRepeat	Variation	yes
 BeatRepeat	Variation Type	no
 BeatRepeat	Volume	yes
 Cabinet	Cabinet Type	no
-Cabinet	Device On	no
 Cabinet	Dry/Wet	yes
 Cabinet	Dual Mono	no
 Cabinet	Microphone Position	no
 Cabinet	Microphone Type	no
-ChannelEq	Device On	no
 ChannelEq	Gain	yes
 ChannelEq	High Gain	no
 ChannelEq	Highpass On	no
@@ -90,7 +83,6 @@ ChannelEq	Mid Freq	no
 ChannelEq	Mid Gain	no
 ChannelEq	Output	yes
 Chorus2	Amount	yes
-Chorus2	Device On	no
 Chorus2	Dry/Wet	yes
 Chorus2	Feedback	yes
 Chorus2	Gain	yes
@@ -102,7 +94,6 @@ Chorus2	Rate	yes
 Chorus2	Shape	yes
 Chorus2	Warmth	yes
 Chorus2	Width	yes
-Collision	Device On	no
 Collision	LFO 1 Amt A	no
 Collision	LFO 1 Amt B	no
 Collision	LFO 1 Depth	no
@@ -238,7 +229,6 @@ Collision	Structure	yes
 Collision	Volume	yes
 Compressor2	Attack	yes
 Compressor2	Auto Release On/Off	no
-Compressor2	Device On	no
 Compressor2	Dry/Wet	yes
 Compressor2	Env Mode	no
 Compressor2	Expansion Ratio	no
@@ -262,7 +252,6 @@ Compressor2	Threshold	yes
 Corpus	Bleed	yes
 Corpus	Brightness	no
 Corpus	Decay	yes
-Corpus	Device On	no
 Corpus	Dry Wet	no
 Corpus	Filter On/Off	no
 Corpus	Fine	yes
@@ -298,7 +287,6 @@ Corpus	Transpose	yes
 Corpus	Tune	yes
 Corpus	Width	yes
 Delay	Delay Mode	no
-Delay	Device On	no
 Delay	Dly < Mod	no
 Delay	Dry/Wet	yes
 Delay	Feedback	yes
@@ -328,7 +316,6 @@ Drift	Cyc Env Synced	no
 Drift	Cyc Env Tilt	no
 Drift	Cyc Env Time	no
 Drift	Cyc Env Time Mode	no
-Drift	Device On	no
 Drift	Drift	yes
 Drift	Env 1 Attack	no
 Drift	Env 1 Decay	no
@@ -391,7 +378,6 @@ DrumBuss	Boom Freq	no
 DrumBuss	Compressor On	no
 DrumBuss	Crunch	yes
 DrumBuss	Damping Freq	no
-DrumBuss	Device On	no
 DrumBuss	Drive	yes
 DrumBuss	Drive Type	no
 DrumBuss	Dry/Wet	yes
@@ -403,7 +389,6 @@ DrumCell	8-Bit Rate	no
 DrumCell	Attack	yes
 DrumCell	Decay	yes
 DrumCell	Detune	yes
-DrumCell	Device On	no
 DrumCell	Env Mode	no
 DrumCell	Filter Freq	no
 DrumCell	Filter Gain	yes
@@ -440,7 +425,6 @@ DrumCell	Vel > Vol	no
 DrumCell	Volume	yes
 Echo	Channel Mode	yes
 Echo	Clip Dry	no
-Echo	Device On	no
 Echo	Dly < Mod	no
 Echo	Dry Wet	no
 Echo	Duck On	no
@@ -571,11 +555,9 @@ Eq8	8 Gain B	no
 Eq8	8 Resonance A	no
 Eq8	8 Resonance B	no
 Eq8	Adaptive Q	yes
-Eq8	Device On	no
 Eq8	Output Gain	no
 Eq8	Scale	yes
 Erosion2	Amount	yes
-Erosion2	Device On	no
 Erosion2	Filter Width	yes
 Erosion2	Frequency	yes
 Erosion2	Noise Blend	yes
@@ -610,9 +592,7 @@ FilterDelay	3 Input On	no
 FilterDelay	3 Pan	no
 FilterDelay	3 Time Delay	no
 FilterDelay	3 Volume	no
-FilterDelay	Device On	no
 FilterDelay	Dry	yes
-FilterEQ3	Device On	no
 FilterEQ3	FreqHi	yes
 FilterEQ3	FreqLo	yes
 FilterEQ3	GainHi	no
@@ -623,7 +603,6 @@ FilterEQ3	LowOn	no
 FilterEQ3	MidOn	no
 FilterEQ3	Slope	no
 Gate	Attack	yes
-Gate	Device On	no
 Gate	FlipMode	no
 Gate	Floor	yes
 Gate	Hold	yes
@@ -641,7 +620,6 @@ Gate	S/C Mix	no
 Gate	S/C On	no
 Gate	Threshold	yes
 GlueCompressor	Attack	yes
-GlueCompressor	Device On	no
 GlueCompressor	Dry/Wet	yes
 GlueCompressor	Makeup	yes
 GlueCompressor	Peak Clip In	no
@@ -660,7 +638,6 @@ GlueCompressor	Threshold	yes
 GrainDelay	Beat Delay	no
 GrainDelay	Beat Swing	no
 GrainDelay	Delay Mode	no
-GrainDelay	Device On	no
 GrainDelay	DryWet	no
 GrainDelay	Feedback	yes
 GrainDelay	Frequency	yes
@@ -673,7 +650,6 @@ Hybrid	Algo Type	no
 Hybrid	Blend	yes
 Hybrid	Damping	yes
 Hybrid	Decay	yes
-Hybrid	Device On	no
 Hybrid	DH Bass X	no
 Hybrid	DH BassMult	no
 Hybrid	DH Shape	no
@@ -853,11 +829,9 @@ InstrumentImpulse	8 Stretch Mode	no
 InstrumentImpulse	8 Transpose	no
 InstrumentImpulse	8 Volume	no
 InstrumentImpulse	8 Volume <- Vel	no
-InstrumentImpulse	Device On	no
 InstrumentImpulse	Global Time	no
 InstrumentImpulse	Global Transpose	no
 InstrumentImpulse	Global Volume	no
-InstrumentMeld	Device On	no
 InstrumentMeld	MeldVoice_Drive	no
 InstrumentMeld	MeldVoice_EngineA_AmpEnvelope_LoopMode	no
 InstrumentMeld	MeldVoice_EngineA_AmpEnvelope_Slopes_Attack	no
@@ -952,7 +926,6 @@ InstrumentVector	Amp Loop Mode	no
 InstrumentVector	Amp R Slope	no
 InstrumentVector	Amp Release	no
 InstrumentVector	Amp Sustain	no
-InstrumentVector	Device On	no
 InstrumentVector	Env 2 A Slope	no
 InstrumentVector	Env 2 Attack	no
 InstrumentVector	Env 2 D Slope	no
@@ -1040,7 +1013,6 @@ InstrumentVector	Unison Amount	no
 InstrumentVector	Volume	yes
 Limiter	Auto	yes
 Limiter	Ceiling	yes
-Limiter	Device On	no
 Limiter	Gain	yes
 Limiter	Input Gain	yes
 Limiter	Link	yes
@@ -1050,7 +1022,6 @@ Limiter	M/S Link	no
 Limiter	Mode	yes
 Limiter	Release	yes
 Limiter	Release time	yes
-Looper	Device On	no
 Looper	Feedback	yes
 Looper	Monitor	yes
 Looper	Quantization	yes
@@ -1063,7 +1034,6 @@ LoungeLizard	Damp Amount	no
 LoungeLizard	Damp Balance	no
 LoungeLizard	Damp Tone	no
 LoungeLizard	Detune	yes
-LoungeLizard	Device On	no
 LoungeLizard	F Release	no
 LoungeLizard	F Tine < Key	no
 LoungeLizard	F Tine Color	no
@@ -1093,7 +1063,6 @@ LoungeLizard	Pickup Model	no
 LoungeLizard	Semitone	yes
 LoungeLizard	Voices	yes
 LoungeLizard	Volume	yes
-MidiArpeggiator	Device On	no
 MidiArpeggiator	Free Rate	yes
 MidiArpeggiator	Gate	yes
 MidiArpeggiator	Groove	yes
@@ -1126,11 +1095,9 @@ MidiCcControl	Custom J	no
 MidiCcControl	Custom K	no
 MidiCcControl	Custom L	no
 MidiCcControl	Custom M	no
-MidiCcControl	Device On	no
 MidiCcControl	Mod Wheel	yes
 MidiCcControl	Pitch Bend	yes
 MidiCcControl	Pressure	yes
-MidiChord	Device On	no
 MidiChord	Shift1	no
 MidiChord	Shift2	no
 MidiChord	Shift3	no
@@ -1145,7 +1112,6 @@ MidiChord	Velocity5	no
 MidiChord	Velocity6	no
 MidiNoteLength	Decay Key Scale	no
 MidiNoteLength	Decay Time	yes
-MidiNoteLength	Device On	no
 MidiNoteLength	Gate	yes
 MidiNoteLength	Latch	yes
 MidiNoteLength	Release Velocity	yes
@@ -1153,24 +1119,20 @@ MidiNoteLength	Sync On	no
 MidiNoteLength	Synced Length	no
 MidiNoteLength	Time Length	no
 MidiNoteLength	Trigger Source	yes
-MidiPitcher	Device On	no
 MidiPitcher	Lowest	yes
 MidiPitcher	Pitch	yes
 MidiPitcher	Range	yes
 MidiRandom	Chance	yes
 MidiRandom	Choices	yes
-MidiRandom	Device On	no
 MidiRandom	Interval	yes
 MidiRandom	Mode	yes
 MidiRandom	Sign	yes
 MidiScale	Base	yes
-MidiScale	Device On	no
 MidiScale	Fold	yes
 MidiScale	Lowest	yes
 MidiScale	Range	yes
 MidiScale	Transpose	yes
 MidiVelocity	Compand	yes
-MidiVelocity	Device On	no
 MidiVelocity	Drive	yes
 MidiVelocity	Lowest	yes
 MidiVelocity	Mode	yes
@@ -1197,7 +1159,6 @@ MultibandDynamics	Below Ratio (Mid)	no
 MultibandDynamics	Below Threshold (High)	no
 MultibandDynamics	Below Threshold (Low)	no
 MultibandDynamics	Below Threshold (Mid)	no
-MultibandDynamics	Device On	no
 MultibandDynamics	Input Gain (High)	no
 MultibandDynamics	Input Gain (Low)	no
 MultibandDynamics	Input Gain (Mid)	no
@@ -1233,7 +1194,6 @@ MultiSampler	Ae Release	no
 MultiSampler	Ae Retrig	no
 MultiSampler	Ae Sustain	no
 MultiSampler	Detune	yes
-MultiSampler	Device On	no
 MultiSampler	F On	no
 MultiSampler	Fe < Env	no
 MultiSampler	Fe Attack	no
@@ -1421,7 +1381,6 @@ Operator	De R < Vel	no
 Operator	De Release	no
 Operator	De Retrig	no
 Operator	De Sustain	no
-Operator	Device On	no
 Operator	Fe A Slope	no
 Operator	Fe Amount	no
 Operator	Fe Attack	no
@@ -1542,7 +1501,6 @@ Operator	Tone	yes
 Operator	Transpose	yes
 Operator	Volume	yes
 OriginalSimpler	Detune	yes
-OriginalSimpler	Device On	no
 OriginalSimpler	Division	yes
 OriginalSimpler	F On	no
 OriginalSimpler	Fade In	yes
@@ -1608,7 +1566,6 @@ OriginalSimpler	Ve Sustain	no
 OriginalSimpler	Vol < LFO	no
 OriginalSimpler	Vol < Vel	no
 OriginalSimpler	Volume	yes
-Overdrive	Device On	no
 Overdrive	Drive	yes
 Overdrive	Dry/Wet	yes
 Overdrive	Filter Freq	no
@@ -1616,7 +1573,6 @@ Overdrive	Filter Width	no
 Overdrive	Preserve Dynamics	no
 Overdrive	Tone	yes
 Pedal	Bass	yes
-Pedal	Device On	no
 Pedal	Dry/Wet	yes
 Pedal	Gain	yes
 Pedal	Mid	yes
@@ -1627,7 +1583,6 @@ Pedal	Treble	yes
 Pedal	Type	no
 PhaserNew	Amount	yes
 PhaserNew	Center Freq	no
-PhaserNew	Device On	no
 PhaserNew	Doubler Time	no
 PhaserNew	Dry/Wet	yes
 PhaserNew	Duty Cycle	yes
@@ -1659,7 +1614,6 @@ PhaserNew	Spread	yes
 PhaserNew	Warmth	yes
 Redux2	Bit Depth	no
 Redux2	DC Shift	yes
-Redux2	Device On	no
 Redux2	Dry/Wet	yes
 Redux2	Jitter	yes
 Redux2	Post-Filter	yes
@@ -1670,7 +1624,6 @@ Redux2	Sample Rate	yes
 Resonator	Color	yes
 Resonator	Const	yes
 Resonator	Decay	yes
-Resonator	Device On	no
 Resonator	Dry/Wet	yes
 Resonator	Filter On	no
 Resonator	Filter Type	no
@@ -1703,7 +1656,6 @@ Reverb	Chorus On	no
 Reverb	Chorus Rate	no
 Reverb	Decay Time	no
 Reverb	Density	yes
-Reverb	Device On	no
 Reverb	Diff. Hi Freq	no
 Reverb	Diff. Hi Type	no
 Reverb	Diffuse Level	no
@@ -1735,7 +1687,6 @@ Reverb	Size Smoothing	no
 Reverb	Stereo Image	yes
 Roar	Blend	yes
 Roar	Comp Amt	no
-Roar	Device On	no
 Roar	Drive	yes
 Roar	Dry/Wet	yes
 Roar	Env Attack	no
@@ -1812,7 +1763,6 @@ Saturator	Color Freq	no
 Saturator	Color On	no
 Saturator	Color Width	no
 Saturator	Depth	yes
-Saturator	Device On	no
 Saturator	Drive	yes
 Saturator	Dry/Wet	yes
 Saturator	Frequency	yes
@@ -1831,7 +1781,6 @@ Shifter	Delay Feedback	yes
 Shifter	Delay S. Time	no
 Shifter	Delay Sync	no
 Shifter	Delay Time	yes
-Shifter	Device On	no
 Shifter	Dry/Wet	yes
 Shifter	Env Amount Hz	no
 Shifter	Env Amount St	no
@@ -1871,7 +1820,6 @@ Spectral	Delay Tilt	no
 Spectral	Delay Time Divisions	no
 Spectral	Delay Time Seconds	no
 Spectral	Delay Time Sixteenths	no
-Spectral	Device On	no
 Spectral	Dry Wet	no
 Spectral	Fade In	yes
 Spectral	Fade Out	yes
@@ -1891,7 +1839,6 @@ StereoGain	Bass Freq	no
 StereoGain	Bass Mono	yes
 StereoGain	Channel Mode	yes
 StereoGain	DC Filter	no
-StereoGain	Device On	no
 StereoGain	Gain	yes
 StereoGain	Gain (Legacy)	no
 StereoGain	Left Inv	no
@@ -1920,7 +1867,6 @@ StringStudio	Damp Pos	no
 StringStudio	Damper Gated	no
 StringStudio	Damper Mass	no
 StringStudio	Damper On	no
-StringStudio	Device On	no
 StringStudio	E Pos	no
 StringStudio	E Pos < Key	no
 StringStudio	E Pos < Vel	no
@@ -2009,7 +1955,6 @@ StringStudio	Vibrato On/Off	no
 StringStudio	Voices	yes
 StringStudio	Volume	yes
 Transmute	Decay	yes
-Transmute	Device On	no
 Transmute	Dry Wet	no
 Transmute	Freq. Hz	no
 Transmute	Glide	yes
@@ -2028,7 +1973,6 @@ Transmute	Unison	yes
 Transmute	Unison Amount	no
 Tube	Attack	yes
 Tube	Bias	yes
-Tube	Device On	no
 Tube	Drive	yes
 Tube	Dry/Wet	no
 Tube	Envelope	yes
@@ -2069,7 +2013,6 @@ UltraAnalog	AMP2 Level	no
 UltraAnalog	AMP2 On/Off	no
 UltraAnalog	AMP2 Pan	no
 UltraAnalog	Detune	yes
-UltraAnalog	Device On	no
 UltraAnalog	F1 Drive	no
 UltraAnalog	F1 Freq	no
 UltraAnalog	F1 Freq < Env	no
@@ -2194,7 +2137,6 @@ UltraAnalog	Voices	yes
 UltraAnalog	Volume	yes
 Vinyl	Crackle Density	no
 Vinyl	Crackle Volume	no
-Vinyl	Device On	no
 Vinyl	Global Drive	no
 Vinyl	Pinch Drive	no
 Vinyl	Pinch Freq.	no
@@ -2207,7 +2149,6 @@ Vinyl	Tracing Freq.	no
 Vinyl	Tracing On	no
 Vinyl	Tracing Width	no
 Vocoder	Attack Time	no
-Vocoder	Device On	no
 Vocoder	Dry/Wet	yes
 Vocoder	Enhance	yes
 Vocoder	Envelope Depth	no
