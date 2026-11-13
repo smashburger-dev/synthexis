@@ -1,0 +1,2232 @@
+class_name	name	in_manual
+Amp	Amp Type	no
+Amp	Bass	yes
+Amp	Device On	no
+Amp	Dry/Wet	yes
+Amp	Dual Mono	no
+Amp	Gain	yes
+Amp	Middle	yes
+Amp	Presence	yes
+Amp	Treble	yes
+Amp	Volume	yes
+AutoFilter2	Control	yes
+AutoFilter2	Device On	no
+AutoFilter2	Drive	yes
+AutoFilter2	Dry/Wet	yes
+AutoFilter2	Filter Morph	no
+AutoFilter2	Filter Type	yes
+AutoFilter2	Formant	yes
+AutoFilter2	Frequency	yes
+AutoFilter2	LFO 16th	no
+AutoFilter2	LFO Amount	no
+AutoFilter2	LFO Freq	no
+AutoFilter2	LFO Rate	no
+AutoFilter2	LFO T Mode	no
+AutoFilter2	LFO Time	yes
+AutoFilter2	LFO Wave	no
+AutoFilter2	Pitch	yes
+AutoFilter2	Resonance	yes
+AutoPan2	16th	yes
+AutoPan2	Amount	yes
+AutoPan2	Attack Time	yes
+AutoPan2	Device On	no
+AutoPan2	Dyn Mod	no
+AutoPan2	Frequency	yes
+AutoPan2	Harmonic	yes
+AutoPan2	Invert	yes
+AutoPan2	Mode	yes
+AutoPan2	Panning Shape	no
+AutoPan2	Phase	yes
+AutoPan2	Rate	yes
+AutoPan2	Spin	yes
+AutoPan2	Stereo Mode	no
+AutoPan2	Time	yes
+AutoPan2	Time Mode	yes
+AutoPan2	Tremolo Shape	no
+AutoPan2	Waveform	yes
+AutoShift	Device On	no
+AutoShift	Dry/Wet	yes
+AutoShift	Formant Follow	yes
+AutoShift	Formant Shift	yes
+AutoShift	Pitch Fine	no
+AutoShift	Pitch Scale Deg.	no
+AutoShift	Pitch St.	no
+AutoShift	Root	yes
+AutoShift	Scale	yes
+AutoShift	Smooth Time	no
+AutoShift	Strength	yes
+AutoShift	Vibrato Amt	no
+AutoShift	Vibrato Rate	yes
+BeatRepeat	Block Triplets	no
+BeatRepeat	Chance	yes
+BeatRepeat	Decay	yes
+BeatRepeat	Device On	no
+BeatRepeat	Filter Freq	no
+BeatRepeat	Filter On	yes
+BeatRepeat	Filter Width	no
+BeatRepeat	Gate	yes
+BeatRepeat	Grid	yes
+BeatRepeat	Interval	yes
+BeatRepeat	Mix Type	no
+BeatRepeat	Offset	yes
+BeatRepeat	Pitch	yes
+BeatRepeat	Pitch Decay	yes
+BeatRepeat	Repeat	yes
+BeatRepeat	Variation	yes
+BeatRepeat	Variation Type	no
+BeatRepeat	Volume	yes
+Cabinet	Cabinet Type	no
+Cabinet	Device On	no
+Cabinet	Dry/Wet	yes
+Cabinet	Dual Mono	no
+Cabinet	Microphone Position	no
+Cabinet	Microphone Type	no
+ChannelEq	Device On	no
+ChannelEq	Gain	yes
+ChannelEq	High Gain	no
+ChannelEq	Highpass On	no
+ChannelEq	Low Gain	no
+ChannelEq	Mid Freq	no
+ChannelEq	Mid Gain	no
+ChannelEq	Output	yes
+Chorus2	Amount	yes
+Chorus2	Device On	no
+Chorus2	Dry/Wet	yes
+Chorus2	Feedback	yes
+Chorus2	Gain	yes
+Chorus2	HP Freq	no
+Chorus2	HPF Freq	no
+Chorus2	Mode	yes
+Chorus2	Offset	yes
+Chorus2	Rate	yes
+Chorus2	Shape	yes
+Chorus2	Warmth	yes
+Chorus2	Width	yes
+Collision	Device On	no
+Collision	LFO 1 Amt A	no
+Collision	LFO 1 Amt B	no
+Collision	LFO 1 Depth	no
+Collision	LFO 1 Depth < Vel	no
+Collision	LFO 1 Dest A	no
+Collision	LFO 1 Dest B	no
+Collision	LFO 1 Destination A	no
+Collision	LFO 1 Destination A Amount	no
+Collision	LFO 1 Offset	no
+Collision	LFO 1 On/Off	no
+Collision	LFO 1 Rate	no
+Collision	LFO 1 Rate < Key	no
+Collision	LFO 1 Shape	no
+Collision	LFO 1 Sync	no
+Collision	LFO 1 Sync Rate	no
+Collision	LFO 2 Amt A	no
+Collision	LFO 2 Amt B	no
+Collision	LFO 2 Depth	no
+Collision	LFO 2 Depth < Vel	no
+Collision	LFO 2 Dest A	no
+Collision	LFO 2 Dest B	no
+Collision	LFO 2 Destination A	no
+Collision	LFO 2 Destination A Amount	no
+Collision	LFO 2 Offset	no
+Collision	LFO 2 On/Off	no
+Collision	LFO 2 Rate	no
+Collision	LFO 2 Rate < Key	no
+Collision	LFO 2 Shape	no
+Collision	LFO 2 Sync	no
+Collision	LFO 2 Sync Rate	no
+Collision	Mallet Noise Amount	no
+Collision	Mallet Noise Amount < Key	no
+Collision	Mallet Noise Amount < Vel	no
+Collision	Mallet Noise Color	no
+Collision	Mallet On/Off	no
+Collision	Mallet Stiffness	no
+Collision	Mallet Stiffness < Key	no
+Collision	Mallet Stiffness < Vel	no
+Collision	Mallet Volume	no
+Collision	Mallet Volume < Key	no
+Collision	Mallet Volume < Vel	no
+Collision	MW Amt A	no
+Collision	MW Amt B	no
+Collision	MW Dest A	no
+Collision	MW Dest B	no
+Collision	Noise Attack	no
+Collision	Noise Decay	no
+Collision	Noise Filter Freq	no
+Collision	Noise Filter Q	no
+Collision	Noise Filter Type	no
+Collision	Noise Freq < Env	no
+Collision	Noise Freq < Key	no
+Collision	Noise Freq < Vel	no
+Collision	Noise On/Off	no
+Collision	Noise Release	no
+Collision	Noise Sustain	no
+Collision	Noise Volume	no
+Collision	Noise Volume < Key	no
+Collision	Noise Volume < Vel	no
+Collision	Note PB Range	no
+Collision	Panorama	no
+Collision	PB Amt A	no
+Collision	PB Dest A	no
+Collision	PB Range	no
+Collision	Press Amt A	no
+Collision	Press Amt B	no
+Collision	Press Dest A	no
+Collision	Press Dest B	no
+Collision	Res 1 Bleed	no
+Collision	Res 1 Brightness	no
+Collision	Res 1 Decay	no
+Collision	Res 1 Decay < Key	no
+Collision	Res 1 Decay < Vel	no
+Collision	Res 1 Fine Tune	no
+Collision	Res 1 Hit	no
+Collision	Res 1 Hit < Random	no
+Collision	Res 1 Inharmonics	no
+Collision	Res 1 Inharmonics < Vel	no
+Collision	Res 1 Listening L	no
+Collision	Res 1 Listening R	no
+Collision	Res 1 Material	no
+Collision	Res 1 Material < Key	no
+Collision	Res 1 Material < Vel	no
+Collision	Res 1 On/Off	no
+Collision	Res 1 Opening	no
+Collision	Res 1 Pan	no
+Collision	Res 1 Pan < Key	no
+Collision	Res 1 Pitch Env.	no
+Collision	Res 1 Pitch Env. < Vel	no
+Collision	Res 1 Pitch Env. Time	no
+Collision	Res 1 Quality	no
+Collision	Res 1 Radius	no
+Collision	Res 1 Ratio	no
+Collision	Res 1 Tune	no
+Collision	Res 1 Tune < Key	no
+Collision	Res 1 Type	no
+Collision	Res 1 Volume	no
+Collision	Res 2 Bleed	no
+Collision	Res 2 Brightness	no
+Collision	Res 2 Decay	no
+Collision	Res 2 Decay < Key	no
+Collision	Res 2 Decay < Vel	no
+Collision	Res 2 Fine Tune	no
+Collision	Res 2 Hit	no
+Collision	Res 2 Hit < Random	no
+Collision	Res 2 Inharmonics	no
+Collision	Res 2 Inharmonics < Vel	no
+Collision	Res 2 Listening L	no
+Collision	Res 2 Listening R	no
+Collision	Res 2 Material	no
+Collision	Res 2 Material < Key	no
+Collision	Res 2 Material < Vel	no
+Collision	Res 2 On/Off	no
+Collision	Res 2 Opening	no
+Collision	Res 2 Pan	no
+Collision	Res 2 Pan < Key	no
+Collision	Res 2 Panorama	no
+Collision	Res 2 Pitch Env.	no
+Collision	Res 2 Pitch Env. < Vel	no
+Collision	Res 2 Pitch Env. Time	no
+Collision	Res 2 Quality	no
+Collision	Res 2 Radius	no
+Collision	Res 2 Ratio	no
+Collision	Res 2 Tune	no
+Collision	Res 2 Tune < Key	no
+Collision	Res 2 Type	no
+Collision	Res 2 Volume	no
+Collision	Slide Amt A	no
+Collision	Slide Amt B	no
+Collision	Slide Dest A	no
+Collision	Slide Dest B	no
+Collision	Structure	yes
+Collision	Volume	yes
+Compressor2	Attack	yes
+Compressor2	Auto Release On/Off	no
+Compressor2	Device On	no
+Compressor2	Dry/Wet	yes
+Compressor2	Env Mode	no
+Compressor2	Expansion Ratio	no
+Compressor2	Knee	yes
+Compressor2	LookAhead	yes
+Compressor2	Makeup	yes
+Compressor2	Model	no
+Compressor2	Output Gain	no
+Compressor2	Ratio	yes
+Compressor2	Release	yes
+Compressor2	S/C EQ Freq	no
+Compressor2	S/C EQ Gain	no
+Compressor2	S/C EQ On	no
+Compressor2	S/C EQ Q	no
+Compressor2	S/C EQ Type	no
+Compressor2	S/C Gain	no
+Compressor2	S/C Listen	no
+Compressor2	S/C Mix	no
+Compressor2	S/C On	no
+Compressor2	Threshold	yes
+Corpus	Bleed	yes
+Corpus	Brightness	no
+Corpus	Decay	yes
+Corpus	Device On	no
+Corpus	Dry Wet	no
+Corpus	Filter On/Off	no
+Corpus	Fine	yes
+Corpus	Gain	yes
+Corpus	Hit	yes
+Corpus	Inharmonics	yes
+Corpus	LFO Amount	no
+Corpus	LFO On/Off	no
+Corpus	LFO Rate	no
+Corpus	LFO Shape	no
+Corpus	LFO Stereo Mode	yes
+Corpus	LFO Sync	no
+Corpus	LFO Sync Rate	no
+Corpus	Listening L	no
+Corpus	Listening R	no
+Corpus	Material	yes
+Corpus	Mid Freq	no
+Corpus	MIDI Frequency	yes
+Corpus	MIDI Mode	no
+Corpus	Note Off	yes
+Corpus	Off Decay	yes
+Corpus	Offset	yes
+Corpus	Opening	yes
+Corpus	PB Range	yes
+Corpus	Phase	yes
+Corpus	Radius	yes
+Corpus	Ratio	yes
+Corpus	Resonance Type	yes
+Corpus	Resonator Quality	yes
+Corpus	Spin	yes
+Corpus	Spread	yes
+Corpus	Transpose	yes
+Corpus	Tune	yes
+Corpus	Width	yes
+Delay	Delay Mode	no
+Delay	Device On	no
+Delay	Dly < Mod	no
+Delay	Dry/Wet	yes
+Delay	Feedback	yes
+Delay	Filter < Mod	no
+Delay	Filter Freq	no
+Delay	Filter On	no
+Delay	Filter Width	no
+Delay	Freeze	yes
+Delay	L 16th	no
+Delay	L Offset	no
+Delay	L Sync	no
+Delay	L Time	no
+Delay	LFO > Delay	no
+Delay	LFO > Filter	no
+Delay	LFO Freq	no
+Delay	Link	yes
+Delay	Mod Freq	no
+Delay	Ping Pong	yes
+Delay	R 16th	no
+Delay	R Offset	no
+Delay	R Sync	no
+Delay	R Time	no
+Drift	Cyc Env Hold	no
+Drift	Cyc Env Rate	yes
+Drift	Cyc Env Ratio	no
+Drift	Cyc Env Synced	no
+Drift	Cyc Env Tilt	no
+Drift	Cyc Env Time	no
+Drift	Cyc Env Time Mode	no
+Drift	Device On	no
+Drift	Drift	yes
+Drift	Env 1 Attack	no
+Drift	Env 1 Decay	no
+Drift	Env 1 Release	no
+Drift	Env 1 Sustain	no
+Drift	Env 2 Attack	no
+Drift	Env 2 Cyc On	no
+Drift	Env 2 Decay	no
+Drift	Env 2 Release	no
+Drift	Env 2 Sustain	no
+Drift	Glide Time	no
+Drift	HP Freq	no
+Drift	Key > LPF	no
+Drift	Legato On	no
+Drift	LFO Amt	no
+Drift	LFO Mod Amt	no
+Drift	LFO Rate	yes
+Drift	LFO Ratio	no
+Drift	LFO Retrig On	no
+Drift	LFO Synced	no
+Drift	LFO Time	no
+Drift	LFO Time Mode	no
+Drift	LFO Wave	no
+Drift	LP Freq	no
+Drift	LP Mod Amt 1	no
+Drift	LP Mod Amt 2	no
+Drift	LP Res	no
+Drift	LP Reso	no
+Drift	LP Type	no
+Drift	Mod Matrix Amt 1	no
+Drift	Mod Matrix Amt 2	no
+Drift	Mod Matrix Amt 3	no
+Drift	Noise Gain	yes
+Drift	Noise On	no
+Drift	Osc 1 Flt On	no
+Drift	Osc 1 Gain	yes
+Drift	Osc 1 Oct	no
+Drift	Osc 1 Shape	yes
+Drift	Osc 1 Shape Mod Amt	no
+Drift	Osc 1 Wave	no
+Drift	Osc 2 Detune	yes
+Drift	Osc 2 Flt On	no
+Drift	Osc 2 Gain	yes
+Drift	Osc 2 Oct	no
+Drift	Osc 2 Shape	no
+Drift	Osc 2 Wave	no
+Drift	Osc Retrig On	no
+Drift	Pitch Mod Amt 1	no
+Drift	Pitch Mod Amt 2	no
+Drift	Spread	yes
+Drift	Strength	yes
+Drift	Thickness	yes
+Drift	Transpose	yes
+Drift	Vel > Vol	yes
+Drift	Volume	yes
+DrumBuss	Boom Amt	no
+DrumBuss	Boom Audition	yes
+DrumBuss	Boom Decay	no
+DrumBuss	Boom Freq	no
+DrumBuss	Compressor On	no
+DrumBuss	Crunch	yes
+DrumBuss	Damping Freq	no
+DrumBuss	Device On	no
+DrumBuss	Drive	yes
+DrumBuss	Drive Type	no
+DrumBuss	Dry/Wet	yes
+DrumBuss	Output Gain	yes
+DrumBuss	Transients	yes
+DrumBuss	Trim	yes
+DrumCell	8-Bit Flt Decay	no
+DrumCell	8-Bit Rate	no
+DrumCell	Attack	yes
+DrumCell	Decay	yes
+DrumCell	Detune	yes
+DrumCell	Device On	no
+DrumCell	Env Mode	no
+DrumCell	Filter Freq	no
+DrumCell	Filter Gain	yes
+DrumCell	Filter Res	no
+DrumCell	Filter Type	no
+DrumCell	Flt Freq	no
+DrumCell	Flt Reso	no
+DrumCell	Flt Type	no
+DrumCell	FM Amt	no
+DrumCell	FM Freq	no
+DrumCell	FX Type	no
+DrumCell	Grain Size	yes
+DrumCell	Hold	yes
+DrumCell	Length	yes
+DrumCell	Loop Length	yes
+DrumCell	Loop Offset	yes
+DrumCell	Mod Amt	no
+DrumCell	Mod Dest	no
+DrumCell	Noise Amt	no
+DrumCell	Noise Color	yes
+DrumCell	Pan	yes
+DrumCell	Pitch Env Amt	no
+DrumCell	Pitch Env Decay	no
+DrumCell	Punch Amt	no
+DrumCell	Punch Release	yes
+DrumCell	RM Amt	no
+DrumCell	RM Freq	no
+DrumCell	Start	yes
+DrumCell	Stretch Factor	no
+DrumCell	Sub Amt	no
+DrumCell	Sub Freq	no
+DrumCell	Transpose	yes
+DrumCell	Vel > Vol	no
+DrumCell	Volume	yes
+Echo	Channel Mode	yes
+Echo	Clip Dry	no
+Echo	Device On	no
+Echo	Dly < Mod	no
+Echo	Dry Wet	no
+Echo	Duck On	no
+Echo	Duck Release	no
+Echo	Duck Thr	no
+Echo	Env Mix	yes
+Echo	Feedback	yes
+Echo	Feedback Inv	no
+Echo	Filter On	no
+Echo	Flt < Mod	no
+Echo	Gate On	no
+Echo	Gate Release	no
+Echo	Gate Thr	no
+Echo	HP Freq	no
+Echo	HP Res	no
+Echo	Input Gain	no
+Echo	L 16th	no
+Echo	L Division	no
+Echo	L Offset	no
+Echo	L Sync	no
+Echo	L Sync Mode	no
+Echo	L Time	no
+Echo	Link	yes
+Echo	LP Freq	no
+Echo	LP Res	no
+Echo	Mod 4x	no
+Echo	Mod Freq	no
+Echo	Mod Phase	no
+Echo	Mod Rate	no
+Echo	Mod Sync	no
+Echo	Mod Wave	no
+Echo	Noise Amt	no
+Echo	Noise Mrph	no
+Echo	Noise On	no
+Echo	Output Gain	no
+Echo	R 16th	no
+Echo	R Division	no
+Echo	R Offset	no
+Echo	R Sync	no
+Echo	R Sync Mode	no
+Echo	R Time	no
+Echo	Repitch	yes
+Echo	Reverb Decay	no
+Echo	Reverb Level	no
+Echo	Reverb Loc	no
+Echo	Stereo Width	yes
+Echo	Wobble Amt	no
+Echo	Wobble Mrph	no
+Echo	Wobble On	no
+Eq8	1 Filter On A	no
+Eq8	1 Filter On B	no
+Eq8	1 Filter Type A	no
+Eq8	1 Filter Type B	no
+Eq8	1 Frequency A	no
+Eq8	1 Frequency B	no
+Eq8	1 Gain A	no
+Eq8	1 Gain B	no
+Eq8	1 Resonance A	no
+Eq8	1 Resonance B	no
+Eq8	2 Filter On A	no
+Eq8	2 Filter On B	no
+Eq8	2 Filter Type A	no
+Eq8	2 Filter Type B	no
+Eq8	2 Frequency A	no
+Eq8	2 Frequency B	no
+Eq8	2 Gain A	no
+Eq8	2 Gain B	no
+Eq8	2 Resonance A	no
+Eq8	2 Resonance B	no
+Eq8	3 Filter On A	no
+Eq8	3 Filter On B	no
+Eq8	3 Filter Type A	no
+Eq8	3 Filter Type B	no
+Eq8	3 Frequency A	no
+Eq8	3 Frequency B	no
+Eq8	3 Gain A	no
+Eq8	3 Gain B	no
+Eq8	3 Resonance A	no
+Eq8	3 Resonance B	no
+Eq8	4 Filter On A	no
+Eq8	4 Filter On B	no
+Eq8	4 Filter Type A	no
+Eq8	4 Filter Type B	no
+Eq8	4 Frequency A	no
+Eq8	4 Frequency B	no
+Eq8	4 Gain A	no
+Eq8	4 Gain B	no
+Eq8	4 Resonance A	no
+Eq8	4 Resonance B	no
+Eq8	5 Filter On A	no
+Eq8	5 Filter On B	no
+Eq8	5 Filter Type A	no
+Eq8	5 Filter Type B	no
+Eq8	5 Frequency A	no
+Eq8	5 Frequency B	no
+Eq8	5 Gain A	no
+Eq8	5 Gain B	no
+Eq8	5 Resonance A	no
+Eq8	5 Resonance B	no
+Eq8	6 Filter On A	no
+Eq8	6 Filter On B	no
+Eq8	6 Filter Type A	no
+Eq8	6 Filter Type B	no
+Eq8	6 Frequency A	no
+Eq8	6 Frequency B	no
+Eq8	6 Gain A	no
+Eq8	6 Gain B	no
+Eq8	6 Resonance A	no
+Eq8	6 Resonance B	no
+Eq8	7 Filter On A	no
+Eq8	7 Filter On B	no
+Eq8	7 Filter Type A	no
+Eq8	7 Filter Type B	no
+Eq8	7 Frequency A	no
+Eq8	7 Frequency B	no
+Eq8	7 Gain A	no
+Eq8	7 Gain B	no
+Eq8	7 Resonance A	no
+Eq8	7 Resonance B	no
+Eq8	8 Filter On A	no
+Eq8	8 Filter On B	no
+Eq8	8 Filter Type A	no
+Eq8	8 Filter Type B	no
+Eq8	8 Frequency A	no
+Eq8	8 Frequency B	no
+Eq8	8 Gain A	no
+Eq8	8 Gain B	no
+Eq8	8 Resonance A	no
+Eq8	8 Resonance B	no
+Eq8	Adaptive Q	yes
+Eq8	Device On	no
+Eq8	Output Gain	no
+Eq8	Scale	yes
+Erosion2	Amount	yes
+Erosion2	Device On	no
+Erosion2	Filter Width	yes
+Erosion2	Frequency	yes
+Erosion2	Noise Blend	yes
+Erosion2	Stereo Width	yes
+FilterDelay	1 Beat Delay	no
+FilterDelay	1 Beat Swing	no
+FilterDelay	1 Delay Mode	no
+FilterDelay	1 Feedback	no
+FilterDelay	1 Filter Freq	no
+FilterDelay	1 Filter Width	no
+FilterDelay	1 Input On	no
+FilterDelay	1 Pan	no
+FilterDelay	1 Time Delay	no
+FilterDelay	1 Volume	no
+FilterDelay	2 Beat Delay	no
+FilterDelay	2 Beat Swing	no
+FilterDelay	2 Delay Mode	no
+FilterDelay	2 Feedback	no
+FilterDelay	2 Filter Freq	no
+FilterDelay	2 Filter Width	no
+FilterDelay	2 Input On	no
+FilterDelay	2 Pan	no
+FilterDelay	2 Time Delay	no
+FilterDelay	2 Volume	no
+FilterDelay	3 Beat Delay	no
+FilterDelay	3 Beat Swing	no
+FilterDelay	3 Delay Mode	no
+FilterDelay	3 Feedback	no
+FilterDelay	3 Filter Freq	no
+FilterDelay	3 Filter Width	no
+FilterDelay	3 Input On	no
+FilterDelay	3 Pan	no
+FilterDelay	3 Time Delay	no
+FilterDelay	3 Volume	no
+FilterDelay	Device On	no
+FilterDelay	Dry	yes
+FilterEQ3	Device On	no
+FilterEQ3	FreqHi	yes
+FilterEQ3	FreqLo	yes
+FilterEQ3	GainHi	no
+FilterEQ3	GainLo	no
+FilterEQ3	GainMid	no
+FilterEQ3	HighOn	no
+FilterEQ3	LowOn	no
+FilterEQ3	MidOn	no
+FilterEQ3	Slope	no
+Gate	Attack	yes
+Gate	Device On	no
+Gate	FlipMode	no
+Gate	Floor	yes
+Gate	Hold	yes
+Gate	LookAhead	yes
+Gate	Release	yes
+Gate	Return	yes
+Gate	S/C EQ Freq	no
+Gate	S/C EQ Gain	no
+Gate	S/C EQ On	no
+Gate	S/C EQ Q	no
+Gate	S/C EQ Type	no
+Gate	S/C Gain	no
+Gate	S/C Listen	no
+Gate	S/C Mix	no
+Gate	S/C On	no
+Gate	Threshold	yes
+GlueCompressor	Attack	yes
+GlueCompressor	Device On	no
+GlueCompressor	Dry/Wet	yes
+GlueCompressor	Makeup	yes
+GlueCompressor	Peak Clip In	no
+GlueCompressor	Range	yes
+GlueCompressor	Ratio	yes
+GlueCompressor	Release	yes
+GlueCompressor	S/C EQ Freq	no
+GlueCompressor	S/C EQ Gain	no
+GlueCompressor	S/C EQ On	no
+GlueCompressor	S/C EQ Q	no
+GlueCompressor	S/C EQ Type	no
+GlueCompressor	S/C Gain	no
+GlueCompressor	S/C Mix	no
+GlueCompressor	S/C On	no
+GlueCompressor	Threshold	yes
+GrainDelay	Beat Delay	no
+GrainDelay	Beat Swing	no
+GrainDelay	Delay Mode	no
+GrainDelay	Device On	no
+GrainDelay	DryWet	no
+GrainDelay	Feedback	yes
+GrainDelay	Frequency	yes
+GrainDelay	Pitch	yes
+GrainDelay	Random	yes
+GrainDelay	Spray	yes
+GrainDelay	Time Delay	yes
+Hybrid	Algo Delay	no
+Hybrid	Algo Type	no
+Hybrid	Blend	yes
+Hybrid	Damping	yes
+Hybrid	Decay	yes
+Hybrid	Device On	no
+Hybrid	DH Bass X	no
+Hybrid	DH BassMult	no
+Hybrid	DH Shape	no
+Hybrid	Diffusion	yes
+Hybrid	Dry/Wet	yes
+Hybrid	EQ High Freq	no
+Hybrid	EQ High Gain	no
+Hybrid	EQ High Slope	no
+Hybrid	EQ High Type	no
+Hybrid	EQ Low Freq	no
+Hybrid	EQ Low Gain	no
+Hybrid	EQ Low Slope	no
+Hybrid	EQ Low Type	no
+Hybrid	EQ On	no
+Hybrid	EQ P1 Freq	no
+Hybrid	EQ P1 Gain	no
+Hybrid	EQ P1 Q	no
+Hybrid	EQ P2 Freq	no
+Hybrid	EQ P2 Gain	no
+Hybrid	EQ P2 Q	no
+Hybrid	EQ Pre Algo	no
+Hybrid	Modulation	yes
+Hybrid	P.Dly 16th	no
+Hybrid	P.Dly Fb 16th	no
+Hybrid	P.Dly Fb Time	no
+Hybrid	P.Dly Sync	no
+Hybrid	P.Dly Time	no
+Hybrid	Pr High Mult	no
+Hybrid	Pr Low Mult	no
+Hybrid	Pr X Over	no
+Hybrid	Qz Distance	no
+Hybrid	Qz Low Damp	no
+Hybrid	Routing	yes
+Hybrid	Send Gain	no
+Hybrid	Sh Pitch Shift	no
+Hybrid	Sh Shimmer	no
+Hybrid	Size	yes
+Hybrid	Ti Phase	no
+Hybrid	Ti Rate	no
+Hybrid	Ti Tide	no
+Hybrid	Ti Waveform	no
+Hybrid	Vintage	yes
+Hybrid	Width	yes
+InstrumentImpulse	1 Envelope Decay	no
+InstrumentImpulse	1 Envelope Type	no
+InstrumentImpulse	1 Filter <- Random	no
+InstrumentImpulse	1 Filter <- Vel	no
+InstrumentImpulse	1 Filter Freq	no
+InstrumentImpulse	1 Filter Res	no
+InstrumentImpulse	1 Filter Type	no
+InstrumentImpulse	1 Pan	no
+InstrumentImpulse	1 Pan <- Random	no
+InstrumentImpulse	1 Pan <- Vel	no
+InstrumentImpulse	1 Saturator Drive	no
+InstrumentImpulse	1 Start	no
+InstrumentImpulse	1 Stretch Factor	no
+InstrumentImpulse	1 Stretch Mode	no
+InstrumentImpulse	1 Transpose	no
+InstrumentImpulse	1 Volume	no
+InstrumentImpulse	1 Volume <- Vel	no
+InstrumentImpulse	2 Envelope Decay	no
+InstrumentImpulse	2 Envelope Type	no
+InstrumentImpulse	2 Filter <- Random	no
+InstrumentImpulse	2 Filter <- Vel	no
+InstrumentImpulse	2 Filter Freq	no
+InstrumentImpulse	2 Filter Res	no
+InstrumentImpulse	2 Filter Type	no
+InstrumentImpulse	2 Pan	no
+InstrumentImpulse	2 Pan <- Random	no
+InstrumentImpulse	2 Pan <- Vel	no
+InstrumentImpulse	2 Saturator Drive	no
+InstrumentImpulse	2 Start	yes
+InstrumentImpulse	2 Stretch Factor	no
+InstrumentImpulse	2 Stretch Mode	no
+InstrumentImpulse	2 Transpose	no
+InstrumentImpulse	2 Volume	no
+InstrumentImpulse	2 Volume <- Vel	no
+InstrumentImpulse	3 Envelope Decay	no
+InstrumentImpulse	3 Envelope Type	no
+InstrumentImpulse	3 Filter <- Random	no
+InstrumentImpulse	3 Filter <- Vel	no
+InstrumentImpulse	3 Filter Freq	no
+InstrumentImpulse	3 Filter Res	no
+InstrumentImpulse	3 Filter Type	no
+InstrumentImpulse	3 Pan	no
+InstrumentImpulse	3 Pan <- Random	no
+InstrumentImpulse	3 Pan <- Vel	no
+InstrumentImpulse	3 Saturator Drive	no
+InstrumentImpulse	3 Start	no
+InstrumentImpulse	3 Stretch Factor	no
+InstrumentImpulse	3 Stretch Mode	no
+InstrumentImpulse	3 Transpose	no
+InstrumentImpulse	3 Volume	no
+InstrumentImpulse	3 Volume <- Vel	no
+InstrumentImpulse	4 Envelope Decay	no
+InstrumentImpulse	4 Envelope Type	no
+InstrumentImpulse	4 Filter <- Random	no
+InstrumentImpulse	4 Filter <- Vel	no
+InstrumentImpulse	4 Filter Freq	no
+InstrumentImpulse	4 Filter Res	no
+InstrumentImpulse	4 Filter Type	no
+InstrumentImpulse	4 Pan	no
+InstrumentImpulse	4 Pan <- Random	no
+InstrumentImpulse	4 Pan <- Vel	no
+InstrumentImpulse	4 Saturator Drive	no
+InstrumentImpulse	4 Start	no
+InstrumentImpulse	4 Stretch Factor	no
+InstrumentImpulse	4 Stretch Mode	no
+InstrumentImpulse	4 Transpose	no
+InstrumentImpulse	4 Volume	no
+InstrumentImpulse	4 Volume <- Vel	no
+InstrumentImpulse	5 Envelope Decay	no
+InstrumentImpulse	5 Envelope Type	no
+InstrumentImpulse	5 Filter <- Random	no
+InstrumentImpulse	5 Filter <- Vel	no
+InstrumentImpulse	5 Filter Freq	no
+InstrumentImpulse	5 Filter Res	no
+InstrumentImpulse	5 Filter Type	no
+InstrumentImpulse	5 Pan	yes
+InstrumentImpulse	5 Pan <- Random	no
+InstrumentImpulse	5 Pan <- Vel	no
+InstrumentImpulse	5 Saturator Drive	no
+InstrumentImpulse	5 Start	no
+InstrumentImpulse	5 Stretch Factor	no
+InstrumentImpulse	5 Stretch Mode	no
+InstrumentImpulse	5 Transpose	no
+InstrumentImpulse	5 Volume	no
+InstrumentImpulse	5 Volume <- Vel	no
+InstrumentImpulse	6 Envelope Decay	no
+InstrumentImpulse	6 Envelope Type	no
+InstrumentImpulse	6 Filter <- Random	no
+InstrumentImpulse	6 Filter <- Vel	no
+InstrumentImpulse	6 Filter Freq	no
+InstrumentImpulse	6 Filter Res	no
+InstrumentImpulse	6 Filter Type	no
+InstrumentImpulse	6 Pan	no
+InstrumentImpulse	6 Pan <- Random	no
+InstrumentImpulse	6 Pan <- Vel	no
+InstrumentImpulse	6 Saturator Drive	no
+InstrumentImpulse	6 Start	no
+InstrumentImpulse	6 Stretch Factor	no
+InstrumentImpulse	6 Stretch Mode	no
+InstrumentImpulse	6 Transpose	no
+InstrumentImpulse	6 Volume	no
+InstrumentImpulse	6 Volume <- Vel	no
+InstrumentImpulse	7 Envelope Decay	no
+InstrumentImpulse	7 Envelope Type	no
+InstrumentImpulse	7 Filter <- Random	no
+InstrumentImpulse	7 Filter <- Vel	no
+InstrumentImpulse	7 Filter Freq	no
+InstrumentImpulse	7 Filter Res	no
+InstrumentImpulse	7 Filter Type	no
+InstrumentImpulse	7 Pan	no
+InstrumentImpulse	7 Pan <- Random	no
+InstrumentImpulse	7 Pan <- Vel	no
+InstrumentImpulse	7 Saturator Drive	no
+InstrumentImpulse	7 Start	no
+InstrumentImpulse	7 Stretch Factor	no
+InstrumentImpulse	7 Stretch Mode	no
+InstrumentImpulse	7 Transpose	no
+InstrumentImpulse	7 Volume	no
+InstrumentImpulse	7 Volume <- Vel	no
+InstrumentImpulse	8 Envelope Decay	no
+InstrumentImpulse	8 Envelope Type	no
+InstrumentImpulse	8 Filter <- Random	no
+InstrumentImpulse	8 Filter <- Vel	no
+InstrumentImpulse	8 Filter Freq	no
+InstrumentImpulse	8 Filter Res	no
+InstrumentImpulse	8 Filter Type	no
+InstrumentImpulse	8 Pan	no
+InstrumentImpulse	8 Pan <- Random	no
+InstrumentImpulse	8 Pan <- Vel	no
+InstrumentImpulse	8 Saturator Drive	no
+InstrumentImpulse	8 Start	no
+InstrumentImpulse	8 Stretch Factor	no
+InstrumentImpulse	8 Stretch Mode	no
+InstrumentImpulse	8 Transpose	no
+InstrumentImpulse	8 Volume	no
+InstrumentImpulse	8 Volume <- Vel	no
+InstrumentImpulse	Device On	no
+InstrumentImpulse	Global Time	no
+InstrumentImpulse	Global Transpose	no
+InstrumentImpulse	Global Volume	no
+InstrumentMeld	Device On	no
+InstrumentMeld	MeldVoice_Drive	no
+InstrumentMeld	MeldVoice_EngineA_AmpEnvelope_LoopMode	no
+InstrumentMeld	MeldVoice_EngineA_AmpEnvelope_Slopes_Attack	no
+InstrumentMeld	MeldVoice_EngineA_AmpEnvelope_Slopes_Decay	no
+InstrumentMeld	MeldVoice_EngineA_AmpEnvelope_Slopes_Release	no
+InstrumentMeld	MeldVoice_EngineA_AmpEnvelope_Sustain	no
+InstrumentMeld	MeldVoice_EngineA_AmpEnvelope_Times_Attack	no
+InstrumentMeld	MeldVoice_EngineA_AmpEnvelope_Times_Decay	no
+InstrumentMeld	MeldVoice_EngineA_AmpEnvelope_Times_Release	no
+InstrumentMeld	MeldVoice_EngineA_Filter_FilterType	no
+InstrumentMeld	MeldVoice_EngineA_Filter_Frequency	no
+InstrumentMeld	MeldVoice_EngineA_Filter_Macro1	no
+InstrumentMeld	MeldVoice_EngineA_Filter_Macro2	no
+InstrumentMeld	MeldVoice_EngineA_FilterEnvelope_LoopMode	no
+InstrumentMeld	MeldVoice_EngineA_FilterEnvelope_Slopes_Release	no
+InstrumentMeld	MeldVoice_EngineA_FilterEnvelope_Times_Attack	no
+InstrumentMeld	MeldVoice_EngineA_FilterEnvelope_Times_Decay	no
+InstrumentMeld	MeldVoice_EngineA_FilterEnvelope_Times_Release	no
+InstrumentMeld	MeldVoice_EngineA_FilterEnvelope_Values_Sustain	no
+InstrumentMeld	MeldVoice_EngineA_GlideTime	no
+InstrumentMeld	MeldVoice_EngineA_Lfo1_GeneratorMacro1	no
+InstrumentMeld	MeldVoice_EngineA_Lfo1_GeneratorMacro2	no
+InstrumentMeld	MeldVoice_EngineA_Lfo1_GeneratorType	no
+InstrumentMeld	MeldVoice_EngineA_Lfo1_PhaseOffset	no
+InstrumentMeld	MeldVoice_EngineA_Lfo1_Rate	no
+InstrumentMeld	MeldVoice_EngineA_Lfo1_Sync	no
+InstrumentMeld	MeldVoice_EngineA_Lfo1_SyncedRate	no
+InstrumentMeld	MeldVoice_EngineA_Lfo1_Transformer1Macro	no
+InstrumentMeld	MeldVoice_EngineA_Lfo1_Transformer1Type	no
+InstrumentMeld	MeldVoice_EngineA_Lfo1_Transformer2Macro	no
+InstrumentMeld	MeldVoice_EngineA_Lfo1_Transformer2Type	no
+InstrumentMeld	MeldVoice_EngineA_Lfo2_Rate	no
+InstrumentMeld	MeldVoice_EngineA_Lfo2_Sync	no
+InstrumentMeld	MeldVoice_EngineA_Lfo2_SyncedRate	no
+InstrumentMeld	MeldVoice_EngineA_Lfo2_Waveform	no
+InstrumentMeld	MeldVoice_EngineA_Oscillator_Macro1	no
+InstrumentMeld	MeldVoice_EngineA_Oscillator_Macro2	no
+InstrumentMeld	MeldVoice_EngineA_Oscillator_OscillatorType	no
+InstrumentMeld	MeldVoice_EngineA_Oscillator_Pitch_Detune	no
+InstrumentMeld	MeldVoice_EngineA_Oscillator_Pitch_Transpose	no
+InstrumentMeld	MeldVoice_EngineA_Pan	no
+InstrumentMeld	MeldVoice_EngineA_ToneFilter	no
+InstrumentMeld	MeldVoice_EngineA_Volume	no
+InstrumentMeld	MeldVoice_EngineB_AmpEnvelope_LoopMode	no
+InstrumentMeld	MeldVoice_EngineB_AmpEnvelope_Slopes_Attack	no
+InstrumentMeld	MeldVoice_EngineB_AmpEnvelope_Slopes_Decay	no
+InstrumentMeld	MeldVoice_EngineB_AmpEnvelope_Slopes_Release	no
+InstrumentMeld	MeldVoice_EngineB_AmpEnvelope_Sustain	no
+InstrumentMeld	MeldVoice_EngineB_AmpEnvelope_Times_Attack	no
+InstrumentMeld	MeldVoice_EngineB_AmpEnvelope_Times_Decay	no
+InstrumentMeld	MeldVoice_EngineB_AmpEnvelope_Times_Release	no
+InstrumentMeld	MeldVoice_EngineB_Filter_FilterType	no
+InstrumentMeld	MeldVoice_EngineB_Filter_Frequency	no
+InstrumentMeld	MeldVoice_EngineB_Filter_Macro1	no
+InstrumentMeld	MeldVoice_EngineB_Filter_Macro2	no
+InstrumentMeld	MeldVoice_EngineB_FilterEnvelope_LoopMode	no
+InstrumentMeld	MeldVoice_EngineB_FilterEnvelope_Slopes_Release	no
+InstrumentMeld	MeldVoice_EngineB_FilterEnvelope_Times_Release	no
+InstrumentMeld	MeldVoice_EngineB_FilterEnvelope_Values_Sustain	no
+InstrumentMeld	MeldVoice_EngineB_GlideTime	no
+InstrumentMeld	MeldVoice_EngineB_Lfo1_GeneratorMacro1	no
+InstrumentMeld	MeldVoice_EngineB_Lfo1_GeneratorMacro2	no
+InstrumentMeld	MeldVoice_EngineB_Lfo1_GeneratorType	no
+InstrumentMeld	MeldVoice_EngineB_Lfo1_PhaseOffset	no
+InstrumentMeld	MeldVoice_EngineB_Lfo1_Rate	no
+InstrumentMeld	MeldVoice_EngineB_Lfo1_Sync	no
+InstrumentMeld	MeldVoice_EngineB_Lfo1_SyncedRate	no
+InstrumentMeld	MeldVoice_EngineB_Lfo1_Transformer1Macro	no
+InstrumentMeld	MeldVoice_EngineB_Lfo1_Transformer1Type	no
+InstrumentMeld	MeldVoice_EngineB_Lfo1_Transformer2Macro	no
+InstrumentMeld	MeldVoice_EngineB_Lfo1_Transformer2Type	no
+InstrumentMeld	MeldVoice_EngineB_Lfo2_Rate	no
+InstrumentMeld	MeldVoice_EngineB_Lfo2_Sync	no
+InstrumentMeld	MeldVoice_EngineB_Lfo2_SyncedRate	no
+InstrumentMeld	MeldVoice_EngineB_Lfo2_Waveform	no
+InstrumentMeld	MeldVoice_EngineB_Oscillator_Macro1	no
+InstrumentMeld	MeldVoice_EngineB_Oscillator_Macro2	no
+InstrumentMeld	MeldVoice_EngineB_Oscillator_OscillatorType	no
+InstrumentMeld	MeldVoice_EngineB_Oscillator_Pitch_Detune	no
+InstrumentMeld	MeldVoice_EngineB_Oscillator_Pitch_Transpose	no
+InstrumentMeld	MeldVoice_EngineB_Pan	no
+InstrumentMeld	MeldVoice_EngineB_ToneFilter	no
+InstrumentMeld	MeldVoice_EngineB_Volume	no
+InstrumentMeld	MeldVoice_EngineBDelay	no
+InstrumentMeld	MeldVoice_VoiceSpreadAmount	no
+InstrumentMeld	Volume	yes
+InstrumentVector	Amp A Slope	no
+InstrumentVector	Amp Attack	no
+InstrumentVector	Amp D Slope	no
+InstrumentVector	Amp Decay	no
+InstrumentVector	Amp Loop Mode	no
+InstrumentVector	Amp R Slope	no
+InstrumentVector	Amp Release	no
+InstrumentVector	Amp Sustain	no
+InstrumentVector	Device On	no
+InstrumentVector	Env 2 A Slope	no
+InstrumentVector	Env 2 Attack	no
+InstrumentVector	Env 2 D Slope	no
+InstrumentVector	Env 2 Decay	no
+InstrumentVector	Env 2 Final	no
+InstrumentVector	Env 2 Initial	no
+InstrumentVector	Env 2 Loop Mode	no
+InstrumentVector	Env 2 Peak	no
+InstrumentVector	Env 2 R Slope	no
+InstrumentVector	Env 2 Release	no
+InstrumentVector	Env 2 Sustain	no
+InstrumentVector	Env 3 A Slope	no
+InstrumentVector	Env 3 Attack	no
+InstrumentVector	Env 3 D Slope	no
+InstrumentVector	Env 3 Decay	no
+InstrumentVector	Env 3 Final	no
+InstrumentVector	Env 3 Initial	no
+InstrumentVector	Env 3 Loop Mode	no
+InstrumentVector	Env 3 Peak	no
+InstrumentVector	Env 3 R Slope	no
+InstrumentVector	Env 3 Release	no
+InstrumentVector	Env 3 Sustain	no
+InstrumentVector	Filter 1 BP/NO/Morph	no
+InstrumentVector	Filter 1 Drive	no
+InstrumentVector	Filter 1 Freq	no
+InstrumentVector	Filter 1 LP/HP	no
+InstrumentVector	Filter 1 Morph	no
+InstrumentVector	Filter 1 On	no
+InstrumentVector	Filter 1 Res	no
+InstrumentVector	Filter 1 Slope	no
+InstrumentVector	Filter 1 Type	no
+InstrumentVector	Filter 2 BP/NO/Morph	no
+InstrumentVector	Filter 2 Drive	no
+InstrumentVector	Filter 2 Freq	no
+InstrumentVector	Filter 2 LP/HP	no
+InstrumentVector	Filter 2 Morph	no
+InstrumentVector	Filter 2 On	no
+InstrumentVector	Filter 2 Res	no
+InstrumentVector	Filter 2 Slope	no
+InstrumentVector	Filter 2 Type	no
+InstrumentVector	Glide	yes
+InstrumentVector	Global Mod Amount	no
+InstrumentVector	Internal Filter	no
+InstrumentVector	LFO 1 Amount	no
+InstrumentVector	LFO 1 Attack Time	no
+InstrumentVector	LFO 1 Phase Offset	no
+InstrumentVector	LFO 1 Rate	no
+InstrumentVector	LFO 1 Retrigger	no
+InstrumentVector	LFO 1 S. Rate	no
+InstrumentVector	LFO 1 Shape	no
+InstrumentVector	LFO 1 Shaping	no
+InstrumentVector	LFO 1 Sync	no
+InstrumentVector	LFO 2 Amount	no
+InstrumentVector	LFO 2 Attack Time	no
+InstrumentVector	LFO 2 Phase Offset	no
+InstrumentVector	LFO 2 Rate	no
+InstrumentVector	LFO 2 Retrigger	no
+InstrumentVector	LFO 2 S. Rate	no
+InstrumentVector	LFO 2 Shape	no
+InstrumentVector	LFO 2 Shaping	no
+InstrumentVector	LFO 2 Sync	no
+InstrumentVector	Osc 1 Detune	no
+InstrumentVector	Osc 1 Effect 1	no
+InstrumentVector	Osc 1 Effect 2	no
+InstrumentVector	Osc 1 Gain	no
+InstrumentVector	Osc 1 On	no
+InstrumentVector	Osc 1 Pan	no
+InstrumentVector	Osc 1 Pos	no
+InstrumentVector	Osc 1 Transp	no
+InstrumentVector	Osc 2 Detune	no
+InstrumentVector	Osc 2 Effect 1	no
+InstrumentVector	Osc 2 Effect 2	no
+InstrumentVector	Osc 2 Gain	no
+InstrumentVector	Osc 2 On	no
+InstrumentVector	Osc 2 Pan	no
+InstrumentVector	Osc 2 Pos	no
+InstrumentVector	Osc 2 Transp	no
+InstrumentVector	Sub Gain	no
+InstrumentVector	Sub On	no
+InstrumentVector	Sub Tone	no
+InstrumentVector	Sub Transpose	no
+InstrumentVector	Time	yes
+InstrumentVector	Transpose	yes
+InstrumentVector	Unison Amount	no
+InstrumentVector	Volume	yes
+Limiter	Auto	yes
+Limiter	Ceiling	yes
+Limiter	Device On	no
+Limiter	Gain	yes
+Limiter	Input Gain	yes
+Limiter	Link	yes
+Limiter	Link Channels	no
+Limiter	Lookahead	yes
+Limiter	M/S Link	no
+Limiter	Mode	yes
+Limiter	Release	yes
+Limiter	Release time	yes
+Looper	Device On	no
+Looper	Feedback	yes
+Looper	Monitor	yes
+Looper	Quantization	yes
+Looper	Reverse	yes
+Looper	Song Control	yes
+Looper	Speed	yes
+Looper	State	yes
+Looper	Tempo Control	yes
+LoungeLizard	Damp Amount	no
+LoungeLizard	Damp Balance	no
+LoungeLizard	Damp Tone	no
+LoungeLizard	Detune	yes
+LoungeLizard	Device On	no
+LoungeLizard	F Release	no
+LoungeLizard	F Tine < Key	no
+LoungeLizard	F Tine Color	no
+LoungeLizard	F Tine Decay	no
+LoungeLizard	F Tine Vol	no
+LoungeLizard	F Tone Decay	no
+LoungeLizard	F Tone Vol	no
+LoungeLizard	KB Stretch	no
+LoungeLizard	M Force	no
+LoungeLizard	M Force < Key	no
+LoungeLizard	M Force < Vel	no
+LoungeLizard	M Stiff < Key	no
+LoungeLizard	M Stiff < Vel	no
+LoungeLizard	M Stiffness	no
+LoungeLizard	Noise < Key	no
+LoungeLizard	Noise Amount	no
+LoungeLizard	Noise Decay	no
+LoungeLizard	Noise Pitch	yes
+LoungeLizard	Note PB Range	no
+LoungeLizard	P Amp < Key	no
+LoungeLizard	P Amp In	no
+LoungeLizard	P Amp Out	no
+LoungeLizard	P Distance	no
+LoungeLizard	P Symmetry	no
+LoungeLizard	PB Range	no
+LoungeLizard	Pickup Model	no
+LoungeLizard	Semitone	yes
+LoungeLizard	Voices	yes
+LoungeLizard	Volume	yes
+MidiArpeggiator	Device On	no
+MidiArpeggiator	Free Rate	yes
+MidiArpeggiator	Gate	yes
+MidiArpeggiator	Groove	yes
+MidiArpeggiator	Hold On	no
+MidiArpeggiator	Offset	yes
+MidiArpeggiator	Repeats	yes
+MidiArpeggiator	Ret. Interval	no
+MidiArpeggiator	Retrigger Mode	no
+MidiArpeggiator	Style	yes
+MidiArpeggiator	Sync On	no
+MidiArpeggiator	Synced Rate	no
+MidiArpeggiator	Tranpose Key	no
+MidiArpeggiator	Tranpose Mode	no
+MidiArpeggiator	Transp. Dist.	no
+MidiArpeggiator	Transp. Steps	no
+MidiArpeggiator	Vel. Retrigger	no
+MidiArpeggiator	Velocity Decay	no
+MidiArpeggiator	Velocity On	no
+MidiArpeggiator	Velocity Target	no
+MidiCcControl	Custom A	yes
+MidiCcControl	Custom B	yes
+MidiCcControl	Custom C	no
+MidiCcControl	Custom D	no
+MidiCcControl	Custom E	no
+MidiCcControl	Custom F	no
+MidiCcControl	Custom G	no
+MidiCcControl	Custom H	no
+MidiCcControl	Custom I	no
+MidiCcControl	Custom J	no
+MidiCcControl	Custom K	no
+MidiCcControl	Custom L	no
+MidiCcControl	Custom M	no
+MidiCcControl	Device On	no
+MidiCcControl	Mod Wheel	yes
+MidiCcControl	Pitch Bend	yes
+MidiCcControl	Pressure	yes
+MidiChord	Device On	no
+MidiChord	Shift1	no
+MidiChord	Shift2	no
+MidiChord	Shift3	no
+MidiChord	Shift4	no
+MidiChord	Shift5	no
+MidiChord	Shift6	no
+MidiChord	Velocity1	no
+MidiChord	Velocity2	no
+MidiChord	Velocity3	no
+MidiChord	Velocity4	no
+MidiChord	Velocity5	no
+MidiChord	Velocity6	no
+MidiNoteLength	Decay Key Scale	no
+MidiNoteLength	Decay Time	yes
+MidiNoteLength	Device On	no
+MidiNoteLength	Gate	yes
+MidiNoteLength	Latch	yes
+MidiNoteLength	Release Velocity	yes
+MidiNoteLength	Sync On	no
+MidiNoteLength	Synced Length	no
+MidiNoteLength	Time Length	no
+MidiNoteLength	Trigger Source	yes
+MidiPitcher	Device On	no
+MidiPitcher	Lowest	yes
+MidiPitcher	Pitch	yes
+MidiPitcher	Range	yes
+MidiRandom	Chance	yes
+MidiRandom	Choices	yes
+MidiRandom	Device On	no
+MidiRandom	Interval	yes
+MidiRandom	Mode	yes
+MidiRandom	Sign	yes
+MidiScale	Base	yes
+MidiScale	Device On	no
+MidiScale	Fold	yes
+MidiScale	Lowest	yes
+MidiScale	Range	yes
+MidiScale	Transpose	yes
+MidiVelocity	Compand	yes
+MidiVelocity	Device On	no
+MidiVelocity	Drive	yes
+MidiVelocity	Lowest	yes
+MidiVelocity	Mode	yes
+MidiVelocity	Out Hi	yes
+MidiVelocity	Out Low	yes
+MidiVelocity	Random	yes
+MidiVelocity	Range	yes
+MultibandDynamics	Above Ratio (High)	no
+MultibandDynamics	Above Ratio (Low)	no
+MultibandDynamics	Above Ratio (Mid)	no
+MultibandDynamics	Above Threshold (High)	no
+MultibandDynamics	Above Threshold (Low)	no
+MultibandDynamics	Above Threshold (Mid)	no
+MultibandDynamics	Amount	yes
+MultibandDynamics	Attack Time (High)	no
+MultibandDynamics	Attack Time (Low)	no
+MultibandDynamics	Attack Time (Mid)	no
+MultibandDynamics	Band Activator (High)	no
+MultibandDynamics	Band Activator (Low)	no
+MultibandDynamics	Band Activator (Mid)	no
+MultibandDynamics	Below Ratio (High)	no
+MultibandDynamics	Below Ratio (Low)	no
+MultibandDynamics	Below Ratio (Mid)	no
+MultibandDynamics	Below Threshold (High)	no
+MultibandDynamics	Below Threshold (Low)	no
+MultibandDynamics	Below Threshold (Mid)	no
+MultibandDynamics	Device On	no
+MultibandDynamics	Input Gain (High)	no
+MultibandDynamics	Input Gain (Low)	no
+MultibandDynamics	Input Gain (Mid)	no
+MultibandDynamics	Low-Mid Crossover	no
+MultibandDynamics	Master Output	no
+MultibandDynamics	Mid-High Crossover	no
+MultibandDynamics	Output Gain (High)	no
+MultibandDynamics	Output Gain (Low)	no
+MultibandDynamics	Output Gain (Mid)	no
+MultibandDynamics	Peak/RMS Mode	no
+MultibandDynamics	Release Time (High)	no
+MultibandDynamics	Release Time (Low)	no
+MultibandDynamics	Release Time (Mid)	no
+MultibandDynamics	S/C Gain	no
+MultibandDynamics	S/C Mix	no
+MultibandDynamics	S/C On	no
+MultibandDynamics	Soft Knee On/Off	no
+MultibandDynamics	Time Scaling	no
+MultiSampler	Ae < Env	no
+MultiSampler	Ae A Slope	no
+MultiSampler	Ae Attack	no
+MultiSampler	Ae D Slope	no
+MultiSampler	Ae Decay	no
+MultiSampler	Ae End	no
+MultiSampler	Ae Init	no
+MultiSampler	Ae Loop	no
+MultiSampler	Ae Mode	no
+MultiSampler	Ae On	no
+MultiSampler	Ae Peak	no
+MultiSampler	Ae R < Vel	no
+MultiSampler	Ae R Slope	no
+MultiSampler	Ae Release	no
+MultiSampler	Ae Retrig	no
+MultiSampler	Ae Sustain	no
+MultiSampler	Detune	yes
+MultiSampler	Device On	no
+MultiSampler	F On	no
+MultiSampler	Fe < Env	no
+MultiSampler	Fe Attack	no
+MultiSampler	Fe Decay	no
+MultiSampler	Fe End	no
+MultiSampler	Fe Init	no
+MultiSampler	Fe Loop	no
+MultiSampler	Fe Mode	no
+MultiSampler	Fe On	no
+MultiSampler	Fe Peak	no
+MultiSampler	Fe R < Vel	no
+MultiSampler	Fe Release	no
+MultiSampler	Fe Retrig	no
+MultiSampler	Fe Sustain	no
+MultiSampler	Filt < Key	no
+MultiSampler	Filt < LFO	no
+MultiSampler	Filt < Vel	no
+MultiSampler	Filter Circuit - BP/NO/Morph	no
+MultiSampler	Filter Circuit - LP/HP	no
+MultiSampler	Filter Drive	no
+MultiSampler	Filter Freq	no
+MultiSampler	Filter Morph	no
+MultiSampler	Filter Res	no
+MultiSampler	Filter Res (Legacy)	no
+MultiSampler	Filter Slope	no
+MultiSampler	Filter Type	yes
+MultiSampler	Filter Type (Legacy)	no
+MultiSampler	Glide Mode	yes
+MultiSampler	Glide Time	no
+MultiSampler	Key Zone Shift	yes
+MultiSampler	L 1 Attack	no
+MultiSampler	L 1 Offset	no
+MultiSampler	L 1 On	no
+MultiSampler	L 1 Rate	no
+MultiSampler	L 1 Retrig	no
+MultiSampler	L 1 Sync	no
+MultiSampler	L 1 Sync Rate	no
+MultiSampler	L 1 Wave	no
+MultiSampler	L 2 Attack	no
+MultiSampler	L 2 Offset	no
+MultiSampler	L 2 On	no
+MultiSampler	L 2 Phase	no
+MultiSampler	L 2 R < Key	no
+MultiSampler	L 2 Rate	no
+MultiSampler	L 2 Retrig	no
+MultiSampler	L 2 Spin	no
+MultiSampler	L 2 St Mode	no
+MultiSampler	L 2 Sync	no
+MultiSampler	L 2 Sync Rate	no
+MultiSampler	L 2 Wave	no
+MultiSampler	L 3 Attack	no
+MultiSampler	L 3 Offset	no
+MultiSampler	L 3 On	no
+MultiSampler	L 3 Phase	no
+MultiSampler	L 3 R < Key	no
+MultiSampler	L 3 Rate	no
+MultiSampler	L 3 Retrig	no
+MultiSampler	L 3 Spin	no
+MultiSampler	L 3 St Mode	no
+MultiSampler	L 3 Sync	no
+MultiSampler	L 3 Sync Rate	no
+MultiSampler	L 3 Wave	no
+MultiSampler	O Coarse	no
+MultiSampler	O Fine	no
+MultiSampler	O Fix Freq	no
+MultiSampler	O Fix Freq Mul	no
+MultiSampler	O Fix On	no
+MultiSampler	O Mode	no
+MultiSampler	O Type	no
+MultiSampler	O Volume	no
+MultiSampler	Oe Attack	no
+MultiSampler	Oe Decay	no
+MultiSampler	Oe End	no
+MultiSampler	Oe Init	no
+MultiSampler	Oe Loop	no
+MultiSampler	Oe Mode	no
+MultiSampler	Oe Peak	no
+MultiSampler	Oe Release	no
+MultiSampler	Oe Retrig	no
+MultiSampler	Oe Sustain	no
+MultiSampler	Osc On	no
+MultiSampler	Pan	yes
+MultiSampler	Pan < LFO	no
+MultiSampler	Pan < Rnd	yes
+MultiSampler	Pe < Env	no
+MultiSampler	Pe Attack	no
+MultiSampler	Pe Decay	no
+MultiSampler	Pe End	no
+MultiSampler	Pe Init	no
+MultiSampler	Pe Loop	no
+MultiSampler	Pe Mode	no
+MultiSampler	Pe On	no
+MultiSampler	Pe Peak	no
+MultiSampler	Pe R < Vel	no
+MultiSampler	Pe Release	no
+MultiSampler	Pe Retrig	no
+MultiSampler	Pe Sustain	no
+MultiSampler	Pitch < LFO	no
+MultiSampler	Shaper Amt	no
+MultiSampler	Shaper On	no
+MultiSampler	Shaper Type	no
+MultiSampler	Spread	yes
+MultiSampler	Time	yes
+MultiSampler	Time < Key	yes
+MultiSampler	Transpose	yes
+MultiSampler	Ve Attack	no
+MultiSampler	Ve Decay	no
+MultiSampler	Ve Init	no
+MultiSampler	Ve Loop	no
+MultiSampler	Ve Mode	no
+MultiSampler	Ve Peak	no
+MultiSampler	Ve R < Vel	no
+MultiSampler	Ve Release	no
+MultiSampler	Ve Retrig	no
+MultiSampler	Ve Sustain	no
+MultiSampler	Vol < LFO	no
+MultiSampler	Vol < Vel	yes
+MultiSampler	Volume	yes
+Operator	A Coarse	no
+Operator	A Fine	no
+Operator	A Fix Freq	no
+Operator	A Fix Freq Mul	no
+Operator	A Fix On 	no
+Operator	A Freq<Vel	no
+Operator	A Quantize	no
+Operator	Ae Attack	no
+Operator	Ae Decay	no
+Operator	Ae Init	no
+Operator	Ae Loop	no
+Operator	Ae Mode	no
+Operator	Ae Peak	no
+Operator	Ae R < Vel	no
+Operator	Ae Release	no
+Operator	Ae Retrig	no
+Operator	Ae Sustain	no
+Operator	Algorithm	yes
+Operator	B Coarse	no
+Operator	B Fine	no
+Operator	B Fix Freq	no
+Operator	B Fix Freq Mul	no
+Operator	B Fix On 	no
+Operator	B Freq<Vel	no
+Operator	B Quantize	no
+Operator	Be Attack	no
+Operator	Be Decay	no
+Operator	Be Init	no
+Operator	Be Loop	no
+Operator	Be Mode	no
+Operator	Be Peak	no
+Operator	Be R < Vel	no
+Operator	Be Release	no
+Operator	Be Retrig	no
+Operator	Be Sustain	no
+Operator	C Coarse	no
+Operator	C Fine	no
+Operator	C Fix Freq	no
+Operator	C Fix Freq Mul	no
+Operator	C Fix On 	no
+Operator	C Freq<Vel	no
+Operator	C Quantize	no
+Operator	Ce Attack	no
+Operator	Ce Decay	no
+Operator	Ce Init	no
+Operator	Ce Loop	no
+Operator	Ce Mode	no
+Operator	Ce Peak	no
+Operator	Ce R < Vel	no
+Operator	Ce Release	no
+Operator	Ce Retrig	no
+Operator	Ce Sustain	no
+Operator	D Coarse	no
+Operator	D Fine	no
+Operator	D Fix Freq	no
+Operator	D Fix Freq Mul	no
+Operator	D Fix On 	no
+Operator	D Freq<Vel	no
+Operator	D Quantize	no
+Operator	De Attack	no
+Operator	De Decay	no
+Operator	De Init	no
+Operator	De Loop	no
+Operator	De Mode	no
+Operator	De Peak	no
+Operator	De R < Vel	no
+Operator	De Release	no
+Operator	De Retrig	no
+Operator	De Sustain	no
+Operator	Device On	no
+Operator	Fe A Slope	no
+Operator	Fe Amount	no
+Operator	Fe Attack	no
+Operator	Fe D Slope	no
+Operator	Fe Decay	no
+Operator	Fe End	no
+Operator	Fe Init	no
+Operator	Fe Loop	no
+Operator	Fe Mode	no
+Operator	Fe Peak	no
+Operator	Fe R < Vel	no
+Operator	Fe R Slope	no
+Operator	Fe Release	no
+Operator	Fe Retrig	no
+Operator	Fe Sustain	no
+Operator	Filt < Key	no
+Operator	Filt < LFO	no
+Operator	Filt < Vel	no
+Operator	Filter Circuit - BP/NO/Morph	no
+Operator	Filter Circuit - LP/HP	no
+Operator	Filter Drive	yes
+Operator	Filter Freq	yes
+Operator	Filter Morph	yes
+Operator	Filter On	yes
+Operator	Filter Res	yes
+Operator	Filter Res (Legacy)	no
+Operator	Filter Slope	no
+Operator	Filter Type	yes
+Operator	Filter Type (Legacy)	no
+Operator	Glide On	yes
+Operator	Glide Time	yes
+Operator	Le Attack	no
+Operator	Le Decay	no
+Operator	Le End	no
+Operator	Le Init	no
+Operator	Le Loop	no
+Operator	Le Mode	no
+Operator	Le Peak	no
+Operator	Le R < Vel	no
+Operator	Le Release	no
+Operator	Le Retrig	no
+Operator	Le Sustain	no
+Operator	LFO < Pe	no
+Operator	LFO < Vel	no
+Operator	LFO Amt	no
+Operator	LFO Amt A	no
+Operator	LFO Amt B	no
+Operator	LFO Dst B	no
+Operator	LFO On	yes
+Operator	LFO R < K	no
+Operator	LFO Range	yes
+Operator	LFO Rate	yes
+Operator	LFO Retrigger	no
+Operator	LFO Sync	no
+Operator	LFO Type	no
+Operator	Osc-A < LFO	no
+Operator	Osc-A < Pe	no
+Operator	Osc-A Lev < Key	no
+Operator	Osc-A Lev < Vel	no
+Operator	Osc-A Level	no
+Operator	Osc-A On	no
+Operator	Osc-A Phase	no
+Operator	Osc-A Retrig	no
+Operator	Osc-A Wave	no
+Operator	Osc-B < LFO	no
+Operator	Osc-B < Pe	no
+Operator	Osc-B Lev < Key	no
+Operator	Osc-B Lev < Vel	no
+Operator	Osc-B Level	no
+Operator	Osc-B On	no
+Operator	Osc-B Phase	no
+Operator	Osc-B Retrig	no
+Operator	Osc-B Wave	no
+Operator	Osc-C < LFO	no
+Operator	Osc-C < Pe	no
+Operator	Osc-C Lev < Key	no
+Operator	Osc-C Lev < Vel	no
+Operator	Osc-C Level	no
+Operator	Osc-C On	no
+Operator	Osc-C Phase	no
+Operator	Osc-C Retrig	no
+Operator	Osc-C Wave	no
+Operator	Osc-D < LFO	no
+Operator	Osc-D < Pe	no
+Operator	Osc-D Lev < Key	no
+Operator	Osc-D Lev < Vel	no
+Operator	Osc-D Level	no
+Operator	Osc-D On	no
+Operator	Osc-D Phase	no
+Operator	Osc-D Retrig	no
+Operator	Osc-D Wave	no
+Operator	Pan < Key	yes
+Operator	Pan < Rnd	yes
+Operator	Panorama	yes
+Operator	Pe A Slope	no
+Operator	Pe Amount	no
+Operator	Pe Amt A	no
+Operator	Pe Amt B	no
+Operator	Pe Attack	no
+Operator	Pe D Slope	no
+Operator	Pe Decay	no
+Operator	Pe Dst B	no
+Operator	Pe End	no
+Operator	Pe Init	no
+Operator	Pe On	no
+Operator	Pe Peak	no
+Operator	Pe R < Vel	no
+Operator	Pe R Slope	no
+Operator	Pe Release	no
+Operator	Pe Sustain	no
+Operator	Shaper Drive	yes
+Operator	Shaper Mix	no
+Operator	Shaper Type	no
+Operator	Spread	yes
+Operator	Time	yes
+Operator	Time < Key	yes
+Operator	Tone	yes
+Operator	Transpose	yes
+Operator	Volume	yes
+OriginalSimpler	Detune	yes
+OriginalSimpler	Device On	no
+OriginalSimpler	Division	yes
+OriginalSimpler	F On	no
+OriginalSimpler	Fade In	yes
+OriginalSimpler	Fade Out	yes
+OriginalSimpler	Fe < Env	no
+OriginalSimpler	Fe Attack	no
+OriginalSimpler	Fe Decay	no
+OriginalSimpler	Fe On	no
+OriginalSimpler	Fe Release	no
+OriginalSimpler	Fe Sustain	no
+OriginalSimpler	Filt < LFO	no
+OriginalSimpler	Filt < Vel	no
+OriginalSimpler	Filter Circuit - BP/NO/Morph	no
+OriginalSimpler	Filter Circuit - LP/HP	no
+OriginalSimpler	Filter Drive	no
+OriginalSimpler	Filter Freq	no
+OriginalSimpler	Filter Morph	no
+OriginalSimpler	Filter Res	no
+OriginalSimpler	Filter Res (Legacy)	no
+OriginalSimpler	Filter Slope	no
+OriginalSimpler	Filter Type	yes
+OriginalSimpler	Filter Type (Legacy)	no
+OriginalSimpler	Glide Mode	no
+OriginalSimpler	Glide Time	no
+OriginalSimpler	L Attack	no
+OriginalSimpler	L Offset	no
+OriginalSimpler	L On	no
+OriginalSimpler	L R < Key	no
+OriginalSimpler	L Rate	no
+OriginalSimpler	L Retrig	no
+OriginalSimpler	L Sync	no
+OriginalSimpler	L Sync Rate	no
+OriginalSimpler	L Wave	no
+OriginalSimpler	Nudge	no
+OriginalSimpler	Pan	yes
+OriginalSimpler	Pan < LFO	no
+OriginalSimpler	Pan < Rnd	no
+OriginalSimpler	Pe < Env	no
+OriginalSimpler	Pe Attack	no
+OriginalSimpler	Pe Decay	no
+OriginalSimpler	Pe On	no
+OriginalSimpler	Pe Release	no
+OriginalSimpler	Pe Sustain	no
+OriginalSimpler	Pitch < LFO	no
+OriginalSimpler	Regions	yes
+OriginalSimpler	S Length	no
+OriginalSimpler	S Loop Fade	no
+OriginalSimpler	S Loop Length	no
+OriginalSimpler	S Loop On	no
+OriginalSimpler	S Start	yes
+OriginalSimpler	Slice by	yes
+OriginalSimpler	Slice Style	no
+OriginalSimpler	Spread	yes
+OriginalSimpler	Transpose	yes
+OriginalSimpler	Trigger Mode	no
+OriginalSimpler	Ve Attack	no
+OriginalSimpler	Ve Decay	no
+OriginalSimpler	Ve Loop	no
+OriginalSimpler	Ve Mode	no
+OriginalSimpler	Ve Release	no
+OriginalSimpler	Ve Retrig	no
+OriginalSimpler	Ve Sustain	no
+OriginalSimpler	Vol < LFO	no
+OriginalSimpler	Vol < Vel	no
+OriginalSimpler	Volume	yes
+Overdrive	Device On	no
+Overdrive	Drive	yes
+Overdrive	Dry/Wet	yes
+Overdrive	Filter Freq	no
+Overdrive	Filter Width	no
+Overdrive	Preserve Dynamics	no
+Overdrive	Tone	yes
+Pedal	Bass	yes
+Pedal	Device On	no
+Pedal	Dry/Wet	yes
+Pedal	Gain	yes
+Pedal	Mid	yes
+Pedal	Mid Freq	no
+Pedal	Output	yes
+Pedal	Sub	yes
+Pedal	Treble	yes
+Pedal	Type	no
+PhaserNew	Amount	yes
+PhaserNew	Center Freq	no
+PhaserNew	Device On	no
+PhaserNew	Doubler Time	no
+PhaserNew	Dry/Wet	yes
+PhaserNew	Duty Cycle	yes
+PhaserNew	Env Amount	no
+PhaserNew	Env Attack	no
+PhaserNew	Env Enabled	no
+PhaserNew	Env Release	no
+PhaserNew	FB Inv	no
+PhaserNew	Feedback	yes
+PhaserNew	Flange Time	no
+PhaserNew	Flanger Time	no
+PhaserNew	Lfo Blend	no
+PhaserNew	Mod Blend	no
+PhaserNew	Mod Freq	no
+PhaserNew	Mod Freq 2	no
+PhaserNew	Mod Phase	no
+PhaserNew	Mod Rate	no
+PhaserNew	Mod Rate 2	no
+PhaserNew	Mod Sync	no
+PhaserNew	Mod Sync 2	no
+PhaserNew	Mod Wave	no
+PhaserNew	Mode	yes
+PhaserNew	Notches	yes
+PhaserNew	Output Gain	no
+PhaserNew	Safe Freq	no
+PhaserNew	Spin	yes
+PhaserNew	Spin Enabled	no
+PhaserNew	Spread	yes
+PhaserNew	Warmth	yes
+Redux2	Bit Depth	no
+Redux2	DC Shift	yes
+Redux2	Device On	no
+Redux2	Dry/Wet	yes
+Redux2	Jitter	yes
+Redux2	Post-Filter	yes
+Redux2	Post-Filter On	no
+Redux2	Pre-Filter On	no
+Redux2	Quantizer Shape	no
+Redux2	Sample Rate	yes
+Resonator	Color	yes
+Resonator	Const	yes
+Resonator	Decay	yes
+Resonator	Device On	no
+Resonator	Dry/Wet	yes
+Resonator	Filter On	no
+Resonator	Filter Type	no
+Resonator	Frequency	yes
+Resonator	Global Gain	no
+Resonator	I Gain	no
+Resonator	I Note	no
+Resonator	I On	no
+Resonator	I Tune	no
+Resonator	II Gain	no
+Resonator	II On	no
+Resonator	II Pitch	no
+Resonator	II Tune	no
+Resonator	III Gain	no
+Resonator	III On	no
+Resonator	III Pitch	no
+Resonator	III Tune	no
+Resonator	IV Gain	no
+Resonator	IV On	no
+Resonator	IV Pitch	no
+Resonator	IV Tune	no
+Resonator	Mode	yes
+Resonator	V Gain	no
+Resonator	V On	no
+Resonator	V Pitch	no
+Resonator	V Tune	no
+Resonator	Width	yes
+Reverb	Chorus Amount	no
+Reverb	Chorus On	no
+Reverb	Chorus Rate	no
+Reverb	Decay Time	no
+Reverb	Density	yes
+Reverb	Device On	no
+Reverb	Diff. Hi Freq	no
+Reverb	Diff. Hi Type	no
+Reverb	Diffuse Level	no
+Reverb	Diffusion	yes
+Reverb	Dry/Wet	yes
+Reverb	ER Shape	no
+Reverb	ER Spin Amount	no
+Reverb	ER Spin On	no
+Reverb	ER Spin Rate	no
+Reverb	Flat On	no
+Reverb	Freeze On	no
+Reverb	HiFilter Freq	no
+Reverb	HiFilter On	no
+Reverb	HiFilter Type	no
+Reverb	HiShelf Gain	no
+Reverb	In Filter Freq	no
+Reverb	In Filter Width	no
+Reverb	In HighCut On	no
+Reverb	In LowCut On	no
+Reverb	Input Freq	no
+Reverb	LowShelf Freq	no
+Reverb	LowShelf Gain	no
+Reverb	LowShelf On	no
+Reverb	Predelay	yes
+Reverb	Reflect Level	no
+Reverb	Room Size	yes
+Reverb	Scale	yes
+Reverb	Size Smoothing	no
+Reverb	Stereo Image	yes
+Roar	Blend	yes
+Roar	Comp Amt	no
+Roar	Device On	no
+Roar	Drive	yes
+Roar	Dry/Wet	yes
+Roar	Env Attack	no
+Roar	Env Freq	no
+Roar	Env Gain	no
+Roar	Env Release	no
+Roar	Env Thresh	no
+Roar	Env Width	no
+Roar	Fb Amt	no
+Roar	Fb Freq	no
+Roar	Fb Note	yes
+Roar	Fb Synced	no
+Roar	Fb Time	no
+Roar	Fb Time Mode	no
+Roar	Fb Width	no
+Roar	Flt 1 Freq	no
+Roar	Flt 1 Morph	no
+Roar	Flt 1 Peak	no
+Roar	Flt 1 Res	no
+Roar	Flt 1 Type	no
+Roar	Flt 2 Freq	no
+Roar	Flt 2 Morph	no
+Roar	Flt 2 Peak	no
+Roar	Flt 2 Res	no
+Roar	Flt 2 Type	no
+Roar	Flt 3 Freq	no
+Roar	Flt 3 Morph	no
+Roar	Flt 3 Peak	no
+Roar	Flt 3 Res	no
+Roar	Flt 3 Type	no
+Roar	Global Mod Amt	no
+Roar	LFO 1 16th	no
+Roar	LFO 1 Morph	no
+Roar	LFO 1 Rate	no
+Roar	LFO 1 Rate Mode	no
+Roar	LFO 1 Smooth	no
+Roar	LFO 1 Synced Rate	no
+Roar	LFO 1 Wave	no
+Roar	LFO 2 16th	no
+Roar	LFO 2 Morph	no
+Roar	LFO 2 Rate	no
+Roar	LFO 2 Rate Mode	no
+Roar	LFO 2 Smooth	no
+Roar	LFO 2 Synced Rate	no
+Roar	LFO 2 Wave	no
+Roar	Low Mid X-Over	no
+Roar	Mid High X-Over	no
+Roar	Noise 16th	no
+Roar	Noise Rate	yes
+Roar	Noise Rate Mode	no
+Roar	Noise Smooth	no
+Roar	Noise Synced Rate	no
+Roar	Noise Type	no
+Roar	Output	yes
+Roar	Shaper 1 Amt	no
+Roar	Shaper 1 Bias	no
+Roar	Shaper 1 Level	no
+Roar	Shaper 1 Type	no
+Roar	Shaper 2 Amt	no
+Roar	Shaper 2 Bias	no
+Roar	Shaper 2 Level	no
+Roar	Shaper 2 Type	no
+Roar	Shaper 3 Amt	no
+Roar	Shaper 3 Bias	no
+Roar	Shaper 3 Level	no
+Roar	Shaper 3 Type	no
+Roar	Tone Amt	no
+Roar	Tone Freq	no
+Saturator	Base	no
+Saturator	Color	yes
+Saturator	Color Amt Hi	no
+Saturator	Color Amt Low	no
+Saturator	Color Freq	no
+Saturator	Color On	no
+Saturator	Color Width	no
+Saturator	Depth	yes
+Saturator	Device On	no
+Saturator	Drive	yes
+Saturator	Dry/Wet	yes
+Saturator	Frequency	yes
+Saturator	Output	yes
+Saturator	Soft Clip	yes
+Saturator	Type	yes
+Saturator	Width	yes
+Saturator	WS Curve	no
+Saturator	WS Damp	no
+Saturator	WS Depth	no
+Saturator	WS Drive	no
+Saturator	WS Lin	no
+Saturator	WS Linearity	no
+Saturator	WS Period	no
+Shifter	Delay Feedback	yes
+Shifter	Delay S. Time	no
+Shifter	Delay Sync	no
+Shifter	Delay Time	yes
+Shifter	Device On	no
+Shifter	Dry/Wet	yes
+Shifter	Env Amount Hz	no
+Shifter	Env Amount St	no
+Shifter	Env Attack	no
+Shifter	Env Release	no
+Shifter	FShift Coarse	no
+Shifter	Lfo Amount Hz	no
+Shifter	Lfo Amount St	no
+Shifter	Lfo Duty Cycle	no
+Shifter	Lfo Offset	no
+Shifter	Lfo Phase	no
+Shifter	Lfo Rate Hz	no
+Shifter	Lfo S. Rate	no
+Shifter	Lfo Spin Amount	no
+Shifter	Lfo Sync	no
+Shifter	Lfo Waveform	yes
+Shifter	Lfo Width	no
+Shifter	MidiPitch Glide	no
+Shifter	Mod Fine	no
+Shifter	Mode	yes
+Shifter	Pitch Coarse	no
+Shifter	Pitch Fine	no
+Shifter	Pitch Window	no
+Shifter	RM Coarse	no
+Shifter	RM Drive Gain	no
+Shifter	Tone	yes
+Shifter	Wide	yes
+Spectral	Delay Dly. Unit	no
+Spectral	Delay Feedback	no
+Spectral	Delay Frequency Shift	no
+Spectral	Delay Mask	no
+Spectral	Delay Mix	no
+Spectral	Delay On	yes
+Spectral	Delay Spray	no
+Spectral	Delay Stereo Spread	no
+Spectral	Delay Tilt	no
+Spectral	Delay Time Divisions	no
+Spectral	Delay Time Seconds	no
+Spectral	Delay Time Sixteenths	no
+Spectral	Device On	no
+Spectral	Dry Wet	no
+Spectral	Fade In	yes
+Spectral	Fade Out	yes
+Spectral	Fade Type	no
+Spectral	Frozen	yes
+Spectral	Input Send Gain	no
+Spectral	Mode	yes
+Spectral	On	yes
+Spectral	Retrigger Mode	yes
+Spectral	S.Rate ms	no
+Spectral	Sensitivity	yes
+Spectral	Sync Interval	yes
+Spectral	Unit	yes
+Spectral	XFade %	no
+StereoGain	Balance	yes
+StereoGain	Bass Freq	no
+StereoGain	Bass Mono	yes
+StereoGain	Channel Mode	yes
+StereoGain	DC Filter	no
+StereoGain	Device On	no
+StereoGain	Gain	yes
+StereoGain	Gain (Legacy)	no
+StereoGain	Left Inv	no
+StereoGain	Mid/Side Balance	no
+StereoGain	Mono	yes
+StereoGain	Mute	yes
+StereoGain	Right Inv	no
+StereoGain	Stereo Width	yes
+StringStudio	Body Decay	no
+StringStudio	Body High-Cut	no
+StringStudio	Body Low-Cut	no
+StringStudio	Body Mix	no
+StringStudio	Body On/Off	no
+StringStudio	Body Size	yes
+StringStudio	Body Type	yes
+StringStudio	D Damping	no
+StringStudio	D Mass < Key	no
+StringStudio	D Pos < Key	no
+StringStudio	D Pos < Vel	no
+StringStudio	D Pos Abs	no
+StringStudio	D Stiff < Key	no
+StringStudio	D Stiffness	no
+StringStudio	D Velo < Key	no
+StringStudio	D Velocity	no
+StringStudio	Damp Pos	no
+StringStudio	Damper Gated	no
+StringStudio	Damper Mass	no
+StringStudio	Damper On	no
+StringStudio	Device On	no
+StringStudio	E Pos	no
+StringStudio	E Pos < Key	no
+StringStudio	E Pos < Vel	no
+StringStudio	E Pos Abs	no
+StringStudio	Error	yes
+StringStudio	Exc Damping	no
+StringStudio	Exc ForceMassProt	no
+StringStudio	Exc ForceMassProt < Key	no
+StringStudio	Exc ForceMassProt < Vel	no
+StringStudio	Exc FricStiff	no
+StringStudio	Exc FricStiff < Key	no
+StringStudio	Exc FricStiff < Vel	no
+StringStudio	Exc On/Off	no
+StringStudio	Exc Vel < Key	no
+StringStudio	Exc Vel < Vel	no
+StringStudio	Exc Velocity	no
+StringStudio	Exciter Type	yes
+StringStudio	FEG < Vel	no
+StringStudio	FEG Att < Vel	no
+StringStudio	FEG Attack	no
+StringStudio	FEG Decay	no
+StringStudio	FEG On/Off	no
+StringStudio	FEG Release	no
+StringStudio	FEG Sustain	no
+StringStudio	Filter Freq	no
+StringStudio	Filter On/Off	no
+StringStudio	Filter Reso	no
+StringStudio	Filter Type	yes
+StringStudio	Fine Tune	no
+StringStudio	Freq < Env	no
+StringStudio	Freq < LFO	no
+StringStudio	Key Dest	no
+StringStudio	Key Priority	no
+StringStudio	LFO Delay	no
+StringStudio	LFO Fade In	no
+StringStudio	LFO On/Off	no
+StringStudio	LFO Shape	no
+StringStudio	LFO Speed	no
+StringStudio	LFO Sync On	no
+StringStudio	LFO SyncRate	no
+StringStudio	Note PB Range	no
+StringStudio	Octave	yes
+StringStudio	PB Range	no
+StringStudio	Pickup On/Off	no
+StringStudio	Pickup Pos	no
+StringStudio	Porta Legato	no
+StringStudio	Porta On/Off	no
+StringStudio	Porta Prop	no
+StringStudio	Porta Time	no
+StringStudio	Press Amt A	no
+StringStudio	Press Amt B	no
+StringStudio	Press Dest A	no
+StringStudio	Press Dest B	no
+StringStudio	Reso < Env	no
+StringStudio	Reso < LFO	no
+StringStudio	S Damp < Key	no
+StringStudio	S Decay < Key	no
+StringStudio	S Decay Ratio	no
+StringStudio	Semitone	yes
+StringStudio	Slide Amt A	no
+StringStudio	Slide Amt B	no
+StringStudio	Slide Dest A	no
+StringStudio	Slide Dest B	no
+StringStudio	Str Damping	no
+StringStudio	Str Inharmon	no
+StringStudio	Stretch	yes
+StringStudio	String Decay	no
+StringStudio	T Mass < Key	no
+StringStudio	T Mass < Vel	no
+StringStudio	Term Fng Stiff	no
+StringStudio	Term Fret Stiff	no
+StringStudio	Term Mass	no
+StringStudio	Term On/Off	no
+StringStudio	Uni Delay	no
+StringStudio	Uni Detune	no
+StringStudio	Unison On/Off	no
+StringStudio	Unison Voices	no
+StringStudio	Vel Dest	no
+StringStudio	Vib < ModWh	no
+StringStudio	Vib Amount	no
+StringStudio	Vib Delay	no
+StringStudio	Vib Error	no
+StringStudio	Vib Fade-In	no
+StringStudio	Vib Speed	no
+StringStudio	Vibrato On/Off	no
+StringStudio	Voices	yes
+StringStudio	Volume	yes
+Transmute	Decay	yes
+Transmute	Device On	no
+Transmute	Dry Wet	no
+Transmute	Freq. Hz	no
+Transmute	Glide	yes
+Transmute	Harmonics	yes
+Transmute	HF Damp	yes
+Transmute	Hz/Note Mode	no
+Transmute	Input Send Gain	no
+Transmute	LF Damp	yes
+Transmute	Mod Rate	yes
+Transmute	Note	yes
+Transmute	Pitch Mod	no
+Transmute	Shift	yes
+Transmute	Stretch	yes
+Transmute	Transpose	yes
+Transmute	Unison	yes
+Transmute	Unison Amount	no
+Tube	Attack	yes
+Tube	Bias	yes
+Tube	Device On	no
+Tube	Drive	yes
+Tube	Dry/Wet	no
+Tube	Envelope	yes
+Tube	Output	yes
+Tube	Release	yes
+Tube	Tone	yes
+Tube	Tube Type	no
+UltraAnalog	A1 Pan < Env	no
+UltraAnalog	A1 Pan < Key	no
+UltraAnalog	A1 Pan < LFO	no
+UltraAnalog	A2 Pan < Env	no
+UltraAnalog	A2 Pan < Key	no
+UltraAnalog	A2 Pan < LFO	no
+UltraAnalog	AEG1 < Vel	no
+UltraAnalog	AEG1 A < Vel	no
+UltraAnalog	AEG1 Attack	no
+UltraAnalog	AEG1 Decay	no
+UltraAnalog	AEG1 Loop	no
+UltraAnalog	AEG1 Rel	no
+UltraAnalog	AEG1 S Time	no
+UltraAnalog	AEG1 Sustain	no
+UltraAnalog	AEG2 < Vel	no
+UltraAnalog	AEG2 A < Vel	no
+UltraAnalog	AEG2 Attack	no
+UltraAnalog	AEG2 Decay	no
+UltraAnalog	AEG2 Loop	no
+UltraAnalog	AEG2 Rel	no
+UltraAnalog	AEG2 S Time	no
+UltraAnalog	AEG2 Sustain	no
+UltraAnalog	AMP1 < Key	no
+UltraAnalog	AMP1 < LFO	no
+UltraAnalog	AMP1 Level	no
+UltraAnalog	AMP1 On/Off	no
+UltraAnalog	AMP1 Pan	no
+UltraAnalog	AMP2 < Key	no
+UltraAnalog	AMP2 < LFO	no
+UltraAnalog	AMP2 Level	no
+UltraAnalog	AMP2 On/Off	no
+UltraAnalog	AMP2 Pan	no
+UltraAnalog	Detune	yes
+UltraAnalog	Device On	no
+UltraAnalog	F1 Drive	no
+UltraAnalog	F1 Freq	no
+UltraAnalog	F1 Freq < Env	no
+UltraAnalog	F1 Freq < Key	no
+UltraAnalog	F1 Freq < LFO	no
+UltraAnalog	F1 On/Off	no
+UltraAnalog	F1 Res < Env	no
+UltraAnalog	F1 Res < LFO	no
+UltraAnalog	F1 Reso < Key	no
+UltraAnalog	F1 Resonance	no
+UltraAnalog	F1 Type	no
+UltraAnalog	F2 Drive	no
+UltraAnalog	F2 Freq	no
+UltraAnalog	F2 Freq < Env	no
+UltraAnalog	F2 Freq < Key	no
+UltraAnalog	F2 Freq < LFO	no
+UltraAnalog	F2 On/Off	no
+UltraAnalog	F2 Res < Env	no
+UltraAnalog	F2 Res < LFO	no
+UltraAnalog	F2 Reso < Key	no
+UltraAnalog	F2 Resonance	no
+UltraAnalog	F2 Type	no
+UltraAnalog	FEG1 < Vel	no
+UltraAnalog	FEG1 A < Vel	no
+UltraAnalog	FEG1 Attack	no
+UltraAnalog	FEG1 Decay	no
+UltraAnalog	FEG1 Loop	no
+UltraAnalog	FEG1 Rel	no
+UltraAnalog	FEG1 S Time	no
+UltraAnalog	FEG1 Sustain	no
+UltraAnalog	FEG2 < Vel	no
+UltraAnalog	FEG2 A < Vel	no
+UltraAnalog	FEG2 Attack	no
+UltraAnalog	FEG2 Decay	no
+UltraAnalog	FEG2 Loop	no
+UltraAnalog	FEG2 Rel	no
+UltraAnalog	FEG2 S Time	no
+UltraAnalog	FEG2 Sustain	no
+UltraAnalog	Glide Legato	no
+UltraAnalog	Glide Mode	yes
+UltraAnalog	Glide On/Off	no
+UltraAnalog	Glide Time	yes
+UltraAnalog	Key Error	no
+UltraAnalog	Key Priority	no
+UltraAnalog	Key Stretch	no
+UltraAnalog	LFO1 Delay	no
+UltraAnalog	LFO1 Fade In	no
+UltraAnalog	LFO1 On/Off	no
+UltraAnalog	LFO1 Phase	no
+UltraAnalog	LFO1 PW	no
+UltraAnalog	LFO1 Shape	no
+UltraAnalog	LFO1 SncRate	no
+UltraAnalog	LFO1 Speed	no
+UltraAnalog	LFO1 Sync	no
+UltraAnalog	LFO2 Delay	no
+UltraAnalog	LFO2 Fade In	no
+UltraAnalog	LFO2 On/Off	no
+UltraAnalog	LFO2 Phase	no
+UltraAnalog	LFO2 PW	no
+UltraAnalog	LFO2 Shape	no
+UltraAnalog	LFO2 SncRate	no
+UltraAnalog	LFO2 Speed	no
+UltraAnalog	LFO2 Sync	no
+UltraAnalog	Noise Balance	no
+UltraAnalog	Noise Color	no
+UltraAnalog	Noise Level	no
+UltraAnalog	Noise On/Off	no
+UltraAnalog	Note PB Range	no
+UltraAnalog	O1 Keytrack	no
+UltraAnalog	O1 PW < LFO	no
+UltraAnalog	O1 Sub/Sync	no
+UltraAnalog	O2 Keytrack	no
+UltraAnalog	O2 PW < LFO	no
+UltraAnalog	O2 Sub/Sync	no
+UltraAnalog	Octave	yes
+UltraAnalog	OSC1 < LFO	no
+UltraAnalog	OSC1 Balance	no
+UltraAnalog	OSC1 Detune	no
+UltraAnalog	OSC1 Level	no
+UltraAnalog	OSC1 Mode	no
+UltraAnalog	OSC1 Octave	no
+UltraAnalog	OSC1 On/Off	no
+UltraAnalog	OSC1 PW	no
+UltraAnalog	OSC1 Semi	no
+UltraAnalog	OSC1 Shape	no
+UltraAnalog	OSC2 < LFO	no
+UltraAnalog	OSC2 Balance	no
+UltraAnalog	OSC2 Detune	no
+UltraAnalog	OSC2 Level	no
+UltraAnalog	OSC2 Mode	no
+UltraAnalog	OSC2 Octave	no
+UltraAnalog	OSC2 On/Off	no
+UltraAnalog	OSC2 PW	no
+UltraAnalog	OSC2 Semi	no
+UltraAnalog	OSC2 Shape	no
+UltraAnalog	PB Range	yes
+UltraAnalog	PEG1 Amount	no
+UltraAnalog	PEG1 Time	no
+UltraAnalog	PEG2 Amount	no
+UltraAnalog	PEG2 Time	no
+UltraAnalog	Press Amt A	no
+UltraAnalog	Press Amt B	no
+UltraAnalog	Press Dest A	no
+UltraAnalog	Press Dest B	no
+UltraAnalog	Semitone	yes
+UltraAnalog	Slide Amt A	no
+UltraAnalog	Slide Amt B	no
+UltraAnalog	Slide Dest A	no
+UltraAnalog	Slide Dest B	no
+UltraAnalog	Unison Delay	no
+UltraAnalog	Unison Detune	no
+UltraAnalog	Unison On/Off	no
+UltraAnalog	Unison Voices	no
+UltraAnalog	Vib < ModWh	no
+UltraAnalog	Vib Amount	no
+UltraAnalog	Vib Delay	no
+UltraAnalog	Vib Error	no
+UltraAnalog	Vib Fade-In	no
+UltraAnalog	Vib On/Off	no
+UltraAnalog	Vib Speed	no
+UltraAnalog	Voices	yes
+UltraAnalog	Volume	yes
+Vinyl	Crackle Density	no
+Vinyl	Crackle Volume	no
+Vinyl	Device On	no
+Vinyl	Global Drive	no
+Vinyl	Pinch Drive	no
+Vinyl	Pinch Freq.	no
+Vinyl	Pinch Mono On	no
+Vinyl	Pinch On	no
+Vinyl	Pinch Soft On	no
+Vinyl	Pinch Width	no
+Vinyl	Tracing Drive	no
+Vinyl	Tracing Freq.	no
+Vinyl	Tracing On	no
+Vinyl	Tracing Width	no
+Vocoder	Attack Time	no
+Vocoder	Device On	no
+Vocoder	Dry/Wet	yes
+Vocoder	Enhance	yes
+Vocoder	Envelope Depth	no
+Vocoder	Ext. In Gain	no
+Vocoder	Filter Bandwidth	no
+Vocoder	Formant Shift	no
+Vocoder	Gate Threshold	no
+Vocoder	Lower Filter Band	no
+Vocoder	Lower Pitch Detection	no
+Vocoder	Mono/Stereo	yes
+Vocoder	Noise Crackle	no
+Vocoder	Noise Rate	no
+Vocoder	Oscillator Pitch	no
+Vocoder	Oscillator Waveform	no
+Vocoder	Output Level	yes
+Vocoder	Precise/Retro	yes
+Vocoder	Release Time	no
+Vocoder	Unvoiced Level	no
+Vocoder	Unvoiced Sensitivity	no
+Vocoder	Unvoiced Speed	no
+Vocoder	Upper Filter Band	no
+Vocoder	Upper Pitch Detection	no

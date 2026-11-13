@@ -14,11 +14,15 @@ The plugin column is "ableton:<class_name>", so no Live device can share a
 known.tsv key with an AU/VST3 plugin ("Reverb", "Frequency Shifter", ...);
 the future Live bridge asks sense.rs for "ableton:" + class_name.
 
-Columns: plugin key, class_name, display name (class_display_name as the
-browser shows it, UNVERIFIED: from memory, ableton.com was not reachable),
-parameter name, class, status (newest Live whose scripts list the name:
-12.4, 12.1 or 12.0; "UNVERIFIED in 12.4" for a device 12.4 changed whose
-12.4 banks do not list it), sources of the name (lom_names.tsv).
+Columns: plugin key; class_name; display name (class_display_name as the
+browser shows it); display_in_manual (yes: a section of the Live 12.4
+manual has that title, or the manual names it, as for Erosion Legacy; no:
+from memory, UNVERIFIED); parameter name; class; status (12.4 when the 12.4
+scripts list the name or the 12.4 manual uses it for that device, else the
+newest Live whose scripts list it, 12.1 or 12.0; "UNVERIFIED in 12.4" for
+a device 12.4 changed that neither 12.4 source confirms); manual (yes/no
+from manual_12_4.tsv, "-" for a device without a manual section); sources
+of the name (lom_names.tsv).
 """
 
 import re
@@ -53,7 +57,7 @@ DEVICES = {
     "DrumBuss": ("Drum Buss", "dist"), "Echo": ("Echo", "delay"), "Eq8": ("EQ Eight", "eq"),
     "Erosion": ("Erosion Legacy", "dist"), "Erosion2": ("Erosion", "dist"),
     "FilterDelay": ("Filter Delay", "delay"), "FilterEQ3": ("EQ Three", "eq"),
-    "Flanger": ("Flanger (legacy)", "mod"), "FrequencyShifter": ("Frequency Shifter", "pitch"),
+    "Flanger": ("Flanger (legacy)", "mod"), "FrequencyShifter": ("Frequency Shifter (legacy)", "pitch"),
     "Gate": ("Gate", "dyn"), "GlueCompressor": ("Glue Compressor", "dyn"),
     "GrainDelay": ("Grain Delay", "delay"), "Hybrid": ("Hybrid Reverb", "reverb"),
     "Limiter": ("Limiter", "dyn"), "Looper": ("Looper", "fx"), "MultibandDynamics": ("Multiband Dynamics", "dyn"),
@@ -437,8 +441,19 @@ def overrides():
     return out
 
 
+def manual():
+    """(class_name, name) -> "yes"/"no" from manual_12_4.tsv."""
+    out = {}
+    for line in (HERE / "manual_12_4.tsv").read_text(encoding="utf-8").splitlines()[1:]:
+        cls, name, hit = line.split("\t")
+        out[(cls, name)] = hit
+    return out
+
+
 def main() -> None:
     ov = overrides()
+    man = manual()
+    in_manual = {c for c, _ in man} | {"Erosion"}  # "now named Erosion Legacy" (manual 29.17)
     used = set()
     rows = []
     for line in (HERE / "lom_names.tsv").read_text(encoding="utf-8").splitlines()[1:]:
@@ -462,18 +477,21 @@ def main() -> None:
         if re.search(r"\bdry\b", name, re.I) and not re.search(r"wet", name, re.I) and c in MIXES:
             c = "other"
         tags = src.split(",")
-        if name == "Device On":
+        hit = man.get((cls, name), "-")
+        if "move-12.4" in tags or hit == "yes":
+            status = "12.4"
+        elif name == "Device On":
             status = "12.1"
-        elif "move-12.4" in tags:
             status = "12.4"
         elif cls in CHANGED_12_4:
             status = "UNVERIFIED in 12.4"
         else:
             status = "12.1" if any(t.endswith("12.1") for t in tags) else "12.0"
-        rows.append(f"ableton:{cls}\t{cls}\t{disp}\t{name}\t{c}\t{status}\t{src}")
+        dm = "yes" if cls in in_manual else "no"
+        rows.append(f"ableton:{cls}\t{cls}\t{disp}\t{dm}\t{name}\t{c}\t{status}\t{hit}\t{src}")
     stale = set(ov) - used
     assert not stale, sorted(stale)
-    print("plugin\tclass_name\tdisplay_name\tname\tclass\tstatus\tsources")
+    print("plugin\tclass_name\tdisplay_name\tdisplay_in_manual\tname\tclass\tstatus\tmanual\tsources")
     print("\n".join(rows))
 
 
