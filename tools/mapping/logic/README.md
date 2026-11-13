@@ -8,7 +8,7 @@ names. Measurements and gaps: [`probes/logic-stock/RESULT.md`](../../../probes/l
 
 | File | What |
 |---|---|
-| `pages.tsv` | the 420 guide pages read: kind, plug-in, page title, URL |
+| `pages.tsv` | the 424 guide pages read: kind, plug-in, page title, URL |
 | `manual_names.py` -> `manual_names.tsv` | control names per plug-in from those pages |
 | `stock_labels.py` -> `stock_labels.tsv` | one param-sense class per name (Live rules of `../ableton/stock_labels.py`, Logic rules, overrides) |
 | `../merge_known.py`, `../test_stock.py` | export into `known.tsv` and checks, shared with Live |
@@ -36,7 +36,8 @@ version 13.0 for macOS 27 (its page URLs end in `/13.0/mac/27`), parts
 those two parts except legacy effects and instruments, metering, imaging,
 utilities, Mastering Assistant, Scripter, Surround Compressor, Drum Kit and
 Drum Machine Designer, and pages that are tutorials, how-tos, overviews or
-lists of models. A control is a list item that starts with an emphasized
+lists of models; then Noise Gate's how-to page, Gain, Stereo Spread and
+Studio Piano were appended (lines 421-424). A control is a list item that starts with an emphasized
 label ending in a control word (knob, slider, field, button, switch, pop-up
 menu, checkbox). Only names are kept, no guide text.
 

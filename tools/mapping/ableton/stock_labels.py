@@ -111,10 +111,12 @@ def rule(fam: str, n: str) -> str:
         return "fe"
     if has(r"< ?lfo|^lfo > |lfo mod amt|^lfo amt [ab]$"):
         return "la"
-    if has(r"< ?(pe|env|modwh)\b|^pe amt|^pe amount|pitch env amt|^peg\d amount|mod matrix amt|mod amt|^global mod amount$"
-           r"|^(mw|pb|press|slide) amt|amount$" if instr else r"< ?(pe|env|modwh)\b|mod amt"):
-        if instr or has(r"< ?(pe|env|modwh)\b|mod amt"):
-            return "ma"
+    mod_amt = r"< ?(pe|env|modwh)\b|mod amt"
+    if instr:  # instrument modulation depths
+        mod_amt += (r"|^pe amt|^pe amount|pitch env amt|^peg\d amount|mod matrix amt|^global mod amount$"
+                    r"|^(mw|pb|press|slide) amt|amount$")
+    if has(mod_amt):
+        return "ma"
     # switches and choices
     if has(r"^([a-d]e|ae|fe|pe|oe|ve|le|aeg\d|feg\d) loop$"):
         return "sel"
@@ -136,9 +138,9 @@ def rule(fam: str, n: str) -> str:
     # levels and space
     if has(r"(^| )(pan|panorama|balance)$|^a\d pan|^amp\d pan|pan < "):
         return "pan"
-    if has(r"(stereo )?width|spread|stereo image|^wide$|stereo spread|voicespreadamount"):
-        if not has(r"filter width|flt width|in filter width|tracing width|pinch width|fb width|env width"):
-            return "w"
+    if has(r"(stereo )?width|spread|stereo image|^wide$|stereo spread|voicespreadamount") and not has(
+            r"filter width|flt width|in filter width|tracing width|pinch width|fb width|env width"):
+        return "w"
     if has(r"^(volume|global volume|output|output gain|output level|gain|level|master output|trim)$"):
         return "g"
     # filters and tone

@@ -54,8 +54,8 @@ Only FL Studio is tested. FL lets a script list and move the parameters of every
 | DAW | Stock plugins | What synthexis reaches | Labels | Status |
 |---|---|---|---|---|
 | FL Studio | 109 loaded in the test (64 effects, 42 generators, 3 without parameters) | 99 of 106 plugins with parameters take every tested write (the first 16 parameters of each); FL recorded both write paths as automation (Fruity Reeverb 2, 3x Osc) | 56 stock effects labelled by hand; synths and large racks guessed from their names | **tested** in FL Studio 2026 |
-| Ableton Live | every Live device | nothing yet, needs the Live bridge | planned, from Ableton's device reference | planned |
-| Logic Pro | Logic's own plugins | through Controller Assignments Learn, once the MIDI port exists | planned, hand-made list | planned, untested |
+| Ableton Live | every Live device | nothing yet, needs the Live bridge | 71 devices labelled by hand, 2,421 parameters under the names Live's remote scripts read (Live 12.4) | planned |
+| Logic Pro | Logic's own plugins | through Controller Assignments Learn, once the MIDI port exists | 87 own plug-ins labelled by hand, 1,744 controls from Apple's Logic Pro 13 guide; Logic's automation names not yet checked | planned, untested |
 
 The FL Studio stock plugins that do not work fully:
 
@@ -68,6 +68,8 @@ The FL Studio stock plugins that do not work fully:
 | Patcher, Wave Traveller, Soundgoodizer | FL scripts see no parameters, so no route reaches them. Not counted in the 106. |
 
 Stock plugins looked broken because of synthexis, not FL. synthexis resolved every sentence on the picked plugin (FL's focus or the pin) and ignored the plugin the sentence named, so "open the filter on Fruity Filter" with Fruity Blood Overdrive in focus gave a route to Blood Overdrive's Post filter. Stock parameters also had no labels. Since 0.1.2 the picker jumps to the named plugin. Measurements: [probes/fl-stock-plugins](probes/fl-stock-plugins/RESULT.md); changes: [CHANGELOG.md](CHANGELOG.md).
+
+Since 0.1.3 the label table also holds Ableton Live's devices and Logic Pro's own plug-ins, as `ableton:<device class>` and `logic:<plug-in>` so they never meet a third-party plugin of the same name ("Reverb", "Compressor"). They take effect once a Live or Logic bridge reports those names. Sources and gaps: [probes/ableton-stock](probes/ableton-stock/RESULT.md), [probes/logic-stock](probes/logic-stock/RESULT.md).
 
 ## What you can play
 

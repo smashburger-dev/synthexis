@@ -2,6 +2,20 @@
 
 synthexis for FL Studio on macOS (Apple Silicon), VST3 and CLAP. Downloads on the [releases page](https://github.com/smashburger-dev/synthexis/releases).
 
+## 0.1.3 (2026-11-13)
+
+Labels for the stock plugins of Ableton Live and Logic Pro, ready for the bridges that will report their names ([probes/ableton-stock](probes/ableton-stock/RESULT.md), [probes/logic-stock](probes/logic-stock/RESULT.md)).
+
+Changed:
+- 71 Ableton Live devices carry hand-made labels for 2,421 parameters: 47 audio effects (8 of them legacy), 12 instruments, 8 MIDI effects and the 4 racks. The names are the ones a Live remote script reads (`DeviceParameter.original_name`), taken from the parameter banks in Live's own control surface scripts and checked against the Live 12.4 Reference Manual.
+- 87 Logic Pro 13 plug-ins carry hand-made labels for 1,744 controls: 64 effects (7 MIDI plug-ins among them) and 23 instruments, named as in Apple's Logic Pro 13 User Guide.
+- Both sit in the label table as `ableton:<device class>` and `logic:<plug-in>`, so a third-party plugin called "Reverb" or "Compressor" keeps its own labels. Every existing label stays as it was. The table grows from 943 to 1,101 plugins.
+
+Known limits:
+- No Live or Logic bridge reads these names yet; until one does, the labels are not used.
+- 124 Live parameter names come only from 12.0 or 12.1 scripts for devices that Live 12.4 changed (Wavetable, Reverb, Delay, Drum Sampler, Chorus-Ensemble); they may be gone in 12.4. Max for Live devices, External Audio Effect, External Instrument, Spectrum and Tuner have no labels.
+- The Logic names are the guide's control labels; the names Logic uses for automation can differ. Noise Gate, Scripter, the metering, legacy and surround plug-ins have no labels, and ES2 has only 16.
+
 ## 0.1.2 (2026-11-13)
 
 FL Studio stock plugins work as route targets. Measured in FL Studio 2026 on 109 stock plugins ([probes/fl-stock-plugins](probes/fl-stock-plugins/RESULT.md)).
